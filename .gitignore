@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src/_generated/
+*.log
+.DS_Store
+.env
+.env.local
+.netrc
+coverage/

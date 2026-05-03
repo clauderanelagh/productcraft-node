@@ -1,0 +1,91 @@
+{
+  "name": "productcraft",
+  "version": "0.0.1",
+  "description": "Node.js / TypeScript SDK for the ProductCraft APIs (Heimdall · Envoi · Rally · Agora · Platform-Auth). Generated from production OpenAPI specs.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./heimdall": {
+      "types": "./dist/heimdall.d.ts",
+      "import": "./dist/heimdall.js",
+      "require": "./dist/heimdall.cjs"
+    },
+    "./envoi": {
+      "types": "./dist/envoi.d.ts",
+      "import": "./dist/envoi.js",
+      "require": "./dist/envoi.cjs"
+    },
+    "./rally": {
+      "types": "./dist/rally.d.ts",
+      "import": "./dist/rally.js",
+      "require": "./dist/rally.cjs"
+    },
+    "./agora": {
+      "types": "./dist/agora.d.ts",
+      "import": "./dist/agora.js",
+      "require": "./dist/agora.cjs"
+    },
+    "./platform-auth": {
+      "types": "./dist/platform-auth.d.ts",
+      "import": "./dist/platform-auth.js",
+      "require": "./dist/platform-auth.cjs"
+    }
+  },
+  "files": [
+    "dist/**",
+    "Specs/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "codegen": "openapi-typescript Specs/heimdall.json -o src/_generated/heimdall.d.ts && openapi-typescript Specs/envoi.json -o src/_generated/envoi.d.ts && openapi-typescript Specs/rally.json -o src/_generated/rally.d.ts && openapi-typescript Specs/agora.json -o src/_generated/agora.d.ts && openapi-typescript Specs/platform-auth.json -o src/_generated/platform-auth.d.ts",
+    "refresh-specs": "bash scripts/refresh-specs.sh",
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "prepare": "pnpm run codegen && pnpm run build"
+  },
+  "keywords": [
+    "productcraft",
+    "heimdall",
+    "envoi",
+    "rally",
+    "agora",
+    "auth",
+    "email",
+    "waitlist",
+    "openapi"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git"
+  },
+  "homepage": "https://github.com/clauderanelagh/productcraft-node",
+  "dependencies": {
+    "openapi-fetch": "^0.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "openapi-typescript": "^7.4.0",
+    "prettier": "^3.3.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,59 @@
+name: Refresh OpenAPI specs
+
+on:
+  schedule:
+    - cron: "30 4 * * *"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Fetch latest specs
+        run: bash scripts/refresh-specs.sh
+
+      - name: Regenerate types
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run codegen
+
+      - name: Detect changes
+        id: diff
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open PR
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "chore(specs): refresh from production"
+          title: "chore(specs): nightly refresh from production"
+          body: |
+            Auto-generated PR from `.github/workflows/spec-refresh.yml`.
+
+            Specs refreshed from:
+            - `https://api.auth.productcraft.co/docs-json`
+            - `https://api.heimdall.productcraft.co/docs-json`
+            - `https://api.mail.productcraft.co/docs-json`
+            - `https://agora.productcraft.co/docs-json`
+            - `https://api.rally.productcraft.co/docs-json`
+
+            Type generation re-run via `pnpm codegen`. CI runs build + tests on this PR.
+          branch: chore/refresh-specs
+          delete-branch: true
