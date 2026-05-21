@@ -3,8 +3,14 @@ import tsparser from "@typescript-eslint/parser";
 
 export default [
   {
-    files: ["src/**/*.ts"],
-    ignores: ["src/_generated/**"],
+    ignores: [
+      "**/dist/**",
+      "**/node_modules/**",
+      "**/_generated.d.ts",
+    ],
+  },
+  {
+    files: ["packages/*/src/**/*.ts", "packages/*/tests/**/*.ts"],
     languageOptions: {
       parser: tsparser,
       parserOptions: { ecmaVersion: 2022, sourceType: "module" },

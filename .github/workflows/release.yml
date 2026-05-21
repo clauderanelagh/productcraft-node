@@ -1,15 +1,32 @@
 name: Release
 
+# On every push to main:
+#   1. Look at .changeset/*.md files for pending bumps.
+#   2. If any exist, open / update the "Version Packages" PR that
+#      bumps versions + updates CHANGELOG.md per package.
+#   3. If no pending changesets and versions in package.json files
+#      don't yet exist on npm, publish those packages via Trusted
+#      Publishing (OIDC — no NPM_TOKEN secret required; see
+#      packages/*/package.json#publishConfig).
+#
+# One-time setup per package on npmjs.com:
+#   Package settings → Trusted publishers →
+#   GitHub Actions, clauderanelagh/productcraft-node, release.yml.
+
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -20,7 +37,7 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
 
@@ -29,17 +46,18 @@ jobs:
       - run: pnpm run build
       - run: pnpm run test
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Create release PR or publish
+        uses: changesets/action@v1
         with:
-          generate_release_notes: true
-
-      # Publish to npm requires NPM_TOKEN secret on the repo. Until
-      # that's set, this step is gated to only run when the token is
-      # present so tag pushes don't fail the workflow.
-      - name: Publish to npm
-        if: env.NPM_TOKEN != ''
+          # `release` script builds packages then runs `changeset
+          # publish`, which inspects each workspace package version
+          # against the npm registry and publishes new ones.
+          publish: pnpm run release
+          version: pnpm run version-packages
+          commit: "chore(release): version packages"
+          title: "chore(release): version packages"
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: pnpm publish --no-git-checks --access public
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No NPM_TOKEN — npm CLI picks up the OIDC token from
+          # `id-token: write` and exchanges it via Trusted Publishing.
+          NPM_CONFIG_PROVENANCE: "true"

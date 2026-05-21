@@ -14,19 +14,19 @@
  * );
  * ```
  *
- * Per-surface entry points are also exported for tighter dependency
- * footprints — `import { Heimdall } from "productcraft/heimdall"`.
+ * If you only need one product, install its package directly:
+ * `npm i @productcraft/heimdall` (and skip this umbrella).
  */
 
-import { Heimdall } from "./heimdall.js";
-import { Envoi } from "./envoi.js";
-import { Rally } from "./rally.js";
-import { Agora } from "./agora.js";
-import { PlatformAuth } from "./platform-auth.js";
-import type { PCClientConfig } from "./_core.js";
+import { Heimdall } from "@productcraft/heimdall";
+import { Envoi } from "@productcraft/envoi";
+import { Rally } from "@productcraft/rally";
+import { Agora } from "@productcraft/agora";
+import { PlatformAuth } from "@productcraft/platform-auth";
+import type { PCClientConfig } from "@productcraft/core";
 
 export { Heimdall, Envoi, Rally, Agora, PlatformAuth };
-export { PC_BASE_URL, type PCAuth, type PCClientConfig } from "./_core.js";
+export { PC_BASE_URL, type PCAuth, type PCClientConfig } from "@productcraft/core";
 
 /**
  * The umbrella class — instantiates one of each surface client, all

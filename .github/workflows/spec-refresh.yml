@@ -18,7 +18,7 @@ jobs:
           version: 10
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Fetch latest specs
@@ -29,23 +29,48 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm run codegen
 
-      - name: Detect changes
-        id: diff
+      - name: Generate per-surface changesets for changed specs
+        id: gen
         run: |
-          if git diff --quiet; then
+          set -euo pipefail
+          changed=()
+          for spec in Specs/*.json; do
+            surface="$(basename "$spec" .json)"
+            if ! git diff --quiet -- "$spec"; then
+              echo "› spec changed: $surface"
+              changed+=("$surface")
+              cat > ".changeset/auto-spec-refresh-${surface}-${GITHUB_RUN_ID}.md" <<MD
+          ---
+          "@productcraft/${surface}": patch
+          ---
+
+          Refresh ${surface} OpenAPI types from production.
+          MD
+            fi
+          done
+          if (( ${#changed[@]} == 0 )); then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "surfaces=${changed[*]}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Open PR
-        if: steps.diff.outputs.changed == 'true'
+        if: steps.gen.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
           commit-message: "chore(specs): refresh from production"
-          title: "chore(specs): nightly refresh from production"
+          title: "chore(specs): nightly refresh — ${{ steps.gen.outputs.surfaces }}"
           body: |
             Auto-generated PR from `.github/workflows/spec-refresh.yml`.
+
+            Surfaces with spec changes this run: **${{ steps.gen.outputs.surfaces }}**
+
+            A per-surface changeset entry was added under `.changeset/` —
+            merging this PR will trigger the release workflow, which opens
+            a "Version Packages" PR bumping only the affected packages.
+            The `productcraft` umbrella picks up a patch via
+            `updateInternalDependencies` in `.changeset/config.json`.
 
             Specs refreshed from:
             - `https://api.auth.productcraft.co/docs-json`
@@ -53,7 +78,5 @@ jobs:
             - `https://api.mail.productcraft.co/docs-json`
             - `https://agora.productcraft.co/docs-json`
             - `https://api.rally.productcraft.co/docs-json`
-
-            Type generation re-run via `pnpm codegen`. CI runs build + tests on this PR.
           branch: chore/refresh-specs
           delete-branch: true

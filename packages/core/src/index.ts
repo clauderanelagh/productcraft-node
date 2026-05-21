@@ -1,17 +1,16 @@
 /**
  * Shared transport + auth plumbing used by every surface client.
  *
- * Each surface module (`heimdall.ts`, `envoi.ts`, ...) defines a
- * thin class around `openapi-fetch` plus the generated `paths` types
- * from `_generated/<surface>.d.ts`. The class delegates wire I/O to
- * `openapi-fetch`, but exposes a Stripe-style ergonomic surface where
- * callers reach for `pc.envoi.messages.send(...)` rather than the
- * underlying `client.POST("/v1/...")` shape.
+ * Each surface package (`@productcraft/heimdall`, `@productcraft/envoi`,
+ * ...) defines a thin class around `openapi-fetch` plus the generated
+ * `paths` types from its own `_generated.d.ts`. The class delegates
+ * wire I/O to `openapi-fetch`, but exposes a Stripe-style ergonomic
+ * surface where callers reach for `pc.envoi.messages.send(...)` rather
+ * than the underlying `client.POST("/v1/...")` shape.
  *
  * v0 ships only the underlying `client` (named `client` on each
  * surface) — every endpoint is reachable through it. Ergonomic
- * resource surfaces (`messages.send`, `apps.create`, ...) land in
- * v0.1+ as we hand-roll them.
+ * resource surfaces land in v0.1+ as we hand-roll them.
  */
 
 import createClient, { type Client, type Middleware } from "openapi-fetch";
@@ -74,7 +73,7 @@ export function authMiddleware(auth: PCAuth | undefined): Middleware {
 
 /**
  * Construct an `openapi-fetch` client for a surface. Each surface
- * module calls this with its own generated `paths` type and default
+ * package calls this with its own generated `paths` type and default
  * base URL. The returned client is the v0 surface — every endpoint is
  * reachable through `client.GET(...)`, `client.POST(...)`, etc.
  */

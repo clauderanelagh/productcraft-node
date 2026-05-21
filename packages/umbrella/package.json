@@ -1,0 +1,60 @@
+{
+  "name": "productcraft",
+  "version": "0.0.1",
+  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform \u2014 Heimdall, Envoi, Rally, Agora, and Platform-Auth from a single import. Install per-product packages (`@productcraft/heimdall`, ...) if you only need one.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "productcraft",
+    "sdk",
+    "heimdall",
+    "envoi",
+    "rally",
+    "agora",
+    "auth",
+    "email",
+    "waitlist",
+    "openapi"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/umbrella"
+  },
+  "homepage": "https://github.com/clauderanelagh/productcraft-node",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/agora": "workspace:^",
+    "@productcraft/core": "workspace:^",
+    "@productcraft/envoi": "workspace:^",
+    "@productcraft/heimdall": "workspace:^",
+    "@productcraft/platform-auth": "workspace:^",
+    "@productcraft/rally": "workspace:^"
+  }
+}

@@ -1,34 +1,39 @@
-# productcraft (Node.js / TypeScript)
+# ProductCraft Node SDK
 
-Node.js + TypeScript SDK for the [ProductCraft](https://productcraft.co) APIs — Heimdall (auth-as-a-service), Envoi (transactional email), Rally (waitlists), Agora (social), and Platform-Auth (workspace identity).
+Node.js + TypeScript SDKs for the [ProductCraft](https://productcraft.co) APIs — Heimdall (auth-as-a-service), Envoi (transactional email), Rally (waitlists), Agora (social), and Platform-Auth (workspace identity).
+
+Five per-product packages plus a `productcraft` umbrella. Install just the one you need.
 
 > **Status:** v0 — every endpoint reachable via the typed `openapi-fetch` client; Stripe-style ergonomic resource wrappers ship in v0.1+.
 
 ## Install
 
+Pick the package(s) you need:
+
 ```bash
-pnpm add productcraft
-# or
+# Just one product
+npm install @productcraft/heimdall
+npm install @productcraft/envoi
+npm install @productcraft/rally
+npm install @productcraft/agora
+npm install @productcraft/platform-auth
+
+# Or the all-in-one umbrella
 npm install productcraft
-# or
-yarn add productcraft
 ```
 
 Requires Node 18+.
 
-## Quick start
+## Quick start — single product
 
 ```ts
-import { ProductCraft } from "productcraft";
+import { Envoi } from "@productcraft/envoi";
 
-const pc = new ProductCraft({
+const envoi = new Envoi({
   auth: { type: "apiKey", key: process.env.PRODUCTCRAFT_API_KEY! },
 });
 
-// Every endpoint declared in the OpenAPI spec is reachable through
-// the typed underlying client. Path parameters, request body, and
-// response are all type-checked.
-const { data, error } = await pc.envoi.client.POST(
+const { data, error } = await envoi.client.POST(
   "/v1/mailboxes/{mailboxId}/messages/send",
   {
     params: { path: { mailboxId: "mb_123" } },
@@ -40,27 +45,32 @@ if (error) throw error;
 console.log(data.id);
 ```
 
-The Stripe-style ergonomic surface (`pc.envoi.messages.send({ to, subject, body })`) ships in v0.1+. Until then, the typed underlying client guarantees every endpoint is reachable from day one.
-
-### Per-surface imports
-
-For tighter dependency footprints (e.g. a server that only sends email):
+## Quick start — all products via umbrella
 
 ```ts
-import { Envoi } from "productcraft/envoi";
+import { ProductCraft } from "productcraft";
 
-const envoi = new Envoi({ auth: { type: "apiKey", key: "..." } });
+const pc = new ProductCraft({
+  auth: { type: "apiKey", key: process.env.PRODUCTCRAFT_API_KEY! },
+});
+
+await pc.envoi.client.POST("/v1/mailboxes/{mailboxId}/messages/send", { ... });
+await pc.heimdall.client.POST("/v1/auth/signin", { ... });
 ```
 
-## Five surfaces, one SDK
+The Stripe-style ergonomic surface (`envoi.messages.send({ to, subject, body })`) ships in v0.1+. Until then, the typed underlying client guarantees every endpoint is reachable from day one.
 
-| Module | Default URL |
+## The packages
+
+| Package | Default URL |
 |---|---|
-| `productcraft/heimdall` — Heimdall Consumer + Admin | `https://api.heimdall.productcraft.co` |
-| `productcraft/envoi` — Envoi (mailbox-api) | `https://api.mail.productcraft.co` |
-| `productcraft/rally` — Rally (waitlists) | `https://api.rally.productcraft.co` |
-| `productcraft/agora` — Agora (social) | `https://agora.productcraft.co` |
-| `productcraft/platform-auth` — Platform-Auth (workspaces) | `https://api.auth.productcraft.co` |
+| [`@productcraft/heimdall`](packages/heimdall) — Heimdall Consumer + Admin | `https://api.heimdall.productcraft.co` |
+| [`@productcraft/envoi`](packages/envoi) — Envoi (mailbox-api) | `https://api.mail.productcraft.co` |
+| [`@productcraft/rally`](packages/rally) — Rally (waitlists) | `https://api.rally.productcraft.co` |
+| [`@productcraft/agora`](packages/agora) — Agora (social) | `https://agora.productcraft.co` |
+| [`@productcraft/platform-auth`](packages/platform-auth) — Platform-Auth (workspaces) | `https://api.auth.productcraft.co` |
+| [`@productcraft/core`](packages/core) — shared auth + transport (dep of all the above) | — |
+| [`productcraft`](packages/umbrella) — convenience umbrella, depends on all five | — |
 
 ## Authentication
 
@@ -73,16 +83,16 @@ type PCAuth =
 
 Auth is added as `Authorization: Bearer …` (or `Cookie: auth_token=…`) on every outbound request via an `openapi-fetch` middleware.
 
-## How this SDK is built
+## How these SDKs are built
 
-The SDK is **generated from the live OpenAPI specs** at each prod API's `/docs-json` endpoint:
+The SDKs are **generated from the live OpenAPI specs** at each prod API's `/docs-json` endpoint:
 
-1. **Specs vendored** under `Specs/<surface>.json`.
-2. **`openapi-typescript`** generates `src/_generated/<surface>.d.ts` (types only — no runtime).
-3. A **thin hand-written class per surface** (`Heimdall`, `Envoi`, …) wires `openapi-fetch` with the generated `paths` types + the configured auth + base URL.
-4. **CI cron** (`.github/workflows/spec-refresh.yml`) refetches specs nightly, regenerates types, opens a PR if anything changed.
+1. **Specs vendored** under `Specs/<surface>.json` at the repo root.
+2. **`openapi-typescript`** generates `packages/<surface>/src/_generated.d.ts` (types only — no runtime).
+3. A **thin hand-written class per surface** wires `openapi-fetch` with the generated `paths` types + auth + base URL.
+4. **CI cron** (`.github/workflows/spec-refresh.yml`) refetches specs nightly. When a surface's spec changes, it emits a Changesets entry that triggers a patch bump for just that package.
 
-This means: the SDK tracks API surface drift automatically, the maintainer surface is small (specs + facades), and consumers always get the latest types.
+This means: per-product packages move independently; consumers only see version bumps for the surfaces they use.
 
 ## Local development
 
@@ -92,10 +102,15 @@ cd productcraft-node
 pnpm install
 
 pnpm run refresh-specs   # pull /docs-json from prod into Specs/
-pnpm run codegen         # regenerate src/_generated/
+pnpm run codegen         # regenerate packages/<surface>/src/_generated.d.ts
 pnpm run build
 pnpm run test
+pnpm run lint
 ```
+
+## Versioning + releases
+
+Per-package SemVer. Spec-refresh PRs add a Changesets entry that triggers a patch bump on just the affected surface (and a cascading patch on the `productcraft` umbrella). The release workflow opens a "Version Packages" PR collecting pending bumps; merging it publishes the affected packages to npm via Trusted Publishing (OIDC, no token).
 
 ## License
 

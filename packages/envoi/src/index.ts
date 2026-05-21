@@ -1,11 +1,10 @@
-import type { paths } from "./_generated/envoi.js";
-import { makeClient, PC_BASE_URL, type PCClientConfig } from "./_core.js";
+import type { paths } from "./_generated.js";
+import { makeClient, PC_BASE_URL, type PCClientConfig } from "@productcraft/core";
 
 /**
- * Envoi — see README. `make()` returns a typed
- * `openapi-fetch` client for every endpoint declared in
+ * Envoi — typed `openapi-fetch` client for every endpoint in
  * `Specs/envoi.json`. Reach for `client.GET("/v1/...")` or
- * `client.POST(...)`; the request/response types come from the
+ * `client.POST(...)`; request / response types come from the
  * generated `paths` interface.
  */
 export class Envoi {
@@ -17,4 +16,4 @@ export class Envoi {
   }
 }
 
-export type { paths } from "./_generated/envoi.js";
+export type { paths } from "./_generated.js";

@@ -1,72 +1,23 @@
 {
-  "name": "productcraft",
-  "version": "0.0.1",
-  "description": "Node.js / TypeScript SDK for the ProductCraft APIs (Heimdall · Envoi · Rally · Agora · Platform-Auth). Generated from production OpenAPI specs.",
+  "name": "productcraft-node-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Workspace root for the ProductCraft Node SDK packages. Source lives under packages/.",
   "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    },
-    "./heimdall": {
-      "types": "./dist/heimdall.d.ts",
-      "import": "./dist/heimdall.js",
-      "require": "./dist/heimdall.cjs"
-    },
-    "./envoi": {
-      "types": "./dist/envoi.d.ts",
-      "import": "./dist/envoi.js",
-      "require": "./dist/envoi.cjs"
-    },
-    "./rally": {
-      "types": "./dist/rally.d.ts",
-      "import": "./dist/rally.js",
-      "require": "./dist/rally.cjs"
-    },
-    "./agora": {
-      "types": "./dist/agora.d.ts",
-      "import": "./dist/agora.js",
-      "require": "./dist/agora.cjs"
-    },
-    "./platform-auth": {
-      "types": "./dist/platform-auth.d.ts",
-      "import": "./dist/platform-auth.js",
-      "require": "./dist/platform-auth.cjs"
-    }
-  },
-  "files": [
-    "dist/**",
-    "Specs/**",
-    "README.md",
-    "LICENSE"
-  ],
-  "engines": {
-    "node": ">=18"
-  },
+  "engines": { "node": ">=18", "pnpm": ">=10" },
+  "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "codegen": "openapi-typescript Specs/heimdall.json -o src/_generated/heimdall.d.ts && openapi-typescript Specs/envoi.json -o src/_generated/envoi.d.ts && openapi-typescript Specs/rally.json -o src/_generated/rally.d.ts && openapi-typescript Specs/agora.json -o src/_generated/agora.d.ts && openapi-typescript Specs/platform-auth.json -o src/_generated/platform-auth.d.ts",
+    "codegen": "bash scripts/codegen.sh",
     "refresh-specs": "bash scripts/refresh-specs.sh",
-    "build": "tsup",
-    "test": "vitest run",
-    "lint": "eslint \"src/**/*.ts\" --max-warnings 0",
-    "format": "prettier --write \"src/**/*.ts\"",
-    "prepare": "pnpm run codegen && pnpm run build"
+    "build": "pnpm -r --filter \"./packages/**\" run build",
+    "test": "pnpm -r --filter \"./packages/**\" run test",
+    "lint": "eslint \"packages/*/src/**/*.ts\" \"packages/*/tests/**/*.ts\" --max-warnings 0",
+    "format": "prettier --write \"packages/**/src/**/*.ts\"",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm run build && changeset publish"
   },
-  "keywords": [
-    "productcraft",
-    "heimdall",
-    "envoi",
-    "rally",
-    "agora",
-    "auth",
-    "email",
-    "waitlist",
-    "openapi"
-  ],
+  "keywords": ["productcraft", "sdk", "monorepo"],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
@@ -74,10 +25,8 @@
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git"
   },
   "homepage": "https://github.com/clauderanelagh/productcraft-node",
-  "dependencies": {
-    "openapi-fetch": "^0.13.0"
-  },
   "devDependencies": {
+    "@changesets/cli": "^2.27.0",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -87,5 +36,8 @@
     "tsup": "^8.3.0",
     "typescript": "^5.6.0",
     "vitest": "^2.1.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
   }
 }

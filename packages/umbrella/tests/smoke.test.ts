@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { ProductCraft, Heimdall, Envoi, Rally, Agora, PlatformAuth } from "../src/index.js";
+import {
+  ProductCraft,
+  Heimdall,
+  Envoi,
+  Rally,
+  Agora,
+  PlatformAuth,
+} from "../src/index.js";
 
 describe("ProductCraft umbrella", () => {
   it("constructs every surface from a single config", () => {
@@ -21,10 +28,6 @@ describe("ProductCraft umbrella", () => {
   });
 
   it("per-surface baseUrl override wins over the shared one", () => {
-    // Smoke check that the constructor doesn't throw when surface
-    // overrides are passed. Actual URL routing is exercised at request
-    // time; the unit test for that shape lives in `_core.test.ts`
-    // (added as the v0.1+ ergonomic wrappers ship).
     const pc = new ProductCraft({
       baseUrl: "https://shared.example",
       heimdall: { baseUrl: "https://heimdall.example" },

@@ -22,4 +22,4 @@ for surface in "${!surfaces[@]}"; do
     | jq --sort-keys '.' > "Specs/${surface}.json"
 done
 
-echo "✓ all specs refreshed; run \`pnpm codegen\` to update src/_generated/"
+echo "✓ all specs refreshed; run \`pnpm codegen\` to update packages/<surface>/src/_generated.d.ts"

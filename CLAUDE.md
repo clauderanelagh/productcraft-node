@@ -2,47 +2,67 @@
 
 ## What this repo is
 
-The Node.js / TypeScript SDK for the ProductCraft platform. **Generated from the production OpenAPI specs** via [`openapi-typescript`](https://openapi-ts.dev/) (types only) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) (the typed runtime client). Public, MIT-licensed, distributed via npm as `productcraft`.
+A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft platform. Each product is its own npm package:
 
-Five surface classes — `Heimdall`, `Envoi`, `Rally`, `Agora`, `PlatformAuth` — plus the umbrella `ProductCraft` class that instantiates one of each.
+| npm package | dir | What it wraps |
+|---|---|---|
+| `@productcraft/core` | `packages/core` | Shared auth + transport (`PCAuth`, `makeClient`, `PC_BASE_URL`). Dep of every other package. |
+| `@productcraft/heimdall` | `packages/heimdall` | Heimdall Consumer + Admin API |
+| `@productcraft/envoi` | `packages/envoi` | Envoi (mailbox-api) |
+| `@productcraft/rally` | `packages/rally` | Rally (waitlists) |
+| `@productcraft/agora` | `packages/agora` | Agora (social) |
+| `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
+| `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all five surface packages. |
+
+All packages are **generated from the production OpenAPI specs** via [`openapi-typescript`](https://openapi-ts.dev/) (types only) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) (the typed runtime client). Public, MIT-licensed.
 
 ## The maintenance contract
 
-The SDK is supposed to need **as little ongoing dev effort as possible**. Three rules keep that true:
+The SDKs are supposed to need **as little ongoing dev effort as possible**. Three rules keep that true:
 
-1. **Never hand-edit `src/_generated/`.** That dir is rewritten by `pnpm run codegen` from `Specs/<surface>.json`. It's gitignored. If a generated type is wrong, fix the OpenAPI spec at the source (the monorepo's `@nestjs/swagger` annotations), redeploy, then run `pnpm run refresh-specs && pnpm run codegen`.
-2. **Specs are the contract.** Vendored under `Specs/<surface>.json`. `scripts/refresh-specs.sh` is the only thing that writes them.
+1. **Never hand-edit `packages/<surface>/src/_generated.d.ts`.** That file is rewritten by `pnpm run codegen` from `Specs/<surface>.json`. It's gitignored. If a generated type is wrong, fix the OpenAPI spec at the source (the monorepo's `@nestjs/swagger` annotations), redeploy, then run `pnpm run refresh-specs && pnpm run codegen`.
+2. **Specs are the contract.** Vendored under `Specs/<surface>.json` at the repo root. `scripts/refresh-specs.sh` is the only thing that writes them.
 3. **Hand-written code lives only in:**
-   - `src/_core.ts` — auth helpers (`PCAuth`, `authMiddleware`), `makeClient`, `PC_BASE_URL` constants.
-   - `src/<surface>.ts` — per-surface class (`Heimdall`, `Envoi`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`heimdall.signin({ email, password })` instead of `heimdall.client.POST("/v1/...")`).
-   - `src/index.ts` — umbrella `ProductCraft` class + re-exports.
+   - `packages/core/src/index.ts` — auth helpers (`PCAuth`, `authMiddleware`), `makeClient`, `PC_BASE_URL` constants.
+   - `packages/<surface>/src/index.ts` — per-surface class (`Heimdall`, `Envoi`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`heimdall.signin({ email, password })` instead of `heimdall.client.POST("/v1/...")`).
+   - `packages/umbrella/src/index.ts` — `ProductCraft` umbrella class + re-exports.
 
-## The four files / dirs to touch
+## Where to make changes
 
 | If you want to … | Edit |
 |---|---|
-| Add a new endpoint to the SDK | Don't. Update `@nestjs/swagger` annotations in the monorepo, redeploy, then `pnpm run refresh-specs && pnpm run codegen`. |
-| Add an ergonomic wrapper for an existing endpoint | `src/<surface>.ts` |
-| Change auth header logic | `src/_core.ts` |
-| Add a new API surface | New entry in `tsup.config.ts` + new `src/<name>.ts` + add to `Specs/` + `scripts/refresh-specs.sh` + `package.json#scripts.codegen` + `src/index.ts` umbrella |
+| Add a new endpoint to a surface | Don't. Update `@nestjs/swagger` annotations in the monorepo, redeploy, then `pnpm run refresh-specs && pnpm run codegen`. |
+| Add an ergonomic wrapper for an existing endpoint | `packages/<surface>/src/index.ts` |
+| Change auth header logic | `packages/core/src/index.ts` |
+| Add a new API surface (rare) | New package under `packages/<name>/` (mirror `packages/heimdall/`); add to `Specs/`, `scripts/refresh-specs.sh`, `scripts/codegen.sh`, and re-export from `packages/umbrella/src/index.ts` |
 
 ## CI workflows
 
 - `ci.yml` — install + codegen + lint + build + test on every PR + push to main.
-- `spec-refresh.yml` — nightly cron + manual dispatch. Fetches latest `/docs-json` from each prod API, runs codegen, opens a PR if anything changed. Merge when CI is green.
-- `release.yml` — fires on `v*.*.*` tags. Builds, tests, creates a GitHub Release, publishes to npm if `NPM_TOKEN` secret is set on the repo.
+- `spec-refresh.yml` — nightly cron + manual dispatch. Fetches latest `/docs-json` from each prod API, runs codegen, emits a Changesets entry **per surface that changed**, and opens a PR. Merging the PR triggers `release.yml` which then opens a "Version Packages" PR with just the right bumps.
+- `release.yml` — fires on every push to main. Uses [`changesets/action@v1`](https://github.com/changesets/action). Two modes:
+   1. If `.changeset/*.md` files exist → opens / updates a "Version Packages" PR.
+   2. If there are no pending changesets but `package.json` versions are ahead of npm → publishes via **Trusted Publishing (OIDC)**. No `NPM_TOKEN` secret; the workflow has `id-token: write` and npm CLI 11.5.1+ exchanges the GitHub OIDC token for a publish token. Each package's `publishConfig.provenance: true` adds an attestation.
 
 ## Versioning
 
-SemVer. Pre-1.0 (`v0.x.y`):
+SemVer, **per package**, independent. The `productcraft` umbrella picks up a patch bump whenever any of its surface deps bump (via `updateInternalDependencies: "patch"` in `.changeset/config.json`).
+
+Pre-1.0 (`v0.x.y`):
 - `0.x.0` minor bumps for additive surface changes.
-- `0.x.y` patch bumps for the spec-refresh PRs (the most common churn).
+- `0.x.y` patch bumps for spec-refresh PRs (the common churn).
 
 The SDK version is **not** lock-stepped to the platform API version.
 
+To add a manual version-bump for non-spec changes:
+```bash
+pnpm changeset       # interactive: pick packages + bump type
+```
+
 ## Don't
 
-- Don't commit `src/_generated/` or `dist/`.
-- Don't hand-edit `Specs/<surface>.json` — that's overwritten by `scripts/refresh-specs.sh`.
-- Don't import directly from `src/_generated/` in user-facing code paths — go through the per-surface class so the abstraction stays consistent.
+- Don't commit `packages/*/src/_generated.d.ts` or `packages/*/dist/`.
+- Don't hand-edit `Specs/<surface>.json` — overwritten by `scripts/refresh-specs.sh`.
+- Don't import directly from `_generated.d.ts` in user-facing code paths — go through the per-surface class so the abstraction stays consistent.
 - Don't pin `openapi-typescript` or `openapi-fetch` to specific minor versions unless there's a known incompat.
+- Don't add packages outside `packages/` — the workspace glob (`pnpm-workspace.yaml`) only picks up that dir.

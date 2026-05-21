@@ -1,11 +1,10 @@
-import type { paths } from "./_generated/heimdall.js";
-import { makeClient, PC_BASE_URL, type PCClientConfig } from "./_core.js";
+import type { paths } from "./_generated.js";
+import { makeClient, PC_BASE_URL, type PCClientConfig } from "@productcraft/core";
 
 /**
- * Heimdall — see README. `make()` returns a typed
- * `openapi-fetch` client for every endpoint declared in
+ * Heimdall — typed `openapi-fetch` client for every endpoint in
  * `Specs/heimdall.json`. Reach for `client.GET("/v1/...")` or
- * `client.POST(...)`; the request/response types come from the
+ * `client.POST(...)`; request / response types come from the
  * generated `paths` interface.
  */
 export class Heimdall {
@@ -17,4 +16,4 @@ export class Heimdall {
   }
 }
 
-export type { paths } from "./_generated/heimdall.js";
+export type { paths } from "./_generated.js";
