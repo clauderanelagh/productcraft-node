@@ -39,6 +39,13 @@ jobs:
           cache: pnpm
           registry-url: "https://registry.npmjs.org"
 
+      # npm CLI 11.5.1+ is required for Trusted Publishing (OIDC). Node 22
+      # ships with npm 10.x by default, which doesn't speak the
+      # `npm publish` OIDC exchange — without this step, publishes 404
+      # even with a correct trusted-publisher config on npmjs.com.
+      - run: npm install -g npm@latest
+      - run: npm --version
+
       - run: pnpm install --frozen-lockfile
       - run: pnpm run codegen
       - run: pnpm run build
