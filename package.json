@@ -4,7 +4,10 @@
   "private": true,
   "description": "Workspace root for the ProductCraft Node SDK packages. Source lives under packages/.",
   "type": "module",
-  "engines": { "node": ">=18", "pnpm": ">=10" },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=10"
+  },
   "packageManager": "pnpm@10.24.0",
   "scripts": {
     "codegen": "bash scripts/codegen.sh",
@@ -17,7 +20,11 @@
     "version-packages": "changeset version",
     "release": "pnpm run build && changeset publish"
   },
-  "keywords": ["productcraft", "sdk", "monorepo"],
+  "keywords": [
+    "productcraft",
+    "sdk",
+    "monorepo"
+  ],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
@@ -27,6 +34,11 @@
   "homepage": "https://github.com/clauderanelagh/productcraft-node",
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
+    "@kubb/cli": "^4.37.8",
+    "@kubb/core": "^4.37.8",
+    "@kubb/plugin-client": "^4.37.8",
+    "@kubb/plugin-oas": "^4.37.8",
+    "@kubb/plugin-ts": "^4.37.8",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
@@ -38,6 +50,8 @@
     "vitest": "^2.1.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild"]
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
   }
 }

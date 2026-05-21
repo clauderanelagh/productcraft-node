@@ -7,6 +7,7 @@ export default [
       "**/dist/**",
       "**/node_modules/**",
       "**/_generated.d.ts",
+      "**/_generated/**",
     ],
   },
   {

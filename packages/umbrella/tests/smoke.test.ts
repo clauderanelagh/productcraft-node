@@ -20,9 +20,13 @@ describe("ProductCraft umbrella", () => {
     expect(pc.platformAuth).toBeInstanceOf(PlatformAuth);
   });
 
-  it("each surface exposes a typed openapi-fetch client", () => {
+  it("each surface exposes its resource namespaces", () => {
     const pc = new ProductCraft();
-    expect(typeof pc.heimdall.client.GET).toBe("function");
+    // Heimdall switched to ergonomic resource methods in v0.1.0 — the
+    // old `.client.GET/POST/...` surface is gone. The other surfaces
+    // still expose the raw openapi-fetch client for now.
+    expect(typeof pc.heimdall.app).toBe("function");
+    expect(typeof pc.heimdall.consumer).toBe("function");
     expect(typeof pc.envoi.client.POST).toBe("function");
     expect(typeof pc.rally.client.PATCH).toBe("function");
   });

@@ -2,6 +2,7 @@ node_modules/
 dist/
 packages/*/dist/
 packages/*/src/_generated.d.ts
+packages/*/src/_generated/
 *.log
 .DS_Store
 .env
