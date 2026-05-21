@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/envoi",
-  "version": "0.0.1",
-  "description": "Transactional email \u2014 send messages, manage mailboxes, configure DKIM via ProductCraft Envoi. Generated from the production OpenAPI spec.",
+  "version": "0.0.2",
+  "description": "Transactional email — send messages, manage mailboxes, configure DKIM via ProductCraft Envoi. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
