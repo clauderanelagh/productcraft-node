@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/rally",
   "version": "0.0.3",
-  "description": "Waitlists & growth experiments — collect signups and gate access via ProductCraft Rally. Generated from the production OpenAPI spec.",
+  "description": "Waitlist management — public-form signups, variants for A/B/n landing pages, referrals, position + leaderboard, approval workflow with invite-to-app, signed outbound webhooks, CSV export. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
