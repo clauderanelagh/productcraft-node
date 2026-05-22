@@ -64,15 +64,23 @@ For backend route handlers mediating auth between your SPA and Heimdall. Pre-bin
 const consumer = heimdall.consumer("my-app-slug");
 
 // Sign-in flows
-const { accessToken, refreshToken } = await consumer.auth.signin({
+const { access_token, refresh_token } = await consumer.auth.signin({
   identifier: "alice@example.com",
   password: "...",
 });
 await consumer.auth.signup({ identifier, password });
-await consumer.auth.refresh({ refreshToken });
-await consumer.auth.logout({ refreshToken });
+await consumer.auth.refresh({ refresh_token });
+await consumer.auth.logout({ refresh_token });
 await consumer.auth.requestReset({ email });
-await consumer.auth.resetPassword({ token, password });
+await consumer.auth.resetPassword({ code, newPassword });
+
+// Sign in with Apple (native iOS flow). See "Federated sign-in" below.
+await consumer.auth.signinWithProvider({
+  provider: "apple",
+  id_token: identityTokenFromAppleSdk,
+  nonce: rawNonceClientGenerated,
+  user: { name: "Alice Doe" }, // first sign-in only
+});
 
 // Me — for the signed-in EndUser (pass their token via auth config)
 await consumer.me.getProfile();
@@ -86,6 +94,85 @@ await consumer.verify.authorize({ token, permission: "billing.read" });
 // M2M (client_credentials grant)
 await consumer.oauth.clientCredentials({ clientId, clientSecret, scope });
 ```
+
+> **Wire-shape note.** Heimdall's JSON wire is snake_case, and the SDK returns response objects as-is (e.g. `access_token`, `refresh_token`, `token_type`, `expires_in`). Request DTOs follow the same convention; some convenience fields (`identifier`, `password`, `nonce`) are unaffected, but anywhere the spec uses an underscore the SDK does too.
+
+## Federated sign-in (Apple, Google)
+
+`consumer.auth.signinWithProvider` lets a BFF exchange a provider-issued identity token for a Heimdall `{ access_token, refresh_token }` pair. The endpoint creates the EndUser on first sign-in and returns the same account on subsequent ones — the SDK is a thin wrapper over Heimdall's `POST /{appSlug}/v1/auth/oauth/{provider}` which does the heavy lifting (Apple JWKS verification, issuer pinning, audience validation against the app's configured native client ids, server-side nonce replay protection, account creation / linking).
+
+```ts
+import { Heimdall, HeimdallHttpError } from "@productcraft/heimdall";
+
+const heimdall = new Heimdall();
+const consumer = heimdall.consumer("my-app-slug");
+
+const tokens = await consumer.auth.signinWithProvider({
+  provider: "apple",
+  // The value of `ASAuthorizationAppleIDCredential.identityToken` after
+  // UTF-8 decoding the data; pass through your BFF unchanged.
+  id_token: identityToken,
+  // Raw nonce the client generated and SHA-256-hashed into the
+  // authorize request. Heimdall recomputes sha256(nonce) and compares
+  // to the token's `nonce` claim.
+  nonce: rawNonce,
+  // Apple sends `{ name, email }` ONLY on the very first sign-in.
+  // Pass through on that call; omit on subsequent ones.
+  user: { name: "Alice Doe", email: "alice@example.com" },
+});
+```
+
+### Account linking
+
+When the verified provider claim's `email` matches an existing EndUser's verified primary email, the app's `oauth_link_policy` decides the outcome:
+
+| Policy | Behavior |
+|---|---|
+| `auto` (default) | Silently link the provider identity to the existing account. Only when the provider claims `email_verified: true` AND the email is **not** an Apple private relay. |
+| `confirm` | Refuse with `409 link_required`. UI should sign the user in via their original method, then bind the provider identity through a follow-up flow. |
+| `reject` | Refuse with `409 account_exists_with_different_provider`. |
+
+Configure per-app via the auth-config endpoints (Heimdall-admin → "Auth config" → "OAuth link policy").
+
+### Apple private-relay emails
+
+Apple often returns `*@privaterelay.appleid.com` for users who hide their email. Heimdall persists it **as-is** on the EndUser's primary email contact — you don't need to translate it on your side. Private-relay addresses never participate in `auto`-link (they're nominally verified but not deliverable through channels you control).
+
+### First-sign-in name fields
+
+Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them as a combined string through `user.name` on that call — Heimdall persists it to the EndUser's display name. Subsequent sign-ins should omit `user` entirely; Heimdall keeps whatever was stored on the first call.
+
+### Error handling
+
+```ts
+try {
+  await consumer.auth.signinWithProvider({ provider: "apple", id_token, nonce });
+} catch (err) {
+  if (err instanceof HeimdallHttpError) {
+    // err.status: 401 = bad signature / issuer / audience / nonce / expired
+    //             409 = link_required | account_exists_with_different_provider
+    //             4xx/5xx = other surface errors
+    // err.data: parsed JSON body with `code` / `message` for the 409 family
+  }
+  throw err;
+}
+```
+
+`HeimdallHttpError` is the same exception family every other surface method throws — one filter handles all of them.
+
+### Google (and future providers)
+
+The Heimdall API uses a single `POST /{appSlug}/v1/auth/oauth/{provider}` endpoint for every supported IdP — the `provider` URL segment selects the verifier. Once Google is enabled on Heimdall's side, the SDK call becomes:
+
+```ts
+await consumer.auth.signinWithProvider({
+  provider: "google",
+  id_token: tokenFromGoogleSignInSdk,
+  nonce: rawNonce,
+});
+```
+
+No SDK upgrade required — the per-provider TS enum widens automatically with the next spec refresh.
 
 ## JWT verification
 

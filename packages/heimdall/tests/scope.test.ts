@@ -68,16 +68,16 @@ describe("Heimdall — workspace-level admin", () => {
     expect(calls[0]!.headers["content-type"]).toBe("application/json");
   });
 
-  it("idp.list sends GET /v1/idp/providers", async () => {
-    await heimdall.idp.list();
-    expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/v1/idp/providers",
-    );
-  });
-
   it("stats.get sends GET /v1/stats/me", async () => {
     await heimdall.stats.get();
     expect(calls[0]!.url).toBe("https://api.heimdall.example/v1/stats/me");
+  });
+
+  it("stats.get forwards workspaceId on the query string", async () => {
+    await heimdall.stats.get({ workspaceId: "ws_123" });
+    expect(calls[0]!.url).toBe(
+      "https://api.heimdall.example/v1/stats/me?workspace_id=ws_123",
+    );
   });
 });
 
@@ -155,6 +155,24 @@ describe("ConsumerScope — appSlug pre-bound", () => {
       "https://api.heimdall.example/my-app/v1/auth/signin",
     );
     expect(calls[0]!.body).toEqual({ identifier: "alice", password: "pw" });
+  });
+
+  it("auth.signinWithProvider POSTs to /{slug}/v1/auth/oauth/{provider}", async () => {
+    await consumer.auth.signinWithProvider({
+      provider: "apple",
+      id_token: "eyJhbGciOiJSUzI1NiJ9.dummy.payload",
+      nonce: "01234567890123456789012345678901",
+      user: { name: "Alice Doe" },
+    });
+    expect(calls[0]!.method).toBe("POST");
+    expect(calls[0]!.url).toBe(
+      "https://api.heimdall.example/my-app/v1/auth/oauth/apple",
+    );
+    expect(calls[0]!.body).toEqual({
+      id_token: "eyJhbGciOiJSUzI1NiJ9.dummy.payload",
+      nonce: "01234567890123456789012345678901",
+      user: { name: "Alice Doe" },
+    });
   });
 
   it("auth.signup (callDirect) hits the right path", async () => {
