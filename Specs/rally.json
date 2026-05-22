@@ -13,7 +13,7 @@
             "example": "approve",
             "type": "string"
           },
-          "appSlug": {
+          "app_slug": {
             "description": "Heimdall app slug override for `action: invite-to-app`. When omitted, falls back to `rally_settings.default_heimdall_app_slug`. Ignored for approve/reject.",
             "example": "acme-product",
             "maxLength": 64,
@@ -32,7 +32,7 @@
             "minItems": 1,
             "type": "array"
           },
-          "sendEmail": {
+          "send_email": {
             "default": true,
             "description": "Whether to send the rally/approved email with the invite link baked in. Defaults to `true`. Ignored for approve/reject.",
             "type": "boolean"
@@ -64,11 +64,11 @@
             "example": "Ada Lovelace",
             "type": "string"
           },
-          "recaptchaToken": {
+          "recaptcha_token": {
             "description": "reCAPTCHA v3 token; verified server-side when the waitlist has settings.recaptcha_site_key",
             "type": "string"
           },
-          "referralCode": {
+          "referral_code": {
             "description": "Referral code from a prior signup; bumps that signup’s position when honoured",
             "type": "string"
           },
@@ -76,8 +76,8 @@
             "description": "How they heard about it",
             "type": "string"
           },
-          "variantId": {
-            "description": "Variant id this submission was attributed to. The hosted public page resolves this server-side and the embeddable widget reads it from the public payload — both round-trip it here so per-variant conversion can be computed without a separate impressions table.",
+          "variant_id": {
+            "description": "Variant id this submission was attributed to. Customer frontends fetch the active variant from `GET /v1/waitlists/:workspaceSlug/:waitlistSlug` and round-trip it here on POST so per-variant conversion can be computed without a separate impressions table.",
             "format": "uuid",
             "type": "string"
           }
@@ -132,10 +132,10 @@
       "CreateWaitlistDto": {
         "properties": {
           "description": {
-            "description": "Description shown on the public page",
+            "description": "Description returned in the public waitlist payload — customer frontends typically render it under the display name on their signup form.",
             "type": "string"
           },
-          "displayName": {
+          "display_name": {
             "description": "Display name",
             "example": "Early Access Program",
             "type": "string"
@@ -152,7 +152,7 @@
         },
         "required": [
           "slug",
-          "displayName"
+          "display_name"
         ],
         "type": "object"
       },
@@ -189,13 +189,132 @@
         ],
         "type": "object"
       },
+      "EntryListPaginationDto": {
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
+      "EntryListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EntryResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/EntryListPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "EntryResponseDto": {
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "interest": {
+            "nullable": true,
+            "type": "string"
+          },
+          "invited_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "invited_to_app_slug": {
+            "nullable": true,
+            "type": "string"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "referral_code": {
+            "type": "string"
+          },
+          "referral_count": {
+            "type": "number"
+          },
+          "referred_by_entry_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "referrer": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "waitlist_id": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "waitlist_id",
+          "workspace_id",
+          "email",
+          "name",
+          "interest",
+          "referrer",
+          "referral_code",
+          "referral_count",
+          "referred_by_entry_id",
+          "position",
+          "status",
+          "invited_at",
+          "invited_to_app_slug",
+          "metadata",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "InviteToAppDto": {
         "properties": {
-          "appSlug": {
+          "app_slug": {
             "description": "Heimdall app slug to invite into; defaults to rally_settings.default_heimdall_app_slug",
             "type": "string"
           },
-          "sendEmail": {
+          "send_email": {
             "default": true,
             "description": "Send the rally/approved email with the Heimdall invite link baked in",
             "type": "boolean"
@@ -212,6 +331,10 @@
               "entry.approved",
               "entry.rejected"
             ],
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "Waitlist UUID to reference in the synthetic payload. Defaults to a placeholder UUID when omitted.",
             "type": "string"
           }
         },
@@ -238,26 +361,50 @@
       },
       "UpdateSettingsDto": {
         "properties": {
-          "brandLogoUrl": {
-            "description": "Logo URL shown on public pages",
+          "approved_template_name": {
+            "description": "Envoi template name used for entry.approved notifications. Must already exist in the workspace template store.",
+            "nullable": true,
             "type": "string"
           },
-          "brandName": {
-            "description": "Brand name shown on public pages",
+          "brand_logo_url": {
+            "description": "Logo URL returned in the public waitlist payload. Customer frontends render it on their own signup form.",
             "type": "string"
           },
-          "defaultHeimdallAppSlug": {
+          "brand_name": {
+            "description": "Brand name returned in the public waitlist payload. Customer frontends render it on their own signup form.",
+            "type": "string"
+          },
+          "default_heimdall_app_slug": {
             "description": "Heimdall consumer-app slug to invite approved entries into. null clears the link.",
             "nullable": true,
             "type": "string"
           },
-          "defaultSenderDomainId": {
+          "default_sender_address": {
+            "description": "Verified sender address used as the From envelope on Rally notifications. Must belong to default_sender_domain_id. null clears the override.",
+            "nullable": true,
+            "type": "string"
+          },
+          "default_sender_domain_id": {
             "description": "Envoi (mailbox-api) domain UUID to use as default sender for Rally notifications. null clears the override.",
             "nullable": true,
             "type": "string"
           },
-          "primaryColor": {
+          "notifications_via_envoi": {
+            "description": "Route Rally notifications via Envoi (workspace sender domain + per-event template selection) instead of staying silent. Requires default_sender_domain_id, default_sender_address, and a template name for every supported event. Default false; when off, Rally sends no notification emails and the customer is expected to handle email via the webhook lane.",
+            "type": "boolean"
+          },
+          "primary_color": {
             "description": "Primary brand colour as #RRGGBB",
+            "type": "string"
+          },
+          "rejected_template_name": {
+            "description": "Envoi template name used for entry.rejected notifications. Must already exist in the workspace template store.",
+            "nullable": true,
+            "type": "string"
+          },
+          "welcome_template_name": {
+            "description": "Envoi template name used for entry.created notifications. Must already exist in the workspace template store.",
+            "nullable": true,
             "type": "string"
           }
         },
@@ -288,7 +435,7 @@
             "description": "New description",
             "type": "string"
           },
-          "displayName": {
+          "display_name": {
             "description": "New display name",
             "type": "string"
           },
@@ -358,6 +505,311 @@
           }
         },
         "type": "object"
+      },
+      "VariantListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/VariantResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "VariantResponseDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "copy": {
+            "type": "object"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "ab",
+              "locale"
+            ],
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "waitlist_id": {
+            "type": "string"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "waitlist_id",
+          "kind",
+          "locale",
+          "copy",
+          "weight",
+          "active",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "WaitlistListPaginationDto": {
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
+      "WaitlistListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WaitlistResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/WaitlistListPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "WaitlistResponseDto": {
+        "properties": {
+          "created_at": {
+            "type": "string"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "example": "Early Access Program",
+            "type": "string"
+          },
+          "id": {
+            "example": "b1a4...",
+            "type": "string"
+          },
+          "previous_workspace_slug": {
+            "nullable": true,
+            "type": "string"
+          },
+          "settings": {
+            "description": "Waitlist settings (max_entries, approval_required, custom_fields, confirmation_message, referral_boost).",
+            "type": "object"
+          },
+          "slug": {
+            "example": "early-access",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "draft",
+              "active",
+              "paused",
+              "closed"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "example": "b1a4...",
+            "type": "string"
+          },
+          "workspace_slug": {
+            "example": "acme",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "workspace_slug",
+          "slug",
+          "display_name",
+          "description",
+          "status",
+          "settings",
+          "created_by",
+          "previous_workspace_slug",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "WebhookCreateResponseDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "auto_disabled_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "enum": [
+                "entry.created",
+                "entry.approved",
+                "entry.rejected"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "failure_count": {
+            "type": "number"
+          },
+          "first_failure_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "last_status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "signing_secret": {
+            "description": "Plaintext signing secret returned EXACTLY ONCE on create + rotate. Persist immediately — it does not appear on subsequent GETs.",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "url",
+          "events",
+          "active",
+          "failure_count",
+          "last_status_code",
+          "last_attempt_at",
+          "auto_disabled_at",
+          "first_failure_at",
+          "created_at",
+          "signing_secret"
+        ],
+        "type": "object"
+      },
+      "WebhookListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "WebhookResponseDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "auto_disabled_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "enum": [
+                "entry.created",
+                "entry.approved",
+                "entry.rejected"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "failure_count": {
+            "type": "number"
+          },
+          "first_failure_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "last_status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "url",
+          "events",
+          "active",
+          "failure_count",
+          "last_status_code",
+          "last_attempt_at",
+          "auto_disabled_at",
+          "first_failure_at",
+          "created_at"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -376,13 +828,13 @@
   },
   "openapi": "3.0.0",
   "paths": {
-    "/v1/waitlists/{workspaceSlug}/{waitlistSlug}": {
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}": {
       "get": {
         "operationId": "PublicWaitlistController_getPublic",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -390,7 +842,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistSlug",
+            "name": "waitlist_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -420,13 +872,13 @@
         ]
       }
     },
-    "/v1/waitlists/{workspaceSlug}/{waitlistSlug}/entries": {
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries": {
       "post": {
         "operationId": "PublicWaitlistController_submit",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -434,7 +886,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistSlug",
+            "name": "waitlist_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -477,13 +929,13 @@
         ]
       }
     },
-    "/v1/waitlists/{workspaceSlug}/{waitlistSlug}/leaderboard": {
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/leaderboard": {
       "get": {
         "operationId": "PublicWaitlistController_leaderboard",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -491,7 +943,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistSlug",
+            "name": "waitlist_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -521,13 +973,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/rally/settings": {
+    "/v1/workspaces/{workspace_id}/rally/settings": {
       "get": {
         "operationId": "SettingsController_get",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -536,7 +988,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Workspace Rally settings."
+          },
+          "403": {
+            "description": "Caller lacks `rally.settings.read` on the workspace."
+          },
+          "404": {
+            "description": "Workspace does not exist or is not Rally-enabled."
           }
         },
         "security": [
@@ -554,7 +1012,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -573,7 +1031,16 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Updated workspace Rally settings."
+          },
+          "400": {
+            "description": "Validation failure on the patch body (per `UpdateSettingsDto`)."
+          },
+          "403": {
+            "description": "Caller lacks `rally.settings.update` on the workspace."
+          },
+          "404": {
+            "description": "Workspace does not exist or is not Rally-enabled."
           }
         },
         "security": [
@@ -587,13 +1054,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists": {
+    "/v1/workspaces/{workspace_id}/waitlists": {
       "get": {
         "operationId": "WaitlistController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -631,7 +1098,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistListResponseDto"
+                }
+              }
+            },
+            "description": "Page of waitlists."
           }
         },
         "security": [
@@ -649,8 +1123,17 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stripe-style idempotency key. Waitlist creation provisions a non-trivial sub-tree (variant, default referral settings, etc.); a retry without this header creates a second waitlist sharing the same name slug. 24h TTL.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -668,6 +1151,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistResponseDto"
+                }
+              }
+            },
             "description": "Waitlist created."
           },
           "400": {
@@ -691,7 +1181,7 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{id}": {
+    "/v1/workspaces/{workspace_id}/waitlists/{id}": {
       "delete": {
         "operationId": "WaitlistController_remove",
         "parameters": [
@@ -739,7 +1229,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist row."
+          },
+          "404": {
+            "description": "Waitlist not found."
           }
         },
         "security": [
@@ -776,6 +1276,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistResponseDto"
+                }
+              }
+            },
             "description": "Waitlist updated."
           },
           "400": {
@@ -796,7 +1303,7 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{id}/status": {
+    "/v1/workspaces/{workspace_id}/waitlists/{id}/status": {
       "patch": {
         "operationId": "WaitlistController_updateStatus",
         "parameters": [
@@ -821,6 +1328,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistResponseDto"
+                }
+              }
+            },
             "description": "Status updated."
           },
           "400": {
@@ -841,13 +1355,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/analytics": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics": {
       "get": {
         "operationId": "AnalyticsController_get",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -855,7 +1369,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -864,7 +1378,13 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Aggregated analytics payload for the waitlist."
+          },
+          "403": {
+            "description": "Caller lacks `rally.read` on the workspace."
+          },
+          "404": {
+            "description": "Waitlist does not exist or is not in the path workspace."
           }
         },
         "security": [
@@ -878,13 +1398,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/analytics/timeline": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics/timeline": {
       "get": {
         "operationId": "AnalyticsController_timeline",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -892,7 +1412,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -919,7 +1439,16 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Daily timeline array, oldest first, zero-count days included."
+          },
+          "400": {
+            "description": "`since` / `until` missing, malformed, or `until <= since`."
+          },
+          "403": {
+            "description": "Caller lacks `rally.read` on the workspace."
+          },
+          "404": {
+            "description": "Waitlist does not exist or is not in the path workspace."
           }
         },
         "security": [
@@ -933,13 +1462,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries": {
       "get": {
         "operationId": "EntryController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -947,7 +1476,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -985,6 +1514,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryListResponseDto"
+                }
+              }
+            },
             "description": "Page of entries with pagination cursor."
           },
           "403": {
@@ -1005,13 +1541,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries/bulk": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/bulk": {
       "post": {
         "operationId": "EntryController_bulk",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1019,7 +1555,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1061,13 +1597,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries/count": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/count": {
       "get": {
         "operationId": "EntryController_count",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1075,7 +1611,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1098,13 +1634,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries/export.csv": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/export.csv": {
       "get": {
         "operationId": "EntryController_exportCsv",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1112,7 +1648,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1135,13 +1671,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries/{entryId}": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}": {
       "delete": {
         "operationId": "EntryController_remove",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1149,7 +1685,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1157,7 +1693,7 @@
           },
           {
             "in": "path",
-            "name": "entryId",
+            "name": "entry_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1190,7 +1726,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1198,7 +1734,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1206,7 +1742,7 @@
           },
           {
             "in": "path",
-            "name": "entryId",
+            "name": "entry_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1215,7 +1751,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponseDto"
+                }
+              }
+            },
+            "description": "Entry row."
+          },
+          "404": {
+            "description": "Entry not found."
           }
         },
         "security": [
@@ -1233,7 +1779,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1241,7 +1787,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1249,7 +1795,7 @@
           },
           {
             "in": "path",
-            "name": "entryId",
+            "name": "entry_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1268,6 +1814,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponseDto"
+                }
+              }
+            },
             "description": "Entry status updated."
           },
           "400": {
@@ -1291,13 +1844,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/entries/{entryId}/invite-to-app": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}/invite-to-app": {
       "post": {
         "operationId": "EntryController_inviteToApp",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1305,7 +1858,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1313,7 +1866,7 @@
           },
           {
             "in": "path",
-            "name": "entryId",
+            "name": "entry_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1349,13 +1902,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/variants": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants": {
       "get": {
         "operationId": "VariantController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1363,7 +1916,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1372,6 +1925,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantListResponseDto"
+                }
+              }
+            },
             "description": "Bare array of variants"
           }
         },
@@ -1390,7 +1950,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1398,7 +1958,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1417,6 +1977,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantResponseDto"
+                }
+              }
+            },
             "description": "Variant created"
           },
           "400": {
@@ -1437,13 +2004,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/variants/{id}": {
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants/{id}": {
       "delete": {
         "operationId": "VariantController_remove",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1451,7 +2018,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1489,7 +2056,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1497,7 +2064,7 @@
           },
           {
             "in": "path",
-            "name": "waitlistId",
+            "name": "waitlist_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1524,6 +2091,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VariantResponseDto"
+                }
+              }
+            },
             "description": "Variant updated"
           },
           "404": {
@@ -1541,21 +2115,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/webhooks": {
+    "/v1/workspaces/{workspace_id}/webhooks": {
       "get": {
         "operationId": "WebhookController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1564,7 +2130,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookListResponseDto"
+                }
+              }
+            },
+            "description": "Webhooks for the workspace."
           }
         },
         "security": [
@@ -1572,7 +2145,7 @@
             "bearer": []
           }
         ],
-        "summary": "List webhooks for a waitlist (secrets masked)",
+        "summary": "List webhooks for the workspace (secrets masked)",
         "tags": [
           "webhooks"
         ]
@@ -1582,16 +2155,17 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
             }
           },
           {
-            "in": "path",
-            "name": "waitlistId",
-            "required": true,
+            "description": "Stripe-style idempotency key. The signing secret is returned exactly once; a retry without this header creates a second webhook + secret you never see the plaintext for. 24h TTL.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1609,7 +2183,14 @@
         },
         "responses": {
           "201": {
-            "description": "Webhook created"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookCreateResponseDto"
+                }
+              }
+            },
+            "description": "Webhook created. Includes plaintext `signing_secret` exactly once."
           }
         },
         "security": [
@@ -1617,27 +2198,19 @@
             "bearer": []
           }
         ],
-        "summary": "Create a webhook. The response includes the per-row signing secret in clear EXACTLY ONCE — copy it now.",
+        "summary": "Create a workspace webhook. The response includes the per-row signing secret in clear EXACTLY ONCE — copy it now.",
         "tags": [
           "webhooks"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/webhooks/{id}": {
+    "/v1/workspaces/{workspace_id}/webhooks/{id}": {
       "delete": {
         "operationId": "WebhookController_remove",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1672,15 +2245,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1697,7 +2262,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponseDto"
+                }
+              }
+            },
+            "description": "Webhook row."
+          },
+          "404": {
+            "description": "Webhook not found."
           }
         },
         "security": [
@@ -1715,15 +2290,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1764,21 +2331,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/webhooks/{id}/deliveries": {
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
       "get": {
         "operationId": "WebhookController_recentDeliveries",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1809,21 +2368,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/webhooks/{id}/rotate-secret": {
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
       "post": {
         "operationId": "WebhookController_rotateSecret",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1854,21 +2405,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/waitlists/{waitlistId}/webhooks/{id}/test": {
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
       "post": {
         "operationId": "WebhookController_fireTest",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "waitlistId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
