@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/agora",
   "version": "0.0.3",
-  "description": "Marketing site primitives — landing pages and content blocks via ProductCraft Agora. Generated from the production OpenAPI spec.",
+  "description": "Social infrastructure — communities, posts, ranked feeds, stories, notifications, moderation via ProductCraft Agora. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
