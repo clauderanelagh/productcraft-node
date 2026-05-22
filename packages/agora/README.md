@@ -1,6 +1,6 @@
 # @productcraft/agora
 
-Typed Node.js SDK for [ProductCraft Agora](https://productcraft.co) — landing pages, marketing sites, content blocks.
+Typed Node.js SDK for [ProductCraft Agora](https://productcraft.co) — social infrastructure as an API: communities, posts, ranked feeds, stories (with polls + close-friends), notifications, moderation.
 
 ```bash
 npm install @productcraft/agora
@@ -17,10 +17,10 @@ const agora = new Agora({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
 
-// Fetch a published page
+// Fetch a community's main feed
 const { data } = await agora.client.GET(
-  "/v1/sites/{siteSlug}/pages/{pageSlug}",
-  { params: { path: { siteSlug: "marketing", pageSlug: "pricing" } } },
+  "/v1/communities/{community_id}/feed",
+  { params: { path: { community_id: "com_..." } } },
 );
 ```
 
