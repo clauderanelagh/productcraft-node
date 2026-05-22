@@ -1,6 +1,6 @@
 {
   "name": "productcraft",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform — Heimdall, Envoi, Rally, Agora, and Platform-Auth from a single import. Install per-product packages (`@productcraft/heimdall`, ...) if you only need one.",
   "type": "module",
   "main": "./dist/index.cjs",
