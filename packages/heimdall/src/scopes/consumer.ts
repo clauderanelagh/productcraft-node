@@ -48,6 +48,13 @@ import type { ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey } from 
 import { JwksCache } from "../jwt/jwks-cache.js";
 import { verifyHeimdallToken, type VerifyOptions, type HeimdallClaims } from "../jwt/verify.js";
 
+/**
+ * Literal `iss` claim Heimdall Consumer-API tokens are minted with.
+ * Same string for every app — the per-app boundary is enforced by
+ * the JWKS, not by varying the issuer string.
+ */
+export const HEIMDALL_CONSUMER_ISSUER = "heimdall";
+
 export interface ConsumerScopeInternals {
   client: Client;
   baseUrl: string;
@@ -59,11 +66,16 @@ export class ConsumerScope {
   /** The appSlug bound to this scope. */
   public readonly appSlug: string;
 
-  /** Default iss claim expected on tokens issued by this app's Heimdall instance. */
+  /**
+   * Issuer string the Heimdall Consumer API mints on every token.
+   *
+   * Heimdall uses the literal string `"heimdall"` as the `iss` claim
+   * on every per-app token (apps don't get their slug baked into iss
+   * — the per-app surface is enforced by the JWKS, not the issuer
+   * string). Pass this to `jose.jwtVerify({ issuer })` or rely on
+   * `scope.verifyToken` which checks it for you.
+   */
   public readonly expectedIssuer: string;
-
-  /** Default aud claim. Undefined unless the caller sets it (skip aud check). */
-  public readonly expectedAudience: string | undefined;
 
   /** jose-compatible JWKS resolver. Drop into `jose.jwtVerify`, passport-jwt, etc. */
   public readonly jwks: JwksCache;
@@ -73,12 +85,11 @@ export class ConsumerScope {
   constructor(
     appSlug: string,
     internals: ConsumerScopeInternals,
-    opts: { audience?: string; jwksTtlMs?: number } = {},
+    opts: { jwksTtlMs?: number } = {},
   ) {
     this.appSlug = appSlug;
     this.client = internals.client;
-    this.expectedIssuer = `${internals.baseUrl}/${appSlug}`;
-    this.expectedAudience = opts.audience;
+    this.expectedIssuer = HEIMDALL_CONSUMER_ISSUER;
     this.jwks = new JwksCache({
       url: new URL(`/${appSlug}/v1/.well-known/jwks.json`, internals.baseUrl),
       ttlMs: opts.jwksTtlMs,
@@ -101,11 +112,18 @@ export class ConsumerScope {
     return res.data;
   }
 
-  /** Verify a Heimdall-issued JWT against this app's JWKS. */
+  /**
+   * Verify a Heimdall-issued JWT against this app's JWKS.
+   *
+   * Checks the signature, expiry, and `iss === "heimdall"`. Heimdall
+   * Consumer-API tokens are not issued with an `aud` claim — by
+   * default this method does NOT enforce one. If you mint custom
+   * tokens with the heimdall key and want to enforce an audience,
+   * pass `opts.audience`.
+   */
   verifyToken(token: string, opts: VerifyOptions = {}): Promise<HeimdallClaims> {
     return verifyHeimdallToken(token, this.jwks.getKey, {
       issuer: this.expectedIssuer,
-      audience: this.expectedAudience,
       ...opts,
     });
   }
