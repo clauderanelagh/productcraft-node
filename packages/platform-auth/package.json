@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/platform-auth",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Platform-side authentication — workspace login, API keys, members for the ProductCraft platform itself. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

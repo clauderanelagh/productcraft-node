@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/agora",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Marketing site primitives — landing pages and content blocks via ProductCraft Agora. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
