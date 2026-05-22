@@ -1,5 +1,11 @@
 # @productcraft/agora
 
+## 0.0.4
+
+### Patch Changes
+
+- ce35855: Fix the package description + README framing — Agora is social infrastructure (communities, posts, feeds, stories, moderation), not "landing pages / marketing sites / content blocks" as the v0.0.3 README mistakenly claimed.
+
 ## 0.0.3
 
 ### Patch Changes
