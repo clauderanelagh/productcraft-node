@@ -14,6 +14,54 @@
         ],
         "type": "object"
       },
+      "AuditFeedResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FeedItemDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          },
+          "sources": {
+            "description": "Per-source diagnostics so the UI / customer can see which sources contributed to this page and which are stubbed pending the cross-service fanout.",
+            "items": {
+              "$ref": "#/components/schemas/SourceDiagnosticDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "pagination",
+          "sources"
+        ],
+        "type": "object"
+      },
+      "BoundPolicySummaryDto": {
+        "properties": {
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "example": "envoi-readonly",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description"
+        ],
+        "type": "object"
+      },
       "CreatePakDto": {
         "properties": {
           "description": {
@@ -28,24 +76,26 @@
             "minLength": 1,
             "type": "string"
           },
-          "policy": {
-            "description": "IAM-style policy. List of statements that gate the key — each scoped to a set of actions + resources.",
+          "policy_ids": {
+            "description": "IDs of managed policies (workspace_policy rows) to bind to this PAK. Bind one or more — the PAK's effective policy is the union of all bound statements.",
+            "example": [
+              "11111111-1111-1111-1111-111111111111"
+            ],
             "items": {
-              "$ref": "#/components/schemas/PolicyStatementDto"
+              "type": "string"
             },
-            "minItems": 1,
             "type": "array"
           }
         },
         "required": [
           "name",
-          "policy"
+          "policy_ids"
         ],
         "type": "object"
       },
       "CreateWorkspaceDto": {
         "properties": {
-          "displayName": {
+          "display_name": {
             "description": "Display name shown in console and on receipts.",
             "example": "Acme Corp",
             "maxLength": 128,
@@ -62,7 +112,7 @@
         },
         "required": [
           "slug",
-          "displayName"
+          "display_name"
         ],
         "type": "object"
       },
@@ -73,14 +123,14 @@
             "example": "alice@example.com",
             "type": "string"
           },
-          "expiresInHours": {
+          "expires_in_hours": {
             "description": "Hours until the invite expires. Defaults to 168 (7 days).",
             "example": 168,
             "maximum": 8760,
             "minimum": 1,
             "type": "number"
           },
-          "maxUses": {
+          "max_uses": {
             "description": "Maximum number of accepts. Defaults to 1. Use higher values for \"team link\" invites.",
             "example": 1,
             "maximum": 10000,
@@ -96,11 +146,52 @@
             ],
             "type": "string"
           },
-          "roleId": {
+          "role_id": {
             "description": "UUID of the role to grant on accept. Use to target custom roles.",
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "CreateWorkspacePolicyDto": {
+        "properties": {
+          "description": {
+            "description": "Optional human description. Pass `null` to clear an existing description on PATCH.",
+            "example": "Read-only access to all Envoi resources",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Policy name (1-64 chars, alphanumeric + space/underscore/hyphen). Unique per workspace.",
+            "example": "envoi-readonly",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "policy": {
+            "description": "IAM-style policy. Empty array means \"no permissions\" — useful as a placeholder before granting any actions.",
+            "example": [
+              {
+                "actions": [
+                  "envoi.read",
+                  "envoi.list"
+                ],
+                "effect": "allow",
+                "resources": [
+                  "*"
+                ]
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "policy"
+        ],
         "type": "object"
       },
       "CreateWorkspaceRoleDto": {
@@ -117,16 +208,29 @@
             "minLength": 1,
             "type": "string"
           },
-          "permissions": {
-            "description": "Permission strings (`<service>.<resource>.<action>`) granted to the role.",
+          "policy": {
+            "description": "IAM-style policy granting the role its permissions. Same wire shape as PAK policies. Omit or pass `[]` for a no-permissions role.",
             "example": [
-              "envoi.template.read",
-              "envoi.message.read"
+              {
+                "actions": [
+                  "envoi.*.read"
+                ],
+                "effect": "allow",
+                "resources": [
+                  "*"
+                ]
+              }
             ],
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PolicyStatementDto"
             },
             "type": "array"
+          },
+          "policy_id": {
+            "description": "Optional managed-policy id to bind the role to. When set, the role's effective policy comes from the bound managed policy and `policy` (inline) must be omitted.",
+            "example": "11111111-1111-1111-1111-111111111111",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
@@ -143,6 +247,68 @@
         },
         "type": "object"
       },
+      "FeedItemDto": {
+        "properties": {
+          "action": {
+            "example": "workspace.member.removed",
+            "type": "string"
+          },
+          "actor_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "actor_type": {
+            "description": "Actor classification — one of 'platform_user' | 'end_user' | 'm2m' | 'system' | 'pat' | 'api_key'.",
+            "example": "platform_user",
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Free-form metadata (jsonb).",
+            "type": "object"
+          },
+          "resource": {
+            "example": "workspace_membership",
+            "type": "string"
+          },
+          "resource_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "source": {
+            "description": "Which audit table this row came from.",
+            "enum": [
+              "workspace_audit",
+              "heimdall_audit",
+              "agora_moderation"
+            ],
+            "example": "workspace_audit",
+            "type": "string"
+          },
+          "source_ref": {
+            "description": "Stable per-source identifier. Used by the cursor to resume from the same point on the next page.",
+            "example": "4e5f5c9e-b4ee-4401-9275-283feb66c178",
+            "type": "string"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "timestamp",
+          "actor_id",
+          "actor_type",
+          "action",
+          "resource",
+          "resource_id",
+          "metadata",
+          "source_ref"
+        ],
+        "type": "object"
+      },
       "FeedbackResponseDto": {
         "properties": {
           "message": {
@@ -153,6 +319,398 @@
         },
         "required": [
           "message"
+        ],
+        "type": "object"
+      },
+      "IntrospectAccountDto": {
+        "properties": {
+          "display_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email_verified_at": {
+            "description": "Timestamp when this account verified its primary email, or null if unverified.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "Account status (e.g. `active`, `suspended`).",
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "display_name",
+          "status",
+          "email_verified_at"
+        ],
+        "type": "object"
+      },
+      "IntrospectApiKeyResponseDto": {
+        "properties": {
+          "api_key_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "is_valid": {
+            "type": "boolean"
+          },
+          "policy": {
+            "description": "Merged effective policy across every managed policy bound to this PAK.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "is_valid",
+          "workspace_id",
+          "policy",
+          "created_by",
+          "api_key_id"
+        ],
+        "type": "object"
+      },
+      "IntrospectPrincipalDto": {
+        "properties": {
+          "email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "sub": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "sub",
+          "email",
+          "name"
+        ],
+        "type": "object"
+      },
+      "IntrospectResponseDto": {
+        "properties": {
+          "account": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntrospectAccountDto"
+              }
+            ],
+            "nullable": true
+          },
+          "is_authenticated": {
+            "type": "boolean"
+          },
+          "principal": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntrospectPrincipalDto"
+              }
+            ],
+            "nullable": true
+          },
+          "workspaces": {
+            "items": {
+              "$ref": "#/components/schemas/IntrospectWorkspaceListItemDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "is_authenticated"
+        ],
+        "type": "object"
+      },
+      "IntrospectRoleDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "IntrospectWorkspaceListItemDto": {
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "role": {
+            "description": "Caller’s role name in this workspace.",
+            "example": "owner",
+            "type": "string"
+          },
+          "services": {
+            "description": "Enabled services on this workspace.",
+            "example": [
+              "envoi",
+              "rally"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "role",
+          "services"
+        ],
+        "type": "object"
+      },
+      "IntrospectWorkspaceResponseDto": {
+        "properties": {
+          "id": {
+            "description": "Canonical workspace UUID. Only present for members — non-members get a uniform low-information response.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_member": {
+            "type": "boolean"
+          },
+          "policy": {
+            "description": "Effective IAM-style policy for this caller in this workspace.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntrospectRoleDto"
+              }
+            ],
+            "nullable": true
+          },
+          "services": {
+            "description": "Enabled services on this workspace.",
+            "example": [
+              "envoi",
+              "rally"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "is_member",
+          "role",
+          "policy",
+          "services"
+        ],
+        "type": "object"
+      },
+      "JwkDto": {
+        "properties": {
+          "alg": {
+            "description": "Signing algorithm (e.g. `RS256`).",
+            "example": "RS256",
+            "type": "string"
+          },
+          "kid": {
+            "description": "Key ID for matching the kid header on a JWT.",
+            "example": "k_2026_05_01",
+            "type": "string"
+          },
+          "kty": {
+            "description": "Key type (e.g. `RSA`).",
+            "example": "RSA",
+            "type": "string"
+          },
+          "use": {
+            "description": "Key usage. Always `sig` for this endpoint.",
+            "example": "sig",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kty",
+          "alg",
+          "kid",
+          "use"
+        ],
+        "type": "object"
+      },
+      "JwksResponseDto": {
+        "properties": {
+          "keys": {
+            "description": "Array of public JWKs. Token verifiers iterate these by `kid` to find the matching signer.",
+            "items": {
+              "$ref": "#/components/schemas/JwkDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "keys"
+        ],
+        "type": "object"
+      },
+      "ListManagedPoliciesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ManagedPolicyResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListWorkspaceAuditLogsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceAuditLogEntryDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListWorkspaceInvitesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceInviteListItemDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListWorkspaceMembersResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceMemberResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListWorkspaceRolesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceRoleResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListWorkspaceServicesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceServiceStateDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListWorkspacesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceListItemDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -169,13 +727,178 @@
         ],
         "type": "object"
       },
+      "ManagedPolicyDetailResponseDto": {
+        "properties": {
+          "binding_count": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PolicyBindingCountDto"
+              }
+            ],
+            "description": "Counts of currently-bound consumers — surface this in delete-confirm UX so the operator sees cascade impact."
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "description": "Account that authored the row. Only revealed to callers with `workspace.audit.read`; plain members see null.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "example": "envoi-readonly",
+            "type": "string"
+          },
+          "policy": {
+            "description": "IAM-style policy statements bound to this managed policy.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "description",
+          "policy",
+          "created_by",
+          "created_at",
+          "updated_at",
+          "binding_count"
+        ],
+        "type": "object"
+      },
+      "ManagedPolicyResponseDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "description": "Account that authored the row. Only revealed to callers with `workspace.audit.read`; plain members see null.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "example": "envoi-readonly",
+            "type": "string"
+          },
+          "policy": {
+            "description": "IAM-style policy statements bound to this managed policy.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "description",
+          "policy",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "MintPakResponseDto": {
+        "properties": {
+          "record": {
+            "$ref": "#/components/schemas/PublicApiKeyDto"
+          },
+          "token": {
+            "description": "The full plaintext PAK token. Returned ONCE — store it now; it cannot be retrieved later.",
+            "example": "pcft_live_abc123XYZ...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "record"
+        ],
+        "type": "object"
+      },
+      "PaginationDto": {
+        "properties": {
+          "has_more": {
+            "example": false,
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
+      "PolicyBindingCountDto": {
+        "properties": {
+          "pak": {
+            "description": "Number of platform API keys bound to this policy.",
+            "type": "number"
+          },
+          "role": {
+            "description": "Number of workspace roles bound to this policy.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "pak",
+          "role"
+        ],
+        "type": "object"
+      },
       "PolicyStatementDto": {
         "properties": {
           "actions": {
-            "description": "Action strings the statement applies to (e.g. `agora.actor.read`). Wildcards: `agora.*`, `*`.",
+            "description": "Action strings the statement applies to. Wildcards (e.g. `agora.*`, `*.read`, `*`) supported per `actionMatches` semantics.",
             "example": [
-              "agora.actor.read",
-              "agora.object.read"
+              "agora.read",
+              "agora.list"
             ],
             "items": {
               "type": "string"
@@ -193,9 +916,9 @@
             "type": "string"
           },
           "resources": {
-            "description": "Resource URNs the statement applies to (e.g. `pcft:agora:community/<uuid>`). Wildcards allowed.",
+            "description": "Resource URNs the statement applies to. Use `[\"*\"]` for workspace-wide. Per-resource scoping (e.g. `pcft:agora:community/<uuid>`) is supported by the PAK lane today; the workspace-role authoring API restricts this to `[\"*\"]` for now (see `tasks/platform-auth-api/001`).",
             "example": [
-              "pcft:agora:community/cccccccc-cccc-cccc-cccc-cccccccccccc"
+              "*"
             ],
             "items": {
               "type": "string"
@@ -208,6 +931,74 @@
           "effect",
           "actions",
           "resources"
+        ],
+        "type": "object"
+      },
+      "PublicApiKeyDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "last_used_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "policies": {
+            "description": "Managed policies currently bound to this PAK.",
+            "items": {
+              "$ref": "#/components/schemas/BoundPolicySummaryDto"
+            },
+            "type": "array"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "token_prefix": {
+            "description": "The first ~14 chars of the token (prefix). Plaintext token is never returned after mint.",
+            "example": "pcft_live_abc123",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "created_by",
+          "name",
+          "description",
+          "token_prefix",
+          "policies",
+          "last_used_at",
+          "revoked_at",
+          "created_at",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -239,7 +1030,7 @@
       },
       "ResetPasswordDto": {
         "properties": {
-          "newPassword": {
+          "new_password": {
             "description": "New password (min 8 characters)",
             "example": "MyNewPassword123",
             "type": "string"
@@ -252,24 +1043,24 @@
         },
         "required": [
           "token",
-          "newPassword"
+          "new_password"
         ],
         "type": "object"
       },
       "SessionDto": {
         "properties": {
-          "accountId": {
+          "account_id": {
             "description": "Owning account identifier",
             "example": "acc_01HZY2F2B6N7M8Q9W4E6R2",
             "type": "string"
           },
-          "createdAt": {
+          "created_at": {
             "description": "Creation timestamp (ISO 8601)",
             "example": "2025-09-20T12:34:56.000Z",
             "format": "date-time",
             "type": "string"
           },
-          "expiresAt": {
+          "expires_at": {
             "description": "Expiration timestamp (ISO 8601)",
             "example": "2025-09-21T12:34:56.000Z",
             "format": "date-time",
@@ -286,14 +1077,14 @@
             "nullable": true,
             "type": "string"
           },
-          "lastUsedAt": {
+          "last_used_at": {
             "description": "Last time this session was used (ISO 8601) or null",
             "example": "2025-09-20T18:00:00.000Z",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
-          "userAgent": {
+          "user_agent": {
             "description": "HTTP User-Agent string",
             "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_5_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36",
             "nullable": true,
@@ -302,12 +1093,27 @@
         },
         "required": [
           "id",
-          "accountId",
+          "account_id",
           "ip",
-          "userAgent",
-          "createdAt",
-          "expiresAt",
-          "lastUsedAt"
+          "user_agent",
+          "created_at",
+          "expires_at",
+          "last_used_at"
+        ],
+        "type": "object"
+      },
+      "SetBindingsDto": {
+        "properties": {
+          "policy_ids": {
+            "description": "Replacement set of managed-policy IDs. Empty array is rejected — revoke the PAK to disable it.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "policy_ids"
         ],
         "type": "object"
       },
@@ -323,7 +1129,7 @@
             "example": "MySecurePassword123",
             "type": "string"
           },
-          "sessionDuration": {
+          "session_duration": {
             "description": "Session duration: \"short\" (24h), \"long\" (90d), or integer seconds (3600–7776000). Defaults to 30 days.",
             "example": "short",
             "type": "object"
@@ -337,7 +1143,7 @@
       },
       "SignUpDto": {
         "properties": {
-          "displayName": {
+          "display_name": {
             "description": "Display name",
             "example": "John Doe",
             "type": "string"
@@ -352,7 +1158,7 @@
             "example": "MySecurePassword123",
             "type": "string"
           },
-          "sessionDuration": {
+          "session_duration": {
             "description": "Session duration: \"short\" (24h), \"long\" (90d), or integer seconds (3600–7776000). Defaults to 30 days.",
             "example": "long",
             "type": "object"
@@ -367,6 +1173,33 @@
           "email",
           "username",
           "password"
+        ],
+        "type": "object"
+      },
+      "SourceDiagnosticDto": {
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "error": {
+            "type": "string"
+          },
+          "included": {
+            "type": "boolean"
+          },
+          "source": {
+            "enum": [
+              "workspace_audit",
+              "heimdall_audit",
+              "agora_moderation"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "included",
+          "count"
         ],
         "type": "object"
       },
@@ -411,12 +1244,50 @@
             ],
             "type": "string"
           },
-          "roleId": {
+          "role_id": {
             "description": "UUID of the role to assign. Use this to target custom roles.",
             "example": "11111111-1111-4111-8111-111111111111",
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpdateMemberRoleResponseDto": {
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "invited_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "joined_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "role_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "account_id",
+          "role_id",
+          "invited_by",
+          "joined_at"
+        ],
         "type": "object"
       },
       "UpdatePakDto": {
@@ -430,21 +1301,13 @@
             "maxLength": 120,
             "minLength": 1,
             "type": "string"
-          },
-          "policy": {
-            "description": "Replaces the policy entirely if provided.",
-            "items": {
-              "$ref": "#/components/schemas/PolicyStatementDto"
-            },
-            "minItems": 1,
-            "type": "array"
           }
         },
         "type": "object"
       },
       "UpdateWorkspaceDto": {
         "properties": {
-          "displayName": {
+          "display_name": {
             "maxLength": 128,
             "minLength": 1,
             "type": "string"
@@ -463,6 +1326,43 @@
         },
         "type": "object"
       },
+      "UpdateWorkspacePolicyDto": {
+        "properties": {
+          "description": {
+            "description": "Optional human description. Pass `null` to clear an existing description on PATCH.",
+            "example": "Read-only access to all Envoi resources",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Policy name (1-64 chars, alphanumeric + space/underscore/hyphen). Unique per workspace.",
+            "example": "envoi-readonly",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "policy": {
+            "description": "IAM-style policy. Empty array means \"no permissions\" — useful as a placeholder before granting any actions.",
+            "example": [
+              {
+                "actions": [
+                  "envoi.read",
+                  "envoi.list"
+                ],
+                "effect": "allow",
+                "resources": [
+                  "*"
+                ]
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "UpdateWorkspaceRoleDto": {
         "properties": {
           "description": {
@@ -474,12 +1374,17 @@
             "minLength": 1,
             "type": "string"
           },
-          "permissions": {
-            "description": "Replaces the role permission set if provided. Omit to leave permissions unchanged.",
+          "policy": {
+            "description": "Replaces the role policy if provided. Omit to leave policy unchanged.",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PolicyStatementDto"
             },
             "type": "array"
+          },
+          "policy_id": {
+            "description": "Bind / unbind the role to a managed policy. UUID → bind, null → unbind, omit → leave unchanged.",
+            "nullable": true,
+            "type": "string"
           }
         },
         "type": "object"
@@ -494,6 +1399,476 @@
         },
         "required": [
           "code"
+        ],
+        "type": "object"
+      },
+      "WorkspaceActionCatalogResponseDto": {
+        "properties": {
+          "actions": {
+            "description": "Every known workspace action across all enabled service catalogs.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "actions"
+        ],
+        "type": "object"
+      },
+      "WorkspaceAuditLogEntryDto": {
+        "properties": {
+          "action": {
+            "description": "Action identifier (e.g. `workspace.member.removed`).",
+            "example": "workspace.member.removed",
+            "type": "string"
+          },
+          "actor_id": {
+            "description": "Account UUID of the actor, or null for system actions.",
+            "nullable": true,
+            "type": "string"
+          },
+          "actor_type": {
+            "description": "Actor classification.",
+            "enum": [
+              "platform_user",
+              "system",
+              "pat"
+            ],
+            "example": "platform_user",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "ip": {
+            "description": "Originating request IP, when available.",
+            "nullable": true,
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Free-form metadata attached to the audit row (jsonb).",
+            "type": "object"
+          },
+          "resource": {
+            "description": "Resource type the action targeted.",
+            "example": "workspace_membership",
+            "type": "string"
+          },
+          "resource_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "actor_id",
+          "actor_type",
+          "action",
+          "resource",
+          "resource_id",
+          "ip",
+          "metadata",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "WorkspaceInviteListItemDto": {
+        "properties": {
+          "code": {
+            "description": "Single-use invite code embedded in the invite URL.",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "nullable": true,
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "max_uses": {
+            "nullable": true,
+            "type": "number"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "role_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "role_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "use_count": {
+            "type": "number"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "code",
+          "email",
+          "role_id",
+          "max_uses",
+          "use_count",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "created_by",
+          "role_name"
+        ],
+        "type": "object"
+      },
+      "WorkspaceInviteResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Single-use invite code embedded in the invite URL.",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "nullable": true,
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "max_uses": {
+            "nullable": true,
+            "type": "number"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "role_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "use_count": {
+            "type": "number"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "code",
+          "email",
+          "role_id",
+          "max_uses",
+          "use_count",
+          "expires_at",
+          "revoked_at",
+          "created_at",
+          "created_by"
+        ],
+        "type": "object"
+      },
+      "WorkspaceListItemDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "display_name": {
+            "example": "Acme Corp",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "member_role": {
+            "description": "Caller’s role name in this workspace.",
+            "example": "owner",
+            "nullable": true,
+            "type": "string"
+          },
+          "member_role_id": {
+            "description": "Caller’s workspace_role.id for this workspace.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "settings": {
+            "description": "Free-form workspace settings blob.",
+            "type": "object"
+          },
+          "slug": {
+            "example": "acme-corp",
+            "type": "string"
+          },
+          "status": {
+            "description": "Workspace status (e.g. `active`).",
+            "example": "active",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "created_by",
+          "status",
+          "settings",
+          "created_at",
+          "updated_at",
+          "member_role_id",
+          "member_role"
+        ],
+        "type": "object"
+      },
+      "WorkspaceMemberResponseDto": {
+        "properties": {
+          "account_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "display_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "joined_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "primary_email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "role_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "role_is_system": {
+            "type": "boolean"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "account_id",
+          "username",
+          "display_name",
+          "primary_email",
+          "role_id",
+          "role",
+          "role_is_system",
+          "joined_at"
+        ],
+        "type": "object"
+      },
+      "WorkspaceResponseDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "display_name": {
+            "example": "Acme Corp",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "settings": {
+            "description": "Free-form workspace settings blob.",
+            "type": "object"
+          },
+          "slug": {
+            "example": "acme-corp",
+            "type": "string"
+          },
+          "status": {
+            "description": "Workspace status (e.g. `active`).",
+            "example": "active",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "created_by",
+          "status",
+          "settings",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "WorkspaceRoleResponseDto": {
+        "properties": {
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_system": {
+            "description": "True for built-in system roles (owner/admin/member); false for custom roles.",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Role name. System role names are `owner`/`admin`/`member`.",
+            "type": "string"
+          },
+          "policy": {
+            "description": "Effective IAM-style policy. When `policy_id` is set this is the bound managed policy; otherwise it is the inline policy column.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "policy_id": {
+            "description": "Managed policy ID if the role is bound to one, else null.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "description",
+          "is_system",
+          "policy",
+          "policy_id"
+        ],
+        "type": "object"
+      },
+      "WorkspaceServiceStateDto": {
+        "properties": {
+          "disabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "enabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled_by": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "service": {
+            "description": "Service identifier (e.g. `envoi`, `rally`, `agora`, `heimdall`).",
+            "example": "envoi",
+            "type": "string"
+          },
+          "settings": {
+            "description": "Per-service settings blob (service-specific shape).",
+            "type": "object"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "service",
+          "enabled",
+          "enabled_at",
+          "enabled_by",
+          "disabled_at",
+          "disabled_by",
+          "settings"
         ],
         "type": "object"
       }
@@ -520,11 +1895,19 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JwksResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
+        "summary": "Public JWKS for verifying platform-issued JWTs (issuer `https://api.auth.productcraft.co`).",
         "tags": [
-          "Jwks"
+          "jwks"
         ]
       }
     },
@@ -534,11 +1917,18 @@
         "parameters": [],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Account deleted. All sessions revoked."
+          },
+          "403": {
+            "description": "The session lacks the required action for self-account deletion (defence-in-depth — the route is guarded but the cookie may be present without action access)."
+          },
+          "404": {
+            "description": "No account row exists for the session principal. Should never fire for a valid session — surfaced for SDKs."
           }
         },
+        "summary": "Delete the calling account. Auto-promotes the oldest admin (or oldest non-self member) to owner in any workspace where the departing account is the sole owner.",
         "tags": [
-          "Account"
+          "account"
         ]
       }
     },
@@ -557,7 +1947,7 @@
           "required": true
         },
         "responses": {
-          "200": {
+          "204": {
             "description": "Logout successful (no content)"
           },
           "400": {
@@ -575,7 +1965,7 @@
         "operationId": "AuthenticationController_logoutCurrent",
         "parameters": [],
         "responses": {
-          "200": {
+          "204": {
             "description": "Logout successful (no content)"
           },
           "401": {
@@ -609,11 +1999,12 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Reset request accepted. If the email matches an account, an email has been queued."
           }
         },
+        "summary": "Request a password reset email. The response shape never reveals whether the email matched an account.",
         "tags": [
-          "Password"
+          "authentication"
         ]
       }
     },
@@ -633,11 +2024,12 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Password reset; all active sessions revoked."
           }
         },
+        "summary": "Reset password using the email-delivered reset token.",
         "tags": [
-          "Password"
+          "authentication"
         ]
       }
     },
@@ -752,6 +2144,13 @@
         "parameters": [],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -776,6 +2175,13 @@
         ],
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectApiKeyResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -785,13 +2191,13 @@
         ]
       }
     },
-    "/v1/introspect/workspaces/{workspaceId}": {
+    "/v1/introspect/workspaces/{workspace_id}": {
       "get": {
         "operationId": "IntrospectController_introspectWorkspace",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -800,6 +2206,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectWorkspaceResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -930,6 +2343,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspacesResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -953,6 +2373,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -978,7 +2405,14 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            },
+            "description": "The joined workspace."
           }
         },
         "summary": "Accept a workspace invite by code",
@@ -987,13 +2421,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}": {
+    "/v1/workspaces/{workspace_slug}": {
       "delete": {
         "operationId": "WorkspaceController_deleteWorkspace",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1002,7 +2436,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Workspace deleted."
           }
         },
         "summary": "Delete a workspace (requires workspace.delete)",
@@ -1015,7 +2449,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1024,6 +2458,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1037,7 +2478,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1056,6 +2497,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponseDto"
+                }
+              }
+            },
             "description": "Workspace updated."
           },
           "400": {
@@ -1074,13 +2522,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/api-keys": {
+    "/v1/workspaces/{workspace_slug}/api-keys": {
       "get": {
         "operationId": "PlatformApiKeyController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1089,6 +2537,16 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublicApiKeyDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1107,7 +2565,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1126,6 +2584,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintPakResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1140,13 +2605,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/api-keys/{id}": {
+    "/v1/workspaces/{workspace_slug}/api-keys/{id}": {
       "delete": {
         "operationId": "PlatformApiKeyController_revoke",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1159,11 +2624,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "When `true`, publish a `pak:revoked` Redis fan-out so subscribed services evict their caches immediately instead of waiting out the 60s TTL.",
+            "in": "query",
+            "name": "force",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "PAK revoked."
           }
         },
         "security": [
@@ -1171,6 +2645,7 @@
             "bearer": []
           }
         ],
+        "summary": "Revoke a PAK. Default behaviour: introspect returns null on the next upstream call; downstream services fail-closed within the 60s cache TTL window. Pass `?force=true` to additionally publish a Redis fan-out that evicts the matching cache entry across every PAK-consuming service immediately — use it when rotating a leaked PAK and the 60s window matters.",
         "tags": [
           "platform-api-keys"
         ]
@@ -1180,7 +2655,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1197,6 +2672,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiKeyDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1205,6 +2687,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get a single PAK by id.",
         "tags": [
           "platform-api-keys"
         ]
@@ -1214,7 +2697,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1241,6 +2724,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiKeyDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1249,18 +2739,162 @@
             "bearer": []
           }
         ],
+        "summary": "Update a PAK’s name or description (does not touch bindings).",
         "tags": [
           "platform-api-keys"
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/audit-logs": {
+    "/v1/workspaces/{workspace_slug}/api-keys/{id}/bindings": {
+      "patch": {
+        "operationId": "PlatformApiKeyController_setBindings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBindingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicApiKeyDto"
+                }
+              }
+            },
+            "description": "Updated PAK with new bindings."
+          },
+          "400": {
+            "description": "One of: bound > 25 policies; merged > 200 statements; one of the policy ids does not exist or lives in a different workspace."
+          },
+          "403": {
+            "description": "Caller cannot grant one or more actions in the merged statement set."
+          },
+          "404": {
+            "description": "PAK not found in this workspace."
+          },
+          "409": {
+            "description": "Empty bindings — revoke the PAK instead of leaving it unbound."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the merged union of statements.",
+        "tags": [
+          "platform-api-keys"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/audit-feed": {
+      "get": {
+        "description": "Merged audit timeline across the workspace surfaces. v1 covers `workspace_audit` (this service); per-app Heimdall and per-community Agora rows arrive in a follow-up. Response shape is stable from v1 — clients can build against it today.",
+        "operationId": "WorkspaceAuditFeedController_listFeed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "ISO-8601 lower bound on `timestamp`. Items older than `since` are not returned.",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor from a previous response's `pagination.next_cursor`. Resumes the feed at the same merge boundary.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Per-page cap. Clamped to 1..500; default 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "description": "Comma-separated subset of sources to include (e.g. `workspace_audit,heimdall_audit`). Omitted = all enabled sources.",
+            "in": "query",
+            "name": "sources",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditFeedResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid query params — `since` not parseable as ISO-8601, or `sources` references an unknown source name. Unrecognized sources are silently dropped; an empty result set after that filter still returns 200."
+          },
+          "403": {
+            "description": "The caller is signed in but lacks `workspace.audit.read` for this workspace."
+          },
+          "404": {
+            "description": "The `:workspaceSlug` path param does not resolve to a workspace the caller can see."
+          }
+        },
+        "summary": "Unified workspace audit feed (cursor-paginated)",
+        "tags": [
+          "workspace-audit-logs"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/audit-logs": {
       "get": {
         "operationId": "WorkspaceAuditController_listAuditLogs",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1285,6 +2919,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspaceAuditLogsResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1294,13 +2935,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/invites": {
+    "/v1/workspaces/{workspace_slug}/invites": {
       "get": {
         "operationId": "WorkspaceController_listInvites",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1325,6 +2966,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspaceInvitesResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1338,7 +2986,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1357,6 +3005,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceInviteResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1366,13 +3021,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/invites/{inviteId}": {
+    "/v1/workspaces/{workspace_slug}/invites/{invite_id}": {
       "delete": {
         "operationId": "WorkspaceController_revokeInvite",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1380,7 +3035,7 @@
           },
           {
             "in": "path",
-            "name": "inviteId",
+            "name": "invite_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1389,7 +3044,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Invite revoked."
           }
         },
         "summary": "Revoke a workspace invite",
@@ -1398,13 +3053,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/members": {
+    "/v1/workspaces/{workspace_slug}/members": {
       "get": {
         "operationId": "WorkspaceController_listMembers",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1429,6 +3084,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspaceMembersResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1438,13 +3100,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/members/{accountId}": {
+    "/v1/workspaces/{workspace_slug}/members/{account_id}": {
       "delete": {
         "operationId": "WorkspaceController_removeMember",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1452,7 +3114,7 @@
           },
           {
             "in": "path",
-            "name": "accountId",
+            "name": "account_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1461,7 +3123,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Member removed."
           }
         },
         "summary": "Remove a member from a workspace (or self-leave)",
@@ -1470,13 +3132,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/members/{accountId}/role": {
+    "/v1/workspaces/{workspace_slug}/members/{account_id}/role": {
       "patch": {
         "operationId": "WorkspaceController_updateMemberRole",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1484,7 +3146,7 @@
           },
           {
             "in": "path",
-            "name": "accountId",
+            "name": "account_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1503,6 +3165,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMemberRoleResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1512,13 +3181,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/roles": {
+    "/v1/workspaces/{workspace_slug}/policies": {
       "get": {
-        "operationId": "WorkspaceRoleController_list",
+        "operationId": "WorkspacePolicyController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1527,6 +3196,251 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListManagedPoliciesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "List every managed policy in a workspace",
+        "tags": [
+          "workspace-policies"
+        ]
+      },
+      "post": {
+        "operationId": "WorkspacePolicyController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWorkspacePolicyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedPolicyResponseDto"
+                }
+              }
+            },
+            "description": "Policy created."
+          },
+          "409": {
+            "description": "Name already in use."
+          }
+        },
+        "summary": "Create a managed policy",
+        "tags": [
+          "workspace-policies"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/policies/actions/catalog": {
+      "get": {
+        "operationId": "WorkspacePolicyController_catalog",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceActionCatalogResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "List every known workspace action (catalog of statement actions).",
+        "tags": [
+          "workspace-policies"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/policies/{policy_id}": {
+      "delete": {
+        "operationId": "WorkspacePolicyController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Policy deleted."
+          },
+          "404": {
+            "description": "Policy not found in this workspace."
+          }
+        },
+        "summary": "Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column.",
+        "tags": [
+          "workspace-policies"
+        ]
+      },
+      "get": {
+        "operationId": "WorkspacePolicyController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedPolicyDetailResponseDto"
+                }
+              }
+            },
+            "description": "Policy detail. `binding_count.{pak,role}` reports how many things are currently bound — surface this in delete-confirm UX."
+          },
+          "404": {
+            "description": "Policy not found in this workspace."
+          }
+        },
+        "summary": "Get a managed policy by id",
+        "tags": [
+          "workspace-policies"
+        ]
+      },
+      "patch": {
+        "operationId": "WorkspacePolicyController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "policy_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspacePolicyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedPolicyDetailResponseDto"
+                }
+              }
+            },
+            "description": "Updated policy."
+          },
+          "400": {
+            "description": "Invalid policy shape, name, or condition block."
+          },
+          "403": {
+            "description": "Caller cannot grant one or more requested actions."
+          },
+          "404": {
+            "description": "Policy not found in this workspace."
+          },
+          "409": {
+            "description": "Name already in use."
+          }
+        },
+        "summary": "Update a managed policy",
+        "tags": [
+          "workspace-policies"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/roles": {
+      "get": {
+        "operationId": "WorkspaceRoleController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspaceRolesResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1540,7 +3454,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1559,6 +3473,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRoleResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1568,37 +3489,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/roles/permissions/catalog": {
-      "get": {
-        "operationId": "WorkspaceRoleController_catalog",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "workspaceSlug",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        },
-        "summary": "List every known workspace permission",
-        "tags": [
-          "workspace-roles"
-        ]
-      }
-    },
-    "/v1/workspaces/{workspaceSlug}/roles/{roleId}": {
+    "/v1/workspaces/{workspace_slug}/roles/{role_id}": {
       "delete": {
         "operationId": "WorkspaceRoleController_delete",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1606,7 +3503,7 @@
           },
           {
             "in": "path",
-            "name": "roleId",
+            "name": "role_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1615,7 +3512,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Custom role deleted."
           }
         },
         "summary": "Delete a custom role (fails if it has members)",
@@ -1628,7 +3525,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1636,7 +3533,7 @@
           },
           {
             "in": "path",
-            "name": "roleId",
+            "name": "role_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1645,6 +3542,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRoleResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1658,7 +3562,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1666,7 +3570,7 @@
           },
           {
             "in": "path",
-            "name": "roleId",
+            "name": "role_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1685,6 +3589,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceRoleResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1694,13 +3605,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/services": {
+    "/v1/workspaces/{workspace_slug}/services": {
       "get": {
         "operationId": "WorkspaceServiceController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1709,6 +3620,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWorkspaceServicesResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1718,13 +3636,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/services/{service}": {
+    "/v1/workspaces/{workspace_slug}/services/{service}": {
       "delete": {
         "operationId": "WorkspaceServiceController_disable",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1741,7 +3659,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Service disabled. Settings preserved for re-enable."
           }
         },
         "summary": "Disable a service (settings are retained)",
@@ -1754,7 +3672,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1781,6 +3699,13 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceServiceStateDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1790,13 +3715,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceSlug}/services/{service}/settings": {
+    "/v1/workspaces/{workspace_slug}/services/{service}/settings": {
       "patch": {
         "operationId": "WorkspaceServiceController_updateSettings",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceSlug",
+            "name": "workspace_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -1828,6 +3753,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceServiceStateDto"
+                }
+              }
+            },
             "description": ""
           }
         },

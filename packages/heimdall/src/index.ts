@@ -22,22 +22,13 @@ import { appControllerListMyApps } from "./_generated/clients/apps/appController
 import { appControllerCreateApp } from "./_generated/clients/apps/appControllerCreateApp.js";
 import { appControllerAcceptInvite } from "./_generated/clients/apps/appControllerAcceptInvite.js";
 
-import { idpControllerList } from "./_generated/clients/idp/idpControllerList.js";
-import { idpControllerStart } from "./_generated/clients/idp/idpControllerStart.js";
-import { idpControllerRedirect } from "./_generated/clients/idp/idpControllerRedirect.js";
-import { idpControllerExchange } from "./_generated/clients/idp/idpControllerExchange.js";
-import { idpControllerVerifyIdToken } from "./_generated/clients/idp/idpControllerVerifyIdToken.js";
-
 import { statsControllerGetMyStats } from "./_generated/clients/platformStats/statsControllerGetMyStats.js";
 
 // DTOs
 import type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
 import type { AcceptInviteDto } from "./_generated/types/AcceptInviteDto.js";
-import type { StartDto } from "./_generated/types/StartDto.js";
-import type { ExchangeDto } from "./_generated/types/ExchangeDto.js";
-import type { IdTokenVerifyDto } from "./_generated/types/IdTokenVerifyDto.js";
-import type { IdpControllerStartQueryParams } from "./_generated/types/idp/IdpControllerStart.js";
 import type { AppControllerListMyAppsQueryParams } from "./_generated/types/apps/AppControllerListMyApps.js";
+import type { StatsControllerGetMyStatsQueryParams } from "./_generated/types/platformStats/StatsControllerGetMyStats.js";
 
 export interface HeimdallConfig extends PCClientConfig {
   /**
@@ -114,45 +105,25 @@ export class Heimdall {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // Federated identity providers (workspace-level)
-  // ─────────────────────────────────────────────────────────────
-  readonly idp = {
-    /** List configured IdPs. */
-    list: () => idpControllerList({ client: this.client }),
-
-    /** Begin an OAuth handshake for a provider. */
-    start: (
-      provider: string,
-      data: StartDto,
-      params: IdpControllerStartQueryParams,
-    ) =>
-      idpControllerStart(
-        { provider, data, params },
-        { client: this.client },
-      ),
-
-    /** Browser-redirect endpoint for an IdP. */
-    redirect: (provider: string) =>
-      idpControllerRedirect({ provider }, { client: this.client }),
-
-    /** Exchange an IdP authorization code for a Heimdall session. */
-    exchange: (data: ExchangeDto) =>
-      idpControllerExchange({ data }, { client: this.client }),
-
-    /** Verify an IdP-issued id_token (e.g. a Google ID token). */
-    verifyIdToken: (provider: string, data: IdTokenVerifyDto) =>
-      idpControllerVerifyIdToken(
-        { provider, data },
-        { client: this.client },
-      ),
-  };
-
-  // ─────────────────────────────────────────────────────────────
   // Platform stats
+  //
+  // Workspace-level IdP admin (`/v1/idp/*`) was removed from the API
+  // when consumer-side OAuth moved to per-app `auth_config_provider`
+  // rows. Configure providers via the per-app auth-config endpoints
+  // (`app(appId).authConfig.*`) and consume them client-side through
+  // `consumer(slug).auth.signinWithProvider({ ... })`.
   // ─────────────────────────────────────────────────────────────
   readonly stats = {
-    /** Get the caller's platform-level usage / status stats. */
-    get: () => statsControllerGetMyStats({ client: this.client }),
+    /**
+     * Get the signed-in PlatformUser's aggregate counts. Pass
+     * `workspaceId` to scope to a single workspace; omit to total
+     * across every workspace the caller belongs to.
+     */
+    get: (params: Partial<StatsControllerGetMyStatsQueryParams> = {}) =>
+      statsControllerGetMyStats(
+        { params: params as StatsControllerGetMyStatsQueryParams },
+        { client: this.client },
+      ),
   };
 }
 
@@ -182,7 +153,7 @@ export type { ConsumerSignupDto } from "./_generated/types/ConsumerSignupDto.js"
 export type { ConsumerTokenResponseDto } from "./_generated/types/ConsumerTokenResponseDto.js";
 export type { ConsumerRefreshDto } from "./_generated/types/ConsumerRefreshDto.js";
 export type { ConsumerLogoutDto } from "./_generated/types/ConsumerLogoutDto.js";
-export type { ConsumerRequestResetDto } from "./_generated/types/ConsumerRequestResetDto.js";
+export type { ConsumerRequestPasswordResetDto } from "./_generated/types/ConsumerRequestPasswordResetDto.js";
 export type { ConsumerResetPasswordDto } from "./_generated/types/ConsumerResetPasswordDto.js";
 export type { UpdateMeDto } from "./_generated/types/UpdateMeDto.js";
 export type { VerifyBody } from "./_generated/types/VerifyBody.js";
@@ -207,6 +178,6 @@ export type { CreateApiKeyDto } from "./_generated/types/CreateApiKeyDto.js";
 export type { CreateM2MClientDto } from "./_generated/types/CreateM2MClientDto.js";
 export type { UpdateM2MClientDto } from "./_generated/types/UpdateM2MClientDto.js";
 export type { SetScopesDto } from "./_generated/types/SetScopesDto.js";
-export type { StartDto } from "./_generated/types/StartDto.js";
-export type { ExchangeDto } from "./_generated/types/ExchangeDto.js";
-export type { IdTokenVerifyDto } from "./_generated/types/IdTokenVerifyDto.js";
+export type { IdpNativeSigninDto } from "./_generated/types/IdpNativeSigninDto.js";
+export type { IdpNativeUserHintDto } from "./_generated/types/IdpNativeUserHintDto.js";
+export type { IdpTokenResponseDto } from "./_generated/types/IdpTokenResponseDto.js";

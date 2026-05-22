@@ -23,12 +23,12 @@ import { appControllerListMembers } from "../_generated/clients/apps/appControll
 import { appControllerRemoveMember } from "../_generated/clients/apps/appControllerRemoveMember.js";
 
 // EndUsers — Note: `revokeAllSessions` skipped (spec bug, see callDirect below)
-import { endUserControllerListEndUsers } from "../_generated/clients/endUser/endUserControllerListEndUsers.js";
-import { endUserControllerGetEndUser } from "../_generated/clients/endUser/endUserControllerGetEndUser.js";
-import { endUserControllerUpdateEndUser } from "../_generated/clients/endUser/endUserControllerUpdateEndUser.js";
-import { endUserControllerDeleteEndUser } from "../_generated/clients/endUser/endUserControllerDeleteEndUser.js";
-import { endUserControllerUpdateRole } from "../_generated/clients/endUser/endUserControllerUpdateRole.js";
-import { endUserControllerUpdateStatus } from "../_generated/clients/endUser/endUserControllerUpdateStatus.js";
+import { endUserControllerListEndUsers } from "../_generated/clients/endUsers/endUserControllerListEndUsers.js";
+import { endUserControllerGetEndUser } from "../_generated/clients/endUsers/endUserControllerGetEndUser.js";
+import { endUserControllerUpdateEndUser } from "../_generated/clients/endUsers/endUserControllerUpdateEndUser.js";
+import { endUserControllerDeleteEndUser } from "../_generated/clients/endUsers/endUserControllerDeleteEndUser.js";
+import { endUserControllerUpdateRole } from "../_generated/clients/endUsers/endUserControllerUpdateRole.js";
+import { endUserControllerUpdateStatus } from "../_generated/clients/endUsers/endUserControllerUpdateStatus.js";
 
 // Roles — Note: get/update/delete by roleName skipped (spec bug — see callDirect)
 import { roleControllerListRoles } from "../_generated/clients/roles/roleControllerListRoles.js";
@@ -80,7 +80,7 @@ import type { SetScopesDto } from "../_generated/types/SetScopesDto.js";
 // Query-param types
 import type { AppControllerListInvitesQueryParams } from "../_generated/types/apps/AppControllerListInvites.js";
 import type { AppControllerListMembersQueryParams } from "../_generated/types/apps/AppControllerListMembers.js";
-import type { EndUserControllerListEndUsersQueryParams } from "../_generated/types/endUser/EndUserControllerListEndUsers.js";
+import type { EndUserControllerListEndUsersQueryParams } from "../_generated/types/endUsers/EndUserControllerListEndUsers.js";
 import type { AppAuditControllerGetAuditLogsQueryParams } from "../_generated/types/appAudit/AppAuditControllerGetAuditLogs.js";
 import type { M2MControllerListClientsQueryParams } from "../_generated/types/credentials/M2MControllerListClients.js";
 import type { RoleControllerListRolesQueryParams } from "../_generated/types/roles/RoleControllerListRoles.js";

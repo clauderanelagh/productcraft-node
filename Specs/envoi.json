@@ -5,6 +5,57 @@
         "properties": {},
         "type": "object"
       },
+      "BounceWebhookResponseDto": {
+        "properties": {
+          "accepted": {
+            "description": "Count of bounces accepted and queued for downstream handling.",
+            "example": 1,
+            "type": "number"
+          },
+          "ignored": {
+            "description": "Count of bounces dropped (e.g. envelope-to did not match any mailbox).",
+            "example": 0,
+            "type": "number"
+          },
+          "ok": {
+            "description": "Always true on a 200; providers retry on non-2xx.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "accepted",
+          "ignored"
+        ],
+        "type": "object"
+      },
+      "BrandResponseDto": {
+        "properties": {
+          "raw": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RawBrandDto"
+              }
+            ],
+            "description": "User-set values only (null when the workspace has never customised). Null fields signal \"not customised — falling through to default\".",
+            "nullable": true
+          },
+          "resolved": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedBrandTokensDto"
+              }
+            ],
+            "description": "Fully-resolved tokens every render uses. The frontend reads this for previews so what the editor shows == what recipients get."
+          }
+        },
+        "required": [
+          "resolved",
+          "raw"
+        ],
+        "type": "object"
+      },
       "CreateDomainDto": {
         "properties": {
           "fqdn": {
@@ -30,20 +81,20 @@
       },
       "CreateMailboxDto": {
         "properties": {
-          "displayName": {
+          "display_name": {
             "description": "Human-readable display name",
             "type": "string"
           },
-          "domainId": {
+          "domain_id": {
             "description": "Domain ID (uuid)",
             "type": "string"
           },
-          "localPart": {
+          "local_part": {
             "description": "Local part of the address (portion before @)",
             "example": "claude-qa-alpha",
             "type": "string"
           },
-          "retentionDays": {
+          "retention_days": {
             "description": "Retention period in days (1–30)",
             "maximum": 30,
             "minimum": 1,
@@ -51,14 +102,251 @@
           }
         },
         "required": [
-          "localPart",
-          "domainId"
+          "local_part",
+          "domain_id"
+        ],
+        "type": "object"
+      },
+      "DeleteByRecipientResponseDto": {
+        "properties": {
+          "deleted": {
+            "description": "Number of rows deleted.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "type": "object"
+      },
+      "DnsInstructionDto": {
+        "properties": {
+          "host": {
+            "description": "DNS hostname to publish.",
+            "example": "_amplify.example.com.",
+            "type": "string"
+          },
+          "priority": {
+            "description": "Priority for MX records.",
+            "type": "number"
+          },
+          "purpose": {
+            "description": "Purpose of this record (ownership, sending policy, etc.).",
+            "example": "spf",
+            "type": "string"
+          },
+          "ttl": {
+            "description": "TTL hint (in seconds).",
+            "type": "number"
+          },
+          "type": {
+            "description": "Record type (TXT, MX, CNAME).",
+            "example": "TXT",
+            "type": "string"
+          },
+          "value": {
+            "description": "Record value the customer must publish.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "purpose",
+          "type",
+          "host",
+          "value"
+        ],
+        "type": "object"
+      },
+      "DomainDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "dkim_public_key": {
+            "description": "Public DKIM key in PEM form (private half stays server-side).",
+            "nullable": true,
+            "type": "string"
+          },
+          "dkim_selector": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dns_check_results": {
+            "description": "Snapshot of the most recent DNS check (any shape).",
+            "nullable": true,
+            "type": "object"
+          },
+          "dns_instructions": {
+            "description": "DNS records the customer needs to publish to verify ownership + sending.",
+            "items": {
+              "$ref": "#/components/schemas/DnsInstructionDto"
+            },
+            "type": "array"
+          },
+          "dns_provider": {
+            "description": "Identifier from the wizard provider list, or null when not chosen.",
+            "nullable": true,
+            "type": "string"
+          },
+          "fqdn": {
+            "example": "productcraft.co",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "intent": {
+            "description": "How the workspace intends to use this domain.",
+            "enum": [
+              "receive",
+              "send",
+              "both"
+            ],
+            "type": "string"
+          },
+          "last_dns_check_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "owner_account_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "seq_id": {
+            "description": "Sequential id per workspace.",
+            "example": "3",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "active",
+              "failed"
+            ],
+            "example": "pending",
+            "type": "string"
+          },
+          "test_address": {
+            "description": "Convenience accessor for the test-email mailbox address on this domain.",
+            "example": "test-abc123@productcraft.co",
+            "type": "string"
+          },
+          "test_received_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "test_token": {
+            "type": "string"
+          },
+          "verification_token": {
+            "nullable": true,
+            "type": "string"
+          },
+          "verified_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq_id",
+          "workspace_id",
+          "owner_account_id",
+          "fqdn",
+          "intent",
+          "status",
+          "verification_token",
+          "test_token",
+          "test_received_at",
+          "dkim_selector",
+          "dkim_public_key",
+          "dns_provider",
+          "dns_check_results",
+          "last_dns_check_at",
+          "verified_at",
+          "created_at",
+          "dns_instructions",
+          "test_address"
+        ],
+        "type": "object"
+      },
+      "GetSmtpConfigResponseDto": {
+        "properties": {
+          "data": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SmtpConfigDto"
+              }
+            ],
+            "description": "Null when this workspace has not configured SMTP.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "LintFindingDto": {
+        "properties": {
+          "id": {
+            "description": "Stable identifier for telemetry / suppressions.",
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warn",
+              "info"
+            ],
+            "type": "string"
+          },
+          "suggestion": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "severity",
+          "message"
+        ],
+        "type": "object"
+      },
+      "LintResultDto": {
+        "properties": {
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/LintFindingDto"
+            },
+            "type": "array"
+          },
+          "score": {
+            "description": "0-100, higher is better. ≥90 \"looks great\"; <70 \"likely to spam-folder\".",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score",
+          "findings"
         ],
         "type": "object"
       },
       "LintTemplateDto": {
         "properties": {
-          "bodyHtml": {
+          "body_html": {
             "description": "HTML body to render (Handlebars).",
             "type": "string"
           },
@@ -72,7 +360,480 @@
           }
         },
         "required": [
-          "bodyHtml"
+          "body_html"
+        ],
+        "type": "object"
+      },
+      "ListDomainsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DomainDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListMailboxesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MailboxDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListMessagesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MessageDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListOutboundMessagesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/OutboundMessageDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/OutboundMessagePaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListSmtpConfigsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SmtpConfigDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListSuppressionResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SuppressionEntryDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListTemplateTagsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListTemplatesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "MailboxDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "display_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "local_part": {
+            "type": "string"
+          },
+          "owner_account_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "retention_days": {
+            "description": "Retention period in days.",
+            "example": 14,
+            "type": "number"
+          },
+          "seq_id": {
+            "description": "Sequential id per workspace (stable, monotonic).",
+            "example": "7",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled"
+            ],
+            "example": "active",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "seq_id",
+          "workspace_id",
+          "domain_id",
+          "local_part",
+          "display_name",
+          "owner_account_id",
+          "retention_days",
+          "status",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "MessageAttachmentDto": {
+        "properties": {
+          "content_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "content_type": {
+            "type": "string"
+          },
+          "filename": {
+            "nullable": true,
+            "type": "string"
+          },
+          "position": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "position",
+          "filename",
+          "content_id",
+          "content_type",
+          "size_bytes",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "MessageDetailDto": {
+        "properties": {
+          "attachments": {
+            "items": {
+              "$ref": "#/components/schemas/MessageAttachmentDto"
+            },
+            "type": "array"
+          },
+          "body_preview": {
+            "nullable": true,
+            "type": "string"
+          },
+          "cc_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dkim_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dmarc_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "envelope_to": {
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string"
+          },
+          "from_domain": {
+            "type": "string"
+          },
+          "from_local": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mailbox_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "quarantined": {
+            "type": "boolean"
+          },
+          "raw_object_key": {
+            "description": "Storage object key for the raw RFC5322 .eml.",
+            "type": "string"
+          },
+          "read_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "rfc822_message_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "seq_id": {
+            "description": "Sequential ID per mailbox.",
+            "example": "42",
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "number"
+          },
+          "spam_score": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spam_verdict": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spf_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "subject": {
+            "nullable": true,
+            "type": "string"
+          },
+          "to_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "mailbox_id",
+          "seq_id",
+          "raw_object_key",
+          "envelope_to",
+          "from_address",
+          "from_local",
+          "from_domain",
+          "to_addresses",
+          "cc_addresses",
+          "subject",
+          "body_preview",
+          "rfc822_message_id",
+          "size_bytes",
+          "spam_score",
+          "spam_verdict",
+          "spf_result",
+          "dkim_result",
+          "dmarc_result",
+          "quarantined",
+          "received_at",
+          "read_at",
+          "deleted_at",
+          "attachments"
+        ],
+        "type": "object"
+      },
+      "MessageDto": {
+        "properties": {
+          "body_preview": {
+            "nullable": true,
+            "type": "string"
+          },
+          "cc_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "deleted_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dkim_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dmarc_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "envelope_to": {
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string"
+          },
+          "from_domain": {
+            "type": "string"
+          },
+          "from_local": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mailbox_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "quarantined": {
+            "type": "boolean"
+          },
+          "raw_object_key": {
+            "description": "Storage object key for the raw RFC5322 .eml.",
+            "type": "string"
+          },
+          "read_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "rfc822_message_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "seq_id": {
+            "description": "Sequential ID per mailbox.",
+            "example": "42",
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "number"
+          },
+          "spam_score": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spam_verdict": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spf_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "subject": {
+            "nullable": true,
+            "type": "string"
+          },
+          "to_addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "mailbox_id",
+          "seq_id",
+          "raw_object_key",
+          "envelope_to",
+          "from_address",
+          "from_local",
+          "from_domain",
+          "to_addresses",
+          "cc_addresses",
+          "subject",
+          "body_preview",
+          "rfc822_message_id",
+          "size_bytes",
+          "spam_score",
+          "spam_verdict",
+          "spf_result",
+          "dkim_result",
+          "dmarc_result",
+          "quarantined",
+          "received_at",
+          "read_at",
+          "deleted_at"
         ],
         "type": "object"
       },
@@ -106,9 +867,478 @@
         ],
         "type": "object"
       },
+      "OutboundMessageDto": {
+        "properties": {
+          "bounce_code": {
+            "nullable": true,
+            "type": "string"
+          },
+          "bounce_detail": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "delivered_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dkim_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dmarc_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "smtp_transcript": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spf_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "sent",
+              "delivered",
+              "bounced",
+              "complained",
+              "failed",
+              "suppressed"
+            ],
+            "type": "string"
+          },
+          "subject": {
+            "nullable": true,
+            "type": "string"
+          },
+          "template_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "to_address": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "domain_id",
+          "from_address",
+          "to_address",
+          "subject",
+          "template_name",
+          "status",
+          "smtp_transcript",
+          "spf_result",
+          "dkim_result",
+          "dmarc_result",
+          "bounce_code",
+          "bounce_detail",
+          "created_at",
+          "delivered_at"
+        ],
+        "type": "object"
+      },
+      "OutboundMessagePaginationDto": {
+        "properties": {
+          "has_more": {
+            "description": "True iff another page exists; if true, pass `next_cursor` on the next request.",
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "description": "Opaque cursor for the next page; null when no more pages.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "has_more",
+          "next_cursor"
+        ],
+        "type": "object"
+      },
+      "OutboundMessageSettingsDto": {
+        "properties": {
+          "redact_bodies": {
+            "type": "boolean"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "redact_bodies"
+        ],
+        "type": "object"
+      },
+      "OutboundMessageWithBodyDto": {
+        "properties": {
+          "body_html": {
+            "description": "Cleartext HTML body. Null when the workspace has `redact_bodies = true`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "body_text": {
+            "description": "Cleartext text body. Null when the workspace has `redact_bodies = true`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "bounce_code": {
+            "nullable": true,
+            "type": "string"
+          },
+          "bounce_detail": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "delivered_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "dkim_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "dmarc_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "from_address": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "smtp_transcript": {
+            "nullable": true,
+            "type": "string"
+          },
+          "spf_result": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "sent",
+              "delivered",
+              "bounced",
+              "complained",
+              "failed",
+              "suppressed"
+            ],
+            "type": "string"
+          },
+          "subject": {
+            "nullable": true,
+            "type": "string"
+          },
+          "template_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "to_address": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "domain_id",
+          "from_address",
+          "to_address",
+          "subject",
+          "template_name",
+          "status",
+          "smtp_transcript",
+          "spf_result",
+          "dkim_result",
+          "dmarc_result",
+          "bounce_code",
+          "bounce_detail",
+          "created_at",
+          "delivered_at",
+          "body_html",
+          "body_text"
+        ],
+        "type": "object"
+      },
+      "OutboundWebhookAttemptDto": {
+        "properties": {
+          "attempt_number": {
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "domain_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "error_message": {
+            "nullable": true,
+            "type": "string"
+          },
+          "event_id": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "latency_ms": {
+            "nullable": true,
+            "type": "number"
+          },
+          "status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "event_type",
+          "attempt_number",
+          "status_code",
+          "error_message",
+          "latency_ms",
+          "attempted_at",
+          "url",
+          "domain_id"
+        ],
+        "type": "object"
+      },
+      "OutboundWebhookConfigDto": {
+        "properties": {
+          "consecutive_failures": {
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "disabled_at": {
+            "description": "Set when auto-disabled after sustained failure.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_id": {
+            "description": "Null for the workspace-default config; set for a per-domain override.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while a previous signing secret is still being honoured (24h grace after rotation).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 chars of the active signing secret.",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "domain_id",
+          "url",
+          "event_types",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "OutboundWebhookConfigWithSecretDto": {
+        "properties": {
+          "consecutive_failures": {
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "disabled_at": {
+            "description": "Set when auto-disabled after sustained failure.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_id": {
+            "description": "Null for the workspace-default config; set for a per-domain override.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "event_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while a previous signing secret is still being honoured (24h grace after rotation).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "signing_secret": {
+            "description": "Plaintext signing secret. Returned once on create / rotate; never reconstructable.",
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 chars of the active signing secret.",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "domain_id",
+          "url",
+          "event_types",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "created_at",
+          "updated_at",
+          "signing_secret"
+        ],
+        "type": "object"
+      },
+      "PaginationDto": {
+        "properties": {
+          "has_more": {
+            "description": "True iff another page exists; if true, pass `next_cursor` on the next request.",
+            "example": false,
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "description": "Opaque cursor for the next page. `null` when no more pages are available.",
+            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wNS0wMVQwMDowMDowMFoifQ",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
       "PreviewTemplateDto": {
         "properties": {
-          "bodyHtml": {
+          "body_html": {
             "description": "HTML body to render (Handlebars).",
             "type": "string"
           },
@@ -122,7 +1352,96 @@
           }
         },
         "required": [
-          "bodyHtml"
+          "body_html"
+        ],
+        "type": "object"
+      },
+      "RawBrandDto": {
+        "properties": {
+          "background_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "brand_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "button_radius": {
+            "nullable": true,
+            "type": "string"
+          },
+          "card_background_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "container_max_width": {
+            "nullable": true,
+            "type": "string"
+          },
+          "extras": {
+            "additionalProperties": true,
+            "nullable": true,
+            "type": "object"
+          },
+          "font_stack": {
+            "nullable": true,
+            "type": "string"
+          },
+          "footer_address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "footer_html": {
+            "nullable": true,
+            "type": "string"
+          },
+          "logo_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "muted_text_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "primary_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "secondary_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "social_links": {
+            "additionalProperties": true,
+            "nullable": true,
+            "type": "object"
+          },
+          "text_color": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "logo_url",
+          "brand_name",
+          "primary_color",
+          "secondary_color",
+          "text_color",
+          "muted_text_color",
+          "background_color",
+          "card_background_color",
+          "font_stack",
+          "button_radius",
+          "container_max_width",
+          "footer_html",
+          "footer_address",
+          "social_links",
+          "extras",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -132,13 +1451,147 @@
             "description": "Data object to render into the template",
             "example": {
               "name": "Alice",
-              "orderId": "ord_123"
+              "order_id": "ord_123"
             },
             "type": "object"
           }
         },
         "required": [
           "data"
+        ],
+        "type": "object"
+      },
+      "RenderedMessageDto": {
+        "properties": {
+          "html": {
+            "description": "Fully-rendered HTML body.",
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "text": {
+            "description": "Plain-text body (derived if not authored).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject",
+          "html",
+          "text"
+        ],
+        "type": "object"
+      },
+      "ResolvedBrandTokensDto": {
+        "properties": {
+          "background_color": {
+            "example": "#f4f4f7",
+            "type": "string"
+          },
+          "brand_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "button_radius": {
+            "example": "6px",
+            "type": "string"
+          },
+          "card_background_color": {
+            "example": "#ffffff",
+            "type": "string"
+          },
+          "container_max_width": {
+            "example": "560px",
+            "type": "string"
+          },
+          "extras": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Extra key/value tokens addressable as {{brand.extras.<key>}} in templates.",
+            "type": "object"
+          },
+          "font_stack": {
+            "example": "Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica Neue, Arial, sans-serif",
+            "type": "string"
+          },
+          "footer_address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "footer_html": {
+            "nullable": true,
+            "type": "string"
+          },
+          "logo_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "muted_text_color": {
+            "example": "#6b7280",
+            "type": "string"
+          },
+          "primary_color": {
+            "example": "#2d29d7",
+            "type": "string"
+          },
+          "secondary_color": {
+            "example": "#4338ca",
+            "type": "string"
+          },
+          "social_links": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Map of social-platform → URL.",
+            "type": "object"
+          },
+          "text_color": {
+            "example": "#0a0a0e",
+            "type": "string"
+          }
+        },
+        "required": [
+          "logo_url",
+          "brand_name",
+          "primary_color",
+          "secondary_color",
+          "text_color",
+          "muted_text_color",
+          "background_color",
+          "card_background_color",
+          "font_stack",
+          "button_radius",
+          "container_max_width",
+          "footer_html",
+          "footer_address",
+          "social_links",
+          "extras"
+        ],
+        "type": "object"
+      },
+      "SendAcceptedDto": {
+        "properties": {
+          "accepted": {
+            "description": "Always true on a 202.",
+            "example": true,
+            "type": "boolean"
+          },
+          "from": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accepted",
+          "from",
+          "to",
+          "subject"
         ],
         "type": "object"
       },
@@ -156,6 +1609,24 @@
         },
         "required": [
           "messages"
+        ],
+        "type": "object"
+      },
+      "SendBatchOpenApiResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/SendBatchRowStatusDto"
+            },
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SendBatchSummaryDto"
+          }
+        },
+        "required": [
+          "data",
+          "summary"
         ],
         "type": "object"
       },
@@ -197,13 +1668,75 @@
         ],
         "type": "object"
       },
+      "SendBatchRowErrorDto": {
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SendBatchRowStatusDto": {
+        "properties": {
+          "error": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendBatchRowErrorDto"
+              }
+            ],
+            "nullable": true
+          },
+          "id": {
+            "description": "Outbound message id when accepted; absent on reject.",
+            "type": "string"
+          },
+          "index": {
+            "description": "Index into the request `messages[]` array.",
+            "type": "number"
+          },
+          "status": {
+            "enum": [
+              "accepted",
+              "rejected"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "status"
+        ],
+        "type": "object"
+      },
+      "SendBatchSummaryDto": {
+        "properties": {
+          "accepted": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "accepted",
+          "rejected"
+        ],
+        "type": "object"
+      },
       "SendTemplateDto": {
         "properties": {
           "data": {
             "description": "Data object to render into the template",
             "example": {
               "name": "Alice",
-              "orderId": "ord_123"
+              "order_id": "ord_123"
             },
             "type": "object"
           },
@@ -226,6 +1759,263 @@
           "data",
           "from",
           "to"
+        ],
+        "type": "object"
+      },
+      "SmtpConfigDto": {
+        "properties": {
+          "bounce_webhook_secret": {
+            "description": "Per-workspace bounce-webhook secret. Embedded in the URL the user pastes into provider dashboards.",
+            "type": "string"
+          },
+          "bounce_webhook_url": {
+            "description": "Fully-qualified webhook URL the user pastes into their provider.",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "domain_id": {
+            "description": "Null for the workspace-default config, set for a per-domain override.",
+            "nullable": true,
+            "type": "string"
+          },
+          "from_email": {
+            "type": "string"
+          },
+          "from_name": {
+            "type": "string"
+          },
+          "host": {
+            "type": "string"
+          },
+          "last_verified_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_verify_error": {
+            "nullable": true,
+            "type": "string"
+          },
+          "password": {
+            "description": "Always null on the wire — the stored ciphertext is never returned.",
+            "nullable": true,
+            "type": "string"
+          },
+          "password_set": {
+            "type": "boolean"
+          },
+          "port": {
+            "type": "number"
+          },
+          "secure": {
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "active",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "username": {
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "domain_id",
+          "host",
+          "port",
+          "secure",
+          "username",
+          "password",
+          "password_set",
+          "from_name",
+          "from_email",
+          "status",
+          "last_verified_at",
+          "last_verify_error",
+          "bounce_webhook_secret",
+          "bounce_webhook_url",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "SmtpVerifyErrorDto": {
+        "properties": {
+          "code": {
+            "example": "EAUTH",
+            "type": "string"
+          },
+          "message": {
+            "example": "Authentication failed — check the username and password.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "SmtpVerifyResultDto": {
+        "properties": {
+          "error": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SmtpVerifyErrorDto"
+              }
+            ],
+            "nullable": true
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "type": "object"
+      },
+      "SuppressionEntryDto": {
+        "properties": {
+          "added_at": {
+            "description": "Insertion (or last-touch) timestamp.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "description": "Suppressed recipient (lowercased on insert).",
+            "example": "user@example.com",
+            "type": "string"
+          },
+          "id": {
+            "description": "Suppression row id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Free-text reason; null when unspecified.",
+            "nullable": true,
+            "type": "string"
+          },
+          "source": {
+            "description": "Where the row originated.",
+            "enum": [
+              "manual",
+              "bounce",
+              "complaint"
+            ],
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "Workspace this suppression belongs to.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "email",
+          "reason",
+          "source",
+          "added_at"
+        ],
+        "type": "object"
+      },
+      "TemplateDto": {
+        "properties": {
+          "body_html": {
+            "type": "string"
+          },
+          "body_text": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "template",
+              "layout",
+              "partial"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "variables_schema": {
+            "description": "Declared variable schema; arbitrary JSON or null if not configured.",
+            "nullable": true,
+            "type": "object"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "kind",
+          "subject",
+          "body_html",
+          "body_text",
+          "variables_schema",
+          "tags",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "TemplateVariablesResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Variables auto-detected from the saved template body + subject (Handlebars expressions, dotted paths preserved).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
         ],
         "type": "object"
       },
@@ -275,23 +2065,23 @@
       },
       "UpdateBrandDto": {
         "properties": {
-          "backgroundColor": {
+          "background_color": {
             "description": "Page background — the area outside the email card.",
             "type": "string"
           },
-          "brandName": {
+          "brand_name": {
             "description": "Display name shown in the email header (falls back to your workspace display name if not set).",
             "type": "string"
           },
-          "buttonRadius": {
+          "button_radius": {
             "description": "CSS length value for button border-radius (e.g. \"6px\", \"0\", \"9999px\" for fully round).",
             "type": "string"
           },
-          "cardBackgroundColor": {
+          "card_background_color": {
             "description": "Email card background.",
             "type": "string"
           },
-          "containerMaxWidth": {
+          "container_max_width": {
             "description": "Maximum width of the email card. Bulletproof tables max-out at this.",
             "type": "string"
           },
@@ -302,42 +2092,42 @@
             "description": "Extra key/value tokens addressable as {{brand.extras.<key>}} in templates. Use for marketing strings, secondary accent colors, etc.",
             "type": "object"
           },
-          "fontStack": {
+          "font_stack": {
             "description": "CSS font-family stack. Email clients can't use webfonts reliably — list system fonts in fallback order.",
             "type": "string"
           },
-          "footerAddress": {
+          "footer_address": {
             "description": "Postal address line for compliance footers (CAN-SPAM, etc.). Plain text, displayed verbatim.",
             "type": "string"
           },
-          "footerHtml": {
+          "footer_html": {
             "description": "Custom HTML to render in the email footer. Inline styles only — no <style> tags. Used by templates that opt into `{{> bp.footer}}`.",
             "type": "string"
           },
-          "logoUrl": {
+          "logo_url": {
             "description": "Public URL of your logo. Recommended: PNG/SVG, ≤200px tall, hosted on a domain you control or any CDN reachable at send time.",
             "type": "string"
           },
-          "mutedTextColor": {
+          "muted_text_color": {
             "description": "Muted text color for footers + secondary copy.",
             "type": "string"
           },
-          "primaryColor": {
+          "primary_color": {
             "description": "Primary brand color. Used for buttons, links, and accent strokes. Hex string (e.g. #2d29d7).",
             "type": "string"
           },
-          "secondaryColor": {
+          "secondary_color": {
             "description": "Secondary brand color, typically darker than primary. Used for hover states + secondary accents.",
             "type": "string"
           },
-          "socialLinks": {
+          "social_links": {
             "additionalProperties": {
               "type": "string"
             },
             "description": "Map of social-platform → URL. Recognized keys: twitter, x, linkedin, github, instagram, facebook, youtube, tiktok, mastodon, bluesky, web.",
             "type": "object"
           },
-          "textColor": {
+          "text_color": {
             "description": "Body text color (default: near-black).",
             "type": "string"
           }
@@ -346,7 +2136,7 @@
       },
       "UpdateDomainDto": {
         "properties": {
-          "dnsProvider": {
+          "dns_provider": {
             "description": "Identifier from the wizard's provider list. Free-form so we can ship new entries without a migration. NULL clears the choice.",
             "nullable": true,
             "type": "string"
@@ -356,11 +2146,11 @@
       },
       "UpdateMailboxDto": {
         "properties": {
-          "displayName": {
+          "display_name": {
             "description": "Display name",
             "type": "string"
           },
-          "retentionDays": {
+          "retention_days": {
             "description": "Retention period in days (1–30)",
             "maximum": 30,
             "minimum": 1,
@@ -377,9 +2167,21 @@
         },
         "type": "object"
       },
+      "UpdateOutboundMessageSettingsDto": {
+        "properties": {
+          "redact_bodies": {
+            "description": "When true, /messages/:id/body returns null body_html + body_text even to callers with envoi.message.body.read. Defaults to false.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "redact_bodies"
+        ],
+        "type": "object"
+      },
       "UpsertOutboundWebhookDto": {
         "properties": {
-          "eventTypes": {
+          "event_types": {
             "description": "Events the destination subscribes to.",
             "example": [
               "message.delivered",
@@ -403,20 +2205,20 @@
         },
         "required": [
           "url",
-          "eventTypes"
+          "event_types"
         ],
         "type": "object"
       },
       "UpsertSmtpConfigDto": {
         "properties": {
-          "fromEmail": {
+          "from_email": {
             "description": "Default From email address. Must be authorized to send on the chosen domain.",
             "example": "noreply@acme.com",
             "maxLength": 255,
             "minLength": 1,
             "type": "string"
           },
-          "fromName": {
+          "from_name": {
             "description": "Default From name on outbound messages.",
             "example": "Acme Notifications",
             "maxLength": 100,
@@ -459,18 +2261,18 @@
           "host",
           "port",
           "secure",
-          "fromName",
-          "fromEmail"
+          "from_name",
+          "from_email"
         ],
         "type": "object"
       },
       "UpsertTemplateDto": {
         "properties": {
-          "bodyHtml": {
+          "body_html": {
             "description": "HTML body (Handlebars)",
             "type": "string"
           },
-          "bodyText": {
+          "body_text": {
             "description": "Plain-text body (Handlebars). Auto-derived if omitted.",
             "type": "string"
           },
@@ -501,7 +2303,7 @@
             },
             "type": "array"
           },
-          "variablesSchema": {
+          "variables_schema": {
             "description": "Declared variable schema. Shape: `{version:1, vars:{<name>:{type, required?, default?, options?}}}`. When set, render + send validate the payload against the schema and 400 with descriptive errors on mismatch.",
             "type": "object"
           }
@@ -509,20 +2311,20 @@
         "required": [
           "name",
           "subject",
-          "bodyHtml"
+          "body_html"
         ],
         "type": "object"
       },
       "VerifySmtpConfigDto": {
         "properties": {
-          "fromEmail": {
+          "from_email": {
             "description": "Default From email address. Must be authorized to send on the chosen domain.",
             "example": "noreply@acme.com",
             "maxLength": 255,
             "minLength": 1,
             "type": "string"
           },
-          "fromName": {
+          "from_name": {
             "description": "Default From name on outbound messages.",
             "example": "Acme Notifications",
             "maxLength": 100,
@@ -565,8 +2367,8 @@
           "host",
           "port",
           "secure",
-          "fromName",
-          "fromEmail"
+          "from_name",
+          "from_email"
         ],
         "type": "object"
       }
@@ -587,13 +2389,99 @@
   },
   "openapi": "3.0.0",
   "paths": {
-    "/v1/webhooks/bounces/{workspaceId}/{secret}": {
+    "/v1/webhooks/bounces/{workspace_id}": {
+      "post": {
+        "operationId": "BounceWebhookController_handleBounceHeader",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-envoi-bounce-secret",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BounceWebhookResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Inbound bounce webhook (header-auth, preferred). Authenticates via the `X-Envoi-Bounce-Secret` header + provider signature. Public — no bearer / cookie auth.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/webhooks/bounces/{workspace_id}/d/{domain_id}": {
+      "post": {
+        "operationId": "BounceWebhookController_handleDomainBounceHeader",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "domain_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-envoi-bounce-secret",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BounceWebhookResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Inbound bounce webhook for a per-domain SMTP override (header-auth, preferred). Header secret + provider signature; tagged with the domain so audit attributes correctly.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/webhooks/bounces/{workspace_id}/{secret}": {
       "post": {
         "operationId": "BounceWebhookController_handleBounce",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -610,22 +2498,29 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BounceWebhookResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
-        "summary": "Inbound bounce webhook for the workspace-default SMTP config. Public; authenticates via URL secret + provider signature.",
+        "summary": "DEPRECATED — use the header-auth variant (`POST /webhooks/bounces/:workspaceId` + `X-Envoi-Bounce-Secret`). The path-style URL leaks the secret into ingress access logs; it remains live for 90 days for existing provider configs.",
         "tags": [
           "webhooks"
         ]
       }
     },
-    "/v1/webhooks/bounces/{workspaceId}/{secret}/d/{domainId}": {
+    "/v1/webhooks/bounces/{workspace_id}/{secret}/d/{domain_id}": {
       "post": {
         "operationId": "BounceWebhookController_handleDomainBounce",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -641,7 +2536,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -650,22 +2545,29 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BounceWebhookResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
-        "summary": "Inbound bounce webhook for a per-domain SMTP override. Same auth as the workspace-default URL but tagged with the domain so the audit log attributes correctly.",
+        "summary": "DEPRECATED per-domain variant of the path-style route. Use the header-auth variant (`POST /webhooks/bounces/:workspaceId/d/:domainId` + `X-Envoi-Bounce-Secret`).",
         "tags": [
           "webhooks"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/brand": {
+    "/v1/workspaces/{workspace_id}/brand": {
       "delete": {
         "operationId": "BrandController_reset",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -674,7 +2576,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Brand customisations cleared."
           }
         },
         "security": [
@@ -692,7 +2594,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -701,6 +2603,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -719,7 +2628,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -738,7 +2647,17 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BrandResponseDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure on the brand payload."
           }
         },
         "security": [
@@ -752,13 +2671,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/domains": {
+    "/v1/workspaces/{workspace_id}/domains": {
       "get": {
         "operationId": "DomainController_listDomains",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -767,6 +2686,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDomainsResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -785,7 +2711,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -804,7 +2730,20 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure on the request body."
+          },
+          "409": {
+            "description": "Domain already registered (globally unique)."
           }
         },
         "security": [
@@ -818,13 +2757,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/domains/{domainId}": {
+    "/v1/workspaces/{workspace_id}/domains/{domain_id}": {
       "delete": {
         "operationId": "DomainController_deleteDomain",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -832,7 +2771,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -840,6 +2779,12 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Domain deleted."
+          },
+          "404": {
+            "description": "Domain not found in this workspace."
+          },
           "409": {
             "description": "Domain has existing mailboxes; delete them first"
           }
@@ -849,6 +2794,7 @@
             "bearer": []
           }
         ],
+        "summary": "Delete a domain (must have no mailboxes left).",
         "tags": [
           "domains"
         ]
@@ -858,7 +2804,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -866,7 +2812,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -875,7 +2821,17 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "Domain not found in this workspace."
           }
         },
         "security": [
@@ -883,6 +2839,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get a single domain (with DNS instructions).",
         "tags": [
           "domains"
         ]
@@ -892,7 +2849,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -900,7 +2857,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -919,7 +2876,20 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure on the request body."
+          },
+          "404": {
+            "description": "Domain not found in this workspace."
           }
         },
         "security": [
@@ -933,13 +2903,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/domains/{domainId}/smtp-config": {
+    "/v1/workspaces/{workspace_id}/domains/{domain_id}/smtp-config": {
       "delete": {
         "operationId": "DomainSmtpConfigController_delete",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -947,7 +2917,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -955,6 +2925,9 @@
           }
         ],
         "responses": {
+          "204": {
+            "description": "Per-domain override deleted."
+          },
           "404": {
             "description": "No per-domain override to delete"
           }
@@ -974,7 +2947,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -982,7 +2955,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -991,6 +2964,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSmtpConfigResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1009,7 +2989,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1017,7 +2997,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1036,7 +3016,20 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpConfigDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure or username/password mismatch."
+          },
+          "404": {
+            "description": "Domain not found in this workspace."
           }
         },
         "security": [
@@ -1050,13 +3043,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/domains/{domainId}/smtp-config/verify-saved": {
+    "/v1/workspaces/{workspace_id}/domains/{domain_id}/smtp-config/verify-saved": {
       "post": {
         "operationId": "DomainSmtpConfigController_verifySaved",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1064,7 +3057,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1072,6 +3065,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpVerifyResultDto"
+                }
+              }
+            },
+            "description": ""
+          },
           "404": {
             "description": "No per-domain override saved"
           }
@@ -1087,13 +3090,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/domains/{domainId}/verify": {
+    "/v1/workspaces/{workspace_id}/domains/{domain_id}/verify": {
       "post": {
         "operationId": "DomainController_verifyDomain",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1101,7 +3104,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1109,8 +3112,21 @@
           }
         ],
         "responses": {
-          "201": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DomainDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Verification failed — one or more required records are still missing or wrong."
+          },
+          "404": {
+            "description": "Domain not found in this workspace."
           }
         },
         "security": [
@@ -1118,18 +3134,19 @@
             "bearer": []
           }
         ],
+        "summary": "Run a synchronous DNS check against this domain; flips status to active when the required record set passes.",
         "tags": [
           "domains"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes": {
+    "/v1/workspaces/{workspace_id}/mailboxes": {
       "get": {
         "operationId": "MailboxController_listMailboxes",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1158,7 +3175,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Page of mailboxes."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMailboxesResponseDto"
+                }
+              }
+            },
+            "description": ""
           },
           "403": {
             "description": "Caller lacks `mailbox.read` permission, or workspace has not enabled the `envoi` service."
@@ -1179,7 +3203,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1198,7 +3222,14 @@
         },
         "responses": {
           "201": {
-            "description": "Mailbox created."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailboxDto"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Validation failure (invalid local part, retention out of range)."
@@ -1210,7 +3241,10 @@
             "description": "Domain not found in this workspace."
           },
           "409": {
-            "description": "Mailbox local-part already exists on this domain."
+            "description": "Mailbox local-part already exists on this domain, or the domain is not yet verified."
+          },
+          "422": {
+            "description": "Local part or retention rejected by service-layer validation."
           }
         },
         "security": [
@@ -1224,13 +3258,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}": {
       "delete": {
         "operationId": "MailboxController_deleteMailbox",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1268,7 +3302,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1285,7 +3319,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Mailbox found."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailboxDto"
+                }
+              }
+            },
+            "description": ""
           },
           "404": {
             "description": "Mailbox not found in this workspace."
@@ -1306,7 +3347,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1333,13 +3374,23 @@
         },
         "responses": {
           "200": {
-            "description": "Mailbox updated."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailboxDto"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Validation failure or invalid status transition."
           },
           "404": {
             "description": "Mailbox not found in this workspace."
+          },
+          "422": {
+            "description": "Retention or status rejected by service-layer validation."
           }
         },
         "security": [
@@ -1353,13 +3404,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}/messages": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages": {
       "get": {
         "operationId": "MessageController_listMessages",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1441,7 +3492,20 @@
         ],
         "responses": {
           "200": {
-            "description": "Paginated message list"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListMessagesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid filter or cursor."
+          },
+          "404": {
+            "description": "Mailbox not found in this workspace."
           }
         },
         "security": [
@@ -1455,13 +3519,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}/messages/{mid}": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}": {
       "delete": {
         "operationId": "MessageController_deleteMessage",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1507,7 +3571,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1532,7 +3596,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Message details with attachment list"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageDetailDto"
+                }
+              }
+            },
+            "description": ""
           },
           "404": {
             "description": "Message not found"
@@ -1549,13 +3620,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}/messages/{mid}/attachments/{position}": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/attachments/{position}": {
       "get": {
         "operationId": "MessageController_getAttachment",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1605,13 +3676,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}/messages/{mid}/raw": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/raw": {
       "get": {
         "operationId": "MessageController_getRaw",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1653,13 +3724,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/mailboxes/{id}/messages/{mid}/read": {
+    "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/read": {
       "post": {
         "operationId": "MessageController_markRead",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1701,14 +3772,322 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/messages/timeline": {
+    "/v1/workspaces/{workspace_id}/messages": {
+      "delete": {
+        "operationId": "OutboundMessageController_deleteByRecipient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "recipient",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteByRecipientResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Missing or invalid recipient."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "RTBF: delete every message log row for `recipient` (case-insensitive). Returns the deleted-row count.",
+        "tags": [
+          "outbound-messages"
+        ]
+      },
+      "get": {
+        "operationId": "OutboundMessageController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size, 1–100",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "description": "Opaque cursor from previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by exact recipient address.",
+            "in": "query",
+            "name": "recipient",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by template name.",
+            "in": "query",
+            "name": "template",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by status.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "queued",
+                "sent",
+                "delivered",
+                "bounced",
+                "complained",
+                "failed",
+                "suppressed"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Substring filter on subject (case-insensitive, max 200 chars).",
+            "in": "query",
+            "name": "subject_contains",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOutboundMessagesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid filter or cursor."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List outbound messages with cursor pagination",
+        "tags": [
+          "outbound-messages"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/messages/export": {
+      "get": {
+        "operationId": "OutboundMessageController_exportCsv",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by exact recipient address.",
+            "in": "query",
+            "name": "recipient",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by template name.",
+            "in": "query",
+            "name": "template",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by status.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "queued",
+                "sent",
+                "delivered",
+                "bounced",
+                "complained",
+                "failed",
+                "suppressed"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Substring filter on subject (case-insensitive, max 200 chars).",
+            "in": "query",
+            "name": "subject_contains",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "text/csv stream with one header row + one row per message. Content-Disposition: attachment."
+          },
+          "429": {
+            "description": "Another export is already running, or this workspace has hit the hourly export cap."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stream the filtered message log as CSV. Same filters as GET /messages. Body columns are intentionally omitted; bodies remain gated by `envoi.message.body.read`. Rate-limited 1 concurrent + 5/hour per workspace.",
+        "tags": [
+          "outbound-messages"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/messages/settings": {
+      "get": {
+        "operationId": "OutboundMessageController_getSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundMessageSettingsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read this workspace's outbound-message settings. Absent → defaults (redact_bodies: false).",
+        "tags": [
+          "outbound-messages"
+        ]
+      },
+      "patch": {
+        "operationId": "OutboundMessageController_updateSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateOutboundMessageSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundMessageSettingsDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid payload."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update this workspace's outbound-message settings. Gated on `envoi.message.delete` — same privilege bar as RTBF, since both touch the PII boundary.",
+        "tags": [
+          "outbound-messages"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/messages/timeline": {
       "get": {
         "description": "Returns dense day buckets in [since, until). `metric=sent` (default) reads received messages; `metric=bounced` reads MX-time rejections matched to this workspace by envelope-to.",
         "operationId": "MessageTimelineController_getTimeline",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1785,13 +4164,21 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/smtp-config": {
-      "delete": {
-        "operationId": "SmtpConfigController_delete",
+    "/v1/workspaces/{workspace_id}/messages/{id}": {
+      "get": {
+        "operationId": "OutboundMessageController_get",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1799,6 +4186,95 @@
           }
         ],
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundMessageDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single outbound message (metadata + delivery verdicts; body not included). Use /:id/body for cleartext content.",
+        "tags": [
+          "outbound-messages"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/messages/{id}/body": {
+      "get": {
+        "operationId": "OutboundMessageController_getBody",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundMessageWithBodyDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the cleartext body of an outbound message. Gated by `envoi.message.body.read` (admin+ by default; not granted to plain members).",
+        "tags": [
+          "outbound-messages"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/smtp-config": {
+      "delete": {
+        "operationId": "SmtpConfigController_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Workspace-default SMTP config deleted."
+          },
           "404": {
             "description": "No SMTP config to delete"
           }
@@ -1818,7 +4294,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1827,6 +4303,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSmtpConfigResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1845,7 +4328,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1864,7 +4347,17 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpConfigDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure or username/password mismatch."
           }
         },
         "security": [
@@ -1878,13 +4371,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/smtp-config/verify": {
+    "/v1/workspaces/{workspace_id}/smtp-config/verify": {
       "post": {
         "operationId": "SmtpConfigController_verifyTransient",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1903,7 +4396,17 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpVerifyResultDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure on the request body."
           }
         },
         "security": [
@@ -1917,13 +4420,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/smtp-config/verify-saved": {
+    "/v1/workspaces/{workspace_id}/smtp-config/verify-saved": {
       "post": {
         "operationId": "SmtpConfigController_verifySaved",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1931,6 +4434,16 @@
           }
         ],
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpVerifyResultDto"
+                }
+              }
+            },
+            "description": ""
+          },
           "404": {
             "description": "No SMTP config saved"
           }
@@ -1946,13 +4459,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/smtp-configs": {
+    "/v1/workspaces/{workspace_id}/smtp-configs": {
       "get": {
         "operationId": "SmtpConfigListController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1961,6 +4474,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSmtpConfigsResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1975,13 +4495,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/suppression": {
+    "/v1/workspaces/{workspace_id}/suppression": {
       "get": {
         "operationId": "SuppressionController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -1990,6 +4510,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListSuppressionResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -1998,6 +4525,7 @@
             "bearer": []
           }
         ],
+        "summary": "List suppressed recipients in the workspace (most-recent first, capped at 500).",
         "tags": [
           "suppression"
         ]
@@ -2007,7 +4535,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2026,7 +4554,20 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuppressionEntryDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Invalid payload (missing or malformed email)."
+          },
+          "422": {
+            "description": "Email address rejected as invalid by the service layer."
           }
         },
         "security": [
@@ -2040,13 +4581,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/suppression/{email}": {
+    "/v1/workspaces/{workspace_id}/suppression/{email}": {
       "delete": {
         "operationId": "SuppressionController_remove",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2063,7 +4604,10 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Suppression removed."
+          },
+          "404": {
+            "description": "Email is not on this workspace suppression list."
           }
         },
         "security": [
@@ -2071,18 +4615,19 @@
             "bearer": []
           }
         ],
+        "summary": "Remove an address from the workspace suppression list.",
         "tags": [
           "suppression"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates": {
+    "/v1/workspaces/{workspace_id}/templates": {
       "get": {
         "operationId": "TemplateController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2107,6 +4652,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTemplatesResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -2125,7 +4677,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2144,7 +4696,17 @@
         },
         "responses": {
           "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure (bad name / payload)."
           }
         },
         "security": [
@@ -2152,18 +4714,19 @@
             "bearer": []
           }
         ],
+        "summary": "Create or update a template, layout, or partial. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.",
         "tags": [
           "templates"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/lint": {
+    "/v1/workspaces/{workspace_id}/templates/lint": {
       "post": {
         "operationId": "TemplateController_lint",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2182,7 +4745,17 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LintResultDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "422": {
+            "description": "Underlying render failed."
           }
         },
         "security": [
@@ -2196,13 +4769,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/preview": {
+    "/v1/workspaces/{workspace_id}/templates/preview": {
       "post": {
         "operationId": "TemplateController_preview",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2221,7 +4794,17 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderedMessageDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "422": {
+            "description": "Render failed (compile or runtime error)."
           }
         },
         "security": [
@@ -2235,13 +4818,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/tags": {
+    "/v1/workspaces/{workspace_id}/templates/tags": {
       "get": {
         "operationId": "TemplateController_listTags",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2250,6 +4833,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListTemplateTagsResponseDto"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -2264,13 +4854,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}": {
+    "/v1/workspaces/{workspace_id}/templates/{name}": {
       "delete": {
         "operationId": "TemplateController_delete",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2287,7 +4877,10 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Template deleted."
+          },
+          "404": {
+            "description": "Template not found in this workspace."
           }
         },
         "security": [
@@ -2295,6 +4888,7 @@
             "bearer": []
           }
         ],
+        "summary": "Delete a template, layout, or partial by name.",
         "tags": [
           "templates"
         ]
@@ -2304,7 +4898,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2321,7 +4915,17 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "Template not found in this workspace."
           }
         },
         "security": [
@@ -2329,18 +4933,19 @@
             "bearer": []
           }
         ],
+        "summary": "Get a template, layout, or partial by name.",
         "tags": [
           "templates"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}/render": {
+    "/v1/workspaces/{workspace_id}/templates/{name}/render": {
       "post": {
         "operationId": "TemplateController_render",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2367,7 +4972,23 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderedMessageDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "Template not found in this workspace."
+          },
+          "409": {
+            "description": "Cannot render a layout/partial — only sendable templates."
+          },
+          "422": {
+            "description": "Render or schema validation failed."
           }
         },
         "security": [
@@ -2375,18 +4996,19 @@
             "bearer": []
           }
         ],
+        "summary": "Render a saved template against a data payload. Returns subject + html + text without sending.",
         "tags": [
           "templates"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}/send": {
+    "/v1/workspaces/{workspace_id}/templates/{name}/send": {
       "post": {
         "operationId": "TemplateController_send",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2422,16 +5044,29 @@
         },
         "responses": {
           "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendAcceptedDto"
+                }
+              }
+            },
             "description": "Send accepted; queued for delivery."
           },
           "400": {
             "description": "Validation failure (malformed body or recipient)."
           },
+          "403": {
+            "description": "From-address domain is not registered to this workspace."
+          },
           "404": {
             "description": "Template not found in this workspace."
           },
           "409": {
-            "description": "IDEMPOTENCY_KEY_REUSE — same key, different body."
+            "description": "IDEMPOTENCY_KEY_REUSE — same key, different body — or domain not yet verified."
+          },
+          "422": {
+            "description": "Recipient suppressed, render failure, or invalid from address."
           },
           "429": {
             "description": "Rate limited."
@@ -2448,13 +5083,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}/send-batch": {
+    "/v1/workspaces/{workspace_id}/templates/{name}/send-batch": {
       "post": {
         "operationId": "TemplateController_sendBatch",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2481,7 +5116,14 @@
         },
         "responses": {
           "200": {
-            "description": "Batch accepted; each row reports its own status."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendBatchOpenApiResponseDto"
+                }
+              }
+            },
+            "description": ""
           },
           "400": {
             "description": "Validation failure (malformed body, batch too large)."
@@ -2504,13 +5146,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}/test-send": {
+    "/v1/workspaces/{workspace_id}/templates/{name}/test-send": {
       "post": {
         "operationId": "TemplateController_testSend",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2537,7 +5179,26 @@
         },
         "responses": {
           "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendAcceptedDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "403": {
+            "description": "From-address domain is not registered to this workspace."
+          },
+          "404": {
+            "description": "Template not found in this workspace."
+          },
+          "409": {
+            "description": "Cannot test-send a layout/partial; or domain not yet verified."
+          },
+          "422": {
+            "description": "Invalid from address or render failure."
           }
         },
         "security": [
@@ -2551,13 +5212,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/templates/{name}/variables": {
+    "/v1/workspaces/{workspace_id}/templates/{name}/variables": {
       "get": {
         "operationId": "TemplateController_variables",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2574,7 +5235,17 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateVariablesResponseDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "Template not found in this workspace."
           }
         },
         "security": [
@@ -2588,13 +5259,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks": {
+    "/v1/workspaces/{workspace_id}/webhooks": {
       "get": {
         "operationId": "OutboundWebhookController_list",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2603,6 +5274,16 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OutboundWebhookConfigDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -2617,13 +5298,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks/attempts": {
+    "/v1/workspaces/{workspace_id}/webhooks/attempts": {
       "get": {
         "operationId": "OutboundWebhookController_listAttempts",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2640,6 +5321,16 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OutboundWebhookAttemptDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": ""
           }
         },
@@ -2654,13 +5345,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks/default": {
+    "/v1/workspaces/{workspace_id}/webhooks/default": {
       "delete": {
         "operationId": "OutboundWebhookController_deleteDefault",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2669,7 +5360,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Workspace-default webhook deleted."
           }
         },
         "security": [
@@ -2677,6 +5368,7 @@
             "bearer": []
           }
         ],
+        "summary": "Delete the workspace-default webhook config.",
         "tags": [
           "outbound-webhooks"
         ]
@@ -2686,7 +5378,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2695,7 +5387,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigDto"
+                }
+              }
+            },
+            "description": "Workspace-default config, or null if not configured."
           }
         },
         "security": [
@@ -2703,6 +5402,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get the workspace-default webhook config (returns null if unset).",
         "tags": [
           "outbound-webhooks"
         ]
@@ -2712,7 +5412,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2731,7 +5431,20 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigWithSecretDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure (bad URL or event-type set)."
+          },
+          "422": {
+            "description": "URL failed SSRF + reachability checks at config time."
           }
         },
         "security": [
@@ -2745,13 +5458,13 @@
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks/default/rotate-secret": {
+    "/v1/workspaces/{workspace_id}/webhooks/default/rotate-secret": {
       "post": {
         "operationId": "OutboundWebhookController_rotateDefaultSecret",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2760,7 +5473,17 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigWithSecretDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "No webhook configured to rotate."
           }
         },
         "security": [
@@ -2768,18 +5491,19 @@
             "bearer": []
           }
         ],
+        "summary": "Rotate the workspace-default webhook signing secret. Previous secret remains valid for 24h. Plaintext returned once.",
         "tags": [
           "outbound-webhooks"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks/domains/{domainId}": {
+    "/v1/workspaces/{workspace_id}/webhooks/domains/{domain_id}": {
       "delete": {
         "operationId": "OutboundWebhookController_deleteDomain",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2787,7 +5511,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2796,7 +5520,7 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Per-domain webhook override deleted."
           }
         },
         "security": [
@@ -2804,6 +5528,7 @@
             "bearer": []
           }
         ],
+        "summary": "Delete the per-domain webhook override.",
         "tags": [
           "outbound-webhooks"
         ]
@@ -2813,7 +5538,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2821,7 +5546,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2830,7 +5555,14 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigDto"
+                }
+              }
+            },
+            "description": "Per-domain override, or null if not configured."
           }
         },
         "security": [
@@ -2838,6 +5570,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get the per-domain webhook override (returns null if unset).",
         "tags": [
           "outbound-webhooks"
         ]
@@ -2847,7 +5580,7 @@
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2855,7 +5588,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2874,7 +5607,20 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigWithSecretDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "400": {
+            "description": "Validation failure (bad URL or event-type set)."
+          },
+          "422": {
+            "description": "URL failed SSRF + reachability checks at config time."
           }
         },
         "security": [
@@ -2882,18 +5628,19 @@
             "bearer": []
           }
         ],
+        "summary": "Create or replace the per-domain webhook override. Returns the plaintext signing secret ONCE — store it now.",
         "tags": [
           "outbound-webhooks"
         ]
       }
     },
-    "/v1/workspaces/{workspaceId}/webhooks/domains/{domainId}/rotate-secret": {
+    "/v1/workspaces/{workspace_id}/webhooks/domains/{domain_id}/rotate-secret": {
       "post": {
         "operationId": "OutboundWebhookController_rotateDomainSecret",
         "parameters": [
           {
             "in": "path",
-            "name": "workspaceId",
+            "name": "workspace_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2901,7 +5648,7 @@
           },
           {
             "in": "path",
-            "name": "domainId",
+            "name": "domain_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -2910,7 +5657,17 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundWebhookConfigWithSecretDto"
+                }
+              }
+            },
             "description": ""
+          },
+          "404": {
+            "description": "No per-domain webhook configured to rotate."
           }
         },
         "security": [
@@ -2918,6 +5675,7 @@
             "bearer": []
           }
         ],
+        "summary": "Rotate the per-domain webhook signing secret. Previous secret remains valid for 24h. Plaintext returned once.",
         "tags": [
           "outbound-webhooks"
         ]

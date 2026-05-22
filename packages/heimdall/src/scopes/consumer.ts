@@ -18,8 +18,9 @@ import { consumerAuthControllerSignin } from "../_generated/clients/consumerAuth
 // arg that conflicts with our HTTP client's auth-middleware injection).
 import { consumerAuthControllerRefresh } from "../_generated/clients/consumerAuth/consumerAuthControllerRefresh.js";
 import { consumerAuthControllerLogout } from "../_generated/clients/consumerAuth/consumerAuthControllerLogout.js";
-import { consumerAuthControllerRequestReset } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestReset.js";
+import { consumerAuthControllerRequestPasswordReset } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestPasswordReset.js";
 import { consumerAuthControllerResetPassword } from "../_generated/clients/consumerAuth/consumerAuthControllerResetPassword.js";
+import { consumerIdpControllerNativeSignIn } from "../_generated/clients/consumerOauthSignIn/consumerIdpControllerNativeSignIn.js";
 
 // consumerMe — all six endpoints have spec bugs (appSlug not declared
 // in spec parameters[] despite being in the URL); use callDirect below.
@@ -34,13 +35,15 @@ import type { ConsumerSigninDto } from "../_generated/types/ConsumerSigninDto.js
 import type { ConsumerSignupDto } from "../_generated/types/ConsumerSignupDto.js";
 import type { ConsumerRefreshDto } from "../_generated/types/ConsumerRefreshDto.js";
 import type { ConsumerLogoutDto } from "../_generated/types/ConsumerLogoutDto.js";
-import type { ConsumerRequestResetDto } from "../_generated/types/ConsumerRequestResetDto.js";
+import type { ConsumerRequestPasswordResetDto } from "../_generated/types/ConsumerRequestPasswordResetDto.js";
 import type { ConsumerResetPasswordDto } from "../_generated/types/ConsumerResetPasswordDto.js";
 import type { UpdateMeDto } from "../_generated/types/UpdateMeDto.js";
 import type { VerifyBody } from "../_generated/types/VerifyBody.js";
 import type { AuthorizeBody } from "../_generated/types/AuthorizeBody.js";
 import type { AuthorizeBatchBody } from "../_generated/types/AuthorizeBatchBody.js";
 import type { ClientCredentialsDto } from "../_generated/types/ClientCredentialsDto.js";
+import type { IdpNativeSigninDto } from "../_generated/types/IdpNativeSigninDto.js";
+import type { ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey } from "../_generated/types/consumerOauthSignIn/ConsumerIdpControllerNativeSignIn.js";
 
 import { JwksCache } from "../jwt/jwks-cache.js";
 import { verifyHeimdallToken, type VerifyOptions, type HeimdallClaims } from "../jwt/verify.js";
@@ -142,15 +145,66 @@ export class ConsumerScope {
         { client: this.client },
       ),
 
-    requestReset: (data: ConsumerRequestResetDto) =>
-      consumerAuthControllerRequestReset(
-        { appSlug: this.appSlug, data },
+    /**
+     * PAK-required: caller must instantiate `Heimdall` with
+     * `auth: { type: "apiKey", key: "pcft_live_..." }`. The
+     * kubb-generated `headers.authorization` slot is a stub — the
+     * HTTP client's auth middleware overrides whatever's passed.
+     */
+    requestReset: (data: ConsumerRequestPasswordResetDto) =>
+      consumerAuthControllerRequestPasswordReset(
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
 
     resetPassword: (data: ConsumerResetPasswordDto) =>
       consumerAuthControllerResetPassword(
         { appSlug: this.appSlug, data },
+        { client: this.client },
+      ),
+
+    /**
+     * Sign in / sign up with a provider ID token (native flow).
+     *
+     * Submit the identity token Apple (or Google, once enabled) issued
+     * to a native client (iOS `ASAuthorizationController`, Google
+     * Sign-In for iOS / Android). Heimdall verifies the signature
+     * against the provider's JWKS, pins the issuer, checks the
+     * audience against the app's configured native client ids,
+     * recomputes `sha256(nonce)` and compares to the token's `nonce`
+     * claim, then resolves or creates the EndUser. Same response
+     * shape as `auth.signin`.
+     *
+     * Account linking: when an EndUser already exists with a verified
+     * primary email matching the token's `email` claim, the app's
+     * `oauth_link_policy` decides the outcome:
+     *   - `auto` (default): silently link the identity to the existing
+     *     account (provider claims `email_verified: true` AND the email
+     *     is not an Apple private relay).
+     *   - `confirm`: refuse with 409 `link_required`. UI should sign
+     *     the user in via their original method to bind.
+     *   - `reject`: refuse with 409 `account_exists_with_different_provider`.
+     *
+     * Apple's private-relay emails (`*@privaterelay.appleid.com`) are
+     * persisted as-is on the EndUser's primary email contact and
+     * never participate in auto-link.
+     *
+     * Apple sends the user's display name only on the FIRST sign-in.
+     * Pass it through `user.name` on that call — Heimdall persists it
+     * to the EndUser row. Subsequent sign-ins should omit `user`.
+     */
+    signinWithProvider: (args: {
+      provider: ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey;
+      id_token: IdpNativeSigninDto["id_token"];
+      nonce: IdpNativeSigninDto["nonce"];
+      user?: IdpNativeSigninDto["user"];
+    }) =>
+      consumerIdpControllerNativeSignIn(
+        {
+          appSlug: this.appSlug,
+          provider: args.provider,
+          data: { id_token: args.id_token, nonce: args.nonce, user: args.user },
+        },
         { client: this.client },
       ),
   };
