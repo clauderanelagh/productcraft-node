@@ -13,7 +13,7 @@ Install **`productcraft`** when you call more than one ProductCraft API from the
 Install the **per-product packages** when you only need one:
 
 - `@productcraft/heimdall` — customer auth + EndUsers
-- `@productcraft/envoi` — transactional email
+- `@productcraft/envoi` — receive-and-store mail: template sends, mailboxes, domains + DKIM, webhooks
 - `@productcraft/rally` — waitlists
 - `@productcraft/agora` — communities, posts, feeds, stories, moderation
 - `@productcraft/platform-auth` — workspace administration
