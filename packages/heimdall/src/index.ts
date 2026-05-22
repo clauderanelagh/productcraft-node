@@ -31,12 +31,6 @@ import type { AppControllerListMyAppsQueryParams } from "./_generated/types/apps
 import type { StatsControllerGetMyStatsQueryParams } from "./_generated/types/platformStats/StatsControllerGetMyStats.js";
 
 export interface HeimdallConfig extends PCClientConfig {
-  /**
-   * Override the default `audience` claim expected on tokens verified
-   * via `consumer(slug).verifyToken(...)`. Per-call override is also
-   * available on `verifyToken`'s options.
-   */
-  expectedAudience?: string;
   /** Per-app JWKS cache lifetime in ms. Default 10 minutes. */
   jwksTtlMs?: number;
 }
@@ -45,7 +39,7 @@ export class Heimdall {
   private readonly client: Client;
   private readonly baseUrl: string;
   private readonly fetch: typeof fetch | undefined;
-  private readonly jwtConfig: { audience?: string; jwksTtlMs?: number };
+  private readonly jwtConfig: { jwksTtlMs?: number };
 
   constructor(config: HeimdallConfig = {}) {
     this.baseUrl = config.baseUrl ?? PC_BASE_URL.heimdall;
@@ -56,7 +50,6 @@ export class Heimdall {
       fetch: this.fetch,
     });
     this.jwtConfig = {
-      audience: config.expectedAudience,
       jwksTtlMs: config.jwksTtlMs,
     };
   }

@@ -20,7 +20,9 @@ import {
 
 const BASE = "https://api.heimdall.example";
 const APP = "my-app";
-const ISSUER = `${BASE}/${APP}`;
+// Heimdall mints every Consumer-API token with `iss: "heimdall"`.
+// The per-app boundary is enforced by the JWKS, not the issuer string.
+const ISSUER = "heimdall";
 
 interface TestRig {
   heimdall: Heimdall;
@@ -122,7 +124,7 @@ describe("verifyToken", () => {
   it("throws JwtIssuerMismatchError when iss doesn't match", async () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
-      iss: "https://wrong-issuer.example/my-app",
+      iss: "not-heimdall",
     }, { exp: "1h" });
 
     await expect(

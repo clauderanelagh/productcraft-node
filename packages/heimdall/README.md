@@ -206,10 +206,11 @@ import { jwtVerify } from "jose";
 
 const scope = heimdall.consumer("my-app-slug");
 const { payload } = await jwtVerify(token, scope.jwks.getKey, {
-  issuer: scope.expectedIssuer,
-  audience: "my-app",
+  issuer: scope.expectedIssuer, // the literal string "heimdall"
 });
 ```
+
+Heimdall Consumer-API tokens are not minted with an `aud` claim — the per-app boundary is enforced by the JWKS, not the issuer string or the audience. If you mint custom tokens with the heimdall key and want to enforce an audience, pass `audience` to `jose.jwtVerify` or `scope.verifyToken(token, { audience: "..." })` per-call.
 
 ### Passport integration
 
@@ -263,8 +264,6 @@ new Heimdall({
   baseUrl: "https://api.heimdall.example.test",
   // Custom fetch (undici with retry, mock in tests, ...)
   fetch: customFetch,
-  // Expected JWT `aud` claim for `consumer(slug).verifyToken(...)`. Optional.
-  expectedAudience: "my-app",
   // JWKS cache TTL — default 10 minutes
   jwksTtlMs: 10 * 60 * 1000,
 });
