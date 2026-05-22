@@ -16,7 +16,7 @@ Install the **per-product packages** when you only need one:
 - `@productcraft/envoi` — receive-and-store mail: template sends, mailboxes, domains + DKIM, webhooks
 - `@productcraft/rally` — waitlists: public-form signups, variants, referrals, leaderboard, approvals, signed webhooks
 - `@productcraft/agora` — social-as-a-service: communities, posts, feeds, stories, conversations, notifications, moderation
-- `@productcraft/platform-auth` — workspace administration
+- `@productcraft/platform-auth` — PlatformUser auth + workspaces + members + roles + IAM policies + PAKs + introspect
 
 The per-product packages are leaner (no bundled deps for the surfaces you don't use).
 
