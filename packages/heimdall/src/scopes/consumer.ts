@@ -297,21 +297,28 @@ export class ConsumerScope {
   // (typically called by the customer's backend, not the user agent)
   // ─────────────────────────────────────────────────────────────
   readonly verify = {
+    /**
+     * The kubb-generated client makes `headers.authorization` a required
+     * arg because the server controllers accept the bearer as a fallback
+     * to `body.token`. We stub an empty string here — the HTTP client's
+     * auth middleware overrides whatever's passed with the configured
+     * credential (`PCAuth.apiKey` / `bearer` / `cookie`).
+     */
     verify: (data: VerifyBody) =>
       consumerVerifyControllerVerify(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
 
     authorize: (data: AuthorizeBody) =>
       consumerVerifyControllerAuthorize(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
 
     authorizeBatch: (data: AuthorizeBatchBody) =>
       consumerVerifyControllerAuthorizeBatch(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
   };
