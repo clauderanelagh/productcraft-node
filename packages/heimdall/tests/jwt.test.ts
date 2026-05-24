@@ -20,9 +20,12 @@ import {
 
 const BASE = "https://api.heimdall.example";
 const APP = "my-app";
-// Heimdall mints every Consumer-API token with `iss: "heimdall"`.
-// The per-app boundary is enforced by the JWKS, not the issuer string.
-const ISSUER = "heimdall";
+// Per-app issuer the Heimdall Consumer API mints on every token —
+// the API base joined with the app slug. The SDK also accepts the
+// legacy literal `"heimdall"` issuer during the migration window
+// (see `acceptedIssuers` on ConsumerScope).
+const ISSUER = `${BASE}/${APP}`;
+const AUDIENCE = APP;
 
 interface TestRig {
   heimdall: Heimdall;
@@ -81,6 +84,7 @@ describe("verifyToken", () => {
     const token = await signToken(rig.privateKey, {
       sub: "user_123",
       iss: ISSUER,
+      aud: AUDIENCE,
       role: "member",
       permissions: ["billing.read"],
     }, { exp: "2h" });
@@ -88,14 +92,27 @@ describe("verifyToken", () => {
     const claims = await rig.heimdall.consumer(APP).verifyToken(token);
     expect(claims.sub).toBe("user_123");
     expect(claims.iss).toBe(ISSUER);
+    expect(claims.aud).toBe(AUDIENCE);
     expect(claims.role).toBe("member");
     expect(claims.permissions).toEqual(["billing.read"]);
+  });
+
+  it("accepts the legacy 'heimdall' issuer during the migration window", async () => {
+    const token = await signToken(rig.privateKey, {
+      sub: "user_legacy",
+      iss: "heimdall",
+      aud: AUDIENCE,
+    }, { exp: "1h" });
+
+    const claims = await rig.heimdall.consumer(APP).verifyToken(token);
+    expect(claims.iss).toBe("heimdall");
+    expect(claims.sub).toBe("user_legacy");
   });
 
   it("singleflights: 5 concurrent verifies → 1 JWKS fetch", async () => {
     const token = await signToken(
       rig.privateKey,
-      { sub: "u", iss: ISSUER },
+      { sub: "u", iss: ISSUER, aud: AUDIENCE },
       { exp: "1h" },
     );
 
@@ -114,6 +131,7 @@ describe("verifyToken", () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
       iss: ISSUER,
+      aud: AUDIENCE,
     }, { exp: Math.floor(Date.now() / 1000) - 60 });
 
     await expect(
@@ -121,10 +139,11 @@ describe("verifyToken", () => {
     ).rejects.toBeInstanceOf(JwtExpiredError);
   });
 
-  it("throws JwtIssuerMismatchError when iss doesn't match", async () => {
+  it("throws JwtIssuerMismatchError when iss is neither the per-app URL nor the legacy literal", async () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
-      iss: "not-heimdall",
+      iss: "https://api.heimdall.example/other-app",
+      aud: AUDIENCE,
     }, { exp: "1h" });
 
     await expect(
@@ -132,7 +151,7 @@ describe("verifyToken", () => {
     ).rejects.toBeInstanceOf(JwtIssuerMismatchError);
   });
 
-  it("throws JwtAudienceMismatchError when aud is required + wrong", async () => {
+  it("throws JwtAudienceMismatchError when aud doesn't match the app slug", async () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
       iss: ISSUER,
@@ -140,7 +159,7 @@ describe("verifyToken", () => {
     }, { exp: "1h" });
 
     await expect(
-      rig.heimdall.consumer(APP).verifyToken(token, { audience: "my-app" }),
+      rig.heimdall.consumer(APP).verifyToken(token),
     ).rejects.toBeInstanceOf(JwtAudienceMismatchError);
   });
 
@@ -148,6 +167,7 @@ describe("verifyToken", () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
       iss: ISSUER,
+      aud: AUDIENCE,
     }, { exp: "1h" });
     // Replace the entire signature segment with a deterministic
     // 64-char base64url string so the signature definitely doesn't

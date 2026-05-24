@@ -49,11 +49,14 @@ import { JwksCache } from "../jwt/jwks-cache.js";
 import { verifyHeimdallToken, type VerifyOptions, type HeimdallClaims } from "../jwt/verify.js";
 
 /**
- * Literal `iss` claim Heimdall Consumer-API tokens are minted with.
- * Same string for every app — the per-app boundary is enforced by
- * the JWKS, not by varying the issuer string.
+ * Legacy `iss` claim Heimdall Consumer-API tokens used to be minted
+ * with. Kept exported so consumers verifying tokens issued before the
+ * 2026-05-24 per-app-issuer migration can still match `iss` while a
+ * deployment cycles to fresh tokens. New tokens carry the per-app
+ * issuer URL — `${baseUrl}/${appSlug}` — accessible via
+ * `scope.expectedIssuer`.
  */
-export const HEIMDALL_CONSUMER_ISSUER = "heimdall";
+export const HEIMDALL_LEGACY_ISSUER = "heimdall";
 
 export interface ConsumerScopeInternals {
   client: Client;
@@ -67,15 +70,35 @@ export class ConsumerScope {
   public readonly appSlug: string;
 
   /**
-   * Issuer string the Heimdall Consumer API mints on every token.
+   * Issuer the Heimdall Consumer API stamps on every token for this
+   * app — the public Heimdall API base joined with the app slug
+   * (e.g. `https://api.heimdall.productcraft.co/acme`). Pin it in
+   * your local verifier so a token minted for another app on the
+   * platform cannot pass.
    *
-   * Heimdall uses the literal string `"heimdall"` as the `iss` claim
-   * on every per-app token (apps don't get their slug baked into iss
-   * — the per-app surface is enforced by the JWKS, not the issuer
-   * string). Pass this to `jose.jwtVerify({ issuer })` or rely on
-   * `scope.verifyToken` which checks it for you.
+   * `scope.verifyToken` already enforces this for you. Pass it as a
+   * second-position issuer if you're wiring `jose.jwtVerify`,
+   * `passport-jwt`, or PyJWT yourself.
    */
   public readonly expectedIssuer: string;
+
+  /**
+   * Audience the Consumer API stamps on every token for this app —
+   * literally the app slug (e.g. `"acme"`). Pin it in your verifier
+   * the same way as `expectedIssuer`. `scope.verifyToken` enforces
+   * it by default.
+   */
+  public readonly expectedAudience: string;
+
+  /**
+   * Both accepted issuer strings (`expectedIssuer` + the legacy
+   * `'heimdall'` literal). `verifyToken` passes this to jose so tokens
+   * minted before the 2026-05-24 per-app-issuer migration keep
+   * verifying alongside fresh ones — useful for the ~1-hour transition
+   * window per access-token TTL, and the longer session TTL on
+   * refresh tokens.
+   */
+  public readonly acceptedIssuers: readonly string[];
 
   /** jose-compatible JWKS resolver. Drop into `jose.jwtVerify`, passport-jwt, etc. */
   public readonly jwks: JwksCache;
@@ -89,7 +112,11 @@ export class ConsumerScope {
   ) {
     this.appSlug = appSlug;
     this.client = internals.client;
-    this.expectedIssuer = HEIMDALL_CONSUMER_ISSUER;
+    const apiOrigin = new URL(internals.baseUrl);
+    apiOrigin.pathname = `/${appSlug}`;
+    this.expectedIssuer = apiOrigin.toString().replace(/\/$/, "");
+    this.expectedAudience = appSlug;
+    this.acceptedIssuers = [this.expectedIssuer, HEIMDALL_LEGACY_ISSUER];
     this.jwks = new JwksCache({
       url: new URL(`/${appSlug}/v1/.well-known/jwks.json`, internals.baseUrl),
       ttlMs: opts.jwksTtlMs,
@@ -115,15 +142,18 @@ export class ConsumerScope {
   /**
    * Verify a Heimdall-issued JWT against this app's JWKS.
    *
-   * Checks the signature, expiry, and `iss === "heimdall"`. Heimdall
-   * Consumer-API tokens are not issued with an `aud` claim — by
-   * default this method does NOT enforce one. If you mint custom
-   * tokens with the heimdall key and want to enforce an audience,
-   * pass `opts.audience`.
+   * Checks the signature, expiry, `iss`, and `aud`. Accepts both the
+   * per-app issuer URL (`expectedIssuer`) and the legacy `'heimdall'`
+   * literal during the issuer-migration transition window — callers
+   * who want to refuse legacy tokens can override with
+   * `{ issuer: scope.expectedIssuer }`. Audience defaults to the app
+   * slug (`expectedAudience`); pass `{ audience: false }` (in an
+   * options override) to skip the audience check entirely.
    */
   verifyToken(token: string, opts: VerifyOptions = {}): Promise<HeimdallClaims> {
     return verifyHeimdallToken(token, this.jwks.getKey, {
-      issuer: this.expectedIssuer,
+      issuer: this.acceptedIssuers as string[],
+      audience: this.expectedAudience,
       ...opts,
     });
   }
@@ -267,21 +297,28 @@ export class ConsumerScope {
   // (typically called by the customer's backend, not the user agent)
   // ─────────────────────────────────────────────────────────────
   readonly verify = {
+    /**
+     * The kubb-generated client makes `headers.authorization` a required
+     * arg because the server controllers accept the bearer as a fallback
+     * to `body.token`. We stub an empty string here — the HTTP client's
+     * auth middleware overrides whatever's passed with the configured
+     * credential (`PCAuth.apiKey` / `bearer` / `cookie`).
+     */
     verify: (data: VerifyBody) =>
       consumerVerifyControllerVerify(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
 
     authorize: (data: AuthorizeBody) =>
       consumerVerifyControllerAuthorize(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
 
     authorizeBatch: (data: AuthorizeBatchBody) =>
       consumerVerifyControllerAuthorizeBatch(
-        { appSlug: this.appSlug, data },
+        { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
   };
