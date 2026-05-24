@@ -165,7 +165,6 @@ function loadPassportJwt(): {
 } {
   try {
     // dynamic require so passport-jwt stays a peer dep
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-var-requires
     const mod = require("passport-jwt");
     return {
       Strategy: mod.Strategy ?? mod.default?.Strategy,
