@@ -1035,36 +1035,40 @@
       "AuthorizeBatchBody": {
         "properties": {
           "checks": {
-            "description": "List of checks. Each returns { authorized, missing_permissions }.",
+            "description": "List of checks. Each returns { id?, authorized, missing_permissions }.",
             "items": {
               "$ref": "#/components/schemas/AuthorizeBatchEntry"
             },
             "type": "array"
           },
           "token": {
-            "description": "JWT to verify and authorize against each check.",
+            "description": "JWT to verify and authorize against each check. Optional — if omitted, the token is read from the `Authorization: Bearer <jwt>` header.",
             "type": "string"
           }
         },
         "required": [
-          "token",
           "checks"
         ],
         "type": "object"
       },
       "AuthorizeBatchEntry": {
         "properties": {
+          "id": {
+            "description": "Caller-chosen correlation id for this check. Echoed back on the matching result so the caller can map results to inputs without relying on array order.",
+            "type": "string"
+          },
+          "permission": {
+            "description": "Single permission to check, e.g. 'invoice.read'. Use this OR `permissions`.",
+            "type": "string"
+          },
           "permissions": {
-            "description": "Permissions for this check; ALL must be held.",
+            "description": "Multiple permissions; ALL must be held for this check to pass.",
             "items": {
               "type": "string"
             },
             "type": "array"
           }
         },
-        "required": [
-          "permissions"
-        ],
         "type": "object"
       },
       "AuthorizeBatchResponseDto": {
@@ -1085,6 +1089,10 @@
         "properties": {
           "authorized": {
             "type": "boolean"
+          },
+          "id": {
+            "description": "Caller-supplied id from the corresponding check entry. Echoed back so callers can correlate results to inputs without relying on array order.",
+            "type": "string"
           },
           "missing_permissions": {
             "items": {
@@ -1113,13 +1121,10 @@
             "type": "array"
           },
           "token": {
-            "description": "JWT to verify and authorize.",
+            "description": "JWT to verify and authorize. Optional — if omitted, the token is read from the `Authorization: Bearer <jwt>` header.",
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ],
         "type": "object"
       },
       "AuthorizeResponseDto": {
@@ -2660,8 +2665,8 @@
             "type": "number"
           },
           "iss": {
-            "description": "Issuer.",
-            "example": "heimdall",
+            "description": "Issuer URL — the public Heimdall API base joined with this app slug. Pin this in your local JWKS verifier so a token minted for another app on the platform cannot pass.",
+            "example": "https://api.heimdall.productcraft.co/<appSlug>",
             "type": "string"
           },
           "scope": {
@@ -3284,8 +3289,8 @@
             "type": "string"
           },
           "issuer": {
-            "description": "Token `iss` claim. Verifier libraries should accept this literal — we don't issue tokens with a URL-shaped issuer because tokens are per-app, not per-host.",
-            "example": "heimdall",
+            "description": "Token `iss` claim — the Heimdall API base URL with the app slug appended. Pin this literally in your verifier so a token minted for another app on the platform cannot pass.",
+            "example": "https://api.heimdall.productcraft.co/<slug>",
             "type": "string"
           },
           "jwks_uri": {
@@ -4339,13 +4344,10 @@
       "VerifyBody": {
         "properties": {
           "token": {
-            "description": "EndUser or M2M JWT to verify against the app JWKS.",
+            "description": "EndUser or M2M JWT to verify against the app JWKS. Optional — if omitted, the token is read from the `Authorization: Bearer <jwt>` header instead.",
             "type": "string"
           }
         },
-        "required": [
-          "token"
-        ],
         "type": "object"
       },
       "VerifyPrincipalDto": {
@@ -4424,7 +4426,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4432,7 +4434,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4440,7 +4442,7 @@
           {
             "in": "query",
             "name": "workspace_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4769,7 +4771,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4777,7 +4779,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4785,7 +4787,7 @@
           {
             "in": "query",
             "name": "action",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -4793,7 +4795,7 @@
           {
             "in": "query",
             "name": "actor_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5079,7 +5081,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5087,7 +5089,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5385,7 +5387,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5393,7 +5395,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5401,7 +5403,7 @@
           {
             "in": "query",
             "name": "status",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5409,7 +5411,7 @@
           {
             "in": "query",
             "name": "search",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6071,7 +6073,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6079,7 +6081,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6198,7 +6200,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6206,7 +6208,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6488,7 +6490,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -6496,7 +6498,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -7411,7 +7413,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -7490,7 +7492,7 @@
           {
             "in": "query",
             "name": "workspace_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -7740,7 +7742,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -7748,7 +7750,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -8044,7 +8046,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -8052,7 +8054,7 @@
           {
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -8060,7 +8062,7 @@
           {
             "in": "query",
             "name": "status",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -8068,7 +8070,7 @@
           {
             "in": "query",
             "name": "search",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -9298,12 +9300,20 @@
     },
     "/{app_slug}/v1/authorize": {
       "post": {
-        "description": "Returns `{ authorized: boolean }`. Pass `permission` (string) for a single check, or `permissions` (array) when ALL must be held.",
+        "description": "Returns `{ authorized: boolean }`. Pass `permission` (string) for a single check, or `permissions` (array) when ALL must be held.\n\nToken source: `body.token` if provided, else the `Authorization: Bearer <jwt>` header. At least one must be present.",
         "operationId": "ConsumerVerifyController_authorize",
         "parameters": [
           {
             "in": "path",
             "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
             "required": true,
             "schema": {
               "type": "string"
@@ -9340,12 +9350,20 @@
     },
     "/{app_slug}/v1/authorize/batch": {
       "post": {
-        "description": "Runs N permission checks against the same token in one call. Each result reports the missing permissions (if any). Useful when a UI needs to flag many actions at once.",
+        "description": "Runs N permission checks against the same token in one call. Each check accepts `permission` (singular) or `permissions` (array — ALL must be held); pass an `id` to correlate results back to inputs. Each result reports `authorized` plus the missing permissions (if any).\n\nToken source: `body.token` if provided, else the `Authorization: Bearer <jwt>` header. At least one must be present.",
         "operationId": "ConsumerVerifyController_authorizeBatch",
         "parameters": [
           {
             "in": "path",
             "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
             "required": true,
             "schema": {
               "type": "string"
@@ -10702,12 +10720,20 @@
     },
     "/{app_slug}/v1/verify": {
       "post": {
-        "description": "Validates the JWT against the app's JWKS keys and returns `{ valid, principal }`. Use this when you need the full claims; use `/authorize` for a yes/no permission check.",
+        "description": "Validates the JWT against the app's JWKS keys and returns `{ valid, principal }`. Use this when you need the full claims; use `/authorize` for a yes/no permission check.\n\nToken source: `body.token` if provided, else the `Authorization: Bearer <jwt>` header. At least one must be present.",
         "operationId": "ConsumerVerifyController_verify",
         "parameters": [
           {
             "in": "path",
             "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
             "required": true,
             "schema": {
               "type": "string"
