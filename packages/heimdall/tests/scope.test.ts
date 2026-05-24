@@ -208,9 +208,24 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     );
   });
 
-  it("expectedIssuer is the literal Heimdall issuer string", () => {
-    // Heimdall mints every Consumer-API token with iss: "heimdall".
-    // Per-app boundary is enforced by the JWKS, not the issuer claim.
-    expect(consumer.expectedIssuer).toBe("heimdall");
+  it("expectedIssuer is the per-app URL form", () => {
+    // Heimdall mints every Consumer-API token with the per-app issuer
+    // (the API base joined with the app slug). Customers pin this in
+    // their verifier so a token minted for another app on the platform
+    // cannot pass.
+    expect(consumer.expectedIssuer).toBe(
+      "https://api.heimdall.example/my-app",
+    );
+  });
+
+  it("expectedAudience is the app slug", () => {
+    expect(consumer.expectedAudience).toBe("my-app");
+  });
+
+  it("acceptedIssuers covers both per-app + legacy during transition", () => {
+    expect(consumer.acceptedIssuers).toEqual([
+      "https://api.heimdall.example/my-app",
+      "heimdall",
+    ]);
   });
 });

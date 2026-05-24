@@ -122,6 +122,7 @@ export class Heimdall {
 
 // ─── Re-exports ────────────────────────────────────────────────
 export { AppScope, ConsumerScope, HeimdallHttpError };
+export { HEIMDALL_LEGACY_ISSUER } from "./scopes/consumer.js";
 export type { PCAuth, PCClientConfig };
 
 export {
