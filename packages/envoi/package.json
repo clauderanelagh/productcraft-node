@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/envoi",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Receive-and-store mail platform — template-rendered sends, mailboxes + domains + DKIM, message timeline, suppression lists, outbound webhooks via ProductCraft Envoi. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
