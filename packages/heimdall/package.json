@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/heimdall",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Heimdall. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

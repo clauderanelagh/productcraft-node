@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/rally",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Waitlist management — public-form signups, variants for A/B/n landing pages, referrals, position + leaderboard, approval workflow with invite-to-app, signed outbound webhooks, CSV export. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
