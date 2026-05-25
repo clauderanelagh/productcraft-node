@@ -67,11 +67,16 @@ await envoi.client.GET(
   { params: { path: { workspace_id: "ws_..." } } },
 );
 
-// Lint a template before saving
+// Lint a template before saving — the body field is `body_html`
+// (wire) / `bodyHtml` (camelCase TS DTO), NOT `html`.
 await envoi.client.POST(
   "/v1/workspaces/{workspace_id}/templates/lint",
-  { params: { path: { workspace_id: "ws_..." } }, body: { html: "..." } },
+  {
+    params: { path: { workspace_id: "<workspace-uuid>" } },
+    body: { body_html: "<p>Hello {{name}}</p>" },
+  },
 );
+// → { score, findings: [...] }
 
 // Preview / render with sample data
 await envoi.client.POST(

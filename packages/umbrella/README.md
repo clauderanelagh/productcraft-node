@@ -36,16 +36,20 @@ const tokens = await consumer.auth.signin({
   password: "...",
 });
 
-// Envoi — send a transactional email from the same backend
+// Envoi — send a template-rendered transactional email from the same backend.
+// The mailboxes-keyed send path does not exist; sends are workspace-scoped
+// template renders.
 await pc.envoi.client.POST(
-  "/v1/mailboxes/{mailboxId}/messages/send",
+  "/v1/workspaces/{workspace_id}/templates/{name}/send",
   {
-    params: { path: { mailboxId: "mbx_..." } },
+    params: {
+      path: { workspace_id: "<workspace-uuid>", name: "welcome" },
+      header: { "Idempotency-Key": "welcome-2026-05-22-alice" },
+    },
     body: {
-      to: "alice@example.com",
       from: "hello@yourbrand.com",
-      subject: "Welcome",
-      html: "<p>Hi!</p>",
+      to: "alice@example.com",
+      data: { name: "Alice" },
     },
   },
 );

@@ -31,8 +31,8 @@ const agora = new Agora({
 const { data, error } = await agora.client.POST(
   "/v1/workspaces/{workspaceId}/communities",
   {
-    params: { path: { workspaceId: "ws_..." } },
-    body: { name: "Founders Club", slug: "founders" },
+    params: { path: { workspaceId: "<workspace-uuid>" } },
+    body: { display_name: "Founders Club", slug: "founders" },
   },
 );
 ```
@@ -40,16 +40,20 @@ const { data, error } = await agora.client.POST(
 ## Quick start — post on behalf of an EndUser (customer backend)
 
 ```ts
-const actor_id = "act_..."; // the EndUser's Agora actor id (resolved once, cached on your side)
+const actor_id = "<actor-uuid>"; // the EndUser's Agora actor id
 
 const { data, error } = await agora.client.POST(
   "/v1/communities/{communityId}/posts",
   {
     params: {
-      path: { communityId: "com_..." },
+      path: { communityId: "<community-uuid>" },
       header: { "X-Acting-As": actor_id },
     },
     body: {
+      // `actor_id` is required in the body too — the header sets caller
+      // identity; the body field is the author of the post (typically
+      // the same UUID, but allowed to differ on admin-impersonation flows).
+      actor_id,
       text: "Hello, world!",
       visibility: "public",
     },
