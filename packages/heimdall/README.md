@@ -23,11 +23,17 @@ The SDK splits into three caller contexts.
 ### 1. Workspace-wide admin
 
 ```ts
-// /v1/apps, /v1/idp/*, /v1/stats/me
+// /v1/apps, /v1/stats/me
 const apps = await heimdall.apps.list();
-await heimdall.apps.create({ name: "My App", slug: "my-app" });
-await heimdall.idp.list();
-await heimdall.stats.get();
+
+// Create requires display_name + workspace_id (not `name`).
+await heimdall.apps.create({
+  display_name: "My App",
+  slug: "my-app",
+  workspace_id: "<workspace-uuid>",
+});
+
+const stats = await heimdall.stats.get();
 ```
 
 ### 2. App-scoped admin — `heimdall.app(appId)`
@@ -35,25 +41,31 @@ await heimdall.stats.get();
 Pre-binds the appId path param so resource methods read like `app.endUsers.list()`.
 
 ```ts
-const app = heimdall.app("app_xyz_uuid");
+const app = heimdall.app("<app-uuid>");
 
-// EndUsers
+// EndUsers — profile updates only carry { display_name?, email? }.
+// Status / role transitions are separate calls.
 const users = await app.endUsers.list({ limit: "20", cursor: "..." });
-await app.endUsers.update(userId, { status: "active" });
+await app.endUsers.update(userId, { display_name: "Alice Smith" });
+await app.endUsers.updateStatus(userId, { status: "active" });
 await app.endUsers.revokeAllSessions(userId);
 
-// Roles / Permissions
-await app.roles.create({ name: "admin", permissions: ["billing.read"] });
+// Roles — `CreateRoleDto` is { name, description? }. Permissions are
+// bound separately, after the role exists.
+await app.roles.create({ name: "admin", description: "Billing admin" });
+await app.roles.setPermissions("admin", { permissions: ["billing.read"] });
 await app.roles.assign({ userId, roleName: "admin" });
 await app.permissions.list();
 
-// API keys + M2M creds
-await app.apiKeys.create({ name: "ci" });
+// API keys — permissions[] is required even if empty.
+await app.apiKeys.create({ name: "ci", permissions: [] });
+
+// M2M credentials
 const m2m = await app.credentials.create({ name: "backend-svc" });
 
-// Audit + invites + auth config
+// Audit + invites + auth config (camelCase post-pipe)
 await app.auditLogs.list({ limit: "100" });
-await app.authConfig.update({ passwordPolicy: { minLength: 12 } });
+await app.authConfig.update({ passwordMinLength: 12 });
 ```
 
 ### 3. Consumer-side (BFF) — `heimdall.consumer(appSlug)`
@@ -63,16 +75,23 @@ For backend route handlers mediating auth between your SPA and Heimdall. Pre-bin
 ```ts
 const consumer = heimdall.consumer("my-app-slug");
 
-// Sign-in flows
+// Sign-in
 const { access_token, refresh_token } = await consumer.auth.signin({
   identifier: "alice@example.com",
   password: "...",
 });
-await consumer.auth.signup({ identifier, password });
+
+// Sign-up requires { email, password, username, display_name? } — not `identifier`.
+await consumer.auth.signup({
+  email: "alice@example.com",
+  password: "...",
+  username: "alice",
+});
+
 await consumer.auth.refresh({ refresh_token });
 await consumer.auth.logout({ refresh_token });
 await consumer.auth.requestReset({ email });
-await consumer.auth.resetPassword({ code, newPassword });
+await consumer.auth.resetPassword({ token, new_password: "..." });
 
 // Sign in with Apple (native iOS flow). See "Federated sign-in" below.
 await consumer.auth.signinWithProvider({

@@ -44,12 +44,12 @@ const rally = new Rally({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
 
-// Create a waitlist
+// Create a waitlist — body uses `display_name`, not `name`.
 const { data } = await rally.client.POST(
   "/v1/workspaces/{workspace_id}/waitlists",
   {
-    params: { path: { workspace_id: "ws_..." } },
-    body: { name: "Early Access", slug: "early-access" },
+    params: { path: { workspace_id: "<workspace-uuid>" } },
+    body: { display_name: "Early Access", slug: "early-access" },
   },
 );
 ```
@@ -123,11 +123,25 @@ await rally.client.GET(
 
 ### Variants (A/B/n landing pages)
 
+Variants split two ways: `kind: "ab"` for split-traffic A/B/n tests, or `kind: "locale"` for per-locale copy switching. Pick one; the body shape is `{ kind, slug, locale? }`.
+
 ```ts
-// Create a variant
+// A/B variant
 await rally.client.POST(
   "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants",
-  { params: { ... }, body: { slug: "headline-b", weight: 50 } },
+  {
+    params: { ... },
+    body: { kind: "ab", slug: "headline-b" },
+  },
+);
+
+// Locale variant
+await rally.client.POST(
+  "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants",
+  {
+    params: { ... },
+    body: { kind: "locale", slug: "pt-br", locale: "pt-BR" },
+  },
 );
 ```
 
@@ -142,10 +156,16 @@ await rally.client.GET(
   { ... },
 );
 
-// Timeseries
+// Timeseries — `since` is an ISO-8601 timestamp. There are no
+// `bucket` / `lookback` query params.
 await rally.client.GET(
   "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics/timeline",
-  { params: { path: { ... }, query: { bucket: "1d", lookback: "30d" } } },
+  {
+    params: {
+      path: { ... },
+      query: { since: "2026-05-01T00:00:00Z" },
+    },
+  },
 );
 ```
 

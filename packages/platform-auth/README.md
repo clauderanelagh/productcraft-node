@@ -29,14 +29,24 @@ const platformAuth = new PlatformAuth({
 // Resolve the caller's effective policy + enabled services for a workspace
 const { data } = await platformAuth.client.GET(
   "/v1/introspect/workspaces/{workspace_id}",
-  { params: { path: { workspace_id: "ws_..." } } },
+  { params: { path: { workspace_id: "<workspace-uuid>" } } },
 );
 
-// data.policy.statements[…]  — what the caller is allowed to do
-// data.enabled_services[…]   — envoi / rally / agora / heimdall / …
+// data.policy   — flat array of IAM-style { effect, actions, resources } statements
+// data.services — string[] of enabled services (envoi / rally / agora / heimdall / …)
 ```
 
 The `client` is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) instance bound to `https://api.auth.productcraft.co` and your auth credential.
+
+### Auth modes
+
+| Mode | When to use | Mint/rotate/delete surfaces |
+|---|---|---|
+| `apiKey` (`pcft_live_*`) | Backend-to-backend reads + introspect calls | ❌ — mint requires a human session |
+| `bearer` (PlatformUser JWT) | Anything administrative: workspace create/delete, role/policy authoring, PAK minting, invite mutations | ✅ |
+| `cookie` (`auth_token`) | Server-side route handlers running behind the console session | ✅ |
+
+PAKs are workspace-scoped credentials — they read + introspect freely against the workspace they're bound to but cannot mint another PAK or reshape the human-admin surface. Cross-workspace probes by a PAK return the uniform non-member shape (no slug → UUID oracle).
 
 ## Configuration
 
@@ -82,17 +92,21 @@ await platformAuth.client.POST(
 ### Introspect — used by every other ProductCraft backend
 
 ```ts
-// Resolve the bearer of a token: returns account + email_verified_at + workspaces
+// Resolve the bearer of a token: returns account + email_verified_at + workspaces.
+// Accepts a `pcft_live_*` PAK too — the response carries a synthetic verified
+// account block so downstream `RequireEmailVerifiedGuard`-style gates pass.
 await platformAuth.client.GET("/v1/introspect");
 
 // Resolve effective policy + enabled services for one workspace
 await platformAuth.client.GET(
   "/v1/introspect/workspaces/{workspace_id}",
-  { params: { path: { workspace_id: "ws_..." } } },
+  { params: { path: { workspace_id: "<workspace-uuid>" } } },
 );
 
-// Resolve a PAK — used internally by services that accept pcft_live_* on routes
-await platformAuth.client.GET("/v1/introspect/api-key");
+// Resolve a PAK — POST, not GET. Used internally by services that accept
+// `pcft_live_*` on routes. Caller's bearer is the PAK being introspected;
+// the body is unused (sent as `{}`).
+await platformAuth.client.POST("/v1/introspect/api-key");
 ```
 
 The latter two are cached by every consuming service for ~60 seconds. Reach for them from a backend gate; never from a hot request path.
@@ -100,17 +114,21 @@ The latter two are cached by every consuming service for ~60 seconds. Reach for 
 ### Workspaces
 
 ```ts
-// List
+// List — for a PAK caller, this returns exactly the workspace the PAK is
+// bound to (member_role / member_role_id are null on that lane).
 await platformAuth.client.GET("/v1/workspaces");
 
-// Create
+// Create — cookie/JWT only. PAKs cannot create workspaces.
 await platformAuth.client.POST(
   "/v1/workspaces",
-  { body: { name: "Acme", slug: "acme" } },
+  { body: { display_name: "Acme", slug: "acme" } },
 );
 
-// Get / update / delete by slug
+// Get / update by slug
 await platformAuth.client.GET("/v1/workspaces/{workspace_slug}", { ... });
+
+// Delete — cookie/JWT only. PAKs cannot delete workspaces.
+await platformAuth.client.DELETE("/v1/workspaces/{workspace_slug}", { ... });
 ```
 
 ### Members, invites, roles
@@ -146,14 +164,15 @@ await platformAuth.client.GET(
   { ... },
 );
 
-// Create a custom policy
+// Create a managed policy. Cookie/JWT only.
 await platformAuth.client.POST(
   "/v1/workspaces/{workspace_slug}/policies",
   {
     params: { ... },
     body: {
-      name: "Envoi-read-only",
-      statements: [
+      name: "envoi-read-only",
+      description: "Read-only access to all Envoi resources",
+      policy: [
         { effect: "allow", actions: ["envoi.read", "envoi.list"], resources: ["*"] },
       ],
     },
@@ -163,18 +182,47 @@ await platformAuth.client.POST(
 
 ### Workspace API keys (PATs)
 
+PATs bind to one or more managed `workspace_policy` rows. Author the policy first, then mint the key with its id. The inline `policy: [...]` shape is **not** accepted — `policy_ids: [<uuid>]` is required.
+
+Mint / rotate / revoke require a cookie or JWT — a PAK cannot mint another PAK.
+
 ```ts
-// Mint a PAK for CI / IaC
-await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/api-keys",
-  { params: { ... }, body: { name: "github-actions", policy_ids: ["pol_..."] } },
+// 1. Author (or reuse) a managed policy
+const { data: policy } = await platformAuth.client.POST(
+  "/v1/workspaces/{workspace_slug}/policies",
+  {
+    params: { path: { workspace_slug: "acme" } },
+    body: {
+      name: "ci-staging-deploy",
+      description: "Heimdall + Envoi for the staging pipeline",
+      policy: [
+        { effect: "allow", actions: ["heimdall.create", "heimdall.read", "heimdall.update"], resources: ["pcft:heimdall:app/*"] },
+        { effect: "allow", actions: ["envoi.template.read", "envoi.template.send"], resources: ["*"] },
+      ],
+    },
+  },
 );
 
-// Bind / unbind a PAK to additional workspaces (rare — most PAKs stay
-// scoped to the workspace they were minted under)
-await platformAuth.client.PUT(
+// 2. Mint a PAT that binds to that policy
+const { data: pak } = await platformAuth.client.POST(
+  "/v1/workspaces/{workspace_slug}/api-keys",
+  {
+    params: { path: { workspace_slug: "acme" } },
+    body: {
+      name: "github-actions-staging-deploy",
+      description: "Deploys acme-staging app from CI",
+      policy_ids: [policy!.id],
+    },
+  },
+);
+// pak.token  — the plaintext `pcft_live_*` value, returned exactly once
+// pak.record — public metadata (id, prefix, policies, last_used_at, …)
+
+// Replace the bound policies on an existing PAK (re-runs caller-narrowing
+// against the merged statement set)
+await platformAuth.client.PATCH(
   "/v1/workspaces/{workspace_slug}/api-keys/{id}/bindings",
-  { ... },
+  { params: { ... }, body: { policy_ids: ["<new-policy-uuid>"] } },
 );
 ```
 
