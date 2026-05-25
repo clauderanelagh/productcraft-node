@@ -197,6 +197,26 @@ No SDK upgrade required — the per-provider TS enum widens automatically with t
 
 Every Heimdall app publishes a JWKS at `/{appSlug}/v1/.well-known/jwks.json`. The SDK gives you a verified-claims helper and a jose-compatible JWKS resolver.
 
+### Token claim shape
+
+Heimdall EndUser access tokens carry, at minimum:
+
+| Claim | Example | Notes |
+|---|---|---|
+| `alg` (header) | `RS256` | Signing algorithm — RS256 from the per-app keystore. |
+| `kid` (header) | `rs256-<key-id>` | Selects the public key from the per-app JWKS. |
+| `iss` | `https://api.heimdall.productcraft.co/<appSlug>` | Per-app issuer URL. Available on the SDK as `scope.expectedIssuer`. |
+| `aud` | `<appSlug>` | The app slug (literal). Available as `scope.expectedAudience`. |
+| `sub` | `<account-uuid>` | The EndUser's account id — what your local user table should key on. |
+| `aid` | `<app-uuid>` | The Heimdall app uuid (matches `scope.appId` if you held it). |
+| `sid` | `<session-uuid>` | Session row id — useful for revoke-this-session ops. |
+| `role` | `member` | The EndUser's role in this app. |
+| `type` | `end_user` \| `m2m` | Distinguishes EndUser tokens from M2M (client_credentials) tokens. |
+| `amr` | `["pwd"]` \| `["oauth.apple"]` | Auth-method-reference array — how this session was established. |
+| `iat`, `exp` | unix seconds | Standard. |
+
+Tokens issued before the 2026-05-24 per-app-issuer migration carried `iss: "heimdall"` (no URL) and **no** `aud` claim. `scope.acceptedIssuers` includes both the new URL form and the legacy literal so existing tokens keep verifying through their TTL; `scope.verifyToken(token)` handles this automatically. If you wire `jose.jwtVerify` directly, pass `issuer: scope.acceptedIssuers` (an array) for the transition window, or `issuer: scope.expectedIssuer` once you're sure no legacy tokens are live.
+
 ### One-line verify (the 80% case)
 
 ```ts
@@ -207,14 +227,14 @@ const scope = heimdall.consumer("my-app-slug");
 
 try {
   const claims = await scope.verifyToken(token);
-  // claims.sub, claims.email, claims.role, claims.permissions, ...
+  // claims.sub, claims.aid, claims.sid, claims.role, claims.amr, ...
 } catch (err) {
   if (err instanceof JwtExpiredError) { /* trigger refresh */ }
   throw err;
 }
 ```
 
-Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), singleflighted so 100 concurrent verifies do 1 fetch, auto-refetched if a token's `kid` isn't in the cached JWKS (rotation handling).
+Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), singleflighted so 100 concurrent verifies do 1 fetch, auto-refetched if a token's `kid` isn't in the cached JWKS (rotation handling). Issuer + audience are checked against `scope.acceptedIssuers` + `scope.expectedAudience` automatically.
 
 ### Building blocks for `jose`, NestJS guards, Hono, etc.
 
@@ -225,11 +245,13 @@ import { jwtVerify } from "jose";
 
 const scope = heimdall.consumer("my-app-slug");
 const { payload } = await jwtVerify(token, scope.jwks.getKey, {
-  issuer: scope.expectedIssuer, // the literal string "heimdall"
+  issuer: scope.expectedIssuer,        // "https://api.heimdall.productcraft.co/<appSlug>"
+  audience: scope.expectedAudience,    // "<appSlug>"
+  algorithms: ["RS256"],
 });
 ```
 
-Heimdall Consumer-API tokens are not minted with an `aud` claim — the per-app boundary is enforced by the JWKS, not the issuer string or the audience. If you mint custom tokens with the heimdall key and want to enforce an audience, pass `audience` to `jose.jwtVerify` or `scope.verifyToken(token, { audience: "..." })` per-call.
+For the per-app boundary, the JWKS is the cryptographic gate (only the app's keystore can sign these), but pinning `iss` + `aud` rejects a token minted for a *different* app on the same platform before the signature ever gets checked — defence in depth at a higher layer.
 
 ### Passport integration
 
@@ -248,8 +270,9 @@ new passportJwt.Strategy(
   {
     jwtFromRequest: passportJwt.ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKeyProvider: createPassportSecretOrKeyProvider(scope),
-    issuer: scope.expectedIssuer,
-    algorithms: ["ES256"],
+    issuer: scope.expectedIssuer,        // per-app URL
+    audience: scope.expectedAudience,    // appSlug
+    algorithms: ["RS256"],
   },
   (payload, done) => done(null, payload),
 );
