@@ -1,5 +1,13 @@
 # productcraft
 
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies [2b1e14e]
+- Updated dependencies [7d797b4]
+  - @productcraft/heimdall@0.3.0
+
 ## 0.0.8
 
 ### Patch Changes
