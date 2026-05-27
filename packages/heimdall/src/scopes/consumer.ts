@@ -20,6 +20,9 @@ import { consumerAuthControllerRefresh } from "../_generated/clients/consumerAut
 import { consumerAuthControllerLogout } from "../_generated/clients/consumerAuth/consumerAuthControllerLogout.js";
 import { consumerAuthControllerRequestPasswordReset } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestPasswordReset.js";
 import { consumerAuthControllerResetPassword } from "../_generated/clients/consumerAuth/consumerAuthControllerResetPassword.js";
+import { consumerAuthControllerRequestVerification } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestVerification.js";
+import { consumerAuthControllerSendVerificationEmail } from "../_generated/clients/consumerAuth/consumerAuthControllerSendVerificationEmail.js";
+import { consumerAuthControllerVerify } from "../_generated/clients/consumerAuth/consumerAuthControllerVerify.js";
 import { consumerIdpControllerNativeSignIn } from "../_generated/clients/consumerOauthSignIn/consumerIdpControllerNativeSignIn.js";
 
 // consumerMe — all six endpoints have spec bugs (appSlug not declared
@@ -37,6 +40,12 @@ import type { ConsumerRefreshDto } from "../_generated/types/ConsumerRefreshDto.
 import type { ConsumerLogoutDto } from "../_generated/types/ConsumerLogoutDto.js";
 import type { ConsumerRequestPasswordResetDto } from "../_generated/types/ConsumerRequestPasswordResetDto.js";
 import type { ConsumerResetPasswordDto } from "../_generated/types/ConsumerResetPasswordDto.js";
+import type { ConsumerRequestVerificationDto } from "../_generated/types/ConsumerRequestVerificationDto.js";
+import type { ConsumerSendVerificationEmailDto } from "../_generated/types/ConsumerSendVerificationEmailDto.js";
+import type { ConsumerVerifyDto } from "../_generated/types/ConsumerVerifyDto.js";
+import type { ConsumerVerifyResponseDto } from "../_generated/types/ConsumerVerifyResponseDto.js";
+import type { ConsumerCodeIssueResponseDto } from "../_generated/types/ConsumerCodeIssueResponseDto.js";
+import type { ConsumerCodeDispatchResponseDto } from "../_generated/types/ConsumerCodeDispatchResponseDto.js";
 import type { UpdateMeDto } from "../_generated/types/UpdateMeDto.js";
 import type { VerifyBody } from "../_generated/types/VerifyBody.js";
 import type { AuthorizeBody } from "../_generated/types/AuthorizeBody.js";
@@ -212,6 +221,68 @@ export class ConsumerScope {
       ),
 
     /**
+     * Mint a 6-digit contact-verification code bound to the email or
+     * phone in the body. Returns `{ code, expires_at }` for delivery
+     * via the customer's own channel — or `{}` if no match / already
+     * verified (uniform shape — no account enumeration).
+     *
+     * PAK-required: caller must instantiate `Heimdall` with
+     * `auth: { type: "apiKey", key: "pcft_live_..." }` carrying
+     * `heimdall.user.verify.create` narrowed to this app's URN. The
+     * kubb-generated `headers.authorization` slot is a stub — the
+     * HTTP client's auth middleware overrides whatever's passed.
+     */
+    requestVerification: (
+      data: ConsumerRequestVerificationDto,
+    ): Promise<ConsumerCodeIssueResponseDto> =>
+      consumerAuthControllerRequestVerification(
+        {
+          appSlug: this.appSlug,
+          data,
+          headers: { authorization: "" },
+        },
+        { client: this.client },
+      ) as Promise<ConsumerCodeIssueResponseDto>,
+
+    /**
+     * Mint + dispatch a verification email via Envoi in one call.
+     * Returns `{ expires_at }` on success; the plaintext code is NOT
+     * returned. Returns `{}` when the contact is missing or already
+     * verified (same enumeration defence as `requestVerification`).
+     *
+     * PAK-required with `heimdall.user.verify.send-email` — distinct
+     * permission from the bare mint so customers can enable mint
+     * without enabling outbound Envoi traffic. Surfaces typed 412
+     * precondition errors (e.g. `ENVOI_NOT_ENABLED`) rather than the
+     * silent fail-closed of a fire-and-forget mailer.
+     */
+    sendVerificationEmail: (
+      data: ConsumerSendVerificationEmailDto,
+    ): Promise<ConsumerCodeDispatchResponseDto> =>
+      consumerAuthControllerSendVerificationEmail(
+        {
+          appSlug: this.appSlug,
+          data,
+          headers: { authorization: "" },
+        },
+        { client: this.client },
+      ) as Promise<ConsumerCodeDispatchResponseDto>,
+
+    /**
+     * Consume a 6-digit verification code, flipping the bound
+     * contact's `verified_at`. Public — anyone holding the code can
+     * submit it; that is the whole point of the flow. Server resolves
+     * the contact + account from the code value itself. Returns
+     * `{ account_id, email_verified_at }` on success; 410 on invalid /
+     * expired / consumed code.
+     */
+    verify: (data: ConsumerVerifyDto): Promise<ConsumerVerifyResponseDto> =>
+      consumerAuthControllerVerify(
+        { appSlug: this.appSlug, data },
+        { client: this.client },
+      ) as Promise<ConsumerVerifyResponseDto>,
+
+    /**
      * Sign in / sign up with a provider ID token (native flow).
      *
      * Submit the identity token Apple (or Google, once enabled) issued
@@ -226,11 +297,11 @@ export class ConsumerScope {
      * Account linking: when an EndUser already exists with a verified
      * primary email matching the token's `email` claim, the app's
      * `oauth_link_policy` decides the outcome:
-     *   - `auto` (default): silently link the identity to the existing
-     *     account (provider claims `email_verified: true` AND the email
-     *     is not an Apple private relay).
-     *   - `confirm`: refuse with 409 `link_required`. UI should sign
-     *     the user in via their original method to bind.
+     *   - `confirm` (default): refuse with 409 `link_required`. UI
+     *     should sign the user in via their original method to bind.
+     *   - `auto`: silently link the identity to the existing account
+     *     (provider claims `email_verified: true` AND the email is
+     *     not an Apple private relay).
      *   - `reject`: refuse with 409 `account_exists_with_different_provider`.
      *
      * Apple's private-relay emails (`*@privaterelay.appleid.com`) are
