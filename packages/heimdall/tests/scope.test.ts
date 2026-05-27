@@ -208,6 +208,106 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     );
   });
 
+  it("auth.requestVerification POSTs to /{slug}/v1/auth/request-verification with the PAK on Authorization", async () => {
+    const ff = makeFakeFetch();
+    const heimdall = new Heimdall({
+      auth: { type: "apiKey", key: "pcft_live_test" },
+      baseUrl: "https://api.heimdall.example",
+      fetch: ff.fetch,
+    });
+    await heimdall
+      .consumer("my-app")
+      .auth.requestVerification({ email: "user@example.com" });
+    expect(ff.calls[0]!.method).toBe("POST");
+    expect(ff.calls[0]!.url).toBe(
+      "https://api.heimdall.example/my-app/v1/auth/request-verification",
+    );
+    expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
+    expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
+  });
+
+  it("auth.sendVerificationEmail POSTs to /{slug}/v1/auth/send-verification-email with the PAK on Authorization", async () => {
+    const ff = makeFakeFetch();
+    const heimdall = new Heimdall({
+      auth: { type: "apiKey", key: "pcft_live_test" },
+      baseUrl: "https://api.heimdall.example",
+      fetch: ff.fetch,
+    });
+    await heimdall
+      .consumer("my-app")
+      .auth.sendVerificationEmail({ email: "user@example.com" });
+    expect(ff.calls[0]!.method).toBe("POST");
+    expect(ff.calls[0]!.url).toBe(
+      "https://api.heimdall.example/my-app/v1/auth/send-verification-email",
+    );
+    expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
+    expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
+  });
+
+  it("auth.requestVerification (no PAK) propagates the upstream 401", async () => {
+    const ff = makeFakeFetch();
+    (ff.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ message: "PAK required" }), {
+          status: 401,
+        }),
+    );
+    const heimdall = new Heimdall({
+      baseUrl: "https://api.heimdall.example",
+      fetch: ff.fetch,
+    });
+    await expect(
+      heimdall
+        .consumer("my-app")
+        .auth.requestVerification({ email: "user@example.com" }),
+    ).rejects.toThrow();
+  });
+
+  it("auth.sendVerificationEmail (no PAK) propagates the upstream 401", async () => {
+    const ff = makeFakeFetch();
+    (ff.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ message: "PAK required" }), {
+          status: 401,
+        }),
+    );
+    const heimdall = new Heimdall({
+      baseUrl: "https://api.heimdall.example",
+      fetch: ff.fetch,
+    });
+    await expect(
+      heimdall
+        .consumer("my-app")
+        .auth.sendVerificationEmail({ email: "user@example.com" }),
+    ).rejects.toThrow();
+  });
+
+  it("auth.verify POSTs to /{slug}/v1/auth/verify with the code body", async () => {
+    await consumer.auth.verify({ code: "123456" });
+    expect(calls[0]!.method).toBe("POST");
+    expect(calls[0]!.url).toBe(
+      "https://api.heimdall.example/my-app/v1/auth/verify",
+    );
+    expect(calls[0]!.body).toEqual({ code: "123456" });
+  });
+
+  it("auth.verify propagates the upstream 410 on invalid / expired / consumed code", async () => {
+    const ff = makeFakeFetch();
+    (ff.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async () =>
+        new Response(JSON.stringify({ message: "code consumed" }), {
+          status: 410,
+        }),
+    );
+    const heimdall = new Heimdall({
+      baseUrl: "https://api.heimdall.example",
+      fetch: ff.fetch,
+    });
+    await expect(
+      heimdall.consumer("my-app").auth.verify({ code: "999999" }),
+    ).rejects.toThrow();
+  });
+
   it("expectedIssuer is the per-app URL form", () => {
     // Heimdall mints every Consumer-API token with the per-app issuer
     // (the API base joined with the app slug). Customers pin this in
