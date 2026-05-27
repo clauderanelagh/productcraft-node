@@ -1,5 +1,33 @@
 # @productcraft/heimdall
 
+## 0.3.0
+
+### Minor Changes
+
+- 7d797b4: Add typed wrappers for the email-verification flow on `ConsumerScope.auth`.
+
+  Three new methods, each thin proxies into the kubb-generated clients:
+  - **`auth.requestVerification(data)`** — mints a 6-digit contact-verification code for delivery via your own channel. Returns `{ code, expires_at }` on match, `{}` on no-match / already-verified (uniform shape — no account enumeration). PAK-required, `heimdall.user.verify.create`.
+  - **`auth.sendVerificationEmail(data)`** — mints a fresh code AND dispatches it via the workspace's verified Envoi sender. Returns `{ expires_at }` on success; plaintext code is never returned. Surfaces typed 412 / 503 precondition errors instead of the silent fail-closed of a fire-and-forget mailer. PAK-required, `heimdall.user.verify.send-email`.
+  - **`auth.verify(data)`** — public consume. Submits the 6-digit code, flips the bound contact's `verified_at`, returns `{ account_id, email_verified_at }`. 410 on invalid / expired / consumed code.
+
+  Until now downstream consumers had to either pin to the raw HTTP endpoints or fall back to the internal `callDirect` escape hatch (Conquer ships exactly that workaround on `apps/conquer-api/src/auth/auth.controller.ts` and will swap once this version lands).
+
+  Also fixes the contradictory `oauth_link_policy` docstring on `signinWithProvider`: the canonical default in the Heimdall source is `confirm`, not `auto`. The previous draft documented `auto` as default; now matches the `UpdateAuthConfigDto` description.
+
+  Test coverage: 6 new specs on `scope.test.ts` — happy-path URL/body/Authorization for each method, plus 401 propagation on PAK-missing mints and 410 propagation on the verify consume.
+
+### Patch Changes
+
+- 2b1e14e: README: correct JWKS + passport guidance against the live token shape.
+
+  Verified live (2026-05-25) by signing up a Conquer EndUser against `api.heimdall.productcraft.co/conquer` and decoding the access token. Three stale claims fixed:
+  - **Issuer** is the per-app URL (`https://api.heimdall.productcraft.co/<appSlug>`), not the literal `"heimdall"`. The previous README's `// the literal string "heimdall"` comment dated from before the 2026-05-24 per-app-issuer migration. `scope.expectedIssuer` already returns the URL form; documented alongside `scope.acceptedIssuers` (URL + legacy) for callers wiring `jose.jwtVerify` during the transition window.
+  - **Audience IS minted on every token** (`aud: "<appSlug>"`), exposed as `scope.expectedAudience`. Previous README said "tokens are not minted with an `aud` claim" — out of date. Both the one-line `verifyToken` path and `jose.jwtVerify` now show the audience check.
+  - **Algorithm is RS256**, not ES256. The keystore that signs Consumer tokens is `Rs256KeyService`. Passport example corrected.
+
+  Also added a "Token claim shape" table near the top of the JWT-verification section so callers can see `sub` / `aid` / `sid` / `role` / `type` / `amr` / `iat` / `exp` at a glance without decoding a sample token.
+
 ## 0.2.1
 
 ### Patch Changes
