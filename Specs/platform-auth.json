@@ -2381,9 +2381,12 @@
               }
             },
             "description": ""
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session."
           }
         },
-        "summary": "Create a new workspace",
+        "summary": "Create a new workspace. Cookie/JWT only — PAKs are workspace-scoped credentials and cannot create new workspaces.",
         "tags": [
           "workspaces"
         ]
@@ -2415,7 +2418,7 @@
             "description": "The joined workspace."
           }
         },
-        "summary": "Accept a workspace invite by code",
+        "summary": "Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a human identity to a workspace.",
         "tags": [
           "workspaces"
         ]
@@ -2437,9 +2440,12 @@
         "responses": {
           "204": {
             "description": "Workspace deleted."
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session."
           }
         },
-        "summary": "Delete a workspace (requires workspace.delete)",
+        "summary": "Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible workspace destruction needs a human-attributed audit row.",
         "tags": [
           "workspaces"
         ]
@@ -2592,6 +2598,9 @@
               }
             },
             "description": ""
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Mint requires a human-issued session."
           }
         },
         "security": [
@@ -2599,7 +2608,7 @@
             "bearer": []
           }
         ],
-        "summary": "Mint a new PAK. The plaintext `token` is returned ONCE — store it now. The minter can grant at most their own effective permissions.",
+        "summary": "Mint a new PAK. The plaintext `token` is returned ONCE — store it now. The minter can grant at most their own effective permissions. Cookie/JWT only — PAKs cannot mint other PAKs.",
         "tags": [
           "platform-api-keys"
         ]
@@ -3015,7 +3024,7 @@
             "description": ""
           }
         },
-        "summary": "Create a workspace invite link",
+        "summary": "Create a workspace invite link. Cookie/JWT only — invites bring new humans into the workspace.",
         "tags": [
           "workspaces"
         ]
@@ -3047,7 +3056,7 @@
             "description": "Invite revoked."
           }
         },
-        "summary": "Revoke a workspace invite",
+        "summary": "Revoke a workspace invite. Cookie/JWT only.",
         "tags": [
           "workspaces"
         ]
@@ -3248,7 +3257,7 @@
             "description": "Name already in use."
           }
         },
-        "summary": "Create a managed policy",
+        "summary": "Create a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.",
         "tags": [
           "workspace-policies"
         ]
@@ -3314,7 +3323,7 @@
             "description": "Policy not found in this workspace."
           }
         },
-        "summary": "Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column.",
+        "summary": "Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column. Cookie/JWT only.",
         "tags": [
           "workspace-policies"
         ]
@@ -3413,7 +3422,7 @@
             "description": "Name already in use."
           }
         },
-        "summary": "Update a managed policy",
+        "summary": "Update a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.",
         "tags": [
           "workspace-policies"
         ]
@@ -3483,7 +3492,7 @@
             "description": ""
           }
         },
-        "summary": "Create a new custom role",
+        "summary": "Create a new custom role. Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]
@@ -3515,7 +3524,7 @@
             "description": "Custom role deleted."
           }
         },
-        "summary": "Delete a custom role (fails if it has members)",
+        "summary": "Delete a custom role (fails if it has members). Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]
@@ -3599,7 +3608,7 @@
             "description": ""
           }
         },
-        "summary": "Update a role or replace its permission set",
+        "summary": "Update a role or replace its permission set. Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]

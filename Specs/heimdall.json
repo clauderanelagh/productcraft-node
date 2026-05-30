@@ -5721,6 +5721,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -5799,6 +5807,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -5829,6 +5845,14 @@
       "post": {
         "operationId": "EndUserController_promoteContact",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "user_id",
@@ -5989,6 +6013,14 @@
       "post": {
         "operationId": "EndUserController_revokeAllSessions",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "user_id",
@@ -6424,7 +6456,16 @@
       "get": {
         "description": "Returns the deduplicated set of permission strings that any handler in this heimdall-api build gates via `@RequireAppPermission`. Drives the console \"Enforced\" badge — a customer who binds `user.delete` to a role can see whether any route in this deploy actually checks for it. App-agnostic in shape; the path parameter is included for URN symmetry with the rest of the per-app surface, not to narrow the response.",
         "operationId": "PermissionController_listEnforcedPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6642,6 +6683,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "role_name",
             "required": true,
             "schema": {
@@ -6662,6 +6711,14 @@
       "get": {
         "operationId": "RoleController_getRole",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "role_name",
@@ -6691,6 +6748,14 @@
       "patch": {
         "operationId": "RoleController_updateRole",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "role_name",
@@ -9402,7 +9467,16 @@
       "delete": {
         "description": "Removes the EndUser, all sessions, and all related records inside this app. Cannot be undone.",
         "operationId": "ConsumerMeController_deleteAccount",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Account deleted."
@@ -9421,7 +9495,16 @@
       "get": {
         "description": "Returns the EndUser identity, app membership, and role name. The flat `permissions[]` array is intentionally NOT included — permissions resolve from the role on demand. Call `GET /me/permissions` for the flat list when the client needs it for UI gating.",
         "operationId": "ConsumerMeController_getProfile",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9450,7 +9533,16 @@
       "patch": {
         "description": "Currently only the display name can be changed.",
         "operationId": "ConsumerMeController_updateProfile",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9481,7 +9573,16 @@
       "get": {
         "description": "Login events, password changes, and other security-relevant records, scoped to this EndUser.",
         "operationId": "ConsumerMeController_getActivity",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9509,7 +9610,16 @@
       "post": {
         "description": "Verifies `current_password`, sets the new hash, and revokes every OTHER active session for the account (the calling session is preserved). 401 if the current password is wrong or the account has no password credential — admin-provisioned accounts without an initial password should use the reset flow instead.",
         "operationId": "ConsumerMeController_changePassword",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9542,7 +9652,16 @@
     "/{app_slug}/v1/me/contacts": {
       "get": {
         "operationId": "ConsumerMeController_listContacts",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9568,7 +9687,16 @@
       "post": {
         "description": "Adds an email or phone contact to the EndUser. The contact starts unverified and non-primary. Verification is a separate flow — call /auth/request-verification with the contact value and the customer's PAK to mint a code, then submit via /auth/verify.",
         "operationId": "ConsumerMeController_addContact",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9613,6 +9741,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9643,6 +9779,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9665,7 +9809,16 @@
       "get": {
         "description": "Includes factors in any state (pending enrollment + enabled). Disabled factors are not listed.",
         "operationId": "ConsumerMfaController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9746,6 +9899,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9772,6 +9933,14 @@
           {
             "in": "path",
             "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -9818,7 +9987,16 @@
       "post": {
         "description": "Mints a fresh set of single-use recovery codes and invalidates every prior code for the account. The new codes are returned once — store them now.",
         "operationId": "ConsumerMfaController_regenerateRecoveryCodes",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9846,7 +10024,16 @@
       "post": {
         "description": "Verify a fresh code (TOTP or recovery) against any enabled factor on the account, and update the session's `auth_methods` + `mfa_at`. Call `/auth/refresh` after this to mint a token whose claims reflect the new state. Customers reading `mfa_at` from access tokens to gate sensitive actions should require a `/step-up` + refresh cycle when the timestamp is older than their policy window. 5 consecutive wrong codes lock step-up on this session for 15 minutes.",
         "operationId": "ConsumerMfaController_stepUp",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9890,7 +10077,16 @@
       "get": {
         "description": "Returns the union of the app-level role permissions and the tenant-level role permissions (when the token carries an `org_id`). Resolved per-request through a 60-second LRU — role-permission edits propagate within ~1 minute. Use this instead of decoding a `permissions[]` claim from the JWT, which is no longer included. M2M tokens cannot call this — use `POST /:appSlug/v1/oauth/introspect` to inspect M2M scopes.",
         "operationId": "ConsumerMeController_getPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9918,7 +10114,16 @@
       "get": {
         "description": "Each session includes a `current` flag identifying the one belonging to the bearer token used for this request.",
         "operationId": "ConsumerMeController_listSessions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9950,6 +10155,14 @@
           {
             "in": "path",
             "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
             "required": true,
             "schema": {
               "type": "string"
