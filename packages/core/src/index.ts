@@ -38,13 +38,21 @@ export interface PCClientConfig {
   fetch?: typeof fetch;
 }
 
-/** Default prod base URL per surface. */
+/**
+ * Default prod base URL per surface.
+ *
+ * Pointed at the renamed services (Rally→Waitlist, Agora→Feed,
+ * Heimdall→users) so the SDK targets the canonical new domains and the
+ * old aliases (api.rally, agora.*, api.heimdall) can eventually retire.
+ * The surface KEYS (rally/agora/heimdall) are intentionally kept until
+ * the v1.0.0 public-API rename, so this stays a non-breaking retarget.
+ */
 export const PC_BASE_URL = {
   platformAuth: "https://api.auth.productcraft.co",
-  heimdall: "https://api.heimdall.productcraft.co",
+  heimdall: "https://api.users.productcraft.co",
   envoi: "https://api.mail.productcraft.co",
-  rally: "https://api.rally.productcraft.co",
-  agora: "https://agora.productcraft.co",
+  rally: "https://api.waitlist.productcraft.co",
+  agora: "https://feed.productcraft.co",
 } as const;
 
 /**
