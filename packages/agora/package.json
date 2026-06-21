@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/agora",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Agora. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

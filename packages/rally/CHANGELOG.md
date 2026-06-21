@@ -1,5 +1,12 @@
 # @productcraft/rally
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [d18aa84]
+  - @productcraft/core@0.0.4
+
 ## 0.0.5
 
 ### Patch Changes
