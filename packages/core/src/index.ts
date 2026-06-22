@@ -41,18 +41,28 @@ export interface PCClientConfig {
 /**
  * Default prod base URL per surface.
  *
- * Pointed at the renamed services (Rally→Waitlist, Agora→Feed,
- * Heimdall→users) so the SDK targets the canonical new domains and the
- * old aliases (api.rally, agora.*, api.heimdall) can eventually retire.
+ * Pointed at the canonical post-rebrand domains (Rally→Waitlist,
+ * Envoi→Mail, Agora→Feed→Social, Heimdall→Auth). The old aliases
+ * (api.rally, agora/feed, api.heimdall, api.users) stay live during the
+ * deprecation window, so this is a non-breaking retarget.
+ *
+ * Two important domain moves in this update:
+ *   - platformAuth: api.auth → api.platform-auth. The platform identity
+ *     layer vacated api.auth so the customer-facing Auth product could
+ *     take it; pointing the SDK at api.auth here would now hit the wrong
+ *     service.
+ *   - heimdall (the Auth product): api.users → api.auth (its new
+ *     canonical host).
+ *
  * The surface KEYS (rally/agora/heimdall) are intentionally kept until
- * the v1.0.0 public-API rename, so this stays a non-breaking retarget.
+ * the v1.0.0 public-API rename.
  */
 export const PC_BASE_URL = {
-  platformAuth: "https://api.auth.productcraft.co",
-  heimdall: "https://api.users.productcraft.co",
+  platformAuth: "https://api.platform-auth.productcraft.co",
+  heimdall: "https://api.auth.productcraft.co",
   envoi: "https://api.mail.productcraft.co",
   rally: "https://api.waitlist.productcraft.co",
-  agora: "https://feed.productcraft.co",
+  agora: "https://social.productcraft.co",
 } as const;
 
 /**
