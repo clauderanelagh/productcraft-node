@@ -48,11 +48,15 @@ export interface PCClientConfig {
  * the v1.0.0 public-API rename, so this stays a non-breaking retarget.
  */
 export const PC_BASE_URL = {
-  platformAuth: "https://api.auth.productcraft.co",
-  heimdall: "https://api.users.productcraft.co",
+  // platformAuth moved api.auth → api.platform-auth (the platform
+  // identity layer vacated api.auth so the customer-facing Auth product
+  // could take it). heimdall (the Auth product) → api.auth; agora →
+  // social.productcraft.co. Old hosts stay live as aliases.
+  platformAuth: "https://api.platform-auth.productcraft.co",
+  heimdall: "https://api.auth.productcraft.co",
   envoi: "https://api.mail.productcraft.co",
   rally: "https://api.waitlist.productcraft.co",
-  agora: "https://feed.productcraft.co",
+  agora: "https://social.productcraft.co",
 } as const;
 
 /**
