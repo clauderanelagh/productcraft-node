@@ -1,5 +1,17 @@
 # productcraft
 
+## 0.0.11
+
+### Patch Changes
+
+- Updated dependencies [734798c]
+  - @productcraft/core@0.0.5
+  - @productcraft/agora@0.0.8
+  - @productcraft/envoi@0.0.7
+  - @productcraft/heimdall@0.3.2
+  - @productcraft/platform-auth@0.0.7
+  - @productcraft/rally@0.0.7
+
 ## 0.0.10
 
 ### Patch Changes

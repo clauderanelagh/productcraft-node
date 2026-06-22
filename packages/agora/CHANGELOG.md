@@ -1,5 +1,12 @@
 # @productcraft/agora
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies [734798c]
+  - @productcraft/core@0.0.5
+
 ## 0.0.7
 
 ### Patch Changes
