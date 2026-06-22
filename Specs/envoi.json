@@ -56,6 +56,33 @@
         ],
         "type": "object"
       },
+      "ConnectGitHubRequestDto": {
+        "properties": {
+          "return_to": {
+            "description": "URL the workspace user should land on after the GitHub OAuth flow completes. Must be a same-origin or productcraft.co URL — anything else is rejected to keep the callback from being an open-redirect.",
+            "example": "https://console.productcraft.co/envoi/workspaces/acme/integrations",
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "required": [
+          "return_to"
+        ],
+        "type": "object"
+      },
+      "ConnectGitHubResponseDto": {
+        "properties": {
+          "authorize_url": {
+            "description": "Browser redirects here to start the GitHub OAuth flow.",
+            "example": "https://github.com/login/oauth/authorize?client_id=…&state=…&redirect_uri=…",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorize_url"
+        ],
+        "type": "object"
+      },
       "CreateDomainDto": {
         "properties": {
           "fqdn": {
@@ -297,6 +324,174 @@
         ],
         "type": "object"
       },
+      "GitHubBranchDto": {
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "GitHubRepoDto": {
+        "properties": {
+          "default_branch": {
+            "type": "string"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "html_url": {
+            "type": "string"
+          },
+          "private": {
+            "type": "boolean"
+          },
+          "updated_at": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "default_branch",
+          "private",
+          "html_url",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "IntegrationDetailDto": {
+        "properties": {
+          "account_avatar_url": {
+            "example": "https://avatars.githubusercontent.com/u/1?v=4",
+            "nullable": true,
+            "type": "string"
+          },
+          "account_login": {
+            "example": "octocat",
+            "type": "string"
+          },
+          "credentials_redacted": {
+            "additionalProperties": true,
+            "description": "Provider's redacted credential view — public identifiers + a 'token_present' boolean. Secrets NEVER round-trip.",
+            "type": "object"
+          },
+          "display_name": {
+            "example": "GitHub",
+            "type": "string"
+          },
+          "last_error": {
+            "description": "Surfaced when status is 'error' — last failure message.",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_synced_at": {
+            "description": "When the last successful sync ran. null until first success.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "provider": {
+            "example": "github",
+            "type": "string"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "description": "Provider-specific non-secret settings (e.g. selected repo / branch / path).",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "error",
+              "revoked"
+            ],
+            "example": "active",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "display_name",
+          "account_login",
+          "account_avatar_url",
+          "status",
+          "last_error",
+          "last_synced_at",
+          "settings",
+          "updated_at",
+          "credentials_redacted"
+        ],
+        "type": "object"
+      },
+      "IntegrationListItemDto": {
+        "properties": {
+          "account_avatar_url": {
+            "example": "https://avatars.githubusercontent.com/u/1?v=4",
+            "nullable": true,
+            "type": "string"
+          },
+          "account_login": {
+            "example": "octocat",
+            "type": "string"
+          },
+          "display_name": {
+            "example": "GitHub",
+            "type": "string"
+          },
+          "last_error": {
+            "description": "Surfaced when status is 'error' — last failure message.",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_synced_at": {
+            "description": "When the last successful sync ran. null until first success.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "provider": {
+            "example": "github",
+            "type": "string"
+          },
+          "settings": {
+            "additionalProperties": true,
+            "description": "Provider-specific non-secret settings (e.g. selected repo / branch / path).",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "error",
+              "revoked"
+            ],
+            "example": "active",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "display_name",
+          "account_login",
+          "account_avatar_url",
+          "status",
+          "last_error",
+          "last_synced_at",
+          "settings",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "LintFindingDto": {
         "properties": {
           "id": {
@@ -369,6 +564,20 @@
           "data": {
             "items": {
               "$ref": "#/components/schemas/DomainDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListIntegrationsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/IntegrationListItemDto"
             },
             "type": "array"
           }
@@ -1891,6 +2100,21 @@
         ],
         "type": "object"
       },
+      "StartSyncResponseDto": {
+        "properties": {
+          "started_at": {
+            "type": "string"
+          },
+          "sync_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sync_id",
+          "started_at"
+        ],
+        "type": "object"
+      },
       "SuppressionEntryDto": {
         "properties": {
           "added_at": {
@@ -1938,6 +2162,42 @@
         ],
         "type": "object"
       },
+      "SyncStatusDto": {
+        "properties": {
+          "ended_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "error": {
+            "nullable": true,
+            "type": "string"
+          },
+          "started_at": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "running",
+              "completed",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "nullable": true,
+            "type": "object"
+          }
+        },
+        "required": [
+          "status",
+          "started_at",
+          "ended_at",
+          "summary",
+          "error"
+        ],
+        "type": "object"
+      },
       "TemplateDto": {
         "properties": {
           "body_html": {
@@ -1964,6 +2224,26 @@
             "type": "string"
           },
           "name": {
+            "type": "string"
+          },
+          "source": {
+            "default": "manual",
+            "description": "Where this row came from. 'manual' for UI-authored, 'github' for rows maintained by the workspace GitHub integration sync. Migration 0020.",
+            "enum": [
+              "manual",
+              "github"
+            ],
+            "type": "string"
+          },
+          "source_ref": {
+            "description": "Stable provider pointer used by the editor to build \"Open on GitHub →\" links. Shape: `github:<owner>/<repo>@<branch>:<path-in-repo>`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "source_synced_at": {
+            "description": "When the sync service last wrote this row. null for manual rows.",
+            "format": "date-time",
+            "nullable": true,
             "type": "string"
           },
           "subject": {
@@ -2000,7 +2280,10 @@
           "variables_schema",
           "tags",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "source",
+          "source_ref",
+          "source_synced_at"
         ],
         "type": "object"
       },
@@ -2142,6 +2425,28 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpdateGitHubSettingsDto": {
+        "properties": {
+          "branch": {
+            "example": "main",
+            "type": "string"
+          },
+          "repo_full_name": {
+            "example": "octocat/templates",
+            "type": "string"
+          },
+          "templates_path": {
+            "example": "/",
+            "type": "string"
+          }
+        },
+        "required": [
+          "repo_full_name",
+          "branch",
+          "templates_path"
+        ],
         "type": "object"
       },
       "UpdateMailboxDto": {
@@ -3137,6 +3442,399 @@
         "summary": "Run a synchronous DNS check against this domain; flips status to active when the required record set passes.",
         "tags": [
           "domains"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations": {
+      "get": {
+        "description": "Returns one entry per connected provider (GitHub, …). No secrets in the response — only public identifiers + status + sync stamps.",
+        "operationId": "IntegrationsController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListIntegrationsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List connected workspace integrations.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/connect": {
+      "post": {
+        "description": "The frontend redirects the user to `authorize_url`; GitHub bounces back to the `/callback` endpoint with a `code` + `state` pair. state is single-use, 5-minute TTL.",
+        "operationId": "GitHubOAuthController_connect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectGitHubRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectGitHubResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mint a GitHub OAuth state token and return the authorize URL.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/repos": {
+      "get": {
+        "operationId": "GitHubController_listRepos",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GitHubRepoDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List repos visible to the connected GitHub account.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/repos/{owner}/{repo}/branches": {
+      "get": {
+        "operationId": "GitHubController_listBranches",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "owner",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "repo",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GitHubBranchDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List branches for the given repo.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/settings": {
+      "put": {
+        "operationId": "GitHubController_updateSettings",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGitHubSettingsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Saved."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the repo + branch + templates path to sync from.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/sync": {
+      "post": {
+        "operationId": "GitHubController_startSync",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartSyncResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trigger an immediate sync from GitHub. Returns a sync id to poll.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/sync/{sync_id}": {
+      "get": {
+        "operationId": "GitHubController_getSyncStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "sync_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Run not found or expired."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Poll a sync run's status.",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/{provider}": {
+      "delete": {
+        "description": "Hard delete — the encrypted blob is removed. The customer must reconnect via the provider-specific OAuth flow to restore access.",
+        "operationId": "IntegrationsController_disconnect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional client-supplied key to make the disconnect idempotent.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disconnect an integration. Deletes the credential row.",
+        "tags": [
+          "integrations"
+        ]
+      },
+      "get": {
+        "description": "Includes the provider's `credentials_redacted` view. Secret fields (access tokens, signing keys) are never included.",
+        "operationId": "IntegrationsController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntegrationDetailDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "No integration of the requested provider for this workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single integration detail with redacted credentials.",
+        "tags": [
+          "integrations"
         ]
       }
     },

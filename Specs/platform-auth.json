@@ -40,6 +40,17 @@
         ],
         "type": "object"
       },
+      "AvatarUrlResponseDto": {
+        "properties": {
+          "avatar_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "avatar_url"
+        ],
+        "type": "object"
+      },
       "BoundPolicySummaryDto": {
         "properties": {
           "description": {
@@ -59,6 +70,34 @@
           "id",
           "name",
           "description"
+        ],
+        "type": "object"
+      },
+      "CallbackBodyDto": {
+        "properties": {
+          "code": {
+            "description": "OAuth authorization code returned by the IdP. Optional — either `idToken` or `code` must be supplied.",
+            "maxLength": 2048,
+            "type": "string"
+          },
+          "id_token": {
+            "description": "JWT id_token from the IdP (OIDC providers; Apple form_post). Optional — either `idToken` or `code` must be supplied.",
+            "maxLength": 8192,
+            "type": "string"
+          },
+          "state": {
+            "description": "Opaque state token returned by the IdP, minted at `/start`. Single-use; binds the callback to a specific browser session.",
+            "maxLength": 512,
+            "type": "string"
+          },
+          "user": {
+            "description": "Apple-only first-signin payload: JSON-encoded `{ name, email }`. Apple returns this only the first time a user signs in. Not signed — treated as untrusted input by the controller's payload parser.",
+            "maxLength": 4096,
+            "type": "string"
+          }
+        },
+        "required": [
+          "state"
         ],
         "type": "object"
       },
@@ -324,6 +363,11 @@
       },
       "IntrospectAccountDto": {
         "properties": {
+          "avatar_url": {
+            "description": "Public HTTPS URL of the uploaded avatar, or null when no avatar is set.",
+            "nullable": true,
+            "type": "string"
+          },
           "display_name": {
             "nullable": true,
             "type": "string"
@@ -356,7 +400,8 @@
           "username",
           "display_name",
           "status",
-          "email_verified_at"
+          "email_verified_at",
+          "avatar_url"
         ],
         "type": "object"
       },
@@ -473,6 +518,11 @@
       },
       "IntrospectWorkspaceListItemDto": {
         "properties": {
+          "avatar_url": {
+            "description": "Workspace identity avatar (public HTTPS URL), or null when none is set. Console workspace switcher reads this.",
+            "nullable": true,
+            "type": "string"
+          },
           "display_name": {
             "type": "string"
           },
@@ -505,7 +555,8 @@
           "slug",
           "display_name",
           "role",
-          "services"
+          "services",
+          "avatar_url"
         ],
         "type": "object"
       },
@@ -840,6 +891,50 @@
         ],
         "type": "object"
       },
+      "MeProfileDto": {
+        "properties": {
+          "avatar_url": {
+            "description": "Short-lived (15 min) presigned GET URL for the avatar object in private object storage. NULL when no avatar has been set; the frontend then renders initials. The API mints a fresh URL on every response, so a stable bookmark of this value is not meaningful.",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "email_verified_at": {
+            "description": "Timestamp when this account verified its primary email, or null if unverified.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "description": "Account status (e.g. `active`, `suspended`).",
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "display_name",
+          "status",
+          "email_verified_at",
+          "avatar_url"
+        ],
+        "type": "object"
+      },
       "MintPakResponseDto": {
         "properties": {
           "record": {
@@ -854,6 +949,27 @@
         "required": [
           "token",
           "record"
+        ],
+        "type": "object"
+      },
+      "OAuthCallbackResultDto": {
+        "properties": {
+          "return_to": {
+            "description": "Original `return_to` the user was sent off with. auth-ui redirects here after writing the cookie.",
+            "type": "string"
+          },
+          "tokens": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TokenResponseDto"
+              }
+            ],
+            "description": "Issued PlatformUser session tokens. auth-ui sets the auth_token cookie from `accessToken` and 302s the browser to `return_to`."
+          }
+        },
+        "required": [
+          "tokens",
+          "return_to"
         ],
         "type": "object"
       },
@@ -1305,6 +1421,17 @@
         },
         "type": "object"
       },
+      "UpdateProfileDto": {
+        "properties": {
+          "display_name": {
+            "description": "New display name. 1-128 chars. Optional — empty PATCH is a no-op.",
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UpdateWorkspaceDto": {
         "properties": {
           "display_name": {
@@ -1317,7 +1444,7 @@
             "type": "object"
           },
           "slug": {
-            "description": "New URL-friendly slug. Same constraints as the create form. Renames are broadcast on the workspace events queue so denormalised consumers (rally-api, future product surfaces) can sync. Old URLs continue to resolve for one rename cycle.",
+            "description": "New URL-friendly slug. Same constraints as the create form. Renames are broadcast on the workspace events queue so denormalised consumers (waitlist-api, future product surfaces) can sync. Old URLs continue to resolve for one rename cycle.",
             "example": "acme",
             "maxLength": 64,
             "minLength": 2,
@@ -1482,6 +1609,17 @@
           "ip",
           "metadata",
           "created_at"
+        ],
+        "type": "object"
+      },
+      "WorkspaceAvatarUrlResponseDto": {
+        "properties": {
+          "avatar_url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "avatar_url"
         ],
         "type": "object"
       },
@@ -1983,6 +2121,100 @@
         ]
       }
     },
+    "/v1/auth/oauth/{provider}/callback": {
+      "post": {
+        "operationId": "OAuthController_callback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "enum": [
+                "apple",
+                "google",
+                "github"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallbackBodyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthCallbackResultDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Unknown / expired state, provider state mismatch, or unknown provider id."
+          },
+          "401": {
+            "description": "Provider token verification failed, nonce replayed, or downstream identity could not be resolved."
+          }
+        },
+        "summary": "Complete a federated sign-in. auth-ui proxies the provider redirect (query params for Google/GitHub, form_post body for Apple) into this endpoint and uses the returned `tokens` to set the auth_token cookie.",
+        "tags": [
+          "OAuth Sign-In"
+        ]
+      }
+    },
+    "/v1/auth/oauth/{provider}/start": {
+      "get": {
+        "operationId": "OAuthController_start",
+        "parameters": [
+          {
+            "description": "OAuth provider id. Providers are gated on env-var configuration; unconfigured providers 400 with UNKNOWN_OAUTH_PROVIDER.",
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "enum": [
+                "apple",
+                "google",
+                "github"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Absolute URL the user lands on after a successful signin. Must match the `OAUTH_RETURN_TO_ORIGINS` allowlist (CSV, wildcards supported as `https://*.productcraft.co`).",
+            "in": "query",
+            "name": "return_to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to provider authorize URL."
+          },
+          "400": {
+            "description": "Invalid `return_to` or unknown provider."
+          }
+        },
+        "summary": "Begin a federated sign-in flow; 302s to the provider authorize URL.",
+        "tags": [
+          "OAuth Sign-In"
+        ]
+      }
+    },
     "/v1/auth/password/request-reset": {
       "post": {
         "operationId": "PasswordController_requestPasswordReset",
@@ -2222,6 +2454,159 @@
         ]
       }
     },
+    "/v1/me": {
+      "get": {
+        "operationId": "MeController_getMe",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeProfileDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "No session."
+          },
+          "404": {
+            "description": "No account row for the session principal. Should never fire for a valid session — surfaced for SDKs."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read the caller's account profile.",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/v1/me/avatar": {
+      "delete": {
+        "operationId": "MeController_removeAvatar",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Avatar removed (or already absent)."
+          },
+          "401": {
+            "description": "No session."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Clear the caller's avatar and delete the stored object.",
+        "tags": [
+          "me"
+        ]
+      },
+      "post": {
+        "operationId": "MeController_setAvatar",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "PNG, JPEG, or WEBP image, ≤2 MB.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvatarUrlResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid file: wrong mimetype, oversized, or content does not match the declared type."
+          },
+          "401": {
+            "description": "No session."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload (or replace) the caller's avatar. PNG/JPEG/WEBP only — SVG is rejected because user-uploaded SVG from a productcraft.co origin is a stored-XSS vector. ≤2 MB. Magic bytes are sniffed; a mislabeled file is rejected.",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/v1/me/profile": {
+      "patch": {
+        "operationId": "MeController_updateProfile",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeProfileDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Validation failed (e.g. displayName outside 1-128 chars)."
+          },
+          "401": {
+            "description": "No session."
+          },
+          "403": {
+            "description": "The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update the caller's profile. Currently only `displayName` is editable. An empty body is a no-op that returns the current profile. Cookie/JWT only — this is a human-self-service surface, not a PAK-mutation surface.",
+        "tags": [
+          "me"
+        ]
+      }
+    },
     "/v1/session": {
       "get": {
         "operationId": "SessionController_getSessions",
@@ -2381,9 +2766,12 @@
               }
             },
             "description": ""
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session."
           }
         },
-        "summary": "Create a new workspace",
+        "summary": "Create a new workspace. Cookie/JWT only — PAKs are workspace-scoped credentials and cannot create new workspaces.",
         "tags": [
           "workspaces"
         ]
@@ -2415,7 +2803,7 @@
             "description": "The joined workspace."
           }
         },
-        "summary": "Accept a workspace invite by code",
+        "summary": "Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a human identity to a workspace.",
         "tags": [
           "workspaces"
         ]
@@ -2437,9 +2825,12 @@
         "responses": {
           "204": {
             "description": "Workspace deleted."
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session."
           }
         },
-        "summary": "Delete a workspace (requires workspace.delete)",
+        "summary": "Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible workspace destruction needs a human-attributed audit row.",
         "tags": [
           "workspaces"
         ]
@@ -2516,7 +2907,7 @@
             "description": "Slug already taken by another workspace."
           }
         },
-        "summary": "Update workspace display name, slug, or settings. Slug renames broadcast a `workspace.renamed` event so denormalised consumers (rally-api) sync.",
+        "summary": "Update workspace display name, slug, or settings. Slug renames broadcast a `workspace.renamed` event so denormalised consumers (waitlist-api) sync.",
         "tags": [
           "workspaces"
         ]
@@ -2592,6 +2983,9 @@
               }
             },
             "description": ""
+          },
+          "403": {
+            "description": "Caller is a PAK (`pcft_live_*`). Mint requires a human-issued session."
           }
         },
         "security": [
@@ -2599,7 +2993,7 @@
             "bearer": []
           }
         ],
-        "summary": "Mint a new PAK. The plaintext `token` is returned ONCE — store it now. The minter can grant at most their own effective permissions.",
+        "summary": "Mint a new PAK. The plaintext `token` is returned ONCE — store it now. The minter can grant at most their own effective permissions. Cookie/JWT only — PAKs cannot mint other PAKs.",
         "tags": [
           "platform-api-keys"
         ]
@@ -2935,6 +3329,82 @@
         ]
       }
     },
+    "/v1/workspaces/{workspace_slug}/avatar": {
+      "delete": {
+        "operationId": "WorkspaceController_removeAvatar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Avatar cleared."
+          }
+        },
+        "summary": "Clear the workspace avatar and delete the stored object. Gated by `workspace.settings.update`.",
+        "tags": [
+          "workspaces"
+        ]
+      },
+      "post": {
+        "operationId": "WorkspaceController_setAvatar",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "PNG, JPEG, or WEBP image, ≤2 MB. Square images look best.",
+                    "format": "binary",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceAvatarUrlResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "Caller is not a member of this workspace, or lacks workspace.settings.update."
+          }
+        },
+        "summary": "Upload (or replace) the workspace identity avatar. Gated by `workspace.settings.update` (owner + admin). PNG/JPEG/WEBP only, ≤2 MB, magic-byte sniffed. SVG is rejected (stored-XSS).",
+        "tags": [
+          "workspaces"
+        ]
+      }
+    },
     "/v1/workspaces/{workspace_slug}/invites": {
       "get": {
         "operationId": "WorkspaceController_listInvites",
@@ -3015,7 +3485,7 @@
             "description": ""
           }
         },
-        "summary": "Create a workspace invite link",
+        "summary": "Create a workspace invite link. Cookie/JWT only — invites bring new humans into the workspace.",
         "tags": [
           "workspaces"
         ]
@@ -3047,7 +3517,7 @@
             "description": "Invite revoked."
           }
         },
-        "summary": "Revoke a workspace invite",
+        "summary": "Revoke a workspace invite. Cookie/JWT only.",
         "tags": [
           "workspaces"
         ]
@@ -3248,7 +3718,7 @@
             "description": "Name already in use."
           }
         },
-        "summary": "Create a managed policy",
+        "summary": "Create a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.",
         "tags": [
           "workspace-policies"
         ]
@@ -3314,7 +3784,7 @@
             "description": "Policy not found in this workspace."
           }
         },
-        "summary": "Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column.",
+        "summary": "Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column. Cookie/JWT only.",
         "tags": [
           "workspace-policies"
         ]
@@ -3413,7 +3883,7 @@
             "description": "Name already in use."
           }
         },
-        "summary": "Update a managed policy",
+        "summary": "Update a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.",
         "tags": [
           "workspace-policies"
         ]
@@ -3483,7 +3953,7 @@
             "description": ""
           }
         },
-        "summary": "Create a new custom role",
+        "summary": "Create a new custom role. Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]
@@ -3515,7 +3985,7 @@
             "description": "Custom role deleted."
           }
         },
-        "summary": "Delete a custom role (fails if it has members)",
+        "summary": "Delete a custom role (fails if it has members). Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]
@@ -3599,7 +4069,7 @@
             "description": ""
           }
         },
-        "summary": "Update a role or replace its permission set",
+        "summary": "Update a role or replace its permission set. Cookie/JWT only — role authoring is a human-admin surface.",
         "tags": [
           "workspace-roles"
         ]
