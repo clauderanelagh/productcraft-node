@@ -205,7 +205,7 @@ Heimdall EndUser access tokens carry, at minimum:
 |---|---|---|
 | `alg` (header) | `RS256` | Signing algorithm — RS256 from the per-app keystore. |
 | `kid` (header) | `rs256-<key-id>` | Selects the public key from the per-app JWKS. |
-| `iss` | `https://api.heimdall.productcraft.co/<appSlug>` | Per-app issuer URL. Available on the SDK as `scope.expectedIssuer`. |
+| `iss` | `https://api.auth.productcraft.co/<appSlug>` | Per-app issuer URL. Available on the SDK as `scope.expectedIssuer`. |
 | `aud` | `<appSlug>` | The app slug (literal). Available as `scope.expectedAudience`. |
 | `sub` | `<account-uuid>` | The EndUser's account id — what your local user table should key on. |
 | `aid` | `<app-uuid>` | The Heimdall app uuid (matches `scope.appId` if you held it). |
@@ -245,7 +245,7 @@ import { jwtVerify } from "jose";
 
 const scope = heimdall.consumer("my-app-slug");
 const { payload } = await jwtVerify(token, scope.jwks.getKey, {
-  issuer: scope.expectedIssuer,        // "https://api.heimdall.productcraft.co/<appSlug>"
+  issuer: scope.expectedIssuer,        // "https://api.auth.productcraft.co/<appSlug>"
   audience: scope.expectedAudience,    // "<appSlug>"
   algorithms: ["RS256"],
 });
@@ -313,7 +313,7 @@ new Heimdall({
 
 ## How this SDK is built
 
-Generated from the live OpenAPI spec at `https://api.heimdall.productcraft.co/docs-json`. The 4,000+ lines of types + per-operation client functions in `src/_generated/` are produced by [kubb](https://kubb.dev/); the thin resource classes (~600 lines of `app.ts` / `consumer.ts`) wrap those into the namespace structure shown above.
+Generated from the live OpenAPI spec at `https://api.auth.productcraft.co/docs-json`. The 4,000+ lines of types + per-operation client functions in `src/_generated/` are produced by [kubb](https://kubb.dev/); the thin resource classes (~600 lines of `app.ts` / `consumer.ts`) wrap those into the namespace structure shown above.
 
 When the spec changes, the nightly `spec-refresh` workflow re-runs codegen and opens a PR with the diff. Type-safe consumers get the latest API surface automatically.
 

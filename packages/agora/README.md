@@ -192,7 +192,7 @@ await agora.client.PUT(
 
 ## How this SDK is built
 
-Generated from the live OpenAPI spec at `https://agora.productcraft.co/docs-json` via [`openapi-typescript`](https://openapi-ts.dev/) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). The nightly `spec-refresh` workflow opens a PR whenever the spec changes.
+Generated from the live OpenAPI spec at `https://social.productcraft.co/docs-json` via [`openapi-typescript`](https://openapi-ts.dev/) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). The nightly `spec-refresh` workflow opens a PR whenever the spec changes.
 
 ## License
 
