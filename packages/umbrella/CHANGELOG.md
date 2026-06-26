@@ -1,5 +1,15 @@
 # productcraft
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [91e0664]
+  - @productcraft/heimdall@0.3.3
+  - @productcraft/agora@0.0.9
+  - @productcraft/rally@0.0.8
+  - @productcraft/platform-auth@0.0.8
+
 ## 0.0.11
 
 ### Patch Changes
