@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/heimdall-passport",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Passport-JWT adapter for ProductCraft Heimdall. Plug a Heimdall ConsumerScope into a `passport-jwt` Strategy so existing Passport setups can authenticate Heimdall-issued tokens.",
   "type": "module",
   "main": "./dist/index.cjs",
