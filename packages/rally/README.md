@@ -193,7 +193,7 @@ await rally.client.GET(
 
 ## How this SDK is built
 
-Generated from the live OpenAPI spec at `https://api.rally.productcraft.co/docs-json` via [`openapi-typescript`](https://openapi-ts.dev/) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). The nightly `spec-refresh` workflow opens a PR whenever the spec changes.
+Generated from the live OpenAPI spec at `https://api.waitlist.productcraft.co/docs-json` via [`openapi-typescript`](https://openapi-ts.dev/) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). The nightly `spec-refresh` workflow opens a PR whenever the spec changes.
 
 ## License
 

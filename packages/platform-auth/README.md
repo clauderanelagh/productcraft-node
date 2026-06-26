@@ -170,10 +170,10 @@ await platformAuth.client.POST(
   {
     params: { ... },
     body: {
-      name: "envoi-read-only",
-      description: "Read-only access to all Envoi resources",
+      name: "mail-read-only",
+      description: "Read-only access to all Mail resources",
       policy: [
-        { effect: "allow", actions: ["envoi.read", "envoi.list"], resources: ["*"] },
+        { effect: "allow", actions: ["mail.read", "mail.list"], resources: ["*"] },
       ],
     },
   },
@@ -194,10 +194,13 @@ const { data: policy } = await platformAuth.client.POST(
     params: { path: { workspace_slug: "acme" } },
     body: {
       name: "ci-staging-deploy",
-      description: "Heimdall + Envoi for the staging pipeline",
+      description: "Auth + Mail for the staging pipeline",
       policy: [
-        { effect: "allow", actions: ["heimdall.create", "heimdall.read", "heimdall.update"], resources: ["pcft:heimdall:app/*"] },
-        { effect: "allow", actions: ["envoi.template.read", "envoi.template.send"], resources: ["*"] },
+        // Permission action prefixes rebranded (heimdall.* → auth.*, envoi.* → mail.*),
+        // but resource-URN namespaces intentionally stay pcft:heimdall: / pcft:envoi: —
+        // the services still emit those resource prefixes.
+        { effect: "allow", actions: ["auth.create", "auth.read", "auth.update"], resources: ["pcft:heimdall:app/*"] },
+        { effect: "allow", actions: ["mail.read", "mail.send"], resources: ["*"] },
       ],
     },
   },

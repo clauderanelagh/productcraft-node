@@ -8,10 +8,13 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 declare -A surfaces=(
-  [platform-auth]="https://api.auth.productcraft.co/docs-json"
-  [heimdall]="https://api.users.productcraft.co/docs-json"
+  # Post-rebrand canonical hosts. The surface keys (and Specs/<key>.json
+  # filenames + package names) intentionally keep the old product names
+  # until the SDK v1.0 public-API rename — only the source hosts moved.
+  [platform-auth]="https://api.platform-auth.productcraft.co/docs-json"
+  [heimdall]="https://api.auth.productcraft.co/docs-json"
   [envoi]="https://api.mail.productcraft.co/docs-json"
-  [agora]="https://feed.productcraft.co/docs-json"
+  [agora]="https://social.productcraft.co/docs-json"
   [rally]="https://api.waitlist.productcraft.co/docs-json"
 )
 

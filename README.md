@@ -64,11 +64,11 @@ The Stripe-style ergonomic surface (`envoi.messages.send({ to, subject, body })`
 
 | Package | Default URL |
 |---|---|
-| [`@productcraft/heimdall`](packages/heimdall) — Heimdall Consumer + Admin | `https://api.heimdall.productcraft.co` |
+| [`@productcraft/heimdall`](packages/heimdall) — Heimdall Consumer + Admin | `https://api.auth.productcraft.co` |
 | [`@productcraft/envoi`](packages/envoi) — Envoi (mailbox-api) | `https://api.mail.productcraft.co` |
-| [`@productcraft/rally`](packages/rally) — Rally (waitlists) | `https://api.rally.productcraft.co` |
-| [`@productcraft/agora`](packages/agora) — Agora (social) | `https://agora.productcraft.co` |
-| [`@productcraft/platform-auth`](packages/platform-auth) — Platform-Auth (workspaces) | `https://api.auth.productcraft.co` |
+| [`@productcraft/rally`](packages/rally) — Rally (waitlists) | `https://api.waitlist.productcraft.co` |
+| [`@productcraft/agora`](packages/agora) — Agora (social) | `https://social.productcraft.co` |
+| [`@productcraft/platform-auth`](packages/platform-auth) — Platform-Auth (workspaces) | `https://api.platform-auth.productcraft.co` |
 | [`@productcraft/core`](packages/core) — shared auth + transport (dep of all the above) | — |
 | [`productcraft`](packages/umbrella) — convenience umbrella, depends on all five | — |
 
