@@ -23,6 +23,7 @@ import { consumerAuthControllerResetPassword } from "../_generated/clients/consu
 import { consumerAuthControllerRequestVerification } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestVerification.js";
 import { consumerAuthControllerSendVerificationEmail } from "../_generated/clients/consumerAuth/consumerAuthControllerSendVerificationEmail.js";
 import { consumerAuthControllerVerify } from "../_generated/clients/consumerAuth/consumerAuthControllerVerify.js";
+import { consumerAuthControllerAcceptInvite } from "../_generated/clients/consumerAuth/consumerAuthControllerAcceptInvite.js";
 import { consumerIdpControllerNativeSignIn } from "../_generated/clients/consumerOauthSignIn/consumerIdpControllerNativeSignIn.js";
 
 // consumerMe — all six endpoints have spec bugs (appSlug not declared
@@ -43,6 +44,7 @@ import type { ConsumerResetPasswordDto } from "../_generated/types/ConsumerReset
 import type { ConsumerRequestVerificationDto } from "../_generated/types/ConsumerRequestVerificationDto.js";
 import type { ConsumerSendVerificationEmailDto } from "../_generated/types/ConsumerSendVerificationEmailDto.js";
 import type { ConsumerVerifyDto } from "../_generated/types/ConsumerVerifyDto.js";
+import type { ConsumerAcceptInviteDto } from "../_generated/types/ConsumerAcceptInviteDto.js";
 import type { ConsumerVerifyResponseDto } from "../_generated/types/ConsumerVerifyResponseDto.js";
 import type { ConsumerCodeIssueResponseDto } from "../_generated/types/ConsumerCodeIssueResponseDto.js";
 import type { ConsumerCodeDispatchResponseDto } from "../_generated/types/ConsumerCodeDispatchResponseDto.js";
@@ -281,6 +283,19 @@ export class ConsumerScope {
         { appSlug: this.appSlug, data },
         { client: this.client },
       ) as Promise<ConsumerVerifyResponseDto>,
+
+    /**
+     * Accept an end-user invite into this app. The invite is minted by
+     * an app admin (`heimdall.app(appId).invites.create`) and delivered
+     * to the invitee out-of-band; this consumes the invite token and
+     * provisions the EndUser. Public — the caller is unauthenticated
+     * until the invite is accepted.
+     */
+    acceptInvite: (data: ConsumerAcceptInviteDto) =>
+      consumerAuthControllerAcceptInvite(
+        { appSlug: this.appSlug, data },
+        { client: this.client },
+      ),
 
     /**
      * Sign in / sign up with a provider ID token (native flow).

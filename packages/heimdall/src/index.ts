@@ -20,13 +20,11 @@ import { ConsumerScope } from "./scopes/consumer.js";
 // Workspace-level operations
 import { appControllerListMyApps } from "./_generated/clients/apps/appControllerListMyApps.js";
 import { appControllerCreateApp } from "./_generated/clients/apps/appControllerCreateApp.js";
-import { appControllerAcceptInvite } from "./_generated/clients/apps/appControllerAcceptInvite.js";
 
 import { statsControllerGetMyStats } from "./_generated/clients/platformStats/statsControllerGetMyStats.js";
 
 // DTOs
 import type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
-import type { AcceptInviteDto } from "./_generated/types/AcceptInviteDto.js";
 import type { AppControllerListMyAppsQueryParams } from "./_generated/types/apps/AppControllerListMyApps.js";
 import type { StatsControllerGetMyStatsQueryParams } from "./_generated/types/platformStats/StatsControllerGetMyStats.js";
 
@@ -91,10 +89,6 @@ export class Heimdall {
     /** Create a new app under the caller's workspace. */
     create: (data: CreateAppDto) =>
       appControllerCreateApp({ data }, { client: this.client }),
-
-    /** Accept a workspace invite to join an existing app. */
-    acceptInvite: (data: AcceptInviteDto) =>
-      appControllerAcceptInvite({ data }, { client: this.client }),
   };
 
   // ─────────────────────────────────────────────────────────────
@@ -158,8 +152,9 @@ export type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
 export type { UpdateAppDto } from "./_generated/types/UpdateAppDto.js";
 export type { UpdateAppStatusDto } from "./_generated/types/UpdateAppStatusDto.js";
 export type { UpdateAuthConfigDto } from "./_generated/types/UpdateAuthConfigDto.js";
-export type { CreateInviteDto } from "./_generated/types/CreateInviteDto.js";
-export type { AcceptInviteDto } from "./_generated/types/AcceptInviteDto.js";
+export type { CreateEndUserInviteDto } from "./_generated/types/CreateEndUserInviteDto.js";
+export type { ConsumerAcceptInviteDto } from "./_generated/types/ConsumerAcceptInviteDto.js";
+export type { EndUserInviteResponseDto } from "./_generated/types/EndUserInviteResponseDto.js";
 export type { UpdateEndUserDto } from "./_generated/types/UpdateEndUserDto.js";
 export type { UpdateEndUserRoleDto } from "./_generated/types/UpdateEndUserRoleDto.js";
 export type { UpdateEndUserStatusDto } from "./_generated/types/UpdateEndUserStatusDto.js";

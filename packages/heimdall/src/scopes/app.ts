@@ -16,9 +16,9 @@ import { appControllerDeleteApp } from "../_generated/clients/apps/appController
 import { appControllerUpdateAppStatus } from "../_generated/clients/apps/appControllerUpdateAppStatus.js";
 import { authConfigControllerGetConfig } from "../_generated/clients/apps/authConfigControllerGetConfig.js";
 import { authConfigControllerUpdateConfig } from "../_generated/clients/apps/authConfigControllerUpdateConfig.js";
-import { appControllerListInvites } from "../_generated/clients/apps/appControllerListInvites.js";
-import { appControllerCreateInvite } from "../_generated/clients/apps/appControllerCreateInvite.js";
-import { appControllerRevokeInvite } from "../_generated/clients/apps/appControllerRevokeInvite.js";
+import { endUserInviteControllerList } from "../_generated/clients/endUserInvites/endUserInviteControllerList.js";
+import { endUserInviteControllerCreate } from "../_generated/clients/endUserInvites/endUserInviteControllerCreate.js";
+import { endUserInviteControllerRevoke } from "../_generated/clients/endUserInvites/endUserInviteControllerRevoke.js";
 import { appControllerListMembers } from "../_generated/clients/apps/appControllerListMembers.js";
 import { appControllerRemoveMember } from "../_generated/clients/apps/appControllerRemoveMember.js";
 
@@ -63,7 +63,7 @@ import { appAuditControllerGetAuditLogs } from "../_generated/clients/appAudit/a
 import type { UpdateAppDto } from "../_generated/types/UpdateAppDto.js";
 import type { UpdateAppStatusDto } from "../_generated/types/UpdateAppStatusDto.js";
 import type { UpdateAuthConfigDto } from "../_generated/types/UpdateAuthConfigDto.js";
-import type { CreateInviteDto } from "../_generated/types/CreateInviteDto.js";
+import type { CreateEndUserInviteDto } from "../_generated/types/CreateEndUserInviteDto.js";
 import type { UpdateEndUserDto } from "../_generated/types/UpdateEndUserDto.js";
 import type { UpdateEndUserRoleDto } from "../_generated/types/UpdateEndUserRoleDto.js";
 import type { UpdateEndUserStatusDto } from "../_generated/types/UpdateEndUserStatusDto.js";
@@ -78,7 +78,7 @@ import type { UpdateM2MClientDto } from "../_generated/types/UpdateM2MClientDto.
 import type { SetScopesDto } from "../_generated/types/SetScopesDto.js";
 
 // Query-param types
-import type { AppControllerListInvitesQueryParams } from "../_generated/types/apps/AppControllerListInvites.js";
+import type { EndUserInviteControllerListQueryParams } from "../_generated/types/endUserInvites/EndUserInviteControllerList.js";
 import type { AppControllerListMembersQueryParams } from "../_generated/types/apps/AppControllerListMembers.js";
 import type { EndUserControllerListEndUsersQueryParams } from "../_generated/types/endUsers/EndUserControllerListEndUsers.js";
 import type { AppAuditControllerGetAuditLogsQueryParams } from "../_generated/types/appAudit/AppAuditControllerGetAuditLogs.js";
@@ -148,21 +148,21 @@ export class AppScope {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // Invites (workspace members)
+  // End-user invites (invite EndUsers into this app)
   // ─────────────────────────────────────────────────────────────
   readonly invites = {
-    list: (params: Partial<AppControllerListInvitesQueryParams> = {}) =>
-      appControllerListInvites(
-        { appId: this.appId, params: params as AppControllerListInvitesQueryParams },
+    list: (params: Partial<EndUserInviteControllerListQueryParams> = {}) =>
+      endUserInviteControllerList(
+        { appId: this.appId, params: params as EndUserInviteControllerListQueryParams },
         { client: this.client },
       ),
-    create: (data: CreateInviteDto) =>
-      appControllerCreateInvite(
+    create: (data: CreateEndUserInviteDto) =>
+      endUserInviteControllerCreate(
         { appId: this.appId, data },
         { client: this.client },
       ),
     revoke: (inviteId: string) =>
-      appControllerRevokeInvite(
+      endUserInviteControllerRevoke(
         { appId: this.appId, inviteId },
         { client: this.client },
       ),

@@ -130,7 +130,7 @@ describe("AppScope — appId pre-bound", () => {
       email: "x@example.com",
       role: "admin",
     } as never);
-    expect(calls[0]!.url).toContain("/v1/apps/app_abc123/invites");
+    expect(calls[0]!.url).toContain("/v1/apps/app_abc123/end-users/invites");
   });
 });
 

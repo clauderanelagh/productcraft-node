@@ -1,19 +1,6 @@
 {
   "components": {
     "schemas": {
-      "AcceptInviteDto": {
-        "properties": {
-          "code": {
-            "description": "Invite code from the invite email / link.",
-            "example": "inv_x7H2k…",
-            "type": "string"
-          }
-        },
-        "required": [
-          "code"
-        ],
-        "type": "object"
-      },
       "AccountContactDto": {
         "properties": {
           "created_at": {
@@ -296,140 +283,11 @@
         ],
         "type": "object"
       },
-      "AppInviteListResponseDto": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/AppInviteResponseDto"
-            },
-            "type": "array"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationDto"
-          }
-        },
-        "required": [
-          "data",
-          "pagination"
-        ],
-        "type": "object"
-      },
-      "AppInviteResponseDto": {
-        "properties": {
-          "code": {
-            "description": "Invite code (used to accept).",
-            "type": "string"
-          },
-          "created_at": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "email": {
-            "nullable": true,
-            "type": "string"
-          },
-          "expires_at": {
-            "format": "date-time",
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "max_uses": {
-            "nullable": true,
-            "type": "number"
-          },
-          "revoked_at": {
-            "format": "date-time",
-            "nullable": true,
-            "type": "string"
-          },
-          "role": {
-            "example": "member",
-            "type": "string"
-          },
-          "use_count": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "id",
-          "code",
-          "role",
-          "email",
-          "max_uses",
-          "use_count",
-          "expires_at",
-          "revoked_at",
-          "created_at"
-        ],
-        "type": "object"
-      },
-      "AppListItemDto": {
-        "properties": {
-          "created_at": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "created_by": {
-            "description": "Account that created the app.",
-            "type": "string"
-          },
-          "display_name": {
-            "example": "Acme",
-            "type": "string"
-          },
-          "id": {
-            "type": "string"
-          },
-          "metadata": {
-            "type": "object"
-          },
-          "role_id": {
-            "description": "The current PlatformUser's app-membership role id.",
-            "type": "string"
-          },
-          "slug": {
-            "example": "acme-app",
-            "type": "string"
-          },
-          "status": {
-            "enum": [
-              "active",
-              "suspended",
-              "archived"
-            ],
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "workspace_id": {
-            "description": "Owning workspace UUID.",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "slug",
-          "display_name",
-          "workspace_id",
-          "status",
-          "created_by",
-          "metadata",
-          "created_at",
-          "updated_at",
-          "role_id"
-        ],
-        "type": "object"
-      },
       "AppListResponseDto": {
         "properties": {
           "data": {
             "items": {
-              "$ref": "#/components/schemas/AppListItemDto"
+              "$ref": "#/components/schemas/AppResponseDto"
             },
             "type": "array"
           },
@@ -1347,6 +1205,35 @@
         "required": [
           "factor",
           "recovery_codes"
+        ],
+        "type": "object"
+      },
+      "ConsumerAcceptInviteDto": {
+        "properties": {
+          "code": {
+            "description": "Invite code from the invitation email (`inv_…`).",
+            "example": "inv_x7H2k3jLqXr",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Optional display name shown back to the user.",
+            "example": "Jane Doe",
+            "type": "string"
+          },
+          "password": {
+            "description": "Password the accepter sets for their new account.",
+            "example": "CorrectHorseBatteryStaple",
+            "type": "string"
+          },
+          "username": {
+            "description": "Optional username override. Defaults to a derivation of the invite email local-part.",
+            "example": "jane_doe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "password"
         ],
         "type": "object"
       },
@@ -2285,35 +2172,38 @@
         ],
         "type": "object"
       },
-      "CreateInviteDto": {
+      "CreateEndUserInviteDto": {
         "properties": {
           "email": {
-            "description": "Optional invitee email. If set, the invite is locked to that address.",
+            "description": "Invitee email. Locks the invite to this address.",
             "example": "alice@example.com",
             "type": "string"
           },
           "expires_in_hours": {
-            "description": "Hours until the invite expires. Defaults to 168 (7 days).",
-            "example": 168,
-            "maximum": 8760,
+            "description": "Hours until the invite expires. Defaults to 72 (3 days).",
+            "maximum": 720,
             "minimum": 1,
             "type": "number"
           },
           "max_uses": {
-            "description": "Maximum number of times this invite can be accepted. Defaults to 1.",
-            "example": 1,
+            "description": "Maximum number of accepts. Defaults to 1.",
             "maximum": 10000,
             "minimum": 1,
             "type": "number"
           },
-          "role": {
-            "description": "Role slug to grant on accept (e.g. `admin`, `member`).",
+          "name": {
+            "description": "Optional human-readable name shown in the email.",
+            "example": "Alice Wong",
+            "type": "string"
+          },
+          "role_name": {
+            "description": "Role slug to grant on accept. Defaults to `member`.",
             "example": "member",
             "type": "string"
           }
         },
         "required": [
-          "role"
+          "email"
         ],
         "type": "object"
       },
@@ -2395,6 +2285,80 @@
         },
         "required": [
           "display_name"
+        ],
+        "type": "object"
+      },
+      "EndUserInviteListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/EndUserInviteResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "EndUserInviteResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Invite code the recipient submits to accept.",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "nullable": true,
+            "type": "string"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "max_uses": {
+            "nullable": true,
+            "type": "number"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "role_id": {
+            "type": "string"
+          },
+          "role_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "use_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "email",
+          "role_name",
+          "role_id",
+          "max_uses",
+          "use_count",
+          "expires_at",
+          "revoked_at",
+          "created_at"
         ],
         "type": "object"
       },
@@ -2485,7 +2449,7 @@
       "EnforcedPermissionsResponseDto": {
         "properties": {
           "data": {
-            "description": "Deduplicated set of `<resource>.<action>` permission strings that at least one Consumer-API route gates via `@RequireAppPermission`. App-agnostic — the same heimdall-api binary serves every app, so the set does not vary by `:appId`. Lets the console surface an \"Enforced\" badge so customers can tell which catalog entries do real work.",
+            "description": "Deduplicated set of `<resource>.<action>` permission strings that at least one Consumer-API route gates via `@RequireAppPermission`. App-agnostic — the same users-api binary serves every app, so the set does not vary by `:appId`. Lets the console surface an \"Enforced\" badge so customers can tell which catalog entries do real work.",
             "example": [
               "session.revoke",
               "user.list"
@@ -4413,8 +4377,8 @@
   },
   "info": {
     "contact": {},
-    "description": "Multi-tenant authentication for ProductCraft customers. The Consumer API (`/{appSlug}/v1/*`) is what external apps integrate to sign in their EndUsers; the Heimdall-admin Platform API (`/v1/*`) is for managing the Heimdall apps themselves and is signed in via PlatformUser tokens.",
-    "title": "Heimdall API",
+    "description": "Multi-tenant authentication for ProductCraft customers. The Consumer API (`/{appSlug}/v1/*`) is what external apps integrate to sign in their EndUsers; the Auth-admin Platform API (`/v1/*`) is for managing the Auth apps themselves and is signed in via PlatformUser tokens.",
+    "title": "Auth API",
     "version": "1.0.0"
   },
   "openapi": "3.0.0",
@@ -4460,7 +4424,7 @@
             "description": ""
           }
         },
-        "summary": "List apps the current PlatformUser is a member of. Pass `workspaceId` to scope the result to a single workspace — required from the per-workspace console page so cross-tenant memberships do not leak.",
+        "summary": "List apps in workspaces the caller is a member of. Pass `workspaceId` to scope the result to a single workspace — required from the per-workspace console page so cross-tenant memberships do not leak.",
         "tags": [
           "apps"
         ]
@@ -4510,38 +4474,6 @@
           }
         },
         "summary": "Create a new Heimdall app owned by the caller",
-        "tags": [
-          "apps"
-        ]
-      }
-    },
-    "/v1/apps/invites/accept": {
-      "post": {
-        "operationId": "AppController_acceptInvite",
-        "parameters": [],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AcceptInviteDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppResponseDto"
-                }
-              }
-            },
-            "description": "App joined."
-          }
-        },
-        "summary": "Accept an app invite by code",
         "tags": [
           "apps"
         ]
@@ -4947,7 +4879,9 @@
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -4983,7 +4917,9 @@
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -5029,7 +4965,9 @@
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -5599,6 +5537,139 @@
         ]
       }
     },
+    "/v1/apps/{app_id}/end-users/invites": {
+      "get": {
+        "operationId": "EndUserInviteController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndUserInviteListResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "List EndUser invites for this app.",
+        "tags": [
+          "end-user-invites"
+        ]
+      },
+      "post": {
+        "operationId": "EndUserInviteController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stripe-style idempotency key. Mint dispatches an email + writes an `invite` row; a retry without an idempotency key would double-send.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEndUserInviteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndUserInviteResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Unknown role, or maxUses / expiresInHours out of range."
+          },
+          "409": {
+            "description": "An EndUser with this email already exists in the app."
+          }
+        },
+        "summary": "Pre-allocate an EndUser invite. Dispatches an invitation email via the workspace's Envoi sender.",
+        "tags": [
+          "end-user-invites"
+        ]
+      }
+    },
+    "/v1/apps/{app_id}/end-users/invites/{invite_id}": {
+      "delete": {
+        "operationId": "EndUserInviteController_revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "invite_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Invite revoked."
+          }
+        },
+        "summary": "Revoke an EndUser invite (soft-delete).",
+        "tags": [
+          "end-user-invites"
+        ]
+      }
+    },
     "/v1/apps/{app_id}/end-users/{user_id}": {
       "delete": {
         "operationId": "EndUserController_deleteEndUser",
@@ -5721,6 +5792,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -5799,6 +5878,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -5829,6 +5916,14 @@
       "post": {
         "operationId": "EndUserController_promoteContact",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "user_id",
@@ -5991,6 +6086,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "user_id",
             "required": true,
             "schema": {
@@ -6055,133 +6158,6 @@
         "summary": "Change end-user status (active / suspended / deactivated).",
         "tags": [
           "end-users"
-        ]
-      }
-    },
-    "/v1/apps/{app_id}/invites": {
-      "get": {
-        "operationId": "AppController_listInvites",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "app_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "cursor",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppInviteListResponseDto"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "List app invites",
-        "tags": [
-          "apps"
-        ]
-      },
-      "post": {
-        "operationId": "AppController_createInvite",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "app_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInviteDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "201": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AppInviteResponseDto"
-                }
-              }
-            },
-            "description": "Invite created."
-          },
-          "400": {
-            "description": "Validation failure or unknown role slug."
-          },
-          "403": {
-            "description": "Caller email not verified, or lacks `heimdall.assign`."
-          },
-          "404": {
-            "description": "App not found or caller is not a member."
-          }
-        },
-        "summary": "Create an app invite",
-        "tags": [
-          "apps"
-        ]
-      }
-    },
-    "/v1/apps/{app_id}/invites/{invite_id}": {
-      "delete": {
-        "operationId": "AppController_revokeInvite",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "app_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "path",
-            "name": "invite_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Invite revoked."
-          }
-        },
-        "summary": "Revoke an app invite",
-        "tags": [
-          "apps"
         ]
       }
     },
@@ -6422,9 +6398,18 @@
     },
     "/v1/apps/{app_id}/permissions/enforcement": {
       "get": {
-        "description": "Returns the deduplicated set of permission strings that any handler in this heimdall-api build gates via `@RequireAppPermission`. Drives the console \"Enforced\" badge — a customer who binds `user.delete` to a role can see whether any route in this deploy actually checks for it. App-agnostic in shape; the path parameter is included for URN symmetry with the rest of the per-app surface, not to narrow the response.",
+        "description": "Returns the deduplicated set of permission strings that any handler in this users-api build gates via `@RequireAppPermission`. Drives the console \"Enforced\" badge — a customer who binds `user.delete` to a role can see whether any route in this deploy actually checks for it. App-agnostic in shape; the path parameter is included for URN symmetry with the rest of the per-app surface, not to narrow the response.",
         "operationId": "PermissionController_listEnforcedPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -6642,6 +6627,14 @@
         "parameters": [
           {
             "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
             "name": "role_name",
             "required": true,
             "schema": {
@@ -6662,6 +6655,14 @@
       "get": {
         "operationId": "RoleController_getRole",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "role_name",
@@ -6691,6 +6692,14 @@
       "patch": {
         "operationId": "RoleController_updateRole",
         "parameters": [
+          {
+            "in": "path",
+            "name": "app_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "role_name",
@@ -7486,7 +7495,7 @@
     },
     "/v1/stats/me": {
       "get": {
-        "description": "Returns total apps the caller belongs to, end-users across those apps, and active API keys across those apps. Pass `workspaceId` to scope the counts to a single workspace — required from the dashboard so cross-tenant memberships do not bleed into the totals.",
+        "description": "Returns total Heimdall apps owned by workspaces the caller is a member of, end-users across those apps, and active API keys across those apps. Pass `workspaceId` to scope the counts to a single workspace — required from the dashboard so cross-tenant data does not bleed into the totals.",
         "operationId": "StatsController_getMyStats",
         "parameters": [
           {
@@ -8389,6 +8398,57 @@
         ]
       }
     },
+    "/{app_slug}/v1/auth/accept-invite": {
+      "post": {
+        "description": "Materialises a pre-allocated invite into a real EndUser: creates account + primary email contact (verified, since mailing the code proved control) + password credential + role membership, then mints app-scoped tokens. Public endpoint — the invite code is the authority. 410 on revoked/expired/exhausted invites; 409 on duplicate email or username.",
+        "operationId": "ConsumerAuthController_acceptInvite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsumerAcceptInviteDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsumerTokenResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invite code not found in this app."
+          },
+          "409": {
+            "description": "Email or username already in use."
+          },
+          "410": {
+            "description": "Invite revoked, expired, or fully used."
+          }
+        },
+        "summary": "Accept an EndUser invite by code",
+        "tags": [
+          "Consumer · Auth"
+        ]
+      }
+    },
     "/{app_slug}/v1/auth/logout": {
       "post": {
         "description": "Destroys the session that owns the refresh token. The matching access token continues to verify until its TTL expires.",
@@ -8618,13 +8678,15 @@
             }
           },
           {
-            "description": "OAuth provider id. Currently: apple.",
+            "description": "OAuth provider id. Native flow supports: apple, google. GitHub is web-only — POSTing to this endpoint with provider=github 400s.",
             "in": "path",
             "name": "provider",
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -8682,7 +8744,9 @@
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -8712,6 +8776,65 @@
       }
     },
     "/{app_slug}/v1/auth/oauth/{provider}/callback": {
+      "get": {
+        "operationId": "ConsumerIdpWebController_callbackGet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "enum": [
+                "apple",
+                "google",
+                "github"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "description": "Redirect to return_to."
+          }
+        },
+        "summary": "Provider callback (Google / GitHub redirect with `code` on the query string). Exchanges code, mints Heimdall tokens, stashes them behind a single-use code, 303s to `<return_to>?heimdall_code=…`.",
+        "tags": [
+          "Consumer · OAuth Sign-In"
+        ]
+      },
       "post": {
         "operationId": "ConsumerIdpWebController_callback",
         "parameters": [
@@ -8729,7 +8852,9 @@
             "required": true,
             "schema": {
               "enum": [
-                "apple"
+                "apple",
+                "google",
+                "github"
               ],
               "type": "string"
             }
@@ -9402,7 +9527,16 @@
       "delete": {
         "description": "Removes the EndUser, all sessions, and all related records inside this app. Cannot be undone.",
         "operationId": "ConsumerMeController_deleteAccount",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "204": {
             "description": "Account deleted."
@@ -9421,7 +9555,16 @@
       "get": {
         "description": "Returns the EndUser identity, app membership, and role name. The flat `permissions[]` array is intentionally NOT included — permissions resolve from the role on demand. Call `GET /me/permissions` for the flat list when the client needs it for UI gating.",
         "operationId": "ConsumerMeController_getProfile",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9450,7 +9593,16 @@
       "patch": {
         "description": "Currently only the display name can be changed.",
         "operationId": "ConsumerMeController_updateProfile",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9481,7 +9633,16 @@
       "get": {
         "description": "Login events, password changes, and other security-relevant records, scoped to this EndUser.",
         "operationId": "ConsumerMeController_getActivity",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9509,7 +9670,16 @@
       "post": {
         "description": "Verifies `current_password`, sets the new hash, and revokes every OTHER active session for the account (the calling session is preserved). 401 if the current password is wrong or the account has no password credential — admin-provisioned accounts without an initial password should use the reset flow instead.",
         "operationId": "ConsumerMeController_changePassword",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9542,7 +9712,16 @@
     "/{app_slug}/v1/me/contacts": {
       "get": {
         "operationId": "ConsumerMeController_listContacts",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9568,7 +9747,16 @@
       "post": {
         "description": "Adds an email or phone contact to the EndUser. The contact starts unverified and non-primary. Verification is a separate flow — call /auth/request-verification with the contact value and the customer's PAK to mint a code, then submit via /auth/verify.",
         "operationId": "ConsumerMeController_addContact",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9613,6 +9801,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9643,6 +9839,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9665,7 +9869,16 @@
       "get": {
         "description": "Includes factors in any state (pending enrollment + enabled). Disabled factors are not listed.",
         "operationId": "ConsumerMfaController_list",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9746,6 +9959,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9772,6 +9993,14 @@
           {
             "in": "path",
             "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
             "required": true,
             "schema": {
               "type": "string"
@@ -9818,7 +10047,16 @@
       "post": {
         "description": "Mints a fresh set of single-use recovery codes and invalidates every prior code for the account. The new codes are returned once — store them now.",
         "operationId": "ConsumerMfaController_regenerateRecoveryCodes",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9846,7 +10084,16 @@
       "post": {
         "description": "Verify a fresh code (TOTP or recovery) against any enabled factor on the account, and update the session's `auth_methods` + `mfa_at`. Call `/auth/refresh` after this to mint a token whose claims reflect the new state. Customers reading `mfa_at` from access tokens to gate sensitive actions should require a `/step-up` + refresh cycle when the timestamp is older than their policy window. 5 consecutive wrong codes lock step-up on this session for 15 minutes.",
         "operationId": "ConsumerMfaController_stepUp",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9890,7 +10137,16 @@
       "get": {
         "description": "Returns the union of the app-level role permissions and the tenant-level role permissions (when the token carries an `org_id`). Resolved per-request through a 60-second LRU — role-permission edits propagate within ~1 minute. Use this instead of decoding a `permissions[]` claim from the JWT, which is no longer included. M2M tokens cannot call this — use `POST /:appSlug/v1/oauth/introspect` to inspect M2M scopes.",
         "operationId": "ConsumerMeController_getPermissions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9918,7 +10174,16 @@
       "get": {
         "description": "Each session includes a `current` flag identifying the one belonging to the bearer token used for this request.",
         "operationId": "ConsumerMeController_listSessions",
-        "parameters": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "app_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -9950,6 +10215,14 @@
           {
             "in": "path",
             "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "app_slug",
             "required": true,
             "schema": {
               "type": "string"
