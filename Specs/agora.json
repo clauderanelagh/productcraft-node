@@ -4760,7 +4760,7 @@
   "info": {
     "contact": {},
     "description": "Social-as-a-Service backend. Generic actor / object / edge primitives. Two callers: PlatformUser admin (cookie/JWT) on /v1/workspaces/..., and customer-backend (PAK + X-Acting-As) on /v1/apps/:appSlug/...",
-    "title": "Agora",
+    "title": "Social API",
     "version": "0.1.0"
   },
   "openapi": "3.0.0",
@@ -4820,7 +4820,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -4896,7 +4896,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create` for this community."
+            "description": "PAK lacks `social.create` for this community."
           },
           "404": {
             "content": {
@@ -4964,7 +4964,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5025,7 +5025,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -5167,7 +5167,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.update`."
+            "description": "PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -5253,7 +5253,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5342,7 +5342,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5440,7 +5440,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.close-friend.read`."
+            "description": "PAK lacks `social.close-friend.read`."
           },
           "404": {
             "content": {
@@ -5508,7 +5508,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5597,7 +5597,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5708,7 +5708,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5795,7 +5795,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5882,7 +5882,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -5969,7 +5969,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -6055,7 +6055,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -6136,7 +6136,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -6245,7 +6245,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -6334,7 +6334,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -6405,7 +6405,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -6491,7 +6491,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -6561,7 +6561,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -6647,7 +6647,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -6716,7 +6716,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.read`."
+            "description": "PAK lacks `social.notify.read`."
           },
           "404": {
             "content": {
@@ -6815,7 +6815,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.update`."
+            "description": "PAK lacks `social.notify.update`."
           },
           "404": {
             "content": {
@@ -6940,7 +6940,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.read` for this community."
+            "description": "PAK lacks `social.notify.read` for this community."
           },
           "404": {
             "content": {
@@ -7039,7 +7039,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.update` for this community."
+            "description": "PAK lacks `social.notify.update` for this community."
           },
           "404": {
             "content": {
@@ -7118,7 +7118,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.read` for this community."
+            "description": "PAK lacks `social.notify.read` for this community."
           },
           "404": {
             "content": {
@@ -7220,7 +7220,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.notify.update` for this community."
+            "description": "PAK lacks `social.notify.update` for this community."
           },
           "404": {
             "content": {
@@ -7306,7 +7306,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -7393,7 +7393,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -7472,7 +7472,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -7553,7 +7553,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -7631,7 +7631,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -7700,7 +7700,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -7782,7 +7782,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.close-friend.manage`."
+            "description": "PAK lacks `social.close-friend.manage`."
           },
           "404": {
             "content": {
@@ -7884,7 +7884,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.close-friend.manage`."
+            "description": "PAK lacks `social.close-friend.manage`."
           },
           "404": {
             "content": {
@@ -7986,7 +7986,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -8062,7 +8062,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`, or a participant is suspended."
+            "description": "PAK lacks `social.create`, or a participant is suspended."
           },
           "404": {
             "content": {
@@ -8140,7 +8140,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -8210,7 +8210,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -8285,7 +8285,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -8370,7 +8370,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.update`."
+            "description": "PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -8457,7 +8457,7 @@
                 }
               }
             },
-            "description": "Caller is not an admin, or PAK lacks `agora.update`."
+            "description": "Caller is not an admin, or PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -8755,7 +8755,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -8840,7 +8840,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -8929,7 +8929,7 @@
                 }
               }
             },
-            "description": "Caller is not the sender, or PAK lacks `agora.delete`."
+            "description": "Caller is not the sender, or PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -9023,7 +9023,7 @@
                 }
               }
             },
-            "description": "Caller is not the sender, or PAK lacks `agora.update`."
+            "description": "Caller is not the sender, or PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -9140,7 +9140,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -9236,7 +9236,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`, or reactor is suspended."
+            "description": "PAK lacks `social.create`, or reactor is suspended."
           },
           "404": {
             "content": {
@@ -9342,7 +9342,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -9519,7 +9519,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.update`."
+            "description": "PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -9606,7 +9606,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -9684,7 +9684,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.flag` for this community, or reporter actor is suspended/deleted."
+            "description": "PAK lacks `social.flag` for this community, or reporter actor is suspended/deleted."
           },
           "404": {
             "content": {
@@ -9772,7 +9772,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -9853,7 +9853,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -9930,7 +9930,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -10008,7 +10008,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -10093,7 +10093,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -10190,7 +10190,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           }
         },
         "security": [
@@ -10256,7 +10256,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`, or owner is suspended."
+            "description": "PAK lacks `social.create`, or owner is suspended."
           },
           "404": {
             "content": {
@@ -10401,7 +10401,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -10486,7 +10486,7 @@
                 }
               }
             },
-            "description": "Caller is not the owner, or PAK lacks `agora.update`."
+            "description": "Caller is not the owner, or PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -10606,7 +10606,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -10701,7 +10701,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -10943,7 +10943,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -11022,7 +11022,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -11108,7 +11108,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -11177,7 +11177,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`, or actor is suspended."
+            "description": "PAK lacks `social.create`, or actor is suspended."
           },
           "404": {
             "content": {
@@ -11241,7 +11241,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list` on the community URN."
+            "description": "PAK lacks `social.list` on the community URN."
           }
         },
         "summary": "Batch-increment view counts on a list of posts. Client-side debounced; missing post ids are silently skipped (so a deleted post mid-batch doesn’t fail the rest).",
@@ -11285,7 +11285,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -11355,7 +11355,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -11434,7 +11434,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.update`."
+            "description": "PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -11510,7 +11510,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -11597,7 +11597,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -11704,7 +11704,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -11790,7 +11790,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -11870,7 +11870,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -11955,7 +11955,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -12050,7 +12050,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.update`."
+            "description": "PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -12254,7 +12254,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -12350,7 +12350,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -12467,7 +12467,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -12546,7 +12546,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -12642,7 +12642,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -12724,7 +12724,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -12829,7 +12829,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -12910,7 +12910,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -12997,7 +12997,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -13094,7 +13094,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -13180,7 +13180,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read`."
+            "description": "PAK lacks `social.read`."
           },
           "404": {
             "content": {
@@ -13283,7 +13283,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.read` OR requester is not the post author."
+            "description": "PAK lacks `social.read` OR requester is not the post author."
           },
           "404": {
             "content": {
@@ -13375,7 +13375,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.view`."
+            "description": "PAK lacks `social.view`."
           },
           "404": {
             "content": {
@@ -13477,7 +13477,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.vote`."
+            "description": "PAK lacks `social.vote`."
           },
           "404": {
             "content": {
@@ -13575,7 +13575,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -13644,7 +13644,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.delete`."
+            "description": "PAK lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -13746,7 +13746,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -13835,7 +13835,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -13947,7 +13947,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.list`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -14071,7 +14071,7 @@
                 }
               }
             },
-            "description": "PAK lacks `agora.create`."
+            "description": "PAK lacks `social.create`."
           },
           "404": {
             "content": {
@@ -14455,7 +14455,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.read`, or the workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.read`, or the workspace has not enabled the `agora` service."
           }
         },
         "security": [
@@ -14539,7 +14539,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.create` or workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.create` or workspace has not enabled the `agora` service."
           },
           "404": {
             "content": {
@@ -14610,7 +14610,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.delete`."
+            "description": "Caller lacks `social.delete`."
           },
           "404": {
             "content": {
@@ -14676,7 +14676,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.read`."
+            "description": "Caller lacks `social.read`."
           },
           "404": {
             "content": {
@@ -14762,7 +14762,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.update`."
+            "description": "Caller lacks `social.update`."
           },
           "404": {
             "content": {
@@ -14830,7 +14830,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.analytics.read`, or the workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.analytics.read`, or the workspace has not enabled the `agora` service."
           },
           "404": {
             "content": {
@@ -14902,7 +14902,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.moderate`."
+            "description": "Caller lacks `social.moderate`."
           },
           "404": {
             "content": {
@@ -14987,7 +14987,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.moderate`."
+            "description": "Caller lacks `social.moderate`."
           },
           "404": {
             "content": {
@@ -15062,7 +15062,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.audit.read`."
+            "description": "Caller lacks `social.audit.read`."
           },
           "404": {
             "content": {
@@ -15140,7 +15140,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.audit.read`."
+            "description": "Caller lacks `social.audit.read`."
           },
           "404": {
             "content": {
@@ -15227,7 +15227,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.audit.read`."
+            "description": "Caller lacks `social.audit.read`."
           },
           "404": {
             "content": {
@@ -15320,7 +15320,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.moderation.queue.read`."
+            "description": "Caller lacks `social.moderation.queue.read`."
           },
           "404": {
             "content": {
@@ -15407,7 +15407,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.moderate`."
+            "description": "Caller lacks `social.moderate`."
           },
           "404": {
             "content": {
@@ -15492,7 +15492,7 @@
                 }
               }
             },
-            "description": "Caller lacks `agora.audit.read`."
+            "description": "Caller lacks `social.audit.read`."
           },
           "404": {
             "content": {

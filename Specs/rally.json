@@ -385,7 +385,7 @@
             "type": "string"
           },
           "default_sender_domain_id": {
-            "description": "Envoi (mailbox-api) domain UUID to use as default sender for Rally notifications. null clears the override.",
+            "description": "Envoi (mail-api) domain UUID to use as default sender for Rally notifications. null clears the override.",
             "nullable": true,
             "type": "string"
           },
@@ -823,7 +823,7 @@
   "info": {
     "contact": {},
     "description": "Waitlist management for the ProductCraft platform",
-    "title": "Rally",
+    "title": "Waitlist API",
     "version": "0.1.0"
   },
   "openapi": "3.0.0",
