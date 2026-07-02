@@ -413,7 +413,7 @@
             "type": "boolean"
           },
           "password_reset_template_name": {
-            "description": "Envoi template fired on password-reset request.",
+            "description": "Mail template fired on password-reset request.",
             "nullable": true,
             "type": "string"
           },
@@ -423,7 +423,7 @@
             "type": "string"
           },
           "verification_template_name": {
-            "description": "Envoi template fired for end-user email verification; `null` when unset.",
+            "description": "Mail template fired for end-user email verification; `null` when unset.",
             "nullable": true,
             "type": "string"
           },
@@ -433,7 +433,7 @@
             "type": "string"
           },
           "welcome_template_name": {
-            "description": "Envoi template fired right after a successful verification.",
+            "description": "Mail template fired right after a successful verification.",
             "nullable": true,
             "type": "string"
           }
@@ -590,7 +590,7 @@
             "type": "string"
           },
           "url": {
-            "example": "https://customer.example.com/webhooks/heimdall",
+            "example": "https://customer.example.com/webhooks/auth",
             "type": "string"
           }
         },
@@ -655,7 +655,7 @@
             "type": "string"
           },
           "url": {
-            "example": "https://customer.example.com/webhooks/heimdall",
+            "example": "https://customer.example.com/webhooks/auth",
             "type": "string"
           }
         },
@@ -2160,7 +2160,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "UUID of the platform workspace that will own the new app. The caller must hold `heimdall.create` on this workspace.",
+            "description": "UUID of the platform workspace that will own the new app. The caller must hold `auth.create` on this workspace.",
             "example": "835015dc-7bde-4a8a-b306-c066d4733b90",
             "type": "string"
           }
@@ -2629,8 +2629,8 @@
             "type": "number"
           },
           "iss": {
-            "description": "Issuer URL — the public Heimdall API base joined with this app slug. Pin this in your local JWKS verifier so a token minted for another app on the platform cannot pass.",
-            "example": "https://api.heimdall.productcraft.co/<appSlug>",
+            "description": "Issuer URL — the public Auth API base joined with this app slug. Pin this in your local JWKS verifier so a token minted for another app on the platform cannot pass.",
+            "example": "https://api.auth.productcraft.co/<appSlug>",
             "type": "string"
           },
           "scope": {
@@ -3226,17 +3226,17 @@
           },
           "heimdall_admin_users_endpoint": {
             "description": "Customer-product admin lane root. M2M-callable user CRUD.",
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/admin/users",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/admin/users",
             "type": "string"
           },
           "heimdall_authorize_endpoint": {
-            "description": "Heimdall-specific authorize endpoint. Not part of standard OIDC.",
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/authorize",
+            "description": "Auth-specific authorize endpoint. Not part of standard OIDC.",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/authorize",
             "type": "string"
           },
           "heimdall_verify_endpoint": {
-            "description": "Heimdall-specific verify endpoint. Not part of standard OIDC.",
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/verify",
+            "description": "Auth-specific verify endpoint. Not part of standard OIDC.",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/verify",
             "type": "string"
           },
           "id_token_signing_alg_values_supported": {
@@ -3249,16 +3249,16 @@
             "type": "array"
           },
           "introspection_endpoint": {
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/oauth/introspect",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/oauth/introspect",
             "type": "string"
           },
           "issuer": {
-            "description": "Token `iss` claim — the Heimdall API base URL with the app slug appended. Pin this literally in your verifier so a token minted for another app on the platform cannot pass.",
-            "example": "https://api.heimdall.productcraft.co/<slug>",
+            "description": "Token `iss` claim — the Auth API base URL with the app slug appended. Pin this literally in your verifier so a token minted for another app on the platform cannot pass.",
+            "example": "https://api.auth.productcraft.co/<slug>",
             "type": "string"
           },
           "jwks_uri": {
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/.well-known/jwks.json",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/.well-known/jwks.json",
             "type": "string"
           },
           "response_types_supported": {
@@ -3280,7 +3280,7 @@
             "type": "array"
           },
           "token_endpoint": {
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/oauth/token",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/oauth/token",
             "type": "string"
           },
           "token_endpoint_auth_methods_supported": {
@@ -3294,7 +3294,7 @@
           },
           "userinfo_endpoint": {
             "description": "OIDC userinfo equivalent — returns the signed-in EndUser profile.",
-            "example": "https://api.heimdall.productcraft.co/<slug>/v1/me",
+            "example": "https://api.auth.productcraft.co/<slug>/v1/me",
             "type": "string"
           }
         },
@@ -3382,7 +3382,7 @@
             "type": "number"
           },
           "apps": {
-            "description": "Heimdall apps the caller is a member of (any role).",
+            "description": "Auth apps the caller is a member of (any role).",
             "example": 3,
             "type": "number"
           },
@@ -4278,7 +4278,7 @@
           },
           "url": {
             "description": "Destination URL. Must be absolute https:// with a public TLD.",
-            "example": "https://api.acme.com/webhooks/heimdall",
+            "example": "https://api.acme.com/webhooks/auth",
             "maxLength": 2048,
             "type": "string"
           }
@@ -4467,13 +4467,13 @@
             "description": "Validation failure (slug, display name, or workspaceId)."
           },
           "403": {
-            "description": "Caller email not verified, or caller lacks `heimdall.create` on the target workspace."
+            "description": "Caller email not verified, or caller lacks `auth.create` on the target workspace."
           },
           "409": {
             "description": "Slug already taken."
           }
         },
-        "summary": "Create a new Heimdall app owned by the caller",
+        "summary": "Create a new app owned by the caller",
         "tags": [
           "apps"
         ]
@@ -4497,7 +4497,7 @@
             "description": "App deleted."
           },
           "403": {
-            "description": "Caller lacks `heimdall.delete`."
+            "description": "Caller lacks `auth.delete`."
           },
           "404": {
             "description": "App not found or caller is not a member."
@@ -4745,7 +4745,7 @@
             "description": "Page of audit entries with `next_cursor` and `has_more`."
           },
           "403": {
-            "description": "Caller lacks `heimdall.audit.read`."
+            "description": "Caller lacks `auth.audit.read`."
           },
           "404": {
             "description": "App not found or caller is not a member."
@@ -4855,7 +4855,7 @@
             "description": ""
           }
         },
-        "summary": "List federated sign-in providers Heimdall supports + their config status for this app.",
+        "summary": "List federated sign-in providers Auth supports + their config status for this app.",
         "tags": [
           "apps"
         ]
@@ -5096,7 +5096,7 @@
             "description": "Validation failure (missing or invalid name)."
           },
           "403": {
-            "description": "Caller email not verified, or lacks `heimdall.create`."
+            "description": "Caller email not verified, or lacks `auth.create`."
           },
           "404": {
             "description": "App not found or caller is not a member."
@@ -5134,7 +5134,7 @@
             "description": "M2M client deleted."
           },
           "403": {
-            "description": "Caller lacks `heimdall.delete`."
+            "description": "Caller lacks `auth.delete`."
           },
           "404": {
             "description": "M2M client not found in this app."
@@ -5256,7 +5256,7 @@
             "description": "New secret generated and returned ONCE."
           },
           "403": {
-            "description": "Caller lacks `heimdall.rotate-secret`."
+            "description": "Caller lacks `auth.rotate-secret`."
           },
           "404": {
             "description": "M2M client not found in this app."
@@ -6817,7 +6817,7 @@
             "description": "Invalid status transition (e.g. archived → active)."
           },
           "403": {
-            "description": "Caller lacks `heimdall.update`."
+            "description": "Caller lacks `auth.update`."
           },
           "404": {
             "description": "App not found or caller is not a member."
@@ -6831,7 +6831,7 @@
     },
     "/v1/apps/{app_id}/tenants": {
       "get": {
-        "operationId": "HeimdallTenantsController_list",
+        "operationId": "PlatformTenantsController_list",
         "parameters": [
           {
             "in": "path",
@@ -6891,11 +6891,11 @@
         ],
         "summary": "List tenants in this app, paginated by created_at desc.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       },
       "post": {
-        "operationId": "HeimdallTenantsController_create",
+        "operationId": "PlatformTenantsController_create",
         "parameters": [
           {
             "in": "path",
@@ -6942,15 +6942,15 @@
             "bearer": []
           }
         ],
-        "summary": "Create a tenant in this app. Heimdall-admin lane; requires heimdall.tenant.create on the app URN.",
+        "summary": "Create a tenant in this app. Auth-admin lane; requires auth.tenant.create on the app URN.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       }
     },
     "/v1/apps/{app_id}/tenants/{tenant_id}": {
       "delete": {
-        "operationId": "HeimdallTenantsController_delete",
+        "operationId": "PlatformTenantsController_delete",
         "parameters": [
           {
             "in": "path",
@@ -6981,11 +6981,11 @@
         ],
         "summary": "Delete a tenant.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       },
       "get": {
-        "operationId": "HeimdallTenantsController_get",
+        "operationId": "PlatformTenantsController_get",
         "parameters": [
           {
             "in": "path",
@@ -7023,11 +7023,11 @@
         ],
         "summary": "Get a single tenant by id or display id.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       },
       "patch": {
-        "operationId": "HeimdallTenantsController_update",
+        "operationId": "PlatformTenantsController_update",
         "parameters": [
           {
             "in": "path",
@@ -7075,13 +7075,13 @@
         ],
         "summary": "Update a tenant (display_name, slug, status, metadata).",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       }
     },
     "/v1/apps/{app_id}/tenants/{tenant_id}/members": {
       "get": {
-        "operationId": "HeimdallTenantsController_listMembers",
+        "operationId": "PlatformTenantsController_listMembers",
         "parameters": [
           {
             "in": "path",
@@ -7136,11 +7136,11 @@
         ],
         "summary": "List members of a tenant.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       },
       "post": {
-        "operationId": "HeimdallTenantsController_addMember",
+        "operationId": "PlatformTenantsController_addMember",
         "parameters": [
           {
             "in": "path",
@@ -7188,13 +7188,13 @@
         ],
         "summary": "Add a member to a tenant.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       }
     },
     "/v1/apps/{app_id}/tenants/{tenant_id}/members/{account_id}": {
       "delete": {
-        "operationId": "HeimdallTenantsController_removeMember",
+        "operationId": "PlatformTenantsController_removeMember",
         "parameters": [
           {
             "in": "path",
@@ -7233,11 +7233,11 @@
         ],
         "summary": "Remove a member from a tenant.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       },
       "patch": {
-        "operationId": "HeimdallTenantsController_updateMemberRole",
+        "operationId": "PlatformTenantsController_updateMemberRole",
         "parameters": [
           {
             "in": "path",
@@ -7293,7 +7293,7 @@
         ],
         "summary": "Change a member's role inside a tenant.",
         "tags": [
-          "Heimdall · Tenants"
+          "Auth · Tenants"
         ]
       }
     },
@@ -7495,7 +7495,7 @@
     },
     "/v1/stats/me": {
       "get": {
-        "description": "Returns total Heimdall apps owned by workspaces the caller is a member of, end-users across those apps, and active API keys across those apps. Pass `workspaceId` to scope the counts to a single workspace — required from the dashboard so cross-tenant data does not bleed into the totals.",
+        "description": "Returns total Auth apps owned by workspaces the caller is a member of, end-users across those apps, and active API keys across those apps. Pass `workspaceId` to scope the counts to a single workspace — required from the dashboard so cross-tenant data does not bleed into the totals.",
         "operationId": "StatsController_getMyStats",
         "parameters": [
           {
@@ -8658,7 +8658,7 @@
             "description": "Code does not belong to this `appSlug`."
           }
         },
-        "summary": "Exchange a `heimdall_code` (received on the web-flow callback redirect) for Heimdall access + refresh tokens. Single-use.",
+        "summary": "Exchange a `heimdall_code` (received on the web-flow callback redirect) for Auth access + refresh tokens. Single-use.",
         "tags": [
           "Consumer · OAuth Sign-In"
         ]
@@ -8934,7 +8934,7 @@
     },
     "/{app_slug}/v1/auth/request-password-reset": {
       "post": {
-        "description": "Mints a fresh 6-digit password-reset code for the EndUser owning the named contact. Body must contain exactly one of `email` / `phone` — the contact must be verified (otherwise an attacker who registered an unverified contact could push a reset on another user's account, were the per-app email uniqueness ever breached). The reset itself is account-scoped (revokes all sessions, replaces password) — the contact only acts as the lookup key.\n\nPAK-required: `heimdall.user.password-reset.create`. Returns `{ code, expires_at }` on success, `{}` on no-match (uniform shape prevents enumeration).\n\nRenamed from /auth/request-reset.",
+        "description": "Mints a fresh 6-digit password-reset code for the EndUser owning the named contact. Body must contain exactly one of `email` / `phone` — the contact must be verified (otherwise an attacker who registered an unverified contact could push a reset on another user's account, were the per-app email uniqueness ever breached). The reset itself is account-scoped (revokes all sessions, replaces password) — the contact only acts as the lookup key.\n\nPAK-required: `auth.user.password-reset.create`. Returns `{ code, expires_at }` on success, `{}` on no-match (uniform shape prevents enumeration).\n\nRenamed from /auth/request-reset.",
         "operationId": "ConsumerAuthController_requestPasswordReset",
         "parameters": [
           {
@@ -8982,7 +8982,7 @@
             "description": "No PAK provided."
           },
           "403": {
-            "description": "PAK lacks heimdall.user.password-reset.create on this app."
+            "description": "PAK lacks auth.user.password-reset.create on this app."
           }
         },
         "security": [
@@ -8998,7 +8998,7 @@
     },
     "/{app_slug}/v1/auth/request-verification": {
       "post": {
-        "description": "Mints a fresh 6-digit verification code bound to the email or phone contact named in the body. Body must contain exactly one of `email` / `phone`. PAK-required — `Authorization: Bearer <pcft_live_*>` carrying `heimdall.user.verify.create` narrowed to this app's URN. Public mint flows are refused with 401 — any anonymous mint endpoint is a spam-forwarder vector.\n\nReturns `{ code, expires_at }` for delivery via the customer's own SMTP / SMS provider. Returns `{}` (no code) when the contact doesn't match an account in this app or is already verified — uniform shape prevents enumeration.",
+        "description": "Mints a fresh 6-digit verification code bound to the email or phone contact named in the body. Body must contain exactly one of `email` / `phone`. PAK-required — `Authorization: Bearer <pcft_live_*>` carrying `auth.user.verify.create` narrowed to this app's URN. Public mint flows are refused with 401 — any anonymous mint endpoint is a spam-forwarder vector.\n\nReturns `{ code, expires_at }` for delivery via the customer's own SMTP / SMS provider. Returns `{}` (no code) when the contact doesn't match an account in this app or is already verified — uniform shape prevents enumeration.",
         "operationId": "ConsumerAuthController_requestVerification",
         "parameters": [
           {
@@ -9046,7 +9046,7 @@
             "description": "No PAK provided."
           },
           "403": {
-            "description": "PAK lacks heimdall.user.verify.create on this app."
+            "description": "PAK lacks auth.user.verify.create on this app."
           }
         },
         "security": [
@@ -9100,7 +9100,7 @@
     },
     "/{app_slug}/v1/auth/send-password-reset-email": {
       "post": {
-        "description": "Same shape as `send-verification-email` but for the reset slot. PAK perm: `heimdall.user.password-reset.send-email`. Same loud precondition errors. Email-only.",
+        "description": "Same shape as `send-verification-email` but for the reset slot. PAK perm: `auth.user.password-reset.send-email`. Same loud precondition errors. Email-only.",
         "operationId": "ConsumerAuthController_sendPasswordResetEmail",
         "parameters": [
           {
@@ -9145,13 +9145,13 @@
             "description": "No PAK provided."
           },
           "403": {
-            "description": "PAK lacks heimdall.user.password-reset.send-email on this app."
+            "description": "PAK lacks auth.user.password-reset.send-email on this app."
           },
           "412": {
             "description": "Envoi precondition not met (see error code in the response body)."
           },
           "503": {
-            "description": "Envoi dispatch failed or client not wired."
+            "description": "Mail dispatch failed or client not wired."
           }
         },
         "security": [
@@ -9159,7 +9159,7 @@
             "bearer": []
           }
         ],
-        "summary": "Mint + dispatch a password-reset email via Envoi (PAK-required)",
+        "summary": "Mint + dispatch a password-reset email via Mail (PAK-required)",
         "tags": [
           "Consumer · Auth"
         ]
@@ -9212,13 +9212,13 @@
             "description": "No PAK provided."
           },
           "403": {
-            "description": "PAK lacks heimdall.user.verify.send-email on this app."
+            "description": "PAK lacks auth.user.verify.send-email on this app."
           },
           "412": {
             "description": "Envoi precondition not met (see error code in the response body)."
           },
           "503": {
-            "description": "Envoi dispatch failed or client not wired."
+            "description": "Mail dispatch failed or client not wired."
           }
         },
         "security": [
@@ -9226,7 +9226,7 @@
             "bearer": []
           }
         ],
-        "summary": "Mint + dispatch a verification email via Envoi (PAK-required)",
+        "summary": "Mint + dispatch a verification email via Mail (PAK-required)",
         "tags": [
           "Consumer · Auth"
         ]
@@ -10402,7 +10402,7 @@
             "bearer": []
           }
         ],
-        "summary": "List tenants in this app, paginated by created_at desc. PAK must hold heimdall.tenant.read.",
+        "summary": "List tenants in this app, paginated by created_at desc. PAK must hold auth.tenant.read.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10461,7 +10461,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a tenant inside this app. Returns the new tenant with a `display_id` (`tnt_<12hex>`). PAK must hold heimdall.tenant.create.",
+        "summary": "Create a tenant inside this app. Returns the new tenant with a `display_id` (`tnt_<12hex>`). PAK must hold auth.tenant.create.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10501,7 +10501,7 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a tenant. Cascades to tenant_membership rows; account rows are unaffected. PAK must hold heimdall.tenant.delete.",
+        "summary": "Delete a tenant. Cascades to tenant_membership rows; account rows are unaffected. PAK must hold auth.tenant.delete.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10546,7 +10546,7 @@
             "bearer": []
           }
         ],
-        "summary": "Fetch a single tenant by its UUID or `tnt_<12hex>` display id. PAK must hold heimdall.tenant.read.",
+        "summary": "Fetch a single tenant by its UUID or `tnt_<12hex>` display id. PAK must hold auth.tenant.read.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10607,7 +10607,7 @@
             "bearer": []
           }
         ],
-        "summary": "Patch a tenant. Any subset of {display_name, slug, status, metadata}. PAK must hold heimdall.tenant.update.",
+        "summary": "Patch a tenant. Any subset of {display_name, slug, status, metadata}. PAK must hold auth.tenant.update.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10668,7 +10668,7 @@
             "bearer": []
           }
         ],
-        "summary": "List members of a tenant. Cursor-paginated by joined_at desc. PAK must hold heimdall.tenant.read.",
+        "summary": "List members of a tenant. Cursor-paginated by joined_at desc. PAK must hold auth.tenant.read.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10729,7 +10729,7 @@
             "bearer": []
           }
         ],
-        "summary": "Add a member to a tenant. Pass `accountId` for an existing user, or `email` (+ optional `display_name`/`username`) to auto-create the account inline. PAK must hold heimdall.tenant.members.add.",
+        "summary": "Add a member to a tenant. Pass `accountId` for an existing user, or `email` (+ optional `display_name`/`username`) to auto-create the account inline. PAK must hold auth.tenant.members.add.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10777,7 +10777,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a member from a tenant. The underlying account row stays in the app — only the tenant_membership row is deleted. PAK must hold heimdall.tenant.members.remove.",
+        "summary": "Remove a member from a tenant. The underlying account row stays in the app — only the tenant_membership row is deleted. PAK must hold auth.tenant.members.remove.",
         "tags": [
           "Consumer · Tenants"
         ]
@@ -10843,7 +10843,7 @@
             "bearer": []
           }
         ],
-        "summary": "Change a member's role. PAK must hold heimdall.tenant.members.update-role.",
+        "summary": "Change a member's role. PAK must hold auth.tenant.members.update-role.",
         "tags": [
           "Consumer · Tenants"
         ]

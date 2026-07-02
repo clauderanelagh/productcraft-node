@@ -362,7 +362,7 @@
       "UpdateSettingsDto": {
         "properties": {
           "approved_template_name": {
-            "description": "Envoi template name used for entry.approved notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.approved notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           },
@@ -398,12 +398,12 @@
             "type": "string"
           },
           "rejected_template_name": {
-            "description": "Envoi template name used for entry.rejected notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.rejected notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           },
           "welcome_template_name": {
-            "description": "Envoi template name used for entry.created notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.created notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           }
@@ -988,13 +988,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Workspace Rally settings."
+            "description": "Workspace Waitlist settings."
           },
           "403": {
-            "description": "Caller lacks `rally.settings.read` on the workspace."
+            "description": "Caller lacks `waitlist.settings.read` on the workspace."
           },
           "404": {
-            "description": "Workspace does not exist or is not Rally-enabled."
+            "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
         "security": [
@@ -1002,9 +1002,9 @@
             "bearer": []
           }
         ],
-        "summary": "Read workspace-level Rally defaults",
+        "summary": "Read workspace-level Waitlist defaults",
         "tags": [
-          "rally-settings"
+          "waitlist-settings"
         ]
       },
       "put": {
@@ -1031,16 +1031,16 @@
         },
         "responses": {
           "200": {
-            "description": "Updated workspace Rally settings."
+            "description": "Updated workspace Waitlist settings."
           },
           "400": {
             "description": "Validation failure on the patch body (per `UpdateSettingsDto`)."
           },
           "403": {
-            "description": "Caller lacks `rally.settings.update` on the workspace."
+            "description": "Caller lacks `waitlist.settings.update` on the workspace."
           },
           "404": {
-            "description": "Workspace does not exist or is not Rally-enabled."
+            "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
         "security": [
@@ -1048,9 +1048,9 @@
             "bearer": []
           }
         ],
-        "summary": "Update workspace-level Rally defaults",
+        "summary": "Update workspace-level Waitlist defaults",
         "tags": [
-          "rally-settings"
+          "waitlist-settings"
         ]
       }
     },
@@ -1164,7 +1164,7 @@
             "description": "Validation failure."
           },
           "403": {
-            "description": "Caller lacks `waitlist.create`, or workspace has not enabled the `rally` service."
+            "description": "Caller lacks `waitlist.create`, or workspace has not enabled the `waitlist` service."
           },
           "409": {
             "description": "Slug already taken in this workspace."
@@ -1381,7 +1381,7 @@
             "description": "Aggregated analytics payload for the waitlist."
           },
           "403": {
-            "description": "Caller lacks `rally.read` on the workspace."
+            "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
             "description": "Waitlist does not exist or is not in the path workspace."
@@ -1445,7 +1445,7 @@
             "description": "`since` / `until` missing, malformed, or `until <= since`."
           },
           "403": {
-            "description": "Caller lacks `rally.read` on the workspace."
+            "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
             "description": "Waitlist does not exist or is not in the path workspace."
@@ -1524,7 +1524,7 @@
             "description": "Page of entries with pagination cursor."
           },
           "403": {
-            "description": "Caller lacks `entry.read`, or workspace has not enabled the `rally` service."
+            "description": "Caller lacks `entry.read`, or workspace has not enabled the `waitlist` service."
           },
           "404": {
             "description": "Waitlist not found in this workspace."
@@ -1885,10 +1885,10 @@
         },
         "responses": {
           "200": {
-            "description": "Invite created in Heimdall"
+            "description": "Invite created in Auth"
           },
           "422": {
-            "description": "No linked Heimdall app for this workspace"
+            "description": "No linked Auth app for this workspace"
           }
         },
         "security": [
