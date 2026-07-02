@@ -60,7 +60,7 @@
         "properties": {
           "return_to": {
             "description": "URL the workspace user should land on after the GitHub OAuth flow completes. Must be a same-origin or productcraft.co URL — anything else is rejected to keep the callback from being an open-redirect.",
-            "example": "https://console.productcraft.co/envoi/workspaces/acme/integrations",
+            "example": "https://console.productcraft.co/mail/workspaces/acme/integrations",
             "maxLength": 2048,
             "type": "string"
           }
@@ -3883,7 +3883,7 @@
             "description": ""
           },
           "403": {
-            "description": "Caller lacks `mailbox.read` permission, or workspace has not enabled the `envoi` service."
+            "description": "Caller lacks `mail.read` permission, or workspace has not enabled the `mail` service."
           }
         },
         "security": [
@@ -3933,7 +3933,7 @@
             "description": "Validation failure (invalid local part, retention out of range)."
           },
           "403": {
-            "description": "Caller lacks `mailbox.create` permission, or workspace has not enabled the `envoi` service."
+            "description": "Caller lacks `mail.create` permission, or workspace has not enabled the `mail` service."
           },
           "404": {
             "description": "Domain not found in this workspace."
