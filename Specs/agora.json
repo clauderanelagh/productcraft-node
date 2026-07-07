@@ -59,7 +59,7 @@
       "ActorEdgeDto": {
         "properties": {
           "dst_actor_id": {
-            "description": "Destination agora actor UUID (the one being followed / muted / blocked / restricted).",
+            "description": "Destination social actor UUID (the one being followed / muted / blocked / restricted).",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           },
@@ -68,7 +68,7 @@
             "type": "object"
           },
           "src_actor_id": {
-            "description": "Source agora actor UUID (the one performing the follow / mute / block / restrict).",
+            "description": "Source social actor UUID (the one performing the follow / mute / block / restrict).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -306,12 +306,12 @@
       "AddMemberDto": {
         "properties": {
           "actor_id": {
-            "description": "The new member — agora actor UUID.",
+            "description": "The new member — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000004",
             "type": "string"
           },
           "caller_actor_id": {
-            "description": "Group admin performing the add — agora actor UUID.",
+            "description": "Group admin performing the add — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -400,7 +400,7 @@
       "BookmarkResponseDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID who saved the post.",
+            "description": "Social actor UUID who saved the post.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -448,7 +448,7 @@
       "CastVoteDto": {
         "properties": {
           "actor_id": {
-            "description": "Voter agora actor UUID.",
+            "description": "Voter social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           },
@@ -762,7 +762,7 @@
       "CommunityResponseDto": {
         "properties": {
           "app_id": {
-            "description": "Heimdall app UUID this community wraps; `null` for standalone communities.",
+            "description": "Auth app UUID this community wraps; `null` for standalone communities.",
             "example": "33333333-3333-3333-3333-333333333333",
             "nullable": true,
             "type": "string"
@@ -985,7 +985,7 @@
             "type": "string"
           },
           "created_by": {
-            "description": "Agora actor UUID of the group founder; null for legacy / 1-on-1.",
+            "description": "Social actor UUID of the group founder; null for legacy / 1-on-1.",
             "example": null,
             "nullable": true,
             "type": "string"
@@ -1057,7 +1057,7 @@
             "type": "string"
           },
           "owner_id": {
-            "description": "List owner — agora actor UUID.",
+            "description": "List owner — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1080,7 +1080,7 @@
       "CreateBookmarkDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID who is bookmarking — the customer-backend supplies the end-user identity here.",
+            "description": "Social actor UUID who is bookmarking — the customer-backend supplies the end-user identity here.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -1093,12 +1093,12 @@
       "CreateCloseFriendDto": {
         "properties": {
           "member_actor_id": {
-            "description": "Member agora actor UUID (the actor being added).",
+            "description": "Member social actor UUID (the actor being added).",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           },
           "owner_actor_id": {
-            "description": "Owner agora actor UUID (the actor whose close-friends list this is).",
+            "description": "Owner social actor UUID (the actor whose close-friends list this is).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -1112,7 +1112,7 @@
       "CreateCommentDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID who authors the comment.",
+            "description": "Social actor UUID who authors the comment.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1169,7 +1169,7 @@
       "CreateCommunityDto": {
         "properties": {
           "app_id": {
-            "description": "Optional Heimdall App UUID this community wraps. When supplied, the app must be owned by the calling workspace (cross-tenant gate). Omit to create a standalone community with no Heimdall integration — actor identity is then managed entirely by the customer.",
+            "description": "Optional Auth App UUID this community wraps. When supplied, the app must be owned by the calling workspace (cross-tenant gate). Omit to create a standalone community with no Auth integration — actor identity is then managed entirely by the customer.",
             "example": "33333333-3333-3333-3333-333333333333",
             "type": "string"
           },
@@ -1207,7 +1207,7 @@
       "CreateConversationDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID opening the conversation.",
+            "description": "Social actor UUID opening the conversation.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1237,7 +1237,7 @@
             "type": "string"
           },
           "recipient_actor_id": {
-            "description": "For 1-on-1 (`kind=\"direct\"`): the other participant — agora actor UUID. Required when kind=direct.",
+            "description": "For 1-on-1 (`kind=\"direct\"`): the other participant — social actor UUID. Required when kind=direct.",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           }
@@ -1250,7 +1250,7 @@
       "CreateDirectMessageReactionDto": {
         "properties": {
           "src_actor_id": {
-            "description": "The reactor — agora actor UUID.",
+            "description": "The reactor — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1294,7 +1294,7 @@
             "type": "string"
           },
           "reporter_actor_id": {
-            "description": "Agora actor UUID who is reporting the content.",
+            "description": "Social actor UUID who is reporting the content.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1368,7 +1368,7 @@
       "CreatePostDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID who authors the post (returned from POST /actors).",
+            "description": "Social actor UUID who authors the post (returned from POST /actors).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1451,7 +1451,7 @@
       "CreateReactionDto": {
         "properties": {
           "src_actor_id": {
-            "description": "Reactor — agora actor UUID.",
+            "description": "Reactor — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1528,7 +1528,7 @@
           },
           "url": {
             "description": "Subscriber URL. Must be `https://`.",
-            "example": "https://example.com/webhooks/agora",
+            "example": "https://example.com/webhooks/social",
             "type": "string"
           }
         },
@@ -1568,7 +1568,7 @@
             "type": "string"
           },
           "event_types": {
-            "description": "Subscribed event types. Each item is one of the agora event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
+            "description": "Subscribed event types. Each item is one of the social event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
             "example": [
               "post.created",
               "comment.created"
@@ -1612,7 +1612,7 @@
           },
           "url": {
             "description": "Subscriber URL.",
-            "example": "https://example.com/webhooks/agora",
+            "example": "https://example.com/webhooks/social",
             "type": "string"
           }
         },
@@ -1656,7 +1656,7 @@
       "DeleteActorListDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "Caller — agora actor UUID. Must equal the list owner.",
+            "description": "Caller — social actor UUID. Must equal the list owner.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -2537,7 +2537,7 @@
             "type": "string"
           },
           "reporter_actor_id": {
-            "description": "Agora actor UUID who reported.",
+            "description": "Social actor UUID who reported.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -2650,7 +2650,7 @@
       "HashtagFollowResponseDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -2798,7 +2798,7 @@
       "MarkConversationReadDto": {
         "properties": {
           "actor_id": {
-            "description": "The reader — agora actor UUID.",
+            "description": "The reader — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -3083,7 +3083,7 @@
       "NotificationPrefResponseDto": {
         "properties": {
           "actor_id": {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -3628,7 +3628,7 @@
       "RecordViewDto": {
         "properties": {
           "viewer_actor_id": {
-            "description": "Viewer agora actor UUID.",
+            "description": "Viewer social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           }
@@ -3660,7 +3660,7 @@
       "RemoveMemberDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "Agora actor UUID of the acting party. Equal to the target for self-leave.",
+            "description": "Social actor UUID of the acting party. Equal to the target for self-leave.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -3673,7 +3673,7 @@
       "RenameGroupDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "Agora actor UUID of the renaming admin.",
+            "description": "Social actor UUID of the renaming admin.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -3871,7 +3871,7 @@
             "type": "string"
           },
           "id": {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
@@ -4059,7 +4059,7 @@
             "type": "string"
           },
           "sender_id": {
-            "description": "The sender — agora actor UUID.",
+            "description": "The sender — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
@@ -4221,7 +4221,7 @@
             "type": "string"
           },
           "id": {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
@@ -4358,7 +4358,7 @@
       "UpdateActorListDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "Caller — agora actor UUID. Must equal the list owner.",
+            "description": "Caller — social actor UUID. Must equal the list owner.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -4462,7 +4462,7 @@
       "UpdateMemberRoleDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "The admin performing the role change — agora actor UUID.",
+            "description": "The admin performing the role change — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -4689,7 +4689,7 @@
             "type": "string"
           },
           "event_types": {
-            "description": "Subscribed event types. Each item is one of the agora event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
+            "description": "Subscribed event types. Each item is one of the social event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
             "example": [
               "post.created",
               "comment.created"
@@ -4728,7 +4728,7 @@
           },
           "url": {
             "description": "Subscriber URL.",
-            "example": "https://example.com/webhooks/agora",
+            "example": "https://example.com/webhooks/social",
             "type": "string"
           }
         },
@@ -4770,7 +4770,7 @@
         "operationId": "ActorController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -4840,14 +4840,14 @@
         ],
         "summary": "List actors in a community. 50 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       },
       "post": {
         "operationId": "ActorController_upsert",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -4916,7 +4916,7 @@
         ],
         "summary": "Upsert an actor by external_id. Creates on first call, updates on subsequent calls with the same external_id. Idempotent on `(community, external_id)`. Note: omitted fields on a follow-up call are overwritten with the new body — pass every field you want to keep on each call.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       }
     },
@@ -4925,7 +4925,7 @@
         "operationId": "ActorController_getByExternal",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -4984,7 +4984,7 @@
         ],
         "summary": "Look up an actor by the customer-supplied external_id.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       }
     },
@@ -4993,7 +4993,7 @@
         "operationId": "ActorController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5003,7 +5003,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5045,14 +5045,14 @@
         ],
         "summary": "Delete an actor. Hard delete — cascades to every post, comment, edge, flag, and notification it owns.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       },
       "get": {
         "operationId": "ActorController_getById",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5062,7 +5062,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (the id returned by upsert).",
+            "description": "Social actor UUID (the id returned by upsert).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5099,16 +5099,16 @@
             "bearer": []
           }
         ],
-        "summary": "Get an actor by its agora UUID.",
+        "summary": "Get an actor by its UUID.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       },
       "patch": {
         "operationId": "ActorController_update",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5118,7 +5118,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5187,7 +5187,7 @@
         ],
         "summary": "Update actor profile fields. Pass only the fields you want to change.",
         "tags": [
-          "agora-actors"
+          "social-actors"
         ]
       }
     },
@@ -5196,7 +5196,7 @@
         "operationId": "EdgeController_listBlocks",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5206,7 +5206,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5273,7 +5273,7 @@
         ],
         "summary": "List actors this actor has blocked.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -5283,7 +5283,7 @@
         "operationId": "BookmarkController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5293,7 +5293,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5362,7 +5362,7 @@
         ],
         "summary": "List the actor's bookmarks. Cursor-paginated newest-first.",
         "tags": [
-          "agora-bookmarks"
+          "social-bookmarks"
         ]
       }
     },
@@ -5382,7 +5382,7 @@
             }
           },
           {
-            "description": "Owner agora actor UUID.",
+            "description": "Owner social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5460,7 +5460,7 @@
         ],
         "summary": "List the close-friends members of an actor.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -5469,7 +5469,7 @@
         "operationId": "CounterController_getCounters",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5479,7 +5479,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5528,7 +5528,7 @@
         ],
         "summary": "Denormalised counters for one actor (followers, following, posts, comments, blocks).",
         "tags": [
-          "agora-counters"
+          "social-counters"
         ]
       }
     },
@@ -5538,7 +5538,7 @@
         "operationId": "DraftController_listDrafts",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5548,7 +5548,7 @@
             }
           },
           {
-            "description": "Agora actor UUID whose drafts to list.",
+            "description": "Social actor UUID whose drafts to list.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5617,7 +5617,7 @@
         ],
         "summary": "List the actor's drafts (status='draft'). Cursor-paginated newest-first.",
         "tags": [
-          "agora-drafts"
+          "social-drafts"
         ]
       }
     },
@@ -5626,7 +5626,7 @@
         "operationId": "FeedController_getFeed",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5636,7 +5636,7 @@
             }
           },
           {
-            "description": "Viewer agora actor UUID — feed is candidate-pooled to their follow-graph.",
+            "description": "Viewer social actor UUID — feed is candidate-pooled to their follow-graph.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5728,7 +5728,7 @@
         ],
         "summary": "Feed for an actor: their own posts + posts from actors they follow, with blocks excluded. Default order is `ranked` (recency + engagement + follow-graph signals); pass `order=chronological` to get the time-ordered feed. 50/page (max 200). The cursor shape differs between orders — passing a chronological cursor with `order=ranked` returns 400 INVALID_CURSOR.",
         "tags": [
-          "agora-feed"
+          "social-feed"
         ]
       }
     },
@@ -5737,7 +5737,7 @@
         "operationId": "EdgeController_listFollowers",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5747,7 +5747,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5815,7 +5815,7 @@
         ],
         "summary": "List the actors who follow this actor.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -5824,7 +5824,7 @@
         "operationId": "EdgeController_listFollowing",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5834,7 +5834,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5902,7 +5902,7 @@
         ],
         "summary": "List the actors this actor follows.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -5911,7 +5911,7 @@
         "operationId": "HashtagFollowController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -5921,7 +5921,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -5989,14 +5989,14 @@
         ],
         "summary": "List the hashtags an actor follows. Cursor-paginated newest-first by followed_at.",
         "tags": [
-          "agora-hashtag-follows"
+          "social-hashtag-follows"
         ]
       },
       "post": {
         "operationId": "HashtagFollowController_follow",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6006,7 +6006,7 @@
             }
           },
           {
-            "description": "Agora actor UUID who is following.",
+            "description": "Social actor UUID who is following.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6075,7 +6075,7 @@
         ],
         "summary": "Follow a hashtag on behalf of an actor. Idempotent — re-follow refreshes the followed_at timestamp but doesn't error.",
         "tags": [
-          "agora-hashtag-follows"
+          "social-hashtag-follows"
         ]
       }
     },
@@ -6084,7 +6084,7 @@
         "operationId": "HashtagFollowController_unfollow",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6094,7 +6094,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6156,7 +6156,7 @@
         ],
         "summary": "Unfollow a hashtag. Idempotent — 204 either way.",
         "tags": [
-          "agora-hashtag-follows"
+          "social-hashtag-follows"
         ]
       }
     },
@@ -6176,7 +6176,7 @@
             }
           },
           {
-            "description": "Agora actor UUID whose highlights to list.",
+            "description": "Social actor UUID whose highlights to list.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6265,7 +6265,7 @@
         ],
         "summary": "List the actor's pinned posts (highlights).",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -6275,7 +6275,7 @@
         "operationId": "MentionController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6285,7 +6285,7 @@
             }
           },
           {
-            "description": "Agora actor UUID whose mentions to list.",
+            "description": "Social actor UUID whose mentions to list.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6354,7 +6354,7 @@
         ],
         "summary": "List every place this actor has been @-mentioned (posts + comments).",
         "tags": [
-          "agora-mentions"
+          "social-mentions"
         ]
       }
     },
@@ -6363,7 +6363,7 @@
         "operationId": "MutedTermController_list",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6373,7 +6373,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6425,14 +6425,14 @@
         ],
         "summary": "List the actor's currently-active muted terms.",
         "tags": [
-          "agora-muted-terms"
+          "social-muted-terms"
         ]
       },
       "post": {
         "operationId": "MutedTermController_create",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6442,7 +6442,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6511,7 +6511,7 @@
         ],
         "summary": "Add (or refresh) a muted term for the actor. Re-posting the same `term` updates the scope + expires_at.",
         "tags": [
-          "agora-muted-terms"
+          "social-muted-terms"
         ]
       }
     },
@@ -6520,7 +6520,7 @@
         "operationId": "MutedTermController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6530,7 +6530,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6581,7 +6581,7 @@
         ],
         "summary": "Remove a muted term. Idempotent — 204 either way.",
         "tags": [
-          "agora-muted-terms"
+          "social-muted-terms"
         ]
       }
     },
@@ -6590,7 +6590,7 @@
         "operationId": "EdgeController_listMutes",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6600,7 +6600,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6667,7 +6667,7 @@
         ],
         "summary": "List actors this actor has muted.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -6677,7 +6677,7 @@
         "operationId": "NotificationPrefController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6687,7 +6687,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6736,7 +6736,7 @@
         ],
         "summary": "List the actor's per-kind notification preferences. Synthesises `enabled=true` defaults for kinds the actor has not explicitly toggled.",
         "tags": [
-          "agora-notification-preferences"
+          "social-notification-preferences"
         ]
       }
     },
@@ -6746,7 +6746,7 @@
         "operationId": "NotificationPrefController_set",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -6756,7 +6756,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6835,7 +6835,7 @@
         ],
         "summary": "Set a single notification-kind preference for the actor.",
         "tags": [
-          "agora-notification-preferences"
+          "social-notification-preferences"
         ]
       }
     },
@@ -6855,7 +6855,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -6960,7 +6960,7 @@
         ],
         "summary": "List notifications for an actor (newest first).",
         "tags": [
-          "agora-notifications"
+          "social-notifications"
         ]
       }
     },
@@ -6980,7 +6980,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7059,7 +7059,7 @@
         ],
         "summary": "Mark every unread notification for the actor as read.",
         "tags": [
-          "agora-notifications"
+          "social-notifications"
         ]
       }
     },
@@ -7079,7 +7079,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7138,7 +7138,7 @@
         ],
         "summary": "Count unread notifications for an actor.",
         "tags": [
-          "agora-notifications"
+          "social-notifications"
         ]
       }
     },
@@ -7158,7 +7158,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7240,7 +7240,7 @@
         ],
         "summary": "Mark a single notification as read or unread.",
         "tags": [
-          "agora-notifications"
+          "social-notifications"
         ]
       }
     },
@@ -7249,7 +7249,7 @@
         "operationId": "EdgeController_listRestricts",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -7259,7 +7259,7 @@
             }
           },
           {
-            "description": "Agora actor UUID.",
+            "description": "Social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7326,7 +7326,7 @@
         ],
         "summary": "List actors this actor has restricted.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -7336,7 +7336,7 @@
         "operationId": "DraftController_listScheduledPosts",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -7346,7 +7346,7 @@
             }
           },
           {
-            "description": "Agora actor UUID whose scheduled posts to list.",
+            "description": "Social actor UUID whose scheduled posts to list.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7413,7 +7413,7 @@
         ],
         "summary": "List the actor's scheduled posts (status='scheduled'), ordered soonest-to-publish first. Cursor-paginated.",
         "tags": [
-          "agora-drafts"
+          "social-drafts"
         ]
       }
     },
@@ -7433,7 +7433,7 @@
             }
           },
           {
-            "description": "Agora actor UUID (returned from POST /actors).",
+            "description": "Social actor UUID (returned from POST /actors).",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7492,7 +7492,7 @@
         ],
         "summary": "Story tray for an actor — one entry per author with at least one unexpired or pinned story.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -7502,7 +7502,7 @@
         "operationId": "SuggestionController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -7512,7 +7512,7 @@
             }
           },
           {
-            "description": "Agora actor UUID for whom to compute suggestions.",
+            "description": "Social actor UUID for whom to compute suggestions.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -7573,7 +7573,7 @@
         ],
         "summary": "Suggested follows for an actor.",
         "tags": [
-          "agora-suggestions"
+          "social-suggestions"
         ]
       }
     },
@@ -7582,7 +7582,7 @@
         "operationId": "EdgeController_block",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -7651,7 +7651,7 @@
         ],
         "summary": "Block another actor. Removes any existing follows/mutes between the two in either direction (one transaction).",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -7660,7 +7660,7 @@
         "operationId": "EdgeController_unblock",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -7720,7 +7720,7 @@
         ],
         "summary": "Unblock. Idempotent — 204 either way. Does NOT restore prior follows / mutes (the block tear-down is one-way).",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -7822,7 +7822,7 @@
         ],
         "summary": "Add a member to an actor's close-friends list.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -7842,7 +7842,7 @@
             }
           },
           {
-            "description": "Owner agora actor UUID.",
+            "description": "Owner social actor UUID.",
             "in": "path",
             "name": "ownerActorId",
             "required": true,
@@ -7852,7 +7852,7 @@
             }
           },
           {
-            "description": "Member agora actor UUID.",
+            "description": "Member social actor UUID.",
             "in": "path",
             "name": "memberActorId",
             "required": true,
@@ -7904,7 +7904,7 @@
         ],
         "summary": "Remove a member from an actor's close-friends list.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -7913,7 +7913,7 @@
         "operationId": "ConversationController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8006,14 +8006,14 @@
         ],
         "summary": "List the caller's conversations in this community, most-recent-activity first.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "post": {
         "operationId": "ConversationController_create",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8092,7 +8092,7 @@
         ],
         "summary": "Open a conversation. Default `kind=\"direct\"` is the idempotent 1-on-1 path. Pass `kind=\"group\"` with `actor_ids` for a multi-participant chat (always creates a new row; no idempotency for groups).",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8101,7 +8101,7 @@
         "operationId": "ConversationController_unreadCount",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8160,7 +8160,7 @@
         ],
         "summary": "Global unread message count for the caller across every conversation in this community.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8169,7 +8169,7 @@
         "operationId": "ConversationController_leave",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8230,14 +8230,14 @@
         ],
         "summary": "Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "get": {
         "operationId": "ConversationController_getById",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8305,14 +8305,14 @@
         ],
         "summary": "Get a single conversation by id.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "patch": {
         "operationId": "ConversationController_update",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8390,7 +8390,7 @@
         ],
         "summary": "Update the caller's participant row — toggle muted today.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8399,7 +8399,7 @@
         "operationId": "ConversationController_addMember",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8487,7 +8487,7 @@
         ],
         "summary": "Add a member to a group conversation. Admin-only. Refuses if the new member has a block with any existing participant.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8496,7 +8496,7 @@
         "operationId": "ConversationController_removeMember",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8515,7 +8515,7 @@
             }
           },
           {
-            "description": "Target participant — agora actor UUID.",
+            "description": "Target participant — social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -8576,14 +8576,14 @@
         ],
         "summary": "Remove a participant. Admin-only unless caller_actor_id equals the target (self-leave).",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "patch": {
         "operationId": "ConversationController_updateMemberRole",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8602,7 +8602,7 @@
             }
           },
           {
-            "description": "Target participant — agora actor UUID.",
+            "description": "Target participant — social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -8670,7 +8670,7 @@
         ],
         "summary": "Promote / demote a participant. Admin-only.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8679,7 +8679,7 @@
         "operationId": "ConversationController_listMessages",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8775,14 +8775,14 @@
         ],
         "summary": "List messages in the conversation. Default newest-first cursor. Pass `since` (encoded cursor of the last-seen message) to poll for newer messages instead.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "post": {
         "operationId": "ConversationController_send",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8870,7 +8870,7 @@
         ],
         "summary": "Send a message in the conversation.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -8879,7 +8879,7 @@
         "operationId": "ConversationController_deleteMessage",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -8949,14 +8949,14 @@
         ],
         "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       },
       "patch": {
         "operationId": "ConversationController_editMessage",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9053,7 +9053,7 @@
         ],
         "summary": "Edit a message body. Allowed within 5 minutes of send and only by the sender.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -9062,7 +9062,7 @@
         "operationId": "DirectMessageReactionController_list",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9160,14 +9160,14 @@
         ],
         "summary": "List the reactions on a direct message. Cursor-paginated, newest-first.",
         "tags": [
-          "agora-dm-reactions"
+          "social-dm-reactions"
         ]
       },
       "post": {
         "operationId": "DirectMessageReactionController_add",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9266,7 +9266,7 @@
         ],
         "summary": "Add a reaction to a direct message. Idempotent — re-posting the same (actor, type) is a no-op.",
         "tags": [
-          "agora-dm-reactions"
+          "social-dm-reactions"
         ]
       }
     },
@@ -9275,7 +9275,7 @@
         "operationId": "DirectMessageReactionController_remove",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9362,7 +9362,7 @@
         ],
         "summary": "Remove the (actor, type) reaction. Idempotent — calling on a missing reaction returns the current counts.",
         "tags": [
-          "agora-dm-reactions"
+          "social-dm-reactions"
         ]
       }
     },
@@ -9371,7 +9371,7 @@
         "operationId": "ConversationController_renameGroup",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9459,7 +9459,7 @@
         ],
         "summary": "Rename a group conversation. Admin-only.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -9468,7 +9468,7 @@
         "operationId": "ConversationController_markRead",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9539,7 +9539,7 @@
         ],
         "summary": "Mark messages as read up to a given timestamp (default: now()). Sets the caller's `last_read_at`.",
         "tags": [
-          "agora-conversations"
+          "social-conversations"
         ]
       }
     },
@@ -9548,7 +9548,7 @@
         "operationId": "FeedController_getDiscoverFeed",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9626,7 +9626,7 @@
         ],
         "summary": "Discover / explore feed (task 019). Ranked surface over every public post in the community — Instagram Explore / X \"For You without follow constraint\". Optional `viewer_actor_id` filters the viewer's blocks and applies a small self-boost; without one, the result is the global discovery slice.",
         "tags": [
-          "agora-feed"
+          "social-feed"
         ]
       }
     },
@@ -9635,7 +9635,7 @@
         "operationId": "FlagController_create",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9714,7 +9714,7 @@
         ],
         "summary": "File a moderation report against a post or comment. Idempotent per (reporter, target) while open.",
         "tags": [
-          "agora-flags"
+          "social-flags"
         ]
       }
     },
@@ -9723,7 +9723,7 @@
         "operationId": "EdgeController_follow",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9802,7 +9802,7 @@
         ],
         "summary": "Follow another actor. Idempotent: returns existing edge with `created: false` if the follow already exists. Refused if either side has a block.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -9811,7 +9811,7 @@
         "operationId": "EdgeController_unfollow",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9873,7 +9873,7 @@
         ],
         "summary": "Unfollow. Idempotent — 204 even if the follow didn't exist.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -9882,7 +9882,7 @@
         "operationId": "HashtagController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -9950,7 +9950,7 @@
         ],
         "summary": "List hashtags in this community. Cursor-paginated by `first_used_at` desc.",
         "tags": [
-          "agora-hashtags"
+          "social-hashtags"
         ]
       }
     },
@@ -9959,7 +9959,7 @@
         "operationId": "HashtagController_getOne",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10028,7 +10028,7 @@
         ],
         "summary": "Get a single hashtag with its current published post count.",
         "tags": [
-          "agora-hashtags"
+          "social-hashtags"
         ]
       }
     },
@@ -10113,7 +10113,7 @@
         ],
         "summary": "List posts using a hashtag. Same wire shape as the regular post list.",
         "tags": [
-          "agora-hashtag-posts"
+          "social-hashtag-posts"
         ]
       }
     },
@@ -10122,7 +10122,7 @@
         "operationId": "ActorListController_list",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10200,14 +10200,14 @@
         ],
         "summary": "List discoverable lists in this community. Public lists are visible to anyone; private lists surface only when `viewer_actor_id` is their owner.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       },
       "post": {
         "operationId": "ActorListController_create",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10276,7 +10276,7 @@
         ],
         "summary": "Create a new list. Default visibility `private`.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       }
     },
@@ -10285,7 +10285,7 @@
         "operationId": "ActorListController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10346,14 +10346,14 @@
         ],
         "summary": "Delete a list. Owner-only.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       },
       "get": {
         "operationId": "ActorListController_getById",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10421,14 +10421,14 @@
         ],
         "summary": "Get one list by id.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       },
       "patch": {
         "operationId": "ActorListController_update",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10506,7 +10506,7 @@
         ],
         "summary": "Update list name / description / visibility. Owner-only.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       }
     },
@@ -10515,7 +10515,7 @@
         "operationId": "FeedController_getListFeed",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10626,7 +10626,7 @@
         ],
         "summary": "List-scoped feed (task 018). Returns posts authored by members of the list, filtered by what the viewer can see. Default order is `chronological`; pass `order=ranked` for the same engagement-blended scoring used by the actor feed.",
         "tags": [
-          "agora-feed"
+          "social-feed"
         ]
       }
     },
@@ -10635,7 +10635,7 @@
         "operationId": "ActorListController_listMembers",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10721,14 +10721,14 @@
         ],
         "summary": "List members of a list. Public lists are visible to anyone; private lists surface only when viewer_actor_id is the owner.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       },
       "post": {
         "operationId": "ActorListController_addMember",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10806,7 +10806,7 @@
         ],
         "summary": "Add a member to a list. Owner-only.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       }
     },
@@ -10815,7 +10815,7 @@
         "operationId": "ActorListController_removeMember",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10834,7 +10834,7 @@
             }
           },
           {
-            "description": "Member — agora actor UUID.",
+            "description": "Member — social actor UUID.",
             "in": "path",
             "name": "actorId",
             "required": true,
@@ -10885,7 +10885,7 @@
         ],
         "summary": "Remove a member from a list. Owner-only. Idempotent — 204 either way.",
         "tags": [
-          "agora-lists"
+          "social-lists"
         ]
       }
     },
@@ -10894,7 +10894,7 @@
         "operationId": "EdgeController_mute",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -10973,7 +10973,7 @@
         ],
         "summary": "Mute another actor. One-directional and silent — the muted actor isn't notified. Hides their content from the muter's feed.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -10982,7 +10982,7 @@
         "operationId": "EdgeController_unmute",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11042,7 +11042,7 @@
         ],
         "summary": "Unmute. Idempotent — 204 either way.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -11263,7 +11263,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11316,7 +11316,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11326,7 +11326,7 @@
             }
           },
           {
-            "description": "Agora actor UUID of the viewer. Surfaces non-public posts they are entitled to see.",
+            "description": "Social actor UUID of the viewer. Surfaces non-public posts they are entitled to see.",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -11385,7 +11385,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11458,7 +11458,7 @@
         "operationId": "BookmarkController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11468,7 +11468,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11530,15 +11530,15 @@
         ],
         "summary": "Remove a bookmark on behalf of an actor. Idempotent — 204 either way.",
         "tags": [
-          "agora-bookmarks"
+          "social-bookmarks"
         ]
       },
       "post": {
-        "description": "Visibility-aware: the actor must be allowed to read the post. If they can't, returns 404 (opaque), matching the read-path opacity rule used everywhere else in agora.",
+        "description": "Visibility-aware: the actor must be allowed to read the post. If they can't, returns 404 (opaque), matching the read-path opacity rule used everywhere else in Social.",
         "operationId": "BookmarkController_create",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11548,7 +11548,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11617,7 +11617,7 @@
         ],
         "summary": "Bookmark a post on behalf of an actor. Idempotent — returns the existing row with `created: false` on retry.",
         "tags": [
-          "agora-bookmarks"
+          "social-bookmarks"
         ]
       }
     },
@@ -11626,7 +11626,7 @@
         "operationId": "CommentController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11636,7 +11636,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11724,14 +11724,14 @@
         ],
         "summary": "List comments on a post. Default returns top-level comments newest-first; pass `parent_id` to expand a thread (oldest-first). Pass `requester_id` so DM-style `author_only` replies surface only to the post-author and the comment-author pair.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       },
       "post": {
         "operationId": "CommentController_create",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11741,7 +11741,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11820,7 +11820,7 @@
         ],
         "summary": "Add a comment on a post. Pass `parent_id` to reply; the depth is computed and capped by the community config.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       }
     },
@@ -11829,7 +11829,7 @@
         "operationId": "CommentController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11839,7 +11839,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11849,7 +11849,7 @@
             }
           },
           {
-            "description": "Agora comment UUID.",
+            "description": "Social comment UUID.",
             "in": "path",
             "name": "commentId",
             "required": true,
@@ -11890,14 +11890,14 @@
         ],
         "summary": "Soft-delete a comment.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       },
       "get": {
         "operationId": "CommentController_getById",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11907,7 +11907,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -11917,7 +11917,7 @@
             }
           },
           {
-            "description": "Agora comment UUID.",
+            "description": "Social comment UUID.",
             "in": "path",
             "name": "commentId",
             "required": true,
@@ -11975,14 +11975,14 @@
         ],
         "summary": "Get a single comment by id.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       },
       "patch": {
         "operationId": "CommentController_update",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -11992,7 +11992,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -12002,7 +12002,7 @@
             }
           },
           {
-            "description": "Agora comment UUID.",
+            "description": "Social comment UUID.",
             "in": "path",
             "name": "commentId",
             "required": true,
@@ -12070,7 +12070,7 @@
         ],
         "summary": "Update a comment's body, status, or visibility.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       }
     },
@@ -12079,7 +12079,7 @@
         "operationId": "CommentController_approve",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12089,7 +12089,7 @@
             }
           },
           {
-            "description": "Agora post UUID the comments thread under.",
+            "description": "Social post UUID the comments thread under.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -12099,7 +12099,7 @@
             }
           },
           {
-            "description": "Agora comment UUID.",
+            "description": "Social comment UUID.",
             "in": "path",
             "name": "commentId",
             "required": true,
@@ -12177,7 +12177,7 @@
         ],
         "summary": "Approve a pending_approval comment (restricted-actor pre-moderation). Reserved to the post-author. No-op if already published.",
         "tags": [
-          "agora-comments"
+          "social-comments"
         ]
       }
     },
@@ -12186,7 +12186,7 @@
         "operationId": "CommentReactionController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12274,14 +12274,14 @@
         ],
         "summary": "List reactions on a comment, newest-first. Cursor encodes `(created_at, actor_id, type)` so multi-reaction-from-same-actor stays stable.",
         "tags": [
-          "agora-comment-reactions"
+          "social-comment-reactions"
         ]
       },
       "post": {
         "operationId": "CommentReactionController_add",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12380,7 +12380,7 @@
         ],
         "summary": "React to a comment. Idempotent: re-posting the same `(actor, type)` returns the existing row with `created: false`. Multiple reactions per `(actor, comment)` are allowed (different `type` values count separately).",
         "tags": [
-          "agora-comment-reactions"
+          "social-comment-reactions"
         ]
       }
     },
@@ -12389,7 +12389,7 @@
         "operationId": "CommentReactionController_remove",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12487,7 +12487,7 @@
         ],
         "summary": "Unreact. Idempotent: returns 200 with current `reaction_counts` even if there was nothing to remove.",
         "tags": [
-          "agora-comment-reactions"
+          "social-comment-reactions"
         ]
       }
     },
@@ -12576,7 +12576,7 @@
         ],
         "summary": "Aggregate poll results for a post.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -12666,7 +12666,7 @@
         "operationId": "PostReactionController_react",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12676,7 +12676,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -12754,7 +12754,7 @@
         ],
         "summary": "React to a post. Idempotent: re-posting the same (actor, type) returns the existing edge with `created: false`.",
         "tags": [
-          "agora-post-reactions"
+          "social-post-reactions"
         ]
       }
     },
@@ -12763,7 +12763,7 @@
         "operationId": "PostReactionController_unreact",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12773,7 +12773,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -12849,7 +12849,7 @@
         ],
         "summary": "Unreact. Idempotent: returns 200 with current `reaction_counts` even if there was nothing to remove.",
         "tags": [
-          "agora-post-reactions"
+          "social-post-reactions"
         ]
       }
     },
@@ -12858,7 +12858,7 @@
         "operationId": "RepostController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -12930,7 +12930,7 @@
         ],
         "summary": "Undo my repost of a source post. Idempotent — 204 either way.",
         "tags": [
-          "agora-reposts"
+          "social-reposts"
         ]
       },
       "post": {
@@ -12938,7 +12938,7 @@
         "operationId": "RepostController_create",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13027,7 +13027,7 @@
         ],
         "summary": "Repost a source post on behalf of an actor. Idempotent — returns the existing repost row with `created: false` on retry.",
         "tags": [
-          "agora-reposts"
+          "social-reposts"
         ]
       }
     },
@@ -13036,7 +13036,7 @@
         "operationId": "RepostController_list",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13114,7 +13114,7 @@
         ],
         "summary": "List the actors who have reposted a source post. Cursor-paginated newest-first. Useful for \"X reposted this\" UI.",
         "tags": [
-          "agora-reposts"
+          "social-reposts"
         ]
       }
     },
@@ -13132,7 +13132,7 @@
             }
           },
           {
-            "description": "Agora post UUID.",
+            "description": "Social post UUID.",
             "in": "path",
             "name": "postId",
             "required": true,
@@ -13303,7 +13303,7 @@
         ],
         "summary": "List viewers of a post (author-only).",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -13405,7 +13405,7 @@
         ],
         "summary": "Record a view of a post (idempotent).",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -13517,7 +13517,7 @@
         ],
         "summary": "Cast or change a vote on a poll.",
         "tags": [
-          "agora-stories"
+          "social-stories"
         ]
       }
     },
@@ -13526,7 +13526,7 @@
         "operationId": "EdgeController_restrict",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13595,7 +13595,7 @@
         ],
         "summary": "Restrict another actor (Instagram-style). One-directional. Restricted actors can still see content, but new comments by them are pre-moderated as `pending_approval` until the post-author approves.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -13604,7 +13604,7 @@
         "operationId": "EdgeController_unrestrict",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13664,7 +13664,7 @@
         ],
         "summary": "Unrestrict. Idempotent — 204 either way.",
         "tags": [
-          "agora-edges"
+          "social-edges"
         ]
       }
     },
@@ -13674,7 +13674,7 @@
         "operationId": "SearchController_searchActors",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13707,7 +13707,7 @@
             }
           },
           {
-            "description": "Viewer agora actor UUID — filters out blocked / muted actors.",
+            "description": "Viewer social actor UUID — filters out blocked / muted actors.",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -13766,7 +13766,7 @@
         ],
         "summary": "Search actors by display name, external_id (username), and bio.",
         "tags": [
-          "agora-search"
+          "social-search"
         ]
       }
     },
@@ -13776,7 +13776,7 @@
         "operationId": "HashtagController_autocomplete",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13855,7 +13855,7 @@
         ],
         "summary": "Prefix-search hashtags for autocomplete.",
         "tags": [
-          "agora-hashtags"
+          "social-hashtags"
         ]
       }
     },
@@ -13865,7 +13865,7 @@
         "operationId": "SearchController_searchPosts",
         "parameters": [
           {
-            "description": "Agora community UUID. Must belong to the PAK's workspace.",
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -13967,7 +13967,7 @@
         ],
         "summary": "Search post content (title + body) by full-text.",
         "tags": [
-          "agora-search"
+          "social-search"
         ]
       }
     },
@@ -13976,7 +13976,7 @@
         "operationId": "WebhookController_getActive",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14015,14 +14015,14 @@
         ],
         "summary": "Read the community's active webhook (or null).",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       },
       "post": {
         "operationId": "WebhookController_create",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14101,7 +14101,7 @@
         ],
         "summary": "Create the community webhook. One active subscriber per community. Returns the signing secret ONCE — store it.",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       }
     },
@@ -14110,7 +14110,7 @@
         "operationId": "WebhookController_delete",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14151,14 +14151,14 @@
         ],
         "summary": "Delete the webhook.",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       },
       "get": {
         "operationId": "WebhookController_getById",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14206,14 +14206,14 @@
         ],
         "summary": "Read a single webhook by id.",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       },
       "patch": {
         "operationId": "WebhookController_update",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14281,7 +14281,7 @@
         ],
         "summary": "Update webhook url + subscribed event types.",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       }
     },
@@ -14290,7 +14290,7 @@
         "operationId": "WebhookController_deliveries",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14357,7 +14357,7 @@
         ],
         "summary": "List delivery attempts (newest first).",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       }
     },
@@ -14366,7 +14366,7 @@
         "operationId": "WebhookController_rotateSecret",
         "parameters": [
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14414,7 +14414,7 @@
         ],
         "summary": "Rotate the signing secret. Also clears any auto-disable flag. Returns the new secret ONCE.",
         "tags": [
-          "agora-webhooks"
+          "social-webhooks"
         ]
       }
     },
@@ -14455,7 +14455,7 @@
                 }
               }
             },
-            "description": "Caller lacks `social.read`, or the workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.read`, or the workspace has not enabled the `social` service."
           }
         },
         "security": [
@@ -14465,7 +14465,7 @@
         ],
         "summary": "List communities in a workspace",
         "tags": [
-          "agora-communities"
+          "social-communities"
         ]
       },
       "post": {
@@ -14529,7 +14529,7 @@
                 }
               }
             },
-            "description": "`app_id` was supplied but no bearer/cookie was forwarded for the upstream Heimdall fetch."
+            "description": "`app_id` was supplied but no bearer/cookie was forwarded for the upstream Auth fetch."
           },
           "403": {
             "content": {
@@ -14539,7 +14539,7 @@
                 }
               }
             },
-            "description": "Caller lacks `social.create` or workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.create` or workspace has not enabled the `social` service."
           },
           "404": {
             "content": {
@@ -14549,7 +14549,7 @@
                 }
               }
             },
-            "description": "`app_id` supplied but the Heimdall app was not found in this workspace (opaque cross-tenant 404)."
+            "description": "`app_id` supplied but the Auth app was not found in this workspace (opaque cross-tenant 404)."
           },
           "409": {
             "content": {
@@ -14567,9 +14567,9 @@
             "bearer": []
           }
         ],
-        "summary": "Create an agora community. `app_id` is optional — when supplied agora connects the community to a Heimdall app and refuses if the app belongs to a different workspace (cross-tenant gate) or is already connected. Omit `app_id` for a standalone community (no Heimdall integration; the customer manages actor identity).",
+        "summary": "Create an social community. `app_id` is optional — when supplied Social connects the community to an Auth app and refuses if the app belongs to a different workspace (cross-tenant gate) or is already connected. Omit `app_id` for a standalone community (no Auth integration; the customer manages actor identity).",
         "tags": [
-          "agora-communities"
+          "social-communities"
         ]
       }
     },
@@ -14588,7 +14588,7 @@
             }
           },
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14630,7 +14630,7 @@
         ],
         "summary": "Delete a community. Cascades to every actor, post, comment, edge, flag, and notification it owns. Not reversible.",
         "tags": [
-          "agora-communities"
+          "social-communities"
         ]
       },
       "get": {
@@ -14647,7 +14647,7 @@
             }
           },
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14696,7 +14696,7 @@
         ],
         "summary": "Get one community by id.",
         "tags": [
-          "agora-communities"
+          "social-communities"
         ]
       },
       "patch": {
@@ -14713,7 +14713,7 @@
             }
           },
           {
-            "description": "Agora community UUID.",
+            "description": "Social community UUID.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14782,7 +14782,7 @@
         ],
         "summary": "Update community display name, description, settings, or status. Status transitions are unrestricted (active ↔ suspended; archived is terminal in v1).",
         "tags": [
-          "agora-communities"
+          "social-communities"
         ]
       }
     },
@@ -14801,7 +14801,7 @@
             }
           },
           {
-            "description": "Agora community UUID owned by the workspace.",
+            "description": "Social community UUID owned by the workspace.",
             "in": "path",
             "name": "communityId",
             "required": true,
@@ -14830,7 +14830,7 @@
                 }
               }
             },
-            "description": "Caller lacks `social.analytics.read`, or the workspace has not enabled the `agora` service."
+            "description": "Caller lacks `social.analytics.read`, or the workspace has not enabled the `social` service."
           },
           "404": {
             "content": {
@@ -14850,7 +14850,7 @@
         ],
         "summary": "Community-level analytics rollup: total active actors, published posts, published comments, open flags, and last-7-day windows for each.",
         "tags": [
-          "agora-analytics"
+          "social-analytics"
         ]
       }
     },
@@ -14917,7 +14917,7 @@
         },
         "summary": "Remove a shadow ban. No-op if not currently shadow-banned.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       },
       "post": {
@@ -15002,7 +15002,7 @@
         },
         "summary": "Apply a shadow ban to an actor. The actor sees their own content normally; everyone else sees nothing from them. Pass `duration_hours` for a timed ban or omit for indefinite.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       }
     },
@@ -15077,7 +15077,7 @@
         },
         "summary": "Append-only audit of moderator actions in this community. 50/page (max 200), cursor-paginated.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       }
     },
@@ -15155,7 +15155,7 @@
         },
         "summary": "List every conversation in the community, most-recent-activity first. Moderation-only.",
         "tags": [
-          "agora-conversations-admin"
+          "social-conversations-admin"
         ]
       }
     },
@@ -15242,7 +15242,7 @@
         },
         "summary": "List every message in a conversation. Moderation-only.",
         "tags": [
-          "agora-conversations-admin"
+          "social-conversations-admin"
         ]
       }
     },
@@ -15335,7 +15335,7 @@
         },
         "summary": "List flags in this community. Filter by ?status=open|dismissed|actioned. 50/page (max 200), cursor-paginated.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       }
     },
@@ -15432,7 +15432,7 @@
         },
         "summary": "Apply a moderation action to a flag. Records an audit entry and updates the target post/comment status.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       }
     },
@@ -15507,7 +15507,7 @@
         },
         "summary": "List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first.",
         "tags": [
-          "agora-moderation-admin"
+          "social-moderation-admin"
         ]
       }
     }
