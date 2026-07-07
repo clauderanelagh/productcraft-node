@@ -1,5 +1,18 @@
 # @productcraft/platform-auth
 
+## 0.0.10
+
+### Patch Changes
+
+- ffab086: Regenerate all surfaces from the post-rebrand-scrub API specs: every
+  operation/property description now uses the new product names (Auth,
+  Mail, Social, Waitlist); stale permission strings in descriptions
+  corrected to the live catalog (auth._/mail._/social._/waitlist._).
+  The Waitlist workspace-settings endpoint is now documented at its
+  canonical path `/v1/workspaces/{workspace_id}/waitlist/settings`
+  (the old `/rally/settings` path still works on the wire for existing
+  clients). No request/response shape, auth, or scope changes.
+
 ## 0.0.9
 
 ### Patch Changes

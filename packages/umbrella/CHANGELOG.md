@@ -1,5 +1,16 @@
 # productcraft
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies [ffab086]
+  - @productcraft/heimdall@0.4.1
+  - @productcraft/envoi@0.0.9
+  - @productcraft/agora@0.0.11
+  - @productcraft/rally@0.0.10
+  - @productcraft/platform-auth@0.0.10
+
 ## 0.0.13
 
 ### Patch Changes
