@@ -62,7 +62,7 @@
             "type": "string"
           },
           "name": {
-            "example": "envoi-readonly",
+            "example": "mail-readonly",
             "type": "string"
           }
         },
@@ -110,7 +110,7 @@
           },
           "name": {
             "description": "Human-readable PAK name (shown in the keys list).",
-            "example": "Production agora client",
+            "example": "Production social client",
             "maxLength": 120,
             "minLength": 1,
             "type": "string"
@@ -196,13 +196,13 @@
         "properties": {
           "description": {
             "description": "Optional human description. Pass `null` to clear an existing description on PATCH.",
-            "example": "Read-only access to all Envoi resources",
+            "example": "Read-only access to all Mail resources",
             "nullable": true,
             "type": "string"
           },
           "name": {
             "description": "Policy name (1-64 chars, alphanumeric + space/underscore/hyphen). Unique per workspace.",
-            "example": "envoi-readonly",
+            "example": "mail-readonly",
             "maxLength": 64,
             "minLength": 1,
             "type": "string"
@@ -538,8 +538,8 @@
           "services": {
             "description": "Enabled services on this workspace.",
             "example": [
-              "envoi",
-              "rally"
+              "mail",
+              "waitlist"
             ],
             "items": {
               "type": "string"
@@ -588,8 +588,8 @@
           "services": {
             "description": "Enabled services on this workspace.",
             "example": [
-              "envoi",
-              "rally"
+              "mail",
+              "waitlist"
             ],
             "items": {
               "type": "string"
@@ -807,7 +807,7 @@
             "type": "string"
           },
           "name": {
-            "example": "envoi-readonly",
+            "example": "mail-readonly",
             "type": "string"
           },
           "policy": {
@@ -860,7 +860,7 @@
             "type": "string"
           },
           "name": {
-            "example": "envoi-readonly",
+            "example": "mail-readonly",
             "type": "string"
           },
           "policy": {
@@ -1011,7 +1011,7 @@
       "PolicyStatementDto": {
         "properties": {
           "actions": {
-            "description": "Action strings the statement applies to. Wildcards (e.g. `agora.*`, `*.read`, `*`) supported per `actionMatches` semantics.",
+            "description": "Action strings the statement applies to. Wildcards (e.g. `social.*`, `*.read`, `*`) supported per `actionMatches` semantics.",
             "example": [
               "social.read",
               "social.list"
@@ -1457,13 +1457,13 @@
         "properties": {
           "description": {
             "description": "Optional human description. Pass `null` to clear an existing description on PATCH.",
-            "example": "Read-only access to all Envoi resources",
+            "example": "Read-only access to all Mail resources",
             "nullable": true,
             "type": "string"
           },
           "name": {
             "description": "Policy name (1-64 chars, alphanumeric + space/underscore/hyphen). Unique per workspace.",
-            "example": "envoi-readonly",
+            "example": "mail-readonly",
             "maxLength": 64,
             "minLength": 1,
             "type": "string"
@@ -1985,8 +1985,8 @@
             "type": "string"
           },
           "service": {
-            "description": "Service identifier (e.g. `envoi`, `rally`, `agora`, `heimdall`).",
-            "example": "envoi",
+            "description": "Service identifier (e.g. `mail`, `waitlist`, `social`, `auth`).",
+            "example": "mail",
             "type": "string"
           },
           "settings": {
@@ -3207,7 +3207,7 @@
     },
     "/v1/workspaces/{workspace_slug}/audit-feed": {
       "get": {
-        "description": "Merged audit timeline across the workspace surfaces. v1 covers `workspace_audit` (this service); per-app Heimdall and per-community Agora rows arrive in a follow-up. Response shape is stable from v1 — clients can build against it today.",
+        "description": "Merged audit timeline across the workspace surfaces. v1 covers `workspace_audit` (this service); per-app Auth and per-community Social rows arrive in a follow-up. Response shape is stable from v1 — clients can build against it today.",
         "operationId": "WorkspaceAuditFeedController_listFeed",
         "parameters": [
           {
@@ -4218,7 +4218,7 @@
               }
             }
           },
-          "description": "Replaces the per-service settings jsonb entirely. The body is the settings object itself (no wrapper). Service-specific shape — e.g. envoi tracks default sender, agora tracks ranking weights.",
+          "description": "Replaces the per-service settings jsonb entirely. The body is the settings object itself (no wrapper). Service-specific shape — e.g. mail tracks default sender, social tracks ranking weights.",
           "required": true
         },
         "responses": {

@@ -14,7 +14,7 @@
             "type": "string"
           },
           "app_slug": {
-            "description": "Heimdall app slug override for `action: invite-to-app`. When omitted, falls back to `rally_settings.default_heimdall_app_slug`. Ignored for approve/reject.",
+            "description": "Auth app slug override for `action: invite-to-app`. When omitted, falls back to the workspace Waitlist settings default (`default_heimdall_app_slug`). Ignored for approve/reject.",
             "example": "acme-product",
             "maxLength": 64,
             "type": "string"
@@ -34,7 +34,7 @@
           },
           "send_email": {
             "default": true,
-            "description": "Whether to send the rally/approved email with the invite link baked in. Defaults to `true`. Ignored for approve/reject.",
+            "description": "Whether to send the approval email with the invite link baked in. Defaults to `true`. Ignored for approve/reject.",
             "type": "boolean"
           }
         },
@@ -311,12 +311,12 @@
       "InviteToAppDto": {
         "properties": {
           "app_slug": {
-            "description": "Heimdall app slug to invite into; defaults to rally_settings.default_heimdall_app_slug",
+            "description": "Auth app slug to invite into; defaults to the workspace Waitlist settings default (`default_heimdall_app_slug`)",
             "type": "string"
           },
           "send_email": {
             "default": true,
-            "description": "Send the rally/approved email with the Heimdall invite link baked in",
+            "description": "Send the approval email with the Auth invite link baked in",
             "type": "boolean"
           }
         },
@@ -362,7 +362,7 @@
       "UpdateSettingsDto": {
         "properties": {
           "approved_template_name": {
-            "description": "Envoi template name used for entry.approved notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.approved notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           },
@@ -375,22 +375,22 @@
             "type": "string"
           },
           "default_heimdall_app_slug": {
-            "description": "Heimdall consumer-app slug to invite approved entries into. null clears the link.",
+            "description": "Auth consumer-app slug to invite approved entries into. null clears the link.",
             "nullable": true,
             "type": "string"
           },
           "default_sender_address": {
-            "description": "Verified sender address used as the From envelope on Rally notifications. Must belong to default_sender_domain_id. null clears the override.",
+            "description": "Verified sender address used as the From envelope on Waitlist notifications. Must belong to default_sender_domain_id. null clears the override.",
             "nullable": true,
             "type": "string"
           },
           "default_sender_domain_id": {
-            "description": "Envoi (mail-api) domain UUID to use as default sender for Rally notifications. null clears the override.",
+            "description": "Mail domain UUID to use as default sender for Waitlist notifications. null clears the override.",
             "nullable": true,
             "type": "string"
           },
           "notifications_via_envoi": {
-            "description": "Route Rally notifications via Envoi (workspace sender domain + per-event template selection) instead of staying silent. Requires default_sender_domain_id, default_sender_address, and a template name for every supported event. Default false; when off, Rally sends no notification emails and the customer is expected to handle email via the webhook lane.",
+            "description": "Route Waitlist notifications through the Mail service (workspace sender domain + per-event template selection) instead of staying silent. Requires default_sender_domain_id, default_sender_address, and a template name for every supported event. Default false; when off, Waitlist sends no notification emails and the customer is expected to handle email via the webhook lane.",
             "type": "boolean"
           },
           "primary_color": {
@@ -398,12 +398,12 @@
             "type": "string"
           },
           "rejected_template_name": {
-            "description": "Envoi template name used for entry.rejected notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.rejected notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           },
           "welcome_template_name": {
-            "description": "Envoi template name used for entry.created notifications. Must already exist in the workspace template store.",
+            "description": "Mail template name used for entry.created notifications. Must already exist in the workspace template store.",
             "nullable": true,
             "type": "string"
           }
@@ -973,7 +973,7 @@
         ]
       }
     },
-    "/v1/workspaces/{workspace_id}/rally/settings": {
+    "/v1/workspaces/{workspace_id}/waitlist/settings": {
       "get": {
         "operationId": "SettingsController_get",
         "parameters": [
@@ -988,13 +988,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Workspace Rally settings."
+            "description": "Workspace Waitlist settings."
           },
           "403": {
-            "description": "Caller lacks `rally.settings.read` on the workspace."
+            "description": "Caller lacks `waitlist.settings.read` on the workspace."
           },
           "404": {
-            "description": "Workspace does not exist or is not Rally-enabled."
+            "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
         "security": [
@@ -1002,9 +1002,9 @@
             "bearer": []
           }
         ],
-        "summary": "Read workspace-level Rally defaults",
+        "summary": "Read workspace-level Waitlist defaults",
         "tags": [
-          "rally-settings"
+          "waitlist-settings"
         ]
       },
       "put": {
@@ -1031,16 +1031,16 @@
         },
         "responses": {
           "200": {
-            "description": "Updated workspace Rally settings."
+            "description": "Updated workspace Waitlist settings."
           },
           "400": {
             "description": "Validation failure on the patch body (per `UpdateSettingsDto`)."
           },
           "403": {
-            "description": "Caller lacks `rally.settings.update` on the workspace."
+            "description": "Caller lacks `waitlist.settings.update` on the workspace."
           },
           "404": {
-            "description": "Workspace does not exist or is not Rally-enabled."
+            "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
         "security": [
@@ -1048,9 +1048,9 @@
             "bearer": []
           }
         ],
-        "summary": "Update workspace-level Rally defaults",
+        "summary": "Update workspace-level Waitlist defaults",
         "tags": [
-          "rally-settings"
+          "waitlist-settings"
         ]
       }
     },
@@ -1164,7 +1164,7 @@
             "description": "Validation failure."
           },
           "403": {
-            "description": "Caller lacks `waitlist.create`, or workspace has not enabled the `rally` service."
+            "description": "Caller lacks `waitlist.create`, or workspace has not enabled the `waitlist` service."
           },
           "409": {
             "description": "Slug already taken in this workspace."
@@ -1381,7 +1381,7 @@
             "description": "Aggregated analytics payload for the waitlist."
           },
           "403": {
-            "description": "Caller lacks `rally.read` on the workspace."
+            "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
             "description": "Waitlist does not exist or is not in the path workspace."
@@ -1445,7 +1445,7 @@
             "description": "`since` / `until` missing, malformed, or `until <= since`."
           },
           "403": {
-            "description": "Caller lacks `rally.read` on the workspace."
+            "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
             "description": "Waitlist does not exist or is not in the path workspace."
@@ -1524,7 +1524,7 @@
             "description": "Page of entries with pagination cursor."
           },
           "403": {
-            "description": "Caller lacks `entry.read`, or workspace has not enabled the `rally` service."
+            "description": "Caller lacks `entry.read`, or workspace has not enabled the `waitlist` service."
           },
           "404": {
             "description": "Waitlist not found in this workspace."
@@ -1885,10 +1885,10 @@
         },
         "responses": {
           "200": {
-            "description": "Invite created in Heimdall"
+            "description": "Invite created in Auth"
           },
           "422": {
-            "description": "No linked Heimdall app for this workspace"
+            "description": "No linked Auth app for this workspace"
           }
         },
         "security": [
@@ -1896,7 +1896,7 @@
             "bearer": []
           }
         ],
-        "summary": "Invite an approved entry into a linked Heimdall consumer app (one-click cross-product handoff)",
+        "summary": "Invite an approved entry into a linked Auth consumer app (one-click cross-product handoff)",
         "tags": [
           "entries"
         ]

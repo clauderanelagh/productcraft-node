@@ -60,7 +60,7 @@
         "properties": {
           "return_to": {
             "description": "URL the workspace user should land on after the GitHub OAuth flow completes. Must be a same-origin or productcraft.co URL — anything else is rejected to keep the callback from being an open-redirect.",
-            "example": "https://console.productcraft.co/envoi/workspaces/acme/integrations",
+            "example": "https://console.productcraft.co/mail/workspaces/acme/integrations",
             "maxLength": 2048,
             "type": "string"
           }
@@ -2475,7 +2475,7 @@
       "UpdateOutboundMessageSettingsDto": {
         "properties": {
           "redact_bodies": {
-            "description": "When true, /messages/:id/body returns null body_html + body_text even to callers with envoi.message.body.read. Defaults to false.",
+            "description": "When true, /messages/:id/body returns null body_html + body_text even to callers with mail.message.body.read. Defaults to false.",
             "type": "boolean"
           }
         },
@@ -3883,7 +3883,7 @@
             "description": ""
           },
           "403": {
-            "description": "Caller lacks `mailbox.read` permission, or workspace has not enabled the `envoi` service."
+            "description": "Caller lacks `mail.read` permission, or workspace has not enabled the `mail` service."
           }
         },
         "security": [
@@ -3933,7 +3933,7 @@
             "description": "Validation failure (invalid local part, retention out of range)."
           },
           "403": {
-            "description": "Caller lacks `mailbox.create` permission, or workspace has not enabled the `envoi` service."
+            "description": "Caller lacks `mail.create` permission, or workspace has not enabled the `mail` service."
           },
           "404": {
             "description": "Domain not found in this workspace."
@@ -4689,7 +4689,7 @@
             "bearer": []
           }
         ],
-        "summary": "Stream the filtered message log as CSV. Same filters as GET /messages. Body columns are intentionally omitted; bodies remain gated by `envoi.message.body.read`. Rate-limited 1 concurrent + 5/hour per workspace.",
+        "summary": "Stream the filtered message log as CSV. Same filters as GET /messages. Body columns are intentionally omitted; bodies remain gated by `mail.message.body.read`. Rate-limited 1 concurrent + 5/hour per workspace.",
         "tags": [
           "outbound-messages"
         ]
@@ -4772,7 +4772,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update this workspace's outbound-message settings. Gated on `envoi.message.delete` — same privilege bar as RTBF, since both touch the PII boundary.",
+        "summary": "Update this workspace's outbound-message settings. Gated on `mail.message.delete` — same privilege bar as RTBF, since both touch the PII boundary.",
         "tags": [
           "outbound-messages"
         ]
@@ -4950,7 +4950,7 @@
             "bearer": []
           }
         ],
-        "summary": "Get the cleartext body of an outbound message. Gated by `envoi.message.body.read` (admin+ by default; not granted to plain members).",
+        "summary": "Get the cleartext body of an outbound message. Gated by `mail.message.body.read` (admin+ by default; not granted to plain members).",
         "tags": [
           "outbound-messages"
         ]
