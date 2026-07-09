@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/auth-passport",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Passport-JWT adapter for ProductCraft Auth. Plug an Auth ConsumerScope into a `passport-jwt` Strategy so existing Passport setups can authenticate Auth-issued tokens.",
   "type": "module",
   "main": "./dist/index.cjs",
