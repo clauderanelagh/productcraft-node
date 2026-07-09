@@ -46,6 +46,7 @@
  */
 
 import { KeyObject } from "node:crypto";
+import { createRequire } from "node:module";
 import { decodeProtectedHeader, type JWTHeaderParameters } from "jose";
 
 import type { ConsumerScope } from "@productcraft/auth";
@@ -154,10 +155,15 @@ export interface PassportJwtStrategyCtor {
 }
 
 /**
- * Lazy passport-jwt loader. We try to `require('passport-jwt')` from
- * the caller's dep graph at first use. Throws a clear error if it's
+ * Lazy passport-jwt loader. We resolve `passport-jwt` from the
+ * caller's dep graph at first use. Throws a clear error if it's
  * missing so the user doesn't see a cryptic `Cannot find module`
  * deep in the strategy constructor.
+ *
+ * Uses `createRequire` rather than a bare `require()`: tsup compiles a
+ * bare `require` in the ESM bundle to a stub that throws "Dynamic
+ * require is not supported", which made the ESM build unusable
+ * (misreported as passport-jwt missing) while CJS worked fine.
  */
 function loadPassportJwt(): {
   Strategy: PassportJwtStrategyCtor;
@@ -165,7 +171,8 @@ function loadPassportJwt(): {
 } {
   try {
     // dynamic require so passport-jwt stays a peer dep
-    const mod = require("passport-jwt");
+    const requireFromHere = createRequire(import.meta.url);
+    const mod = requireFromHere("passport-jwt");
     return {
       Strategy: mod.Strategy ?? mod.default?.Strategy,
       ExtractJwt: mod.ExtractJwt ?? mod.default?.ExtractJwt,
