@@ -1,9 +1,9 @@
 /**
  * AppScope — every admin request under `/v1/apps/{appId}/...`.
  *
- * Returned by `heimdall.app(appId)`. Pre-binds the appId path param so
+ * Returned by `auth.app(appId)`. Pre-binds the appId path param so
  * resource methods read like `app.endUsers.list()` rather than
- * `heimdall.endUsers.list({ appId })`. Methods delegate into the
+ * `auth.endUsers.list({ appId })`. Methods delegate into the
  * kubb-generated client functions.
  */
 
@@ -185,7 +185,7 @@ export class AppScope {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // EndUsers (the app's authenticated users — Heimdall's bread + butter)
+  // EndUsers (the app's authenticated users — Auth's bread + butter)
   // ─────────────────────────────────────────────────────────────
   readonly endUsers = {
     list: (params: Partial<EndUserControllerListEndUsersQueryParams> = {}) =>

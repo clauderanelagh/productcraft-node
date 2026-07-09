@@ -1,19 +1,19 @@
 /**
- * `@productcraft/heimdall` — typed SDK for the ProductCraft Heimdall API.
+ * `@productcraft/auth` — typed SDK for the ProductCraft Auth API.
  *
  * Three caller contexts:
- *   1. Workspace-wide admin   → methods on the Heimdall instance itself
- *   2. App-scoped admin        → `heimdall.app(appId).{endUsers,roles,...}`
- *   3. Consumer-side (BFF)     → `heimdall.consumer(appSlug).{auth,me,...}`
+ *   1. Workspace-wide admin   → methods on the Auth instance itself
+ *   2. App-scoped admin        → `auth.app(appId).{endUsers,roles,...}`
+ *   3. Consumer-side (BFF)     → `auth.consumer(appSlug).{auth,me,...}`
  *
  * Plus JWT verification on consumer scopes:
- *   `heimdall.consumer(slug).verifyToken(jwt)`
+ *   `auth.consumer(slug).verifyToken(jwt)`
  */
 
 import type { Client } from "@kubb/plugin-client/clients/fetch";
 import { PC_BASE_URL, type PCAuth, type PCClientConfig } from "@productcraft/core";
 
-import { makeHeimdallHttpClient, HeimdallHttpError } from "./_http.js";
+import { makeAuthHttpClient, AuthHttpError } from "./_http.js";
 import { AppScope } from "./scopes/app.js";
 import { ConsumerScope } from "./scopes/consumer.js";
 
@@ -28,21 +28,21 @@ import type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
 import type { AppControllerListMyAppsQueryParams } from "./_generated/types/apps/AppControllerListMyApps.js";
 import type { StatsControllerGetMyStatsQueryParams } from "./_generated/types/platformStats/StatsControllerGetMyStats.js";
 
-export interface HeimdallConfig extends PCClientConfig {
+export interface AuthConfig extends PCClientConfig {
   /** Per-app JWKS cache lifetime in ms. Default 10 minutes. */
   jwksTtlMs?: number;
 }
 
-export class Heimdall {
+export class Auth {
   private readonly client: Client;
   private readonly baseUrl: string;
   private readonly fetch: typeof fetch | undefined;
   private readonly jwtConfig: { jwksTtlMs?: number };
 
-  constructor(config: HeimdallConfig = {}) {
-    this.baseUrl = config.baseUrl ?? PC_BASE_URL.heimdall;
+  constructor(config: AuthConfig = {}) {
+    this.baseUrl = config.baseUrl ?? PC_BASE_URL.auth;
     this.fetch = config.fetch;
-    this.client = makeHeimdallHttpClient({
+    this.client = makeAuthHttpClient({
       baseUrl: this.baseUrl,
       auth: config.auth,
       fetch: this.fetch,
@@ -115,15 +115,15 @@ export class Heimdall {
 }
 
 // ─── Re-exports ────────────────────────────────────────────────
-export { AppScope, ConsumerScope, HeimdallHttpError };
-export { HEIMDALL_LEGACY_ISSUER } from "./scopes/consumer.js";
+export { AppScope, ConsumerScope, AuthHttpError };
+export { AUTH_LEGACY_ISSUER } from "./scopes/consumer.js";
 export type { PCAuth, PCClientConfig };
 
 export {
   JwksCache,
-  type HeimdallClaims,
+  type AuthClaims,
   type VerifyOptions,
-  verifyHeimdallToken,
+  verifyAuthToken,
   JwtVerifyError,
   JwtInvalidError,
   JwtExpiredError,
@@ -135,7 +135,7 @@ export {
 } from "./jwt/index.js";
 
 // Re-export the most commonly-used request/response DTOs so callers
-// can `import type { ConsumerSigninDto } from "@productcraft/heimdall"`.
+// can `import type { ConsumerSigninDto } from "@productcraft/auth"`.
 export type { ConsumerSigninDto } from "./_generated/types/ConsumerSigninDto.js";
 export type { ConsumerSignupDto } from "./_generated/types/ConsumerSignupDto.js";
 export type { ConsumerTokenResponseDto } from "./_generated/types/ConsumerTokenResponseDto.js";

@@ -1,7 +1,7 @@
 {
-  "name": "@productcraft/heimdall",
+  "name": "@productcraft/auth",
   "version": "0.4.1",
-  "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Heimdall. Generated from the production OpenAPI spec.",
+  "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Auth. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,16 +28,16 @@
   "keywords": [
     "productcraft",
     "sdk",
-    "heimdall"
+    "auth"
   ],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
-    "directory": "packages/heimdall"
+    "directory": "packages/auth"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/heimdall",
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth",
   "publishConfig": {
     "access": "public",
     "provenance": true

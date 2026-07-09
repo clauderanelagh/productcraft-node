@@ -1,7 +1,7 @@
 {
-  "name": "@productcraft/envoi",
+  "name": "@productcraft/mail",
   "version": "0.0.9",
-  "description": "Receive-and-store mail platform — template-rendered sends, mailboxes + domains + DKIM, message timeline, suppression lists, outbound webhooks via ProductCraft Envoi. Generated from the production OpenAPI spec.",
+  "description": "Receive-and-store mail platform — template-rendered sends, mailboxes + domains + DKIM, message timeline, suppression lists, outbound webhooks via ProductCraft Mail. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,16 +27,16 @@
   "keywords": [
     "productcraft",
     "sdk",
-    "envoi"
+    "mail"
   ],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
-    "directory": "packages/envoi"
+    "directory": "packages/mail"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/envoi",
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/mail",
   "publishConfig": {
     "access": "public",
     "provenance": true

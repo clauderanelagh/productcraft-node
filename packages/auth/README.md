@@ -1,9 +1,9 @@
-# @productcraft/heimdall
+# @productcraft/auth
 
-Typed Node.js SDK for the [ProductCraft Heimdall](https://productcraft.co) auth platform.
+Typed Node.js SDK for the [ProductCraft Auth](https://productcraft.co) auth platform.
 
 ```bash
-npm install @productcraft/heimdall
+npm install @productcraft/auth
 ```
 
 Server-side only. For React / Next.js apps, call this from your backend (BFF pattern) — the SDK ships an API key in headers.
@@ -11,9 +11,9 @@ Server-side only. For React / Next.js apps, call this from your backend (BFF pat
 ## Quick start
 
 ```ts
-import { Heimdall } from "@productcraft/heimdall";
+import { Auth } from "@productcraft/auth";
 
-const heimdall = new Heimdall({
+const auth = new Auth({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
 ```
@@ -24,24 +24,24 @@ The SDK splits into three caller contexts.
 
 ```ts
 // /v1/apps, /v1/stats/me
-const apps = await heimdall.apps.list();
+const apps = await auth.apps.list();
 
 // Create requires display_name + workspace_id (not `name`).
-await heimdall.apps.create({
+await auth.apps.create({
   display_name: "My App",
   slug: "my-app",
   workspace_id: "<workspace-uuid>",
 });
 
-const stats = await heimdall.stats.get();
+const stats = await auth.stats.get();
 ```
 
-### 2. App-scoped admin — `heimdall.app(appId)`
+### 2. App-scoped admin — `auth.app(appId)`
 
 Pre-binds the appId path param so resource methods read like `app.endUsers.list()`.
 
 ```ts
-const app = heimdall.app("<app-uuid>");
+const app = auth.app("<app-uuid>");
 
 // EndUsers — profile updates only carry { display_name?, email? }.
 // Status / role transitions are separate calls.
@@ -68,12 +68,12 @@ await app.auditLogs.list({ limit: "100" });
 await app.authConfig.update({ passwordMinLength: 12 });
 ```
 
-### 3. Consumer-side (BFF) — `heimdall.consumer(appSlug)`
+### 3. Consumer-side (BFF) — `auth.consumer(appSlug)`
 
-For backend route handlers mediating auth between your SPA and Heimdall. Pre-binds the appSlug.
+For backend route handlers mediating auth between your SPA and Auth. Pre-binds the appSlug.
 
 ```ts
-const consumer = heimdall.consumer("my-app-slug");
+const consumer = auth.consumer("my-app-slug");
 
 // Sign-in
 const { access_token, refresh_token } = await consumer.auth.signin({
@@ -114,17 +114,17 @@ await consumer.verify.authorize({ token, permission: "billing.read" });
 await consumer.oauth.clientCredentials({ clientId, clientSecret, scope });
 ```
 
-> **Wire-shape note.** Heimdall's JSON wire is snake_case, and the SDK returns response objects as-is (e.g. `access_token`, `refresh_token`, `token_type`, `expires_in`). Request DTOs follow the same convention; some convenience fields (`identifier`, `password`, `nonce`) are unaffected, but anywhere the spec uses an underscore the SDK does too.
+> **Wire-shape note.** Auth's JSON wire is snake_case, and the SDK returns response objects as-is (e.g. `access_token`, `refresh_token`, `token_type`, `expires_in`). Request DTOs follow the same convention; some convenience fields (`identifier`, `password`, `nonce`) are unaffected, but anywhere the spec uses an underscore the SDK does too.
 
 ## Federated sign-in (Apple, Google)
 
-`consumer.auth.signinWithProvider` lets a BFF exchange a provider-issued identity token for a Heimdall `{ access_token, refresh_token }` pair. The endpoint creates the EndUser on first sign-in and returns the same account on subsequent ones — the SDK is a thin wrapper over Heimdall's `POST /{appSlug}/v1/auth/oauth/{provider}` which does the heavy lifting (Apple JWKS verification, issuer pinning, audience validation against the app's configured native client ids, server-side nonce replay protection, account creation / linking).
+`consumer.auth.signinWithProvider` lets a BFF exchange a provider-issued identity token for an Auth `{ access_token, refresh_token }` pair. The endpoint creates the EndUser on first sign-in and returns the same account on subsequent ones — the SDK is a thin wrapper over Auth's `POST /{appSlug}/v1/auth/oauth/{provider}` which does the heavy lifting (Apple JWKS verification, issuer pinning, audience validation against the app's configured native client ids, server-side nonce replay protection, account creation / linking).
 
 ```ts
-import { Heimdall, HeimdallHttpError } from "@productcraft/heimdall";
+import { Auth, AuthHttpError } from "@productcraft/auth";
 
-const heimdall = new Heimdall();
-const consumer = heimdall.consumer("my-app-slug");
+const auth = new Auth();
+const consumer = auth.consumer("my-app-slug");
 
 const tokens = await consumer.auth.signinWithProvider({
   provider: "apple",
@@ -132,7 +132,7 @@ const tokens = await consumer.auth.signinWithProvider({
   // UTF-8 decoding the data; pass through your BFF unchanged.
   id_token: identityToken,
   // Raw nonce the client generated and SHA-256-hashed into the
-  // authorize request. Heimdall recomputes sha256(nonce) and compares
+  // authorize request. Auth recomputes sha256(nonce) and compares
   // to the token's `nonce` claim.
   nonce: rawNonce,
   // Apple sends `{ name, email }` ONLY on the very first sign-in.
@@ -151,15 +151,15 @@ When the verified provider claim's `email` matches an existing EndUser's verifie
 | `confirm` | Refuse with `409 link_required`. UI should sign the user in via their original method, then bind the provider identity through a follow-up flow. |
 | `reject` | Refuse with `409 account_exists_with_different_provider`. |
 
-Configure per-app via the auth-config endpoints (Heimdall-admin → "Auth config" → "OAuth link policy").
+Configure per-app via the auth-config endpoints (Auth-admin → "Auth config" → "OAuth link policy").
 
 ### Apple private-relay emails
 
-Apple often returns `*@privaterelay.appleid.com` for users who hide their email. Heimdall persists it **as-is** on the EndUser's primary email contact — you don't need to translate it on your side. Private-relay addresses never participate in `auto`-link (they're nominally verified but not deliverable through channels you control).
+Apple often returns `*@privaterelay.appleid.com` for users who hide their email. Auth persists it **as-is** on the EndUser's primary email contact — you don't need to translate it on your side. Private-relay addresses never participate in `auto`-link (they're nominally verified but not deliverable through channels you control).
 
 ### First-sign-in name fields
 
-Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them as a combined string through `user.name` on that call — Heimdall persists it to the EndUser's display name. Subsequent sign-ins should omit `user` entirely; Heimdall keeps whatever was stored on the first call.
+Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them as a combined string through `user.name` on that call — Auth persists it to the EndUser's display name. Subsequent sign-ins should omit `user` entirely; Auth keeps whatever was stored on the first call.
 
 ### Error handling
 
@@ -167,7 +167,7 @@ Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them
 try {
   await consumer.auth.signinWithProvider({ provider: "apple", id_token, nonce });
 } catch (err) {
-  if (err instanceof HeimdallHttpError) {
+  if (err instanceof AuthHttpError) {
     // err.status: 401 = bad signature / issuer / audience / nonce / expired
     //             409 = link_required | account_exists_with_different_provider
     //             4xx/5xx = other surface errors
@@ -177,11 +177,11 @@ try {
 }
 ```
 
-`HeimdallHttpError` is the same exception family every other surface method throws — one filter handles all of them.
+`AuthHttpError` is the same exception family every other surface method throws — one filter handles all of them.
 
 ### Google (and future providers)
 
-The Heimdall API uses a single `POST /{appSlug}/v1/auth/oauth/{provider}` endpoint for every supported IdP — the `provider` URL segment selects the verifier. Once Google is enabled on Heimdall's side, the SDK call becomes:
+The Auth API uses a single `POST /{appSlug}/v1/auth/oauth/{provider}` endpoint for every supported IdP — the `provider` URL segment selects the verifier. Once Google is enabled on Auth's side, the SDK call becomes:
 
 ```ts
 await consumer.auth.signinWithProvider({
@@ -195,11 +195,11 @@ No SDK upgrade required — the per-provider TS enum widens automatically with t
 
 ## JWT verification
 
-Every Heimdall app publishes a JWKS at `/{appSlug}/v1/.well-known/jwks.json`. The SDK gives you a verified-claims helper and a jose-compatible JWKS resolver.
+Every Auth app publishes a JWKS at `/{appSlug}/v1/.well-known/jwks.json`. The SDK gives you a verified-claims helper and a jose-compatible JWKS resolver.
 
 ### Token claim shape
 
-Heimdall EndUser access tokens carry, at minimum:
+Auth EndUser access tokens carry, at minimum:
 
 | Claim | Example | Notes |
 |---|---|---|
@@ -208,7 +208,7 @@ Heimdall EndUser access tokens carry, at minimum:
 | `iss` | `https://api.auth.productcraft.co/<appSlug>` | Per-app issuer URL. Available on the SDK as `scope.expectedIssuer`. |
 | `aud` | `<appSlug>` | The app slug (literal). Available as `scope.expectedAudience`. |
 | `sub` | `<account-uuid>` | The EndUser's account id — what your local user table should key on. |
-| `aid` | `<app-uuid>` | The Heimdall app uuid (matches `scope.appId` if you held it). |
+| `aid` | `<app-uuid>` | The Auth app uuid (matches `scope.appId` if you held it). |
 | `sid` | `<session-uuid>` | Session row id — useful for revoke-this-session ops. |
 | `role` | `member` | The EndUser's role in this app. |
 | `type` | `end_user` \| `m2m` | Distinguishes EndUser tokens from M2M (client_credentials) tokens. |
@@ -220,10 +220,10 @@ Tokens issued before the 2026-05-24 per-app-issuer migration carried `iss: "heim
 ### One-line verify (the 80% case)
 
 ```ts
-import { Heimdall, JwtExpiredError } from "@productcraft/heimdall";
+import { Auth, JwtExpiredError } from "@productcraft/auth";
 
-const heimdall = new Heimdall();
-const scope = heimdall.consumer("my-app-slug");
+const auth = new Auth();
+const scope = auth.consumer("my-app-slug");
 
 try {
   const claims = await scope.verifyToken(token);
@@ -243,7 +243,7 @@ Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), 
 ```ts
 import { jwtVerify } from "jose";
 
-const scope = heimdall.consumer("my-app-slug");
+const scope = auth.consumer("my-app-slug");
 const { payload } = await jwtVerify(token, scope.jwks.getKey, {
   issuer: scope.expectedIssuer,        // "https://api.auth.productcraft.co/<appSlug>"
   audience: scope.expectedAudience,    // "<appSlug>"
@@ -255,17 +255,17 @@ For the per-app boundary, the JWKS is the cryptographic gate (only the app's key
 
 ### Passport integration
 
-Use the companion package [`@productcraft/heimdall-passport`](../heimdall-passport):
+Use the companion package [`@productcraft/auth-passport`](../auth-passport):
 
 ```bash
-npm install @productcraft/heimdall-passport passport-jwt
+npm install @productcraft/auth-passport passport-jwt
 ```
 
 ```ts
 import passportJwt from "passport-jwt";
-import { createPassportSecretOrKeyProvider } from "@productcraft/heimdall-passport";
+import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";
 
-const scope = heimdall.consumer("my-app-slug");
+const scope = auth.consumer("my-app-slug");
 new passportJwt.Strategy(
   {
     jwtFromRequest: passportJwt.ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -290,20 +290,20 @@ import {
   JwtAudienceMismatchError,
   JwksKeyNotFoundError,
   JwksFetchError,
-  HeimdallHttpError,         // any non-2xx HTTP response
-} from "@productcraft/heimdall";
+  AuthHttpError,         // any non-2xx HTTP response
+} from "@productcraft/auth";
 ```
 
 ## Configuration
 
 ```ts
-new Heimdall({
-  // Auth credential the SDK presents to Heimdall
+new Auth({
+  // Auth credential the SDK presents to Auth
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },
   // Override the prod base URL — useful for dev / staging
-  baseUrl: "https://api.heimdall.example.test",
+  baseUrl: "https://api.auth.example.test",
   // Custom fetch (undici with retry, mock in tests, ...)
   fetch: customFetch,
   // JWKS cache TTL — default 10 minutes

@@ -3,10 +3,10 @@
   "include": [],
   "references": [
     { "path": "./packages/core" },
-    { "path": "./packages/heimdall" },
-    { "path": "./packages/envoi" },
-    { "path": "./packages/rally" },
-    { "path": "./packages/agora" },
+    { "path": "./packages/auth" },
+    { "path": "./packages/mail" },
+    { "path": "./packages/waitlist" },
+    { "path": "./packages/social" },
     { "path": "./packages/platform-auth" },
     { "path": "./packages/umbrella" }
   ]

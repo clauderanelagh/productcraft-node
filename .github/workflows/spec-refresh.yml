@@ -71,10 +71,10 @@ jobs:
             `updateInternalDependencies` in `.changeset/config.json`.
 
             Specs refreshed from:
+            - `https://api.platform-auth.productcraft.co/docs-json`
             - `https://api.auth.productcraft.co/docs-json`
-            - `https://api.heimdall.productcraft.co/docs-json`
             - `https://api.mail.productcraft.co/docs-json`
-            - `https://agora.productcraft.co/docs-json`
-            - `https://api.rally.productcraft.co/docs-json`
+            - `https://social.productcraft.co/docs-json`
+            - `https://api.waitlist.productcraft.co/docs-json`
           branch: chore/refresh-specs
           delete-branch: true

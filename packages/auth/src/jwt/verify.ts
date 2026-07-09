@@ -1,9 +1,9 @@
 /**
- * `verifyHeimdallToken` — the 80%-case verify helper.
+ * `verifyAuthToken` — the 80%-case verify helper.
  *
  * Wraps `jose.jwtVerify` with:
  *   - Sensible defaults (algorithm allow-list, clockTolerance)
- *   - Typed claim payload (`HeimdallClaims`)
+ *   - Typed claim payload (`AuthClaims`)
  *   - Translation of jose errors into our typed error hierarchy
  */
 
@@ -19,16 +19,16 @@ import {
   JwksFetchError,
   JwtVerifyError,
 } from "./errors.js";
-import type { HeimdallGetKeyFn } from "./jwks-cache.js";
+import type { AuthGetKeyFn } from "./jwks-cache.js";
 
 /**
- * Claims that a Heimdall-issued EndUser access token is expected to
+ * Claims that an Auth-issued EndUser access token is expected to
  * carry. Unknown claims pass through as `string | number | unknown`
  * (jose's `JWTPayload` is open-ended) — callers can intersect with
- * their own custom-claim type if they've configured Heimdall to add
+ * their own custom-claim type if they've configured Auth to add
  * extras.
  */
-export interface HeimdallClaims extends JWTPayload {
+export interface AuthClaims extends JWTPayload {
   /** EndUser id. */
   sub: string;
   /** App slug the token was issued for. */
@@ -41,7 +41,7 @@ export interface HeimdallClaims extends JWTPayload {
   nbf?: number;
   /** JWT id — present on refreshable tokens. */
   jti?: string;
-  /** Role assigned by Heimdall, if any. */
+  /** Role assigned by Auth, if any. */
   role?: string;
   /** Permission keys the EndUser is authorized for. */
   permissions?: string[];
@@ -72,7 +72,7 @@ export interface VerifyOptions {
 }
 
 /**
- * Verify a Heimdall-issued JWT against a JWKS resolver.
+ * Verify an Auth-issued JWT against a JWKS resolver.
  *
  * @param token        The compact-form JWT (header.payload.signature)
  * @param getKey       A jose-compatible key resolver — pass
@@ -80,11 +80,11 @@ export interface VerifyOptions {
  * @param opts         Defaults supplied by the scope; override here
  *                     for one-off cases.
  */
-export async function verifyHeimdallToken(
+export async function verifyAuthToken(
   token: string,
-  getKey: HeimdallGetKeyFn,
+  getKey: AuthGetKeyFn,
   opts: VerifyOptions = {},
-): Promise<HeimdallClaims> {
+): Promise<AuthClaims> {
   try {
     const { payload } = await jwtVerify(token, getKey, {
       algorithms: opts.algorithms ?? ["ES256", "RS256", "EdDSA"],
@@ -95,7 +95,7 @@ export async function verifyHeimdallToken(
       currentDate: opts.currentDate,
       maxTokenAge: opts.maxTokenAge,
     });
-    return payload as HeimdallClaims;
+    return payload as AuthClaims;
   } catch (err) {
     throw translateJoseError(err);
   }

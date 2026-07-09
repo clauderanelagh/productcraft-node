@@ -1,10 +1,10 @@
 /**
- * `@productcraft/heimdall-passport` — passport-jwt adapter for Heimdall.
+ * `@productcraft/auth-passport` — passport-jwt adapter for Auth.
  *
- * Install alongside `@productcraft/heimdall` + `passport-jwt`:
+ * Install alongside `@productcraft/auth` + `passport-jwt`:
  *
  * ```bash
- * npm install @productcraft/heimdall @productcraft/heimdall-passport passport-jwt
+ * npm install @productcraft/auth @productcraft/auth-passport passport-jwt
  * ```
  *
  * Recommended one-call form:
@@ -12,14 +12,14 @@
  * ```ts
  * import passportJwt from "passport-jwt";
  * import passport from "passport";
- * import { Heimdall } from "@productcraft/heimdall";
- * import { createHeimdallJwtStrategy } from "@productcraft/heimdall-passport";
+ * import { Auth } from "@productcraft/auth";
+ * import { createAuthJwtStrategy } from "@productcraft/auth-passport";
  *
- * const heimdall = new Heimdall({ auth: { type: "apiKey", key: process.env.PCFT_KEY! } });
- * const scope = heimdall.consumer("my-app-slug");
+ * const auth = new Auth({ auth: { type: "apiKey", key: process.env.PCFT_KEY! } });
+ * const scope = auth.consumer("my-app-slug");
  *
- * passport.use(createHeimdallJwtStrategy(scope, (claims, done) => {
- *   // claims is the verified Heimdall claims object (sub, role, permissions, ...)
+ * passport.use(createAuthJwtStrategy(scope, (claims, done) => {
+ *   // claims is the verified Auth claims object (sub, role, permissions, ...)
  *   return done(null, claims);
  * }));
  * ```
@@ -48,7 +48,7 @@
 import { KeyObject } from "node:crypto";
 import { decodeProtectedHeader, type JWTHeaderParameters } from "jose";
 
-import type { ConsumerScope } from "@productcraft/heimdall";
+import type { ConsumerScope } from "@productcraft/auth";
 
 /**
  * passport-jwt's `secretOrKeyProvider` callback signature. We don't
@@ -62,7 +62,7 @@ type PassportSecretOrKeyProvider = (
 ) => void;
 
 /**
- * Returns a passport-jwt `secretOrKeyProvider` bound to a Heimdall
+ * Returns a passport-jwt `secretOrKeyProvider` bound to an Auth
  * `ConsumerScope`. Decodes the protected header, looks up the matching
  * key via the scope's JWKS cache, and converts the resulting jose
  * `CryptoKey` into a Node `KeyObject` that `jsonwebtoken` (the library
@@ -103,18 +103,18 @@ export function createPassportSecretOrKeyProvider(
  * token passes signature + issuer + audience + expiry checks. Mirrors
  * `passport-jwt`'s own `VerifyCallback` / `VerifyCallbackWithRequest`.
  */
-export type HeimdallVerifyCallback = (
+export type AuthVerifyCallback = (
   payload: Record<string, unknown>,
   done: (err: unknown, user?: unknown, info?: unknown) => void,
 ) => void;
 
 /**
- * Extra options for `createHeimdallJwtStrategy`. Defaults are the
- * Heimdall-recommended values; override here if you need a different
+ * Extra options for `createAuthJwtStrategy`. Defaults are the
+ * Auth-recommended values; override here if you need a different
  * token source (cookie, custom header, ...), a stricter algorithm
  * allow-list, or want to skip the legacy-issuer acceptance window.
  */
-export interface CreateHeimdallJwtStrategyOptions {
+export interface CreateAuthJwtStrategyOptions {
   /**
    * Where to read the bearer from. Defaults to
    * `ExtractJwt.fromAuthHeaderAsBearerToken()`. Pass any
@@ -124,7 +124,7 @@ export interface CreateHeimdallJwtStrategyOptions {
 
   /**
    * JWS algorithms accepted by the underlying verifier. Defaults to
-   * the algorithms Heimdall mints today (`['RS256']`); set explicitly
+   * the algorithms Auth mints today (`['RS256']`); set explicitly
    * if your app is on a different signing alg or you also accept
    * customer-minted tokens with a different alg.
    */
@@ -150,7 +150,7 @@ export interface CreateHeimdallJwtStrategyOptions {
  */
 export interface PassportJwtStrategyCtor {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  new (options: Record<string, unknown>, verify: HeimdallVerifyCallback): any;
+  new (options: Record<string, unknown>, verify: AuthVerifyCallback): any;
 }
 
 /**
@@ -172,13 +172,13 @@ function loadPassportJwt(): {
     };
   } catch {
     throw new Error(
-      "@productcraft/heimdall-passport: `passport-jwt` is not installed. Run `npm install passport-jwt @types/passport-jwt`.",
+      "@productcraft/auth-passport: `passport-jwt` is not installed. Run `npm install passport-jwt @types/passport-jwt`.",
     );
   }
 }
 
 /**
- * Build a fully-configured `passport-jwt` strategy from a Heimdall
+ * Build a fully-configured `passport-jwt` strategy from an Auth
  * `ConsumerScope`. Wires:
  *
  *   - `jwtFromRequest`     → `ExtractJwt.fromAuthHeaderAsBearerToken()` (override via opts)
@@ -190,10 +190,10 @@ function loadPassportJwt(): {
  * The verify callback you pass receives the parsed claims after
  * passport-jwt has finished its checks.
  */
-export function createHeimdallJwtStrategy(
+export function createAuthJwtStrategy(
   scope: ConsumerScope,
-  verify: HeimdallVerifyCallback,
-  options: CreateHeimdallJwtStrategyOptions = {},
+  verify: AuthVerifyCallback,
+  options: CreateAuthJwtStrategyOptions = {},
 ) {
   const passportJwt = loadPassportJwt();
   const issuer = options.strictIssuer

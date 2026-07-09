@@ -1,9 +1,9 @@
-# @productcraft/envoi
+# @productcraft/mail
 
-Typed Node.js SDK for [ProductCraft Envoi](https://productcraft.co) — receive-and-store mail platform: send template-rendered messages, manage mailboxes + domains + DKIM, lint templates, track deliveries, configure outbound webhooks, hold suppression lists.
+Typed Node.js SDK for [ProductCraft Mail](https://productcraft.co) — receive-and-store mail platform: send template-rendered messages, manage mailboxes + domains + DKIM, lint templates, track deliveries, configure outbound webhooks, hold suppression lists.
 
 ```bash
-npm install @productcraft/envoi
+npm install @productcraft/mail
 ```
 
 Server-side only. The SDK ships a Platform API Key in the `Authorization` header — never embed it in a browser bundle.
@@ -11,14 +11,14 @@ Server-side only. The SDK ships a Platform API Key in the `Authorization` header
 ## Quick start
 
 ```ts
-import { Envoi } from "@productcraft/envoi";
+import { Mail } from "@productcraft/mail";
 
-const envoi = new Envoi({
+const mail = new Mail({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
 
 // Send a template-rendered message
-const { data, error } = await envoi.client.POST(
+const { data, error } = await mail.client.POST(
   "/v1/workspaces/{workspace_id}/templates/{name}/send",
   {
     params: {
@@ -42,8 +42,8 @@ The `client` property is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fet
 ## Configuration
 
 ```ts
-new Envoi({
-  // The auth credential the SDK presents to Envoi
+new Mail({
+  // The auth credential the SDK presents to Mail
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },
@@ -62,14 +62,14 @@ Every path is workspace-scoped — `{workspace_id}` is the UUID of the workspace
 
 ```ts
 // List templates
-await envoi.client.GET(
+await mail.client.GET(
   "/v1/workspaces/{workspace_id}/templates",
   { params: { path: { workspace_id: "ws_..." } } },
 );
 
 // Lint a template before saving — the body field is `body_html`
 // (wire) / `bodyHtml` (camelCase TS DTO), NOT `html`.
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/templates/lint",
   {
     params: { path: { workspace_id: "<workspace-uuid>" } },
@@ -79,7 +79,7 @@ await envoi.client.POST(
 // → { score, findings: [...] }
 
 // Preview / render with sample data
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/templates/{name}/render",
   {
     params: { path: { workspace_id: "ws_...", name: "welcome" } },
@@ -88,13 +88,13 @@ await envoi.client.POST(
 );
 
 // Send to one address (template-rendered)
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/templates/{name}/send",
   { params: { ... }, body: { from, to, data } },
 );
 
 // Send the same template to many addresses (batch)
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/templates/{name}/send-batch",
   { params: { ... }, body: { recipients: [{ to, data }, ...] } },
 );
@@ -104,16 +104,16 @@ await envoi.client.POST(
 
 ```ts
 // List domains
-await envoi.client.GET("/v1/workspaces/{workspace_id}/domains", { ... });
+await mail.client.GET("/v1/workspaces/{workspace_id}/domains", { ... });
 
-// Add a domain (then publish the DKIM TXT record Envoi prints)
-await envoi.client.POST(
+// Add a domain (then publish the DKIM TXT record Mail prints)
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/domains",
   { params: { ... }, body: { name: "mail.yourbrand.com" } },
 );
 
 // Verify after DNS propagation
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/domains/{domain_id}/verify",
   { params: { path: { workspace_id, domain_id } } },
 );
@@ -123,14 +123,14 @@ await envoi.client.POST(
 
 ```ts
 // Workspace-wide message listing + filters
-await envoi.client.GET(
+await mail.client.GET(
   "/v1/workspaces/{workspace_id}/messages",
   { params: { path: { workspace_id }, query: { limit: 50 } } },
 );
 
 // Read body / attachments / raw RFC822
-await envoi.client.GET("/v1/workspaces/{workspace_id}/messages/{id}/body", { ... });
-await envoi.client.GET(
+await mail.client.GET("/v1/workspaces/{workspace_id}/messages/{id}/body", { ... });
+await mail.client.GET(
   "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/attachments/{position}",
   { ... },
 );
@@ -140,7 +140,7 @@ await envoi.client.GET(
 
 ```ts
 // Add an email to the workspace suppression list
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/suppression",
   { params: { ... }, body: { email: "bounced@example.com", reason: "hard_bounce" } },
 );
@@ -150,16 +150,16 @@ await envoi.client.POST(
 
 ```ts
 // Configure the workspace's default webhook (delivery / open / bounce events)
-await envoi.client.PUT(
+await mail.client.PUT(
   "/v1/workspaces/{workspace_id}/webhooks/default",
   {
     params: { ... },
-    body: { url: "https://yourapp.com/hooks/envoi", events: ["message.delivered"] },
+    body: { url: "https://yourapp.com/hooks/mail", events: ["message.delivered"] },
   },
 );
 
 // Per-domain webhook overrides + secret rotation
-await envoi.client.POST(
+await mail.client.POST(
   "/v1/workspaces/{workspace_id}/webhooks/domains/{domain_id}/rotate-secret",
   { ... },
 );

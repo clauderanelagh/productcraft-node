@@ -4,15 +4,15 @@ import { pluginTs } from "@kubb/plugin-ts";
 import { pluginClient } from "@kubb/plugin-client";
 
 /**
- * Codegen config for @productcraft/heimdall.
+ * Codegen config for @productcraft/auth.
  *
- * - Reads Specs/heimdall.json at the workspace root.
+ * - Reads Specs/auth.json at the workspace root.
  * - Emits per-tag client functions + types under src/_generated/.
  * - Tag names from the spec contain spaces / dots / parens
  *   (e.g. "Consumer · Auth"); normalized to clean lowerCamel
  *   directory names here so generated paths are predictable.
  *
- * The outer Heimdall class (src/index.ts) composes the generated
+ * The outer Auth class (src/index.ts) composes the generated
  * functions into the public namespace shape — workspace-level admin,
  * app(appId)-scoped admin, and consumer(appSlug)-scoped end-user.
  */
@@ -33,7 +33,7 @@ const tagSlug = (tag: string): string => {
 
 export default defineConfig({
   root: ".",
-  input: { path: "../../Specs/heimdall.json" },
+  input: { path: "../../Specs/auth.json" },
   output: { path: "./src/_generated", clean: true },
   plugins: [
     pluginOas({ generators: [], validate: false }),

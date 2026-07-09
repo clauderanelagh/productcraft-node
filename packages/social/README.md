@@ -1,16 +1,16 @@
-# @productcraft/agora
+# @productcraft/social
 
-Typed Node.js SDK for [ProductCraft Agora](https://productcraft.co) — social-as-a-service backend: communities, posts, ranked feeds, stories (with polls + close-friends), direct conversations, notifications, moderation, flags. Generic actor / object / edge primitives.
+Typed Node.js SDK for [ProductCraft Social](https://productcraft.co) — social-as-a-service backend: communities, posts, ranked feeds, stories (with polls + close-friends), direct conversations, notifications, moderation, flags. Generic actor / object / edge primitives.
 
 ```bash
-npm install @productcraft/agora
+npm install @productcraft/social
 ```
 
 Server-side only. Customer-facing apps integrate via a backend (BFF pattern) that holds the workspace PAK (`pcft_live_…`).
 
 ## Two caller contexts
 
-Agora's surface splits two ways — both reach the same data but differ in auth + URL shape:
+Social's surface splits two ways — both reach the same data but differ in auth + URL shape:
 
 | Caller | URL prefix | Auth | What you do |
 |---|---|---|---|
@@ -22,13 +22,13 @@ The customer backend acts on behalf of one of its EndUsers via the `X-Acting-As`
 ## Quick start — create a community (admin)
 
 ```ts
-import { Agora } from "@productcraft/agora";
+import { Social } from "@productcraft/social";
 
-const agora = new Agora({
+const social = new Social({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
 
-const { data, error } = await agora.client.POST(
+const { data, error } = await social.client.POST(
   "/v1/workspaces/{workspaceId}/communities",
   {
     params: { path: { workspaceId: "<workspace-uuid>" } },
@@ -40,9 +40,9 @@ const { data, error } = await agora.client.POST(
 ## Quick start — post on behalf of an EndUser (customer backend)
 
 ```ts
-const actor_id = "<actor-uuid>"; // the EndUser's Agora actor id
+const actor_id = "<actor-uuid>"; // the EndUser's Social actor id
 
-const { data, error } = await agora.client.POST(
+const { data, error } = await social.client.POST(
   "/v1/communities/{communityId}/posts",
   {
     params: {
@@ -61,16 +61,16 @@ const { data, error } = await agora.client.POST(
 );
 ```
 
-Agora's wire is snake_case both at the DTO level and in TS types — there's no name translation layer for this surface. Use snake_case keys in `body` to match what the API actually accepts.
+Social's wire is snake_case both at the DTO level and in TS types — there's no name translation layer for this surface. Use snake_case keys in `body` to match what the API actually accepts.
 
 ## Configuration
 
 ```ts
-new Agora({
+new Social({
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },
-  baseUrl: "https://agora.example.test",  // optional override
+  baseUrl: "https://social.example.test",  // optional override
   fetch: customFetch,                      // optional
 });
 ```
@@ -81,19 +81,19 @@ new Agora({
 
 ```ts
 // Create a post
-await agora.client.POST(
+await social.client.POST(
   "/v1/communities/{communityId}/posts",
   { params: { path: { communityId } }, body: { text: "..." } },
 );
 
 // Get the actor's ranked home feed
-await agora.client.GET(
+await social.client.GET(
   "/v1/communities/{communityId}/actors/{actorId}/feed",
   { params: { path: { communityId, actorId } } },
 );
 
 // Discover (community-wide ranked feed, not personalised to follows)
-await agora.client.GET(
+await social.client.GET(
   "/v1/communities/{communityId}/discover-feed",
   { params: { path: { communityId } } },
 );
@@ -105,13 +105,13 @@ await agora.client.GET(
 
 ```ts
 // Post a story (24h TTL)
-await agora.client.POST(
+await social.client.POST(
   "/v1/communities/{communityId}/stories",
   { params: { ... }, body: { media_url: "...", visibility: "close_friends" } },
 );
 
 // Story tray (the bubble row at the top of the home screen)
-await agora.client.GET(
+await social.client.GET(
   "/v1/communities/{communityId}/actors/{actorId}/story-tray",
   { ... },
 );
@@ -121,7 +121,7 @@ await agora.client.GET(
 
 ```ts
 // Follow / unfollow
-await agora.client.PUT(
+await social.client.PUT(
   "/v1/communities/{communityId}/follows/{srcActorId}/{dstActorId}",
   { ... },
 );
@@ -134,19 +134,19 @@ await agora.client.PUT(
 
 ```ts
 // List
-await agora.client.GET(
+await social.client.GET(
   "/v1/communities/{communityId}/actors/{actorId}/notifications",
   { ... },
 );
 
 // Unread count for the bell badge
-await agora.client.GET(
+await social.client.GET(
   "/v1/communities/{communityId}/actors/{actorId}/notifications/unread-count",
   { ... },
 );
 
 // Mark all read
-await agora.client.POST(
+await social.client.POST(
   "/v1/communities/{communityId}/actors/{actorId}/notifications/read-all",
   { ... },
 );
@@ -156,13 +156,13 @@ await agora.client.POST(
 
 ```ts
 // Start / open a conversation
-await agora.client.POST(
+await social.client.POST(
   "/v1/communities/{communityId}/conversations",
   { params: { ... }, body: { members: ["act_a", "act_b"] } },
 );
 
 // Send a message
-await agora.client.POST(
+await social.client.POST(
   "/v1/communities/{communityId}/conversations/{conversationId}/messages",
   { ... },
 );
@@ -172,19 +172,19 @@ await agora.client.POST(
 
 ```ts
 // List flags
-await agora.client.GET(
+await social.client.GET(
   "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/flags",
   { ... },
 );
 
 // Act on a flag (resolve / dismiss / take action on the target)
-await agora.client.POST(
+await social.client.POST(
   "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/flags/{flagId}/actions",
   { params: { ... }, body: { action: "remove_content", note: "..." } },
 );
 
 // Shadow-ban an actor
-await agora.client.PUT(
+await social.client.PUT(
   "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/actors/{actorId}/shadow-ban",
   { ... },
 );

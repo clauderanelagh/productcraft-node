@@ -11,16 +11,16 @@ import {
   type CryptoKey,
 } from "jose";
 import {
-  Heimdall,
+  Auth,
   JwtExpiredError,
   JwtInvalidError,
   JwtIssuerMismatchError,
   JwtAudienceMismatchError,
 } from "../src/index.js";
 
-const BASE = "https://api.heimdall.example";
+const BASE = "https://api.auth.example";
 const APP = "my-app";
-// Per-app issuer the Heimdall Consumer API mints on every token —
+// Per-app issuer the Auth Consumer API mints on every token —
 // the API base joined with the app slug. The SDK also accepts the
 // legacy literal `"heimdall"` issuer during the migration window
 // (see `acceptedIssuers` on ConsumerScope).
@@ -28,7 +28,7 @@ const ISSUER = `${BASE}/${APP}`;
 const AUDIENCE = APP;
 
 interface TestRig {
-  heimdall: Heimdall;
+  auth: Auth;
   privateKey: CryptoKey;
   fetchMock: ReturnType<typeof vi.fn>;
 }
@@ -51,12 +51,12 @@ async function setup(): Promise<TestRig> {
     return new Response("{}", { status: 404 });
   });
 
-  const heimdall = new Heimdall({
+  const auth = new Auth({
     baseUrl: BASE,
     fetch: fetchMock as unknown as typeof fetch,
   });
 
-  return { heimdall, privateKey, fetchMock };
+  return { auth, privateKey, fetchMock };
 }
 
 async function signToken(
@@ -89,7 +89,7 @@ describe("verifyToken", () => {
       permissions: ["billing.read"],
     }, { exp: "2h" });
 
-    const claims = await rig.heimdall.consumer(APP).verifyToken(token);
+    const claims = await rig.auth.consumer(APP).verifyToken(token);
     expect(claims.sub).toBe("user_123");
     expect(claims.iss).toBe(ISSUER);
     expect(claims.aud).toBe(AUDIENCE);
@@ -97,14 +97,14 @@ describe("verifyToken", () => {
     expect(claims.permissions).toEqual(["billing.read"]);
   });
 
-  it("accepts the legacy 'heimdall' issuer during the migration window", async () => {
+  it("accepts the legacy 'auth' issuer during the migration window", async () => {
     const token = await signToken(rig.privateKey, {
       sub: "user_legacy",
       iss: "heimdall",
       aud: AUDIENCE,
     }, { exp: "1h" });
 
-    const claims = await rig.heimdall.consumer(APP).verifyToken(token);
+    const claims = await rig.auth.consumer(APP).verifyToken(token);
     expect(claims.iss).toBe("heimdall");
     expect(claims.sub).toBe("user_legacy");
   });
@@ -116,7 +116,7 @@ describe("verifyToken", () => {
       { exp: "1h" },
     );
 
-    const scope = rig.heimdall.consumer(APP);
+    const scope = rig.auth.consumer(APP);
     await Promise.all(Array.from({ length: 5 }, () => scope.verifyToken(token)));
 
     const jwksFetches = rig.fetchMock.mock.calls.filter(([input]) => {
@@ -135,19 +135,19 @@ describe("verifyToken", () => {
     }, { exp: Math.floor(Date.now() / 1000) - 60 });
 
     await expect(
-      rig.heimdall.consumer(APP).verifyToken(token),
+      rig.auth.consumer(APP).verifyToken(token),
     ).rejects.toBeInstanceOf(JwtExpiredError);
   });
 
   it("throws JwtIssuerMismatchError when iss is neither the per-app URL nor the legacy literal", async () => {
     const token = await signToken(rig.privateKey, {
       sub: "u",
-      iss: "https://api.heimdall.example/other-app",
+      iss: "https://api.auth.example/other-app",
       aud: AUDIENCE,
     }, { exp: "1h" });
 
     await expect(
-      rig.heimdall.consumer(APP).verifyToken(token),
+      rig.auth.consumer(APP).verifyToken(token),
     ).rejects.toBeInstanceOf(JwtIssuerMismatchError);
   });
 
@@ -159,7 +159,7 @@ describe("verifyToken", () => {
     }, { exp: "1h" });
 
     await expect(
-      rig.heimdall.consumer(APP).verifyToken(token),
+      rig.auth.consumer(APP).verifyToken(token),
     ).rejects.toBeInstanceOf(JwtAudienceMismatchError);
   });
 
@@ -178,7 +178,7 @@ describe("verifyToken", () => {
     const tampered = parts.join(".");
 
     await expect(
-      rig.heimdall.consumer(APP).verifyToken(tampered),
+      rig.auth.consumer(APP).verifyToken(tampered),
     ).rejects.toBeInstanceOf(JwtInvalidError);
   });
 });

@@ -1,7 +1,7 @@
 /**
  * ConsumerScope — every request under `/{appSlug}/v1/...`.
  *
- * Returned by `heimdall.consumer(appSlug)`. The appSlug is pre-bound
+ * Returned by `auth.consumer(appSlug)`. The appSlug is pre-bound
  * so callers don't repeat it; each resource namespace (`auth`, `me`,
  * `verify`, `oauth`) forwards into the matching kubb-generated client
  * function with the slug injected.
@@ -57,17 +57,17 @@ import type { IdpNativeSigninDto } from "../_generated/types/IdpNativeSigninDto.
 import type { ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey } from "../_generated/types/consumerOauthSignIn/ConsumerIdpControllerNativeSignIn.js";
 
 import { JwksCache } from "../jwt/jwks-cache.js";
-import { verifyHeimdallToken, type VerifyOptions, type HeimdallClaims } from "../jwt/verify.js";
+import { verifyAuthToken, type VerifyOptions, type AuthClaims } from "../jwt/verify.js";
 
 /**
- * Legacy `iss` claim Heimdall Consumer-API tokens used to be minted
+ * Legacy `iss` claim Auth Consumer-API tokens used to be minted
  * with. Kept exported so consumers verifying tokens issued before the
  * 2026-05-24 per-app-issuer migration can still match `iss` while a
  * deployment cycles to fresh tokens. New tokens carry the per-app
  * issuer URL — `${baseUrl}/${appSlug}` — accessible via
  * `scope.expectedIssuer`.
  */
-export const HEIMDALL_LEGACY_ISSUER = "heimdall";
+export const AUTH_LEGACY_ISSUER = "heimdall";
 
 export interface ConsumerScopeInternals {
   client: Client;
@@ -81,9 +81,9 @@ export class ConsumerScope {
   public readonly appSlug: string;
 
   /**
-   * Issuer the Heimdall Consumer API stamps on every token for this
-   * app — the public Heimdall API base joined with the app slug
-   * (e.g. `https://api.heimdall.productcraft.co/acme`). Pin it in
+   * Issuer the Auth Consumer API stamps on every token for this
+   * app — the public Auth API base joined with the app slug
+   * (e.g. `https://api.auth.productcraft.co/acme`). Pin it in
    * your local verifier so a token minted for another app on the
    * platform cannot pass.
    *
@@ -103,7 +103,7 @@ export class ConsumerScope {
 
   /**
    * Both accepted issuer strings (`expectedIssuer` + the legacy
-   * `'heimdall'` literal). `verifyToken` passes this to jose so tokens
+   * `'auth'` literal). `verifyToken` passes this to jose so tokens
    * minted before the 2026-05-24 per-app-issuer migration keep
    * verifying alongside fresh ones — useful for the ~1-hour transition
    * window per access-token TTL, and the longer session TTL on
@@ -127,7 +127,7 @@ export class ConsumerScope {
     apiOrigin.pathname = `/${appSlug}`;
     this.expectedIssuer = apiOrigin.toString().replace(/\/$/, "");
     this.expectedAudience = appSlug;
-    this.acceptedIssuers = [this.expectedIssuer, HEIMDALL_LEGACY_ISSUER];
+    this.acceptedIssuers = [this.expectedIssuer, AUTH_LEGACY_ISSUER];
     this.jwks = new JwksCache({
       url: new URL(`/${appSlug}/v1/.well-known/jwks.json`, internals.baseUrl),
       ttlMs: opts.jwksTtlMs,
@@ -151,7 +151,7 @@ export class ConsumerScope {
   }
 
   /**
-   * Verify a Heimdall-issued JWT against this app's JWKS.
+   * Verify an Auth-issued JWT against this app's JWKS.
    *
    * Checks the signature, expiry, `iss`, and `aud`. Accepts both the
    * per-app issuer URL (`expectedIssuer`) and the legacy `'heimdall'`
@@ -161,8 +161,8 @@ export class ConsumerScope {
    * slug (`expectedAudience`); pass `{ audience: false }` (in an
    * options override) to skip the audience check entirely.
    */
-  verifyToken(token: string, opts: VerifyOptions = {}): Promise<HeimdallClaims> {
-    return verifyHeimdallToken(token, this.jwks.getKey, {
+  verifyToken(token: string, opts: VerifyOptions = {}): Promise<AuthClaims> {
+    return verifyAuthToken(token, this.jwks.getKey, {
       issuer: this.acceptedIssuers as string[],
       audience: this.expectedAudience,
       ...opts,
@@ -181,8 +181,8 @@ export class ConsumerScope {
 
     /**
      * Signup may require a Platform API Key when the app has
-     * `signup_requires_pak: true`. Configure that on the Heimdall
-     * instance (`new Heimdall({ auth: { type: "apiKey", key: "..." } })`)
+     * `signup_requires_pak: true`. Configure that on the Auth
+     * instance (`new Auth({ auth: { type: "apiKey", key: "..." } })`)
      * — our HTTP client attaches the Authorization header automatically.
      */
     signup: (data: ConsumerSignupDto) =>
@@ -205,7 +205,7 @@ export class ConsumerScope {
       ),
 
     /**
-     * PAK-required: caller must instantiate `Heimdall` with
+     * PAK-required: caller must instantiate `Auth` with
      * `auth: { type: "apiKey", key: "pcft_live_..." }`. The
      * kubb-generated `headers.authorization` slot is a stub — the
      * HTTP client's auth middleware overrides whatever's passed.
@@ -228,9 +228,9 @@ export class ConsumerScope {
      * via the customer's own channel — or `{}` if no match / already
      * verified (uniform shape — no account enumeration).
      *
-     * PAK-required: caller must instantiate `Heimdall` with
+     * PAK-required: caller must instantiate `Auth` with
      * `auth: { type: "apiKey", key: "pcft_live_..." }` carrying
-     * `heimdall.user.verify.create` narrowed to this app's URN. The
+     * `auth.user.verify.create` narrowed to this app's URN. The
      * kubb-generated `headers.authorization` slot is a stub — the
      * HTTP client's auth middleware overrides whatever's passed.
      */
@@ -247,14 +247,14 @@ export class ConsumerScope {
       ) as Promise<ConsumerCodeIssueResponseDto>,
 
     /**
-     * Mint + dispatch a verification email via Envoi in one call.
+     * Mint + dispatch a verification email via Mail in one call.
      * Returns `{ expires_at }` on success; the plaintext code is NOT
      * returned. Returns `{}` when the contact is missing or already
      * verified (same enumeration defence as `requestVerification`).
      *
-     * PAK-required with `heimdall.user.verify.send-email` — distinct
+     * PAK-required with `auth.user.verify.send-email` — distinct
      * permission from the bare mint so customers can enable mint
-     * without enabling outbound Envoi traffic. Surfaces typed 412
+     * without enabling outbound Mail traffic. Surfaces typed 412
      * precondition errors (e.g. `ENVOI_NOT_ENABLED`) rather than the
      * silent fail-closed of a fire-and-forget mailer.
      */
@@ -286,7 +286,7 @@ export class ConsumerScope {
 
     /**
      * Accept an end-user invite into this app. The invite is minted by
-     * an app admin (`heimdall.app(appId).invites.create`) and delivered
+     * an app admin (`auth.app(appId).invites.create`) and delivered
      * to the invitee out-of-band; this consumes the invite token and
      * provisions the EndUser. Public — the caller is unauthenticated
      * until the invite is accepted.
@@ -302,7 +302,7 @@ export class ConsumerScope {
      *
      * Submit the identity token Apple (or Google, once enabled) issued
      * to a native client (iOS `ASAuthorizationController`, Google
-     * Sign-In for iOS / Android). Heimdall verifies the signature
+     * Sign-In for iOS / Android). Auth verifies the signature
      * against the provider's JWKS, pins the issuer, checks the
      * audience against the app's configured native client ids,
      * recomputes `sha256(nonce)` and compares to the token's `nonce`
@@ -324,7 +324,7 @@ export class ConsumerScope {
      * never participate in auto-link.
      *
      * Apple sends the user's display name only on the FIRST sign-in.
-     * Pass it through `user.name` on that call — Heimdall persists it
+     * Pass it through `user.name` on that call — Auth persists it
      * to the EndUser row. Subsequent sign-ins should omit `user`.
      */
     signinWithProvider: (args: {
@@ -346,7 +346,7 @@ export class ConsumerScope {
   // ─────────────────────────────────────────────────────────────
   // Me — the currently-signed-in EndUser's own resources
   // All six endpoints currently use callDirect to work around spec
-  // bugs in heimdall.json (appSlug missing from parameters[]).
+  // bugs in auth.json (appSlug missing from parameters[]).
   // ─────────────────────────────────────────────────────────────
   readonly me = {
     getProfile: () =>

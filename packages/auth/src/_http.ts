@@ -5,7 +5,7 @@
  * override matching kubb's `Client` shape:
  *   <TData, TError, TVars>(config: RequestConfig<TVars>) => Promise<ResponseConfig<TData>>
  *
- * We construct one per `Heimdall` instance — bound to that instance's
+ * We construct one per `Auth` instance — bound to that instance's
  * baseUrl + auth credential — so generated functions don't need to
  * know anything about authentication or environment selection.
  */
@@ -17,23 +17,23 @@ import type {
   ResponseConfig,
 } from "@kubb/plugin-client/clients/fetch";
 
-export interface HeimdallHttpClientOptions {
+export interface AuthHttpClientOptions {
   baseUrl: string;
   auth?: PCAuth;
   fetch?: typeof fetch;
 }
 
 /** Thrown for any non-2xx response; `response.data` is the parsed body. */
-export class HeimdallHttpError<TData = unknown> extends Error {
+export class AuthHttpError<TData = unknown> extends Error {
   public readonly status: number;
   public readonly statusText: string;
   public readonly data: TData;
 
   constructor(response: ResponseConfig<TData>) {
     super(
-      `Heimdall request failed: ${response.status} ${response.statusText}`,
+      `Auth request failed: ${response.status} ${response.statusText}`,
     );
-    this.name = "HeimdallHttpError";
+    this.name = "AuthHttpError";
     this.status = response.status;
     this.statusText = response.statusText;
     this.data = response.data;
@@ -70,13 +70,13 @@ function buildUrl(baseUrl: string, path: string, params: unknown): URL {
   return url;
 }
 
-export function makeHeimdallHttpClient(
-  options: HeimdallHttpClientOptions,
+export function makeAuthHttpClient(
+  options: AuthHttpClientOptions,
 ): Client {
   const fetchImpl = options.fetch ?? globalThis.fetch;
   if (!fetchImpl) {
     throw new Error(
-      "@productcraft/heimdall: no `fetch` available — pass `fetch` in the config or run on Node 18+",
+      "@productcraft/auth: no `fetch` available — pass `fetch` in the config or run on Node 18+",
     );
   }
 
@@ -133,7 +133,7 @@ export function makeHeimdallHttpClient(
       headers: res.headers,
     };
 
-    if (!res.ok) throw new HeimdallHttpError(response);
+    if (!res.ok) throw new AuthHttpError(response);
     return response;
   };
 }

@@ -42,14 +42,14 @@ export interface JwksCacheOptions {
   fetch?: typeof fetch;
 }
 
-export type HeimdallGetKeyFn = (
+export type AuthGetKeyFn = (
   protectedHeader?: JWTHeaderParameters,
   token?: FlattenedJWSInput,
 ) => Promise<CryptoKey>;
 
 export class JwksCache {
   public readonly url: URL;
-  private readonly _jose: HeimdallGetKeyFn;
+  private readonly _jose: AuthGetKeyFn;
 
   constructor(options: JwksCacheOptions) {
     this.url = options.url;
@@ -68,7 +68,7 @@ export class JwksCache {
     this._jose = createRemoteJWKSet(
       options.url,
       joseOpts as Parameters<typeof createRemoteJWKSet>[1],
-    ) as HeimdallGetKeyFn;
+    ) as AuthGetKeyFn;
   }
 
   /**
@@ -77,7 +77,7 @@ export class JwksCache {
    * (`jose.jwtVerify(token, cache.getKey, ...)`, passport-jwt, etc.)
    * without losing `this`.
    */
-  readonly getKey: HeimdallGetKeyFn = async (header, input) => {
+  readonly getKey: AuthGetKeyFn = async (header, input) => {
     try {
       return await this._jose(header, input);
     } catch (err) {

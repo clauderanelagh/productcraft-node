@@ -1,7 +1,7 @@
 {
-  "name": "@productcraft/agora",
+  "name": "@productcraft/social",
   "version": "0.0.11",
-  "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Agora. Generated from the production OpenAPI spec.",
+  "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Social. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -27,16 +27,16 @@
   "keywords": [
     "productcraft",
     "sdk",
-    "agora"
+    "social"
   ],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
-    "directory": "packages/agora"
+    "directory": "packages/social"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/agora",
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/social",
   "publishConfig": {
     "access": "public",
     "provenance": true

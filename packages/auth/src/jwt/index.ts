@@ -1,7 +1,7 @@
-export { JwksCache, type JwksCacheOptions, type HeimdallGetKeyFn } from "./jwks-cache.js";
+export { JwksCache, type JwksCacheOptions, type AuthGetKeyFn } from "./jwks-cache.js";
 export {
-  verifyHeimdallToken,
-  type HeimdallClaims,
+  verifyAuthToken,
+  type AuthClaims,
   type VerifyOptions,
 } from "./verify.js";
 export {

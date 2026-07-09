@@ -1,22 +1,22 @@
-# @productcraft/heimdall-passport
+# @productcraft/auth-passport
 
-Passport-JWT adapter for [`@productcraft/heimdall`](../heimdall). Plug a Heimdall `ConsumerScope` into a `passport-jwt` Strategy so existing Passport setups can authenticate Heimdall-issued tokens.
+Passport-JWT adapter for [`@productcraft/auth`](../auth). Plug an Auth `ConsumerScope` into a `passport-jwt` Strategy so existing Passport setups can authenticate Auth-issued tokens.
 
 ```bash
-npm install @productcraft/heimdall @productcraft/heimdall-passport passport-jwt
+npm install @productcraft/auth @productcraft/auth-passport passport-jwt
 ```
 
 ## Usage
 
 ```ts
 import passportJwt from "passport-jwt";
-import { Heimdall } from "@productcraft/heimdall";
-import { createPassportSecretOrKeyProvider } from "@productcraft/heimdall-passport";
+import { Auth } from "@productcraft/auth";
+import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";
 
-const heimdall = new Heimdall({
+const auth = new Auth({
   auth: { type: "apiKey", key: process.env.PCFT_KEY! },
 });
-const scope = heimdall.consumer("my-app-slug");
+const scope = auth.consumer("my-app-slug");
 
 new passportJwt.Strategy(
   {
@@ -27,17 +27,17 @@ new passportJwt.Strategy(
     algorithms: ["ES256"],
   },
   (payload, done) => {
-    // payload is the verified Heimdall claims object (sub, role, permissions, ...)
+    // payload is the verified Auth claims object (sub, role, permissions, ...)
     return done(null, payload);
   },
 );
 ```
 
-The helper decodes the JWT header, asks the Heimdall `ConsumerScope` for the matching signing key via its cached JWKS, converts the resulting `CryptoKey` into a Node `KeyObject`, and hands it to passport-jwt.
+The helper decodes the JWT header, asks the Auth `ConsumerScope` for the matching signing key via its cached JWKS, converts the resulting `CryptoKey` into a Node `KeyObject`, and hands it to passport-jwt.
 
 ## How it relates to the main package
 
-`@productcraft/heimdall` already ships a `scope.verifyToken(token)` one-liner. Use **this** package only when you have an existing Passport setup you'd rather keep. For Express middleware without Passport, the direct verify is simpler.
+`@productcraft/auth` already ships a `scope.verifyToken(token)` one-liner. Use **this** package only when you have an existing Passport setup you'd rather keep. For Express middleware without Passport, the direct verify is simpler.
 
 ## License
 

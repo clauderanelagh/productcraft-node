@@ -4,7 +4,7 @@
  * `fetch` and assert on what the SDK tries to send.
  */
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Heimdall } from "../src/index.js";
+import { Auth } from "../src/index.js";
 
 interface CapturedRequest {
   url: string;
@@ -38,62 +38,62 @@ function makeFakeFetch(): { fetch: typeof fetch; calls: CapturedRequest[] } {
   return { fetch, calls };
 }
 
-describe("Heimdall — workspace-level admin", () => {
-  let heimdall: Heimdall;
+describe("Auth — workspace-level admin", () => {
+  let auth: Auth;
   let calls: CapturedRequest[];
 
   beforeEach(() => {
     const ff = makeFakeFetch();
     calls = ff.calls;
-    heimdall = new Heimdall({
+    auth = new Auth({
       auth: { type: "apiKey", key: "pcft_live_test" },
-      baseUrl: "https://api.heimdall.example",
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
   });
 
   it("apps.list sends GET /v1/apps with Authorization header", async () => {
-    await heimdall.apps.list();
+    await auth.apps.list();
     expect(calls).toHaveLength(1);
     expect(calls[0]!.method).toBe("GET");
-    expect(calls[0]!.url).toBe("https://api.heimdall.example/v1/apps");
+    expect(calls[0]!.url).toBe("https://api.auth.example/v1/apps");
     expect(calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
   });
 
   it("apps.create sends POST with the body JSON-encoded", async () => {
-    await heimdall.apps.create({ name: "demo", slug: "demo" } as never);
+    await auth.apps.create({ name: "demo", slug: "demo" } as never);
     expect(calls[0]!.method).toBe("POST");
-    expect(calls[0]!.url).toBe("https://api.heimdall.example/v1/apps");
+    expect(calls[0]!.url).toBe("https://api.auth.example/v1/apps");
     expect(calls[0]!.body).toEqual({ name: "demo", slug: "demo" });
     expect(calls[0]!.headers["content-type"]).toBe("application/json");
   });
 
   it("stats.get sends GET /v1/stats/me", async () => {
-    await heimdall.stats.get();
-    expect(calls[0]!.url).toBe("https://api.heimdall.example/v1/stats/me");
+    await auth.stats.get();
+    expect(calls[0]!.url).toBe("https://api.auth.example/v1/stats/me");
   });
 
   it("stats.get forwards workspaceId on the query string", async () => {
-    await heimdall.stats.get({ workspaceId: "ws_123" });
+    await auth.stats.get({ workspaceId: "ws_123" });
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/v1/stats/me?workspace_id=ws_123",
+      "https://api.auth.example/v1/stats/me?workspace_id=ws_123",
     );
   });
 });
 
 describe("AppScope — appId pre-bound", () => {
-  let app: ReturnType<Heimdall["app"]>;
+  let app: ReturnType<Auth["app"]>;
   let calls: CapturedRequest[];
 
   beforeEach(() => {
     const ff = makeFakeFetch();
     calls = ff.calls;
-    const heimdall = new Heimdall({
+    const auth = new Auth({
       auth: { type: "apiKey", key: "k" },
-      baseUrl: "https://api.heimdall.example",
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
-    app = heimdall.app("app_abc123");
+    app = auth.app("app_abc123");
   });
 
   it("endUsers.list interpolates appId into the URL", async () => {
@@ -105,7 +105,7 @@ describe("AppScope — appId pre-bound", () => {
     await app.endUsers.update("user_xyz", { displayName: "Alice" } as never);
     expect(calls[0]!.method).toBe("PATCH");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/v1/apps/app_abc123/end-users/user_xyz",
+      "https://api.auth.example/v1/apps/app_abc123/end-users/user_xyz",
     );
     expect(calls[0]!.body).toEqual({ displayName: "Alice" });
   });
@@ -114,14 +114,14 @@ describe("AppScope — appId pre-bound", () => {
     await app.endUsers.revokeAllSessions("user_xyz");
     expect(calls[0]!.method).toBe("POST");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/v1/apps/app_abc123/end-users/user_xyz/sessions/revoke-all",
+      "https://api.auth.example/v1/apps/app_abc123/end-users/user_xyz/sessions/revoke-all",
     );
   });
 
   it("roles.get (callDirect workaround) hits the right path", async () => {
     await app.roles.get("admin");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/v1/apps/app_abc123/roles/admin",
+      "https://api.auth.example/v1/apps/app_abc123/roles/admin",
     );
   });
 
@@ -135,24 +135,24 @@ describe("AppScope — appId pre-bound", () => {
 });
 
 describe("ConsumerScope — appSlug pre-bound", () => {
-  let consumer: ReturnType<Heimdall["consumer"]>;
+  let consumer: ReturnType<Auth["consumer"]>;
   let calls: CapturedRequest[];
 
   beforeEach(() => {
     const ff = makeFakeFetch();
     calls = ff.calls;
-    const heimdall = new Heimdall({
-      baseUrl: "https://api.heimdall.example",
+    const auth = new Auth({
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
-    consumer = heimdall.consumer("my-app");
+    consumer = auth.consumer("my-app");
   });
 
   it("auth.signin POSTs to /{slug}/v1/auth/signin", async () => {
     await consumer.auth.signin({ identifier: "alice", password: "pw" });
     expect(calls[0]!.method).toBe("POST");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/signin",
+      "https://api.auth.example/my-app/v1/auth/signin",
     );
     expect(calls[0]!.body).toEqual({ identifier: "alice", password: "pw" });
   });
@@ -166,7 +166,7 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     });
     expect(calls[0]!.method).toBe("POST");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/oauth/apple",
+      "https://api.auth.example/my-app/v1/auth/oauth/apple",
     );
     expect(calls[0]!.body).toEqual({
       id_token: "eyJhbGciOiJSUzI1NiJ9.dummy.payload",
@@ -181,7 +181,7 @@ describe("ConsumerScope — appSlug pre-bound", () => {
       password: "pw2",
     } as never);
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/signup",
+      "https://api.auth.example/my-app/v1/auth/signup",
     );
   });
 
@@ -189,7 +189,7 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     await consumer.me.getProfile();
     expect(calls[0]!.method).toBe("GET");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/me",
+      "https://api.auth.example/my-app/v1/me",
     );
   });
 
@@ -197,30 +197,30 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     await consumer.me.revokeSession("sess_123");
     expect(calls[0]!.method).toBe("DELETE");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/me/sessions/sess_123",
+      "https://api.auth.example/my-app/v1/me/sessions/sess_123",
     );
   });
 
   it("verify.verify scopes by appSlug", async () => {
     await consumer.verify.verify({ token: "jwt-here" } as never);
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/verify",
+      "https://api.auth.example/my-app/v1/verify",
     );
   });
 
   it("auth.requestVerification POSTs to /{slug}/v1/auth/request-verification with the PAK on Authorization", async () => {
     const ff = makeFakeFetch();
-    const heimdall = new Heimdall({
+    const auth = new Auth({
       auth: { type: "apiKey", key: "pcft_live_test" },
-      baseUrl: "https://api.heimdall.example",
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
-    await heimdall
+    await auth
       .consumer("my-app")
       .auth.requestVerification({ email: "user@example.com" });
     expect(ff.calls[0]!.method).toBe("POST");
     expect(ff.calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/request-verification",
+      "https://api.auth.example/my-app/v1/auth/request-verification",
     );
     expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
     expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
@@ -228,17 +228,17 @@ describe("ConsumerScope — appSlug pre-bound", () => {
 
   it("auth.sendVerificationEmail POSTs to /{slug}/v1/auth/send-verification-email with the PAK on Authorization", async () => {
     const ff = makeFakeFetch();
-    const heimdall = new Heimdall({
+    const auth = new Auth({
       auth: { type: "apiKey", key: "pcft_live_test" },
-      baseUrl: "https://api.heimdall.example",
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
-    await heimdall
+    await auth
       .consumer("my-app")
       .auth.sendVerificationEmail({ email: "user@example.com" });
     expect(ff.calls[0]!.method).toBe("POST");
     expect(ff.calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/send-verification-email",
+      "https://api.auth.example/my-app/v1/auth/send-verification-email",
     );
     expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
     expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
@@ -252,12 +252,12 @@ describe("ConsumerScope — appSlug pre-bound", () => {
           status: 401,
         }),
     );
-    const heimdall = new Heimdall({
-      baseUrl: "https://api.heimdall.example",
+    const auth = new Auth({
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
     await expect(
-      heimdall
+      auth
         .consumer("my-app")
         .auth.requestVerification({ email: "user@example.com" }),
     ).rejects.toThrow();
@@ -271,12 +271,12 @@ describe("ConsumerScope — appSlug pre-bound", () => {
           status: 401,
         }),
     );
-    const heimdall = new Heimdall({
-      baseUrl: "https://api.heimdall.example",
+    const auth = new Auth({
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
     await expect(
-      heimdall
+      auth
         .consumer("my-app")
         .auth.sendVerificationEmail({ email: "user@example.com" }),
     ).rejects.toThrow();
@@ -286,7 +286,7 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     await consumer.auth.verify({ code: "123456" });
     expect(calls[0]!.method).toBe("POST");
     expect(calls[0]!.url).toBe(
-      "https://api.heimdall.example/my-app/v1/auth/verify",
+      "https://api.auth.example/my-app/v1/auth/verify",
     );
     expect(calls[0]!.body).toEqual({ code: "123456" });
   });
@@ -299,22 +299,22 @@ describe("ConsumerScope — appSlug pre-bound", () => {
           status: 410,
         }),
     );
-    const heimdall = new Heimdall({
-      baseUrl: "https://api.heimdall.example",
+    const auth = new Auth({
+      baseUrl: "https://api.auth.example",
       fetch: ff.fetch,
     });
     await expect(
-      heimdall.consumer("my-app").auth.verify({ code: "999999" }),
+      auth.consumer("my-app").auth.verify({ code: "999999" }),
     ).rejects.toThrow();
   });
 
   it("expectedIssuer is the per-app URL form", () => {
-    // Heimdall mints every Consumer-API token with the per-app issuer
+    // Auth mints every Consumer-API token with the per-app issuer
     // (the API base joined with the app slug). Customers pin this in
     // their verifier so a token minted for another app on the platform
     // cannot pass.
     expect(consumer.expectedIssuer).toBe(
-      "https://api.heimdall.example/my-app",
+      "https://api.auth.example/my-app",
     );
   });
 
@@ -324,7 +324,7 @@ describe("ConsumerScope — appSlug pre-bound", () => {
 
   it("acceptedIssuers covers both per-app + legacy during transition", () => {
     expect(consumer.acceptedIssuers).toEqual([
-      "https://api.heimdall.example/my-app",
+      "https://api.auth.example/my-app",
       "heimdall",
     ]);
   });

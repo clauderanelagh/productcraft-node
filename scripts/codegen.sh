@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Regenerate per-package types/clients from Specs/<surface>.json.
 #
-# Heimdall uses kubb (per-tag ergonomic methods + full type tree)
-# and writes to packages/heimdall/src/_generated/. Other surfaces
+# Auth uses kubb (per-tag ergonomic methods + full type tree)
+# and writes to packages/auth/src/_generated/. Other surfaces
 # still use openapi-typescript (types only — the wrapper class wraps
 # openapi-fetch by hand) and write a single _generated.d.ts.
 #
@@ -12,12 +12,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# Heimdall — kubb
-echo "› heimdall → packages/heimdall/src/_generated/ (via kubb)"
-pnpm --filter @productcraft/heimdall exec kubb generate --config kubb.config.ts > /dev/null
+# Auth — kubb
+echo "› auth → packages/auth/src/_generated/ (via kubb)"
+pnpm --filter @productcraft/auth exec kubb generate --config kubb.config.ts > /dev/null
 
 # Other surfaces — openapi-typescript (single .d.ts per surface)
-for surface in envoi rally agora platform-auth; do
+for surface in mail waitlist social platform-auth; do
   spec="Specs/${surface}.json"
   out="packages/${surface}/src/_generated.d.ts"
   if [[ ! -f "$spec" ]]; then

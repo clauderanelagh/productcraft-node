@@ -1,7 +1,7 @@
 {
   "name": "productcraft",
   "version": "0.0.14",
-  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform — Heimdall, Envoi, Rally, Agora, and Platform-Auth from a single import. Install per-product packages (`@productcraft/heimdall`, ...) if you only need one.",
+  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform — Auth, Mail, Waitlist, Social, and Platform-Auth from a single import. Install per-product packages (`@productcraft/auth`, ...) if you only need one.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,10 +28,10 @@
   "keywords": [
     "productcraft",
     "sdk",
-    "heimdall",
-    "envoi",
-    "rally",
-    "agora",
+    "auth",
+    "mail",
+    "waitlist",
+    "social",
     "auth",
     "email",
     "waitlist",
@@ -50,11 +50,11 @@
     "provenance": true
   },
   "dependencies": {
-    "@productcraft/agora": "workspace:^",
+    "@productcraft/social": "workspace:^",
     "@productcraft/core": "workspace:^",
-    "@productcraft/envoi": "workspace:^",
-    "@productcraft/heimdall": "workspace:^",
+    "@productcraft/mail": "workspace:^",
+    "@productcraft/auth": "workspace:^",
     "@productcraft/platform-auth": "workspace:^",
-    "@productcraft/rally": "workspace:^"
+    "@productcraft/waitlist": "workspace:^"
   }
 }
