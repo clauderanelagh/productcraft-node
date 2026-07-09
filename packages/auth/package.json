@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/auth",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Auth. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
