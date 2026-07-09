@@ -66,6 +66,15 @@ jobs:
           title: "chore(release): version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # No NPM_TOKEN — npm CLI picks up the OIDC token from
-          # `id-token: write` and exchanges it via Trusted Publishing.
+          # Token-based publish. The 2026-07 package rename created new
+          # names (@productcraft/auth, auth-passport, mail, waitlist,
+          # social) that have no trusted-publisher config on npmjs.com
+          # yet — OIDC can't publish them, and configuring it is
+          # web-UI-only (Cloudflare-blocked from the headless dev box).
+          # Provenance still works: npm attests via the runner OIDC
+          # token (`id-token: write`) independently of auth method.
+          # TODO: once trusted publishers are configured for the five
+          # new names via an interactive browser, drop NODE_AUTH_TOKEN
+          # and the NPM_TOKEN secret to go back to tokenless OIDC.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
