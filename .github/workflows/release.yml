@@ -43,7 +43,10 @@ jobs:
       # ships with npm 10.x by default, which doesn't speak the
       # `npm publish` OIDC exchange — without this step, publishes 404
       # even with a correct trusted-publisher config on npmjs.com.
-      - run: npm install -g npm@latest
+      # Pinned to 11.x: `npm@latest` (12.0.0, 2026-07) ends up missing
+      # the `sigstore` module after the in-place upgrade and every
+      # provenance publish dies with MODULE_NOT_FOUND (run 2026-07-09).
+      - run: npm install -g npm@11
       - run: npm --version
 
       - run: pnpm install --frozen-lockfile
