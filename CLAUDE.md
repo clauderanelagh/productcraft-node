@@ -7,10 +7,10 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | npm package | dir | What it wraps |
 |---|---|---|
 | `@productcraft/core` | `packages/core` | Shared auth + transport (`PCAuth`, `makeClient`, `PC_BASE_URL`). Dep of every other package. |
-| `@productcraft/heimdall` | `packages/heimdall` | Heimdall Consumer + Admin API |
-| `@productcraft/envoi` | `packages/envoi` | Envoi (mailbox-api) |
-| `@productcraft/rally` | `packages/rally` | Rally (waitlists) |
-| `@productcraft/agora` | `packages/agora` | Agora (social) |
+| `@productcraft/auth` | `packages/auth` | Auth Consumer + Admin API |
+| `@productcraft/mail` | `packages/mail` | Mail API (mail-api) |
+| `@productcraft/waitlist` | `packages/waitlist` | Waitlist API (waitlists) |
+| `@productcraft/social` | `packages/social` | Social API (feeds, communities) |
 | `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
 | `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all five surface packages. |
 
@@ -24,7 +24,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
 2. **Specs are the contract.** Vendored under `Specs/<surface>.json` at the repo root. `scripts/refresh-specs.sh` is the only thing that writes them.
 3. **Hand-written code lives only in:**
    - `packages/core/src/index.ts` — auth helpers (`PCAuth`, `authMiddleware`), `makeClient`, `PC_BASE_URL` constants.
-   - `packages/<surface>/src/index.ts` — per-surface class (`Heimdall`, `Envoi`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`heimdall.signin({ email, password })` instead of `heimdall.client.POST("/v1/...")`).
+   - `packages/<surface>/src/index.ts` — per-surface class (`Auth`, `Mail`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`auth.signin({ email, password })` instead of `auth.client.POST("/v1/...")`).
    - `packages/umbrella/src/index.ts` — `ProductCraft` umbrella class + re-exports.
 
 ## Where to make changes
@@ -34,7 +34,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
 | Add a new endpoint to a surface | Don't. Update `@nestjs/swagger` annotations in the monorepo, redeploy, then `pnpm run refresh-specs && pnpm run codegen`. |
 | Add an ergonomic wrapper for an existing endpoint | `packages/<surface>/src/index.ts` |
 | Change auth header logic | `packages/core/src/index.ts` |
-| Add a new API surface (rare) | New package under `packages/<name>/` (mirror `packages/heimdall/`); add to `Specs/`, `scripts/refresh-specs.sh`, `scripts/codegen.sh`, and re-export from `packages/umbrella/src/index.ts` |
+| Add a new API surface (rare) | New package under `packages/<name>/` (mirror `packages/auth/`); add to `Specs/`, `scripts/refresh-specs.sh`, `scripts/codegen.sh`, and re-export from `packages/umbrella/src/index.ts` |
 
 ## CI workflows
 

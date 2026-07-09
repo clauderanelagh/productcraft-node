@@ -12,10 +12,10 @@ Server-side only. The SDK ships a Platform API Key in the `Authorization` header
 
 | If your goal is to … | Reach for |
 |---|---|
-| Authenticate **your own end-users** in a product you're building (Heimdall apps) | [`@productcraft/heimdall`](https://www.npmjs.com/package/@productcraft/heimdall) |
+| Authenticate **your own end-users** in a product you're building (Auth apps) | [`@productcraft/auth`](https://www.npmjs.com/package/@productcraft/auth) |
 | Authenticate **your team** into the ProductCraft console + manage workspaces | **this package** |
 
-The two are easy to confuse because both have "auth" in the name. Platform-Auth owns *the ProductCraft account you use to log into productcraft.co*. Heimdall owns *the end-users of products you build on the platform*. Distinct databases, distinct signing keys.
+The two are easy to confuse because both have "auth" in the name. Platform-Auth owns *the ProductCraft account you use to log into productcraft.co*. Auth owns *the end-users of products you build on the platform*. Distinct databases, distinct signing keys.
 
 ## Quick start
 
@@ -33,7 +33,7 @@ const { data } = await platformAuth.client.GET(
 );
 
 // data.policy   — flat array of IAM-style { effect, actions, resources } statements
-// data.services — string[] of enabled services (envoi / rally / agora / heimdall / …)
+// data.services — string[] of enabled services (mail / waitlist / social / auth / …)
 ```
 
 The `client` is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) instance bound to `https://api.auth.productcraft.co` and your auth credential.
@@ -198,7 +198,7 @@ const { data: policy } = await platformAuth.client.POST(
       policy: [
         // Permission action prefixes rebranded (heimdall.* → auth.*, envoi.* → mail.*),
         // but resource-URN namespaces intentionally stay pcft:heimdall: / pcft:envoi: —
-        // the services still emit those resource prefixes.
+        // the services still emit the old resource prefixes.
         { effect: "allow", actions: ["auth.create", "auth.read", "auth.update"], resources: ["pcft:heimdall:app/*"] },
         { effect: "allow", actions: ["mail.read", "mail.send"], resources: ["*"] },
       ],
@@ -232,7 +232,7 @@ await platformAuth.client.PATCH(
 ### Service activation
 
 ```ts
-// Enable / disable a service for the workspace (envoi, rally, agora, heimdall, …)
+// Enable / disable a service for the workspace (mail, waitlist, social, auth, …)
 await platformAuth.client.PUT(
   "/v1/workspaces/{workspace_slug}/services/{service}",
   { params: { ... }, body: { enabled: true } },

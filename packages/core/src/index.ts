@@ -1,11 +1,11 @@
 /**
  * Shared transport + auth plumbing used by every surface client.
  *
- * Each surface package (`@productcraft/heimdall`, `@productcraft/envoi`,
+ * Each surface package (`@productcraft/auth`, `@productcraft/mail`,
  * ...) defines a thin class around `openapi-fetch` plus the generated
  * `paths` types from its own `_generated.d.ts`. The class delegates
  * wire I/O to `openapi-fetch`, but exposes a Stripe-style ergonomic
- * surface where callers reach for `pc.envoi.messages.send(...)` rather
+ * surface where callers reach for `pc.mail.messages.send(...)` rather
  * than the underlying `client.POST("/v1/...")` shape.
  *
  * v0 ships only the underlying `client` (named `client` on each
@@ -20,7 +20,7 @@ import createClient, { type Client, type Middleware } from "openapi-fetch";
  *
  * - `apiKey` — Platform API Key (`pcft_live_*`). Server-side only;
  *   never embed in a shipped browser bundle.
- * - `bearer` — pre-resolved JWT (e.g. a Heimdall app-scoped EndUser
+ * - `bearer` — pre-resolved JWT (e.g. an Auth app-scoped EndUser
  *   token your backend minted and shipped to the device).
  * - `cookie` — captured `auth_token` cookie value. Mostly useful in
  *   dev / E2E tests where you've already signed in.
@@ -41,22 +41,20 @@ export interface PCClientConfig {
 /**
  * Default prod base URL per surface.
  *
- * Pointed at the renamed services (Rally→Waitlist, Agora→Feed,
- * Heimdall→users) so the SDK targets the canonical new domains and the
- * old aliases (api.rally, agora.*, api.heimdall) can eventually retire.
- * The surface KEYS (rally/agora/heimdall) are intentionally kept until
- * the v1.0.0 public-API rename, so this stays a non-breaking retarget.
+ * Keys use the rebranded product names (Auth, Mail, Waitlist, Social)
+ * matching the package + class names since the 2026-07 SDK rename.
+ * Prior releases (`@productcraft/heimdall` 0.x etc.) exposed the same
+ * hosts under the old keys (heimdall/envoi/rally/agora).
  */
 export const PC_BASE_URL = {
-  // platformAuth moved api.auth → api.platform-auth (the platform
-  // identity layer vacated api.auth so the customer-facing Auth product
-  // could take it). heimdall (the Auth product) → api.auth; agora →
-  // social.productcraft.co. Old hosts stay live as aliases.
+  // platformAuth is the platform identity layer (workspaces, PATs);
+  // it vacated api.auth so the customer-facing Auth product could
+  // take that host.
   platformAuth: "https://api.platform-auth.productcraft.co",
-  heimdall: "https://api.auth.productcraft.co",
-  envoi: "https://api.mail.productcraft.co",
-  rally: "https://api.waitlist.productcraft.co",
-  agora: "https://social.productcraft.co",
+  auth: "https://api.auth.productcraft.co",
+  mail: "https://api.mail.productcraft.co",
+  waitlist: "https://api.waitlist.productcraft.co",
+  social: "https://social.productcraft.co",
 } as const;
 
 /**

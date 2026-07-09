@@ -54,14 +54,26 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@22.19.19)
 
-  packages/agora:
+  packages/auth:
     dependencies:
       '@productcraft/core':
         specifier: workspace:^
         version: link:../core
-      openapi-fetch:
-        specifier: ^0.13.0
-        version: 0.13.8
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
+
+  packages/auth-passport:
+    dependencies:
+      '@productcraft/auth':
+        specifier: workspace:^
+        version: link:../auth
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
+      passport-jwt:
+        specifier: ^4.0.0
+        version: 4.0.1
 
   packages/core:
     dependencies:
@@ -69,7 +81,7 @@ importers:
         specifier: ^0.13.0
         version: 0.13.8
 
-  packages/envoi:
+  packages/mail:
     dependencies:
       '@productcraft/core':
         specifier: workspace:^
@@ -77,27 +89,6 @@ importers:
       openapi-fetch:
         specifier: ^0.13.0
         version: 0.13.8
-
-  packages/heimdall:
-    dependencies:
-      '@productcraft/core':
-        specifier: workspace:^
-        version: link:../core
-      jose:
-        specifier: ^6.2.3
-        version: 6.2.3
-
-  packages/heimdall-passport:
-    dependencies:
-      '@productcraft/heimdall':
-        specifier: workspace:^
-        version: link:../heimdall
-      jose:
-        specifier: ^6.2.3
-        version: 6.2.3
-      passport-jwt:
-        specifier: ^4.0.0
-        version: 4.0.1
 
   packages/platform-auth:
     dependencies:
@@ -108,7 +99,7 @@ importers:
         specifier: ^0.13.0
         version: 0.13.8
 
-  packages/rally:
+  packages/social:
     dependencies:
       '@productcraft/core':
         specifier: workspace:^
@@ -119,24 +110,33 @@ importers:
 
   packages/umbrella:
     dependencies:
-      '@productcraft/agora':
+      '@productcraft/auth':
         specifier: workspace:^
-        version: link:../agora
+        version: link:../auth
       '@productcraft/core':
         specifier: workspace:^
         version: link:../core
-      '@productcraft/envoi':
+      '@productcraft/mail':
         specifier: workspace:^
-        version: link:../envoi
-      '@productcraft/heimdall':
-        specifier: workspace:^
-        version: link:../heimdall
+        version: link:../mail
       '@productcraft/platform-auth':
         specifier: workspace:^
         version: link:../platform-auth
-      '@productcraft/rally':
+      '@productcraft/social':
         specifier: workspace:^
-        version: link:../rally
+        version: link:../social
+      '@productcraft/waitlist':
+        specifier: workspace:^
+        version: link:../waitlist
+
+  packages/waitlist:
+    dependencies:
+      '@productcraft/core':
+        specifier: workspace:^
+        version: link:../core
+      openapi-fetch:
+        specifier: ^0.13.0
+        version: 0.13.8
 
 packages:
 

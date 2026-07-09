@@ -1,7 +1,7 @@
 {
-  "name": "productcraft",
-  "version": "0.0.14",
-  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform — Auth, Mail, Waitlist, Social, and Platform-Auth from a single import. Install per-product packages (`@productcraft/auth`, ...) if you only need one.",
+  "name": "@productcraft/auth",
+  "version": "0.4.1",
+  "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Auth. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,33 +28,22 @@
   "keywords": [
     "productcraft",
     "sdk",
-    "auth",
-    "mail",
-    "waitlist",
-    "social",
-    "auth",
-    "email",
-    "waitlist",
-    "openapi"
+    "auth"
   ],
   "author": "ProductCraft",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
-    "directory": "packages/umbrella"
+    "directory": "packages/auth"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node",
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth",
   "publishConfig": {
     "access": "public",
     "provenance": true
   },
   "dependencies": {
-    "@productcraft/social": "workspace:^",
     "@productcraft/core": "workspace:^",
-    "@productcraft/mail": "workspace:^",
-    "@productcraft/auth": "workspace:^",
-    "@productcraft/platform-auth": "workspace:^",
-    "@productcraft/waitlist": "workspace:^"
+    "jose": "^6.2.3"
   }
 }

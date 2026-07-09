@@ -2,7 +2,7 @@
 
 Shared transport + auth primitives for the ProductCraft Node.js SDKs.
 
-You **don't install this directly**. It's a runtime dependency of every product SDK (`@productcraft/heimdall`, `@productcraft/envoi`, `@productcraft/rally`, `@productcraft/agora`, `@productcraft/platform-auth`) plus the `productcraft` umbrella. Installing one of those pulls `@productcraft/core` along automatically.
+You **don't install this directly**. It's a runtime dependency of every product SDK (`@productcraft/auth`, `@productcraft/mail`, `@productcraft/waitlist`, `@productcraft/social`, `@productcraft/platform-auth`) plus the `productcraft` umbrella. Installing one of those pulls `@productcraft/core` along automatically.
 
 ## What it provides
 

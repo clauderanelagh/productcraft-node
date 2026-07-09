@@ -1,0 +1,48 @@
+{
+  "name": "@productcraft/social",
+  "version": "0.0.11",
+  "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Social. Generated from the production OpenAPI spec.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": [
+    "productcraft",
+    "sdk",
+    "social"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/social"
+  },
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/social",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/core": "workspace:^",
+    "openapi-fetch": "^0.13.0"
+  }
+}
