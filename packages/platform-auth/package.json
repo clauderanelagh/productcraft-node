@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/platform-auth",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "PlatformUser auth, workspaces, members, invites, roles + IAM policies, API keys, service activation, and the introspect endpoint every ProductCraft backend uses to resolve permissions. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

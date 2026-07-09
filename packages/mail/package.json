@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/mail",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "Receive-and-store mail platform — template-rendered sends, mailboxes + domains + DKIM, message timeline, suppression lists, outbound webhooks via ProductCraft Mail. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
