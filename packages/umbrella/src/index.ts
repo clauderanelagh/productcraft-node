@@ -23,9 +23,10 @@ import { Mail } from "@productcraft/mail";
 import { Waitlist } from "@productcraft/waitlist";
 import { Social } from "@productcraft/social";
 import { PlatformAuth } from "@productcraft/platform-auth";
+import { Trawl } from "@productcraft/trawl";
 import type { PCClientConfig } from "@productcraft/core";
 
-export { Auth, Mail, Waitlist, Social, PlatformAuth };
+export { Auth, Mail, Waitlist, Social, PlatformAuth, Trawl };
 export { PC_BASE_URL, type PCAuth, type PCClientConfig } from "@productcraft/core";
 
 /**
@@ -39,6 +40,7 @@ export interface ProductCraftOverrides {
   waitlist?: PCClientConfig;
   social?: PCClientConfig;
   platformAuth?: PCClientConfig;
+  trawl?: PCClientConfig;
 }
 
 /**
@@ -54,6 +56,7 @@ export class ProductCraft {
   public readonly waitlist: Waitlist;
   public readonly social: Social;
   public readonly platformAuth: PlatformAuth;
+  public readonly trawl: Trawl;
 
   constructor(
     config: PCClientConfig & { overrides?: ProductCraftOverrides } = {},
@@ -64,5 +67,6 @@ export class ProductCraft {
     this.waitlist = new Waitlist({ ...shared, ...overrides?.waitlist });
     this.social = new Social({ ...shared, ...overrides?.social });
     this.platformAuth = new PlatformAuth({ ...shared, ...overrides?.platformAuth });
+    this.trawl = new Trawl({ ...shared, ...overrides?.trawl });
   }
 }

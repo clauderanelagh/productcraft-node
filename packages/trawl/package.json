@@ -1,0 +1,50 @@
+{
+  "name": "@productcraft/trawl",
+  "version": "0.0.0",
+  "description": "AI web-extraction — submit a JSON Schema + natural-language description, get schema-conforming data extracted from the live web and delivered to an HMAC-signed webhook via ProductCraft Trawl. Generated from the production OpenAPI spec.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup"
+  },
+  "keywords": [
+    "productcraft",
+    "sdk",
+    "trawl",
+    "web-extraction",
+    "scraping"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/trawl"
+  },
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/trawl",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/core": "workspace:^",
+    "openapi-fetch": "^0.13.0"
+  }
+}

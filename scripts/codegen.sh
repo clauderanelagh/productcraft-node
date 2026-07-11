@@ -17,7 +17,7 @@ echo "› auth → packages/auth/src/_generated/ (via kubb)"
 pnpm --filter @productcraft/auth exec kubb generate --config kubb.config.ts > /dev/null
 
 # Other surfaces — openapi-typescript (single .d.ts per surface)
-for surface in mail waitlist social platform-auth; do
+for surface in mail waitlist social platform-auth trawl; do
   spec="Specs/${surface}.json"
   out="packages/${surface}/src/_generated.d.ts"
   if [[ ! -f "$spec" ]]; then

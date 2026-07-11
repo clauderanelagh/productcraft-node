@@ -55,6 +55,7 @@ export const PC_BASE_URL = {
   mail: "https://api.mail.productcraft.co",
   waitlist: "https://api.waitlist.productcraft.co",
   social: "https://social.productcraft.co",
+  trawl: "https://api.trawl.productcraft.co",
 } as const;
 
 /**
