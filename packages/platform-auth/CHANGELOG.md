@@ -1,5 +1,12 @@
 # @productcraft/platform-auth
 
+## 0.0.12
+
+### Patch Changes
+
+- Updated dependencies [2904862]
+  - @productcraft/core@0.2.0
+
 ## 0.0.11
 
 ### Patch Changes
