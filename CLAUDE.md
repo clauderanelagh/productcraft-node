@@ -44,7 +44,11 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
 - `spec-refresh.yml` — nightly cron + manual dispatch. Fetches latest `/docs-json` from each prod API, runs codegen, emits a Changesets entry **per surface that changed**, and opens a PR. Merging the PR triggers `release.yml` which then opens a "Version Packages" PR with just the right bumps.
 - `release.yml` — fires on every push to main. Uses [`changesets/action@v1`](https://github.com/changesets/action). Two modes:
    1. If `.changeset/*.md` files exist → opens / updates a "Version Packages" PR.
-   2. If there are no pending changesets but `package.json` versions are ahead of npm → publishes via **Trusted Publishing (OIDC)**. No `NPM_TOKEN` secret; the workflow has `id-token: write` and npm CLI 11.5.1+ exchanges the GitHub OIDC token for a publish token. Each package's `publishConfig.provenance: true` adds an attestation.
+   2. If there are no pending changesets but `package.json` versions are ahead of npm → runs `pnpm run release` (build + `changeset publish`).
+
+  **Publish auth — read this before touching release.yml.** Despite the OIDC scaffolding (`id-token: write`, npm pinned to `11.x`), publishes currently authenticate with **`NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`** — NOT tokenless OIDC. Trusted Publishing was never configured on npmjs.com for the rebranded package names (it's web-UI-only and Cloudflare blocks headless Chromium from this box). Provenance attestation still works independently via the runner OIDC token. The `TODO` in release.yml to drop `NPM_TOKEN` is real but blocked on that interactive config step. `npm@11` is pinned deliberately — `npm@12` breaks provenance publishes with a missing-`sigstore` error.
+
+  **First publish of a brand-new package name:** the `NPM_TOKEN` secret must have publish rights to the new name. If it's a granular token scoped to existing packages, the first CI publish 403s — mint/scope the token (or do a one-off manual `pnpm publish` from this box) before relying on CI. `@productcraft/trawl` (added 2026-07-11) was the first new name since the token was set; confirm it actually landed on npm after release, don't assume.
 
 ## Versioning
 
