@@ -11,8 +11,10 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | `@productcraft/mail` | `packages/mail` | Mail API (mail-api) |
 | `@productcraft/waitlist` | `packages/waitlist` | Waitlist API (waitlists) |
 | `@productcraft/social` | `packages/social` | Social API (feeds, communities) |
+| `@productcraft/trawl` | `packages/trawl` | Trawl API (AI web extraction — jobs + webhooks) |
 | `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
-| `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all five surface packages. |
+| `@productcraft/auth-passport` | `packages/auth-passport` | Passport-JWT adapter for Auth (not a surface; wraps `@productcraft/auth`) |
+| `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all six surface packages. |
 
 All packages are **generated from the production OpenAPI specs** via [`openapi-typescript`](https://openapi-ts.dev/) (types only) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) (the typed runtime client). Public, MIT-licensed.
 
@@ -34,7 +36,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
 | Add a new endpoint to a surface | Don't. Update `@nestjs/swagger` annotations in the monorepo, redeploy, then `pnpm run refresh-specs && pnpm run codegen`. |
 | Add an ergonomic wrapper for an existing endpoint | `packages/<surface>/src/index.ts` |
 | Change auth header logic | `packages/core/src/index.ts` |
-| Add a new API surface (rare) | New package under `packages/<name>/` (mirror `packages/auth/`); add to `Specs/`, `scripts/refresh-specs.sh`, `scripts/codegen.sh`, and re-export from `packages/umbrella/src/index.ts` |
+| Add a new API surface (rare) | New package under `packages/<name>/` — **mirror `packages/mail/`, not `packages/auth/`** (auth is the one special case: it uses kubb; every other surface uses plain `openapi-typescript`). Then: add the surface to `PC_BASE_URL` in `packages/core/src/index.ts`, `scripts/refresh-specs.sh`, the `openapi-typescript` loop in `scripts/codegen.sh`, and wire it into `packages/umbrella/` (import/export, `ProductCraftOverrides`, constructor field, `package.json` dep). New package starts at `version: 0.0.0` so a `minor` changeset lands it at `0.1.0`. See PR #41 (`@productcraft/trawl`) for the reference diff. |
 
 ## CI workflows
 
