@@ -108,6 +108,15 @@ importers:
         specifier: ^0.13.0
         version: 0.13.8
 
+  packages/trawl:
+    dependencies:
+      '@productcraft/core':
+        specifier: workspace:^
+        version: link:../core
+      openapi-fetch:
+        specifier: ^0.13.0
+        version: 0.13.8
+
   packages/umbrella:
     dependencies:
       '@productcraft/auth':
@@ -125,6 +134,9 @@ importers:
       '@productcraft/social':
         specifier: workspace:^
         version: link:../social
+      '@productcraft/trawl':
+        specifier: workspace:^
+        version: link:../trawl
       '@productcraft/waitlist':
         specifier: workspace:^
         version: link:../waitlist

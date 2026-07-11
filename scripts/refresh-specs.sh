@@ -15,6 +15,7 @@ declare -A surfaces=(
   [mail]="https://api.mail.productcraft.co/docs-json"
   [social]="https://social.productcraft.co/docs-json"
   [waitlist]="https://api.waitlist.productcraft.co/docs-json"
+  [trawl]="https://api.trawl.productcraft.co/docs-json"
 )
 
 for surface in "${!surfaces[@]}"; do

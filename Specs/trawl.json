@@ -1,0 +1,921 @@
+{
+  "components": {
+    "schemas": {
+      "CreateJobDto": {
+        "properties": {
+          "description": {
+            "description": "Natural-language description of what to extract.",
+            "example": "Extract the product title and price from each page.",
+            "type": "string"
+          },
+          "json_schema": {
+            "description": "JSON Schema describing the shape of the extraction result. Must be a non-empty object with `type: \"object\"`.",
+            "example": {
+              "properties": {
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title"
+              ],
+              "type": "object"
+            },
+            "type": "object"
+          },
+          "max_steps": {
+            "description": "Maximum number of worker steps before the job stops.",
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "number"
+          },
+          "model_tier": {
+            "description": "Model tier the worker should use (e.g. `standard`, `pro`).",
+            "type": "string"
+          },
+          "suggested_urls": {
+            "description": "Seed URLs the worker should start from.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
+          "timeout_s": {
+            "description": "Wall-clock timeout for the job, in seconds.",
+            "maximum": 3600,
+            "minimum": 1,
+            "type": "number"
+          },
+          "webhook_id": {
+            "description": "Webhook id to notify when the job finishes.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "json_schema",
+          "description"
+        ],
+        "type": "object"
+      },
+      "CreateWebhookDto": {
+        "properties": {
+          "active": {
+            "description": "Disabled webhooks are never delivered to.",
+            "type": "boolean"
+          },
+          "url": {
+            "description": "Destination URL (https required in prod).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "JobListPaginationDto": {
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
+      "JobListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/JobResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/JobListPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "JobResponseDto": {
+        "properties": {
+          "attempts": {
+            "type": "number"
+          },
+          "completed_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "enqueued_at": {
+            "type": "string"
+          },
+          "error": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "json_schema": {
+            "type": "object"
+          },
+          "max_steps": {
+            "type": "number"
+          },
+          "model_tier": {
+            "type": "string"
+          },
+          "result": {
+            "nullable": true,
+            "type": "object"
+          },
+          "started_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ],
+            "type": "string"
+          },
+          "suggested_urls": {
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "type": "array"
+          },
+          "timeout_s": {
+            "type": "number"
+          },
+          "webhook_id": {
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "status",
+          "json_schema",
+          "description",
+          "suggested_urls",
+          "max_steps",
+          "timeout_s",
+          "model_tier",
+          "webhook_id",
+          "result",
+          "error",
+          "attempts",
+          "enqueued_at",
+          "started_at",
+          "completed_at",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "UpdateWebhookDto": {
+        "properties": {
+          "active": {
+            "description": "Pause/resume the webhook. Setting active=true clears auto-disable.",
+            "type": "boolean"
+          },
+          "url": {
+            "description": "New destination URL.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WebhookCreateResponseDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "auto_disabled_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "failure_count": {
+            "type": "number"
+          },
+          "first_failure_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "last_status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "signing_secret": {
+            "description": "Plaintext signing secret returned EXACTLY ONCE on create + rotate. Persist immediately — it never appears on subsequent GETs.",
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "url",
+          "active",
+          "failure_count",
+          "last_status_code",
+          "last_attempt_at",
+          "auto_disabled_at",
+          "first_failure_at",
+          "created_at",
+          "signing_secret"
+        ],
+        "type": "object"
+      },
+      "WebhookListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "WebhookResponseDto": {
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "auto_disabled_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "failure_count": {
+            "type": "number"
+          },
+          "first_failure_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "last_attempt_at": {
+            "nullable": true,
+            "type": "string"
+          },
+          "last_status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "url": {
+            "type": "string"
+          },
+          "workspace_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "url",
+          "active",
+          "failure_count",
+          "last_status_code",
+          "last_attempt_at",
+          "auto_disabled_at",
+          "first_failure_at",
+          "created_at"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "bearerFormat": "JWT",
+        "scheme": "bearer",
+        "type": "http"
+      }
+    }
+  },
+  "info": {
+    "contact": {},
+    "description": "Trawl service for the ProductCraft platform",
+    "title": "Trawl API",
+    "version": "0.1.0"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/v1/workspaces/{workspace_id}/jobs": {
+      "get": {
+        "operationId": "JobController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by job status.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "queued",
+                "running",
+                "succeeded",
+                "failed",
+                "cancelled"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor for pagination.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobListResponseDto"
+                }
+              }
+            },
+            "description": "Page of jobs with pagination cursor."
+          },
+          "403": {
+            "description": "Caller lacks `trawl.list`, or workspace has not enabled the `trawl` service."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List trawl jobs (paginated, newest first)",
+        "tags": [
+          "jobs"
+        ]
+      },
+      "post": {
+        "operationId": "JobController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Pass a key (1..256 chars, [A-Za-z0-9_\\-:]) to make retries safe — replays return the original response for 24h.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateJobDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponseDto"
+                }
+              }
+            },
+            "description": "Job created and queued."
+          },
+          "400": {
+            "description": "Invalid JSON Schema (must be a non-empty `type: object`)."
+          },
+          "403": {
+            "description": "Caller lacks `trawl.create`, or workspace has not enabled the `trawl` service."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create (enqueue) a trawl job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/jobs/{id}": {
+      "get": {
+        "operationId": "JobController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponseDto"
+                }
+              }
+            },
+            "description": "Job row."
+          },
+          "404": {
+            "description": "Job not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a single trawl job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/jobs/{id}/cancel": {
+      "post": {
+        "operationId": "JobController_cancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobResponseDto"
+                }
+              }
+            },
+            "description": "Job cancelled."
+          },
+          "404": {
+            "description": "Job not found in this workspace."
+          },
+          "422": {
+            "description": "Job is already in a terminal state and cannot be cancelled."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a queued or running trawl job",
+        "tags": [
+          "jobs"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks": {
+      "get": {
+        "operationId": "WebhookController_list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookListResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhooks for the workspace (secrets masked)",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "post": {
+        "operationId": "WebhookController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stripe-style idempotency key. The signing secret is returned exactly once; a retry without this header creates a second webhook + secret. 24h TTL.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookCreateResponseDto"
+                }
+              }
+            },
+            "description": "Webhook created. Includes plaintext `signing_secret` exactly once."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a workspace webhook. The response includes the signing secret in clear EXACTLY ONCE — copy it now.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/{id}": {
+      "delete": {
+        "operationId": "WebhookController_remove",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "get": {
+        "operationId": "WebhookController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Webhook not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a webhook (secret masked)",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "patch": {
+        "operationId": "WebhookController_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponseDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update url / active flag (active=true clears auto-disable)",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
+      "get": {
+        "operationId": "WebhookController_recentDeliveries",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent delivery attempts."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recent delivery attempts for a webhook (default 50, max 200, newest first)",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
+      "post": {
+        "operationId": "WebhookController_rotateSecret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the signing secret. Returns the new secret in clear EXACTLY ONCE.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
+      "post": {
+        "operationId": "WebhookController_fireTest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fire a synthetic event to this webhook (asynchronous; check the destination logs)",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    }
+  },
+  "servers": [],
+  "tags": []
+}
