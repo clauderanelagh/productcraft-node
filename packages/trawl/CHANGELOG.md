@@ -1,5 +1,11 @@
 # @productcraft/trawl
 
+## 0.1.1
+
+### Patch Changes
+
+- ee0f176: Routine spec refresh: trawl declares the 429 rate-limit response on job submission; minor auth description updates.
+
 ## 0.1.0
 
 ### Minor Changes

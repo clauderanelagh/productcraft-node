@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/trawl",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI web-extraction — submit a JSON Schema + natural-language description, get schema-conforming data extracted from the live web and delivered to an HMAC-signed webhook via ProductCraft Trawl. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

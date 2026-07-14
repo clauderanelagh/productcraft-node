@@ -1,5 +1,11 @@
 # @productcraft/heimdall
 
+## 0.5.2
+
+### Patch Changes
+
+- ee0f176: Routine spec refresh: trawl declares the 429 rate-limit response on job submission; minor auth description updates.
+
 ## 0.5.1
 
 ### Patch Changes
