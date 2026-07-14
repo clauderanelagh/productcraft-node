@@ -471,6 +471,9 @@
           },
           "403": {
             "description": "Caller lacks `trawl.create`, or workspace has not enabled the `trawl` service."
+          },
+          "429": {
+            "description": "Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish."
           }
         },
         "security": [
