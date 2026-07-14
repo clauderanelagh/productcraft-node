@@ -1,6 +1,31 @@
 {
   "components": {
     "schemas": {
+      "ActOnFlagResponseDto": {
+        "properties": {
+          "flag": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FlagResponseDto"
+              }
+            ],
+            "description": "The flag after the action (status flipped to actioned/dismissed for punitive/dismiss actions; reversals re-resolve it too)."
+          },
+          "moderation_action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ModerationActionResponseDto"
+              }
+            ],
+            "description": "The audit row this action recorded."
+          }
+        },
+        "required": [
+          "flag",
+          "moderation_action"
+        ],
+        "type": "object"
+      },
       "ActorCountersResponseDto": {
         "properties": {
           "actor_id": {
@@ -148,6 +173,72 @@
       },
       "ActorListResponseDto": {
         "properties": {
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "description": {
+            "description": "Optional description.",
+            "example": "Curated tech accounts I follow.",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "List UUID.",
+            "example": "llllllll-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "member_count": {
+            "description": "Current member count.",
+            "example": 12,
+            "type": "number"
+          },
+          "name": {
+            "description": "List display name.",
+            "example": "Tech news",
+            "type": "string"
+          },
+          "owner_id": {
+            "description": "List owner — social actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "visibility": {
+            "description": "public = discoverable; private = owner-only.",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "example": "public",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "owner_id",
+          "name",
+          "description",
+          "visibility",
+          "member_count",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "ActorPageResponseDto": {
+        "properties": {
           "data": {
             "items": {
               "$ref": "#/components/schemas/ActorResponseDto"
@@ -168,6 +259,7 @@
         "properties": {
           "avatar_url": {
             "description": "Avatar URL.",
+            "example": "https://cdn.example.com/avatars/ada.png",
             "nullable": true,
             "type": "string"
           },
@@ -177,55 +269,45 @@
             "type": "string"
           },
           "created_at": {
-            "description": "ISO timestamp.",
+            "description": "ISO timestamp the row was inserted.",
             "example": "2026-05-01T12:00:00.000Z",
             "type": "string"
           },
           "display_name": {
             "description": "Display name.",
-            "example": "Alice",
+            "example": "Ada Lovelace",
             "nullable": true,
             "type": "string"
           },
           "external_id": {
-            "description": "Customer-supplied stable id.",
-            "example": "user-42",
+            "description": "Customer-supplied stable identifier (your user id).",
+            "example": "user_abc123",
             "type": "string"
           },
           "id": {
-            "description": "Actor UUID.",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "description": "Social actor UUID.",
+            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
           "metadata": {
-            "description": "Free-form metadata.",
+            "description": "Free-form metadata blob.",
+            "example": {
+              "tier": "pro"
+            },
             "type": "object"
           },
-          "shadow_banned_at": {
-            "description": "ISO timestamp the shadow ban was applied, or null.",
-            "nullable": true,
-            "type": "string"
-          },
-          "shadow_banned_reason": {
-            "description": "Moderator note attached to the ban.",
-            "nullable": true,
-            "type": "string"
-          },
-          "shadow_banned_until": {
-            "description": "ISO timestamp the shadow ban auto-expires, or null for indefinite.",
-            "nullable": true,
-            "type": "string"
-          },
           "status": {
+            "description": "Lifecycle status. `suspended` is moderator-applied via PATCH `status=suspended`; `deleted` is soft-deletion. Shadow-banning is a separate moderation mechanism that does not change `status`.",
             "enum": [
               "active",
               "suspended",
               "deleted"
             ],
+            "example": "active",
             "type": "string"
           },
           "updated_at": {
-            "description": "ISO timestamp.",
+            "description": "ISO timestamp of the last update.",
             "example": "2026-05-01T12:00:00.000Z",
             "type": "string"
           }
@@ -238,9 +320,6 @@
           "avatar_url",
           "metadata",
           "status",
-          "shadow_banned_at",
-          "shadow_banned_until",
-          "shadow_banned_reason",
           "created_at",
           "updated_at"
         ],
@@ -249,7 +328,7 @@
       "ActorSearchHitDto": {
         "properties": {
           "actor": {
-            "$ref": "#/components/schemas/SearchActorResponseDto"
+            "$ref": "#/components/schemas/ActorResponseDto"
           },
           "rank": {
             "description": "PG `ts_rank` score on the (display_name A, external_id B, bio C) tsvector. Higher = more relevant.",
@@ -300,6 +379,25 @@
           "reaction",
           "created",
           "reaction_counts"
+        ],
+        "type": "object"
+      },
+      "AddListMemberDto": {
+        "properties": {
+          "actor_id": {
+            "description": "New member — social actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "caller_actor_id": {
+            "description": "Caller — social actor UUID. Must equal the list owner.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_actor_id",
+          "actor_id"
         ],
         "type": "object"
       },
@@ -518,7 +616,7 @@
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/CursorPagination"
+            "$ref": "#/components/schemas/PaginationResponseDto"
           }
         },
         "required": [
@@ -658,12 +756,20 @@
             "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
             "type": "string"
           },
+          "reaction_counts": {
+            "description": "Map of reaction type to count, denormalised on the comment row in lock-step with the comment-reaction writes.",
+            "example": {
+              "like": 2
+            },
+            "type": "object"
+          },
           "status": {
-            "description": "Lifecycle status. `removed` rows are hidden from public reads.",
+            "description": "Lifecycle status. `pending_approval` = held by restricted-commenter pre-moderation; list endpoints surface these rows only to the comment author and the post-author (who publishes them via POST :commentId/approve). `removed` rows are hidden from public reads.",
             "enum": [
               "published",
               "hidden",
-              "removed"
+              "removed",
+              "pending_approval"
             ],
             "example": "published",
             "type": "string"
@@ -693,6 +799,7 @@
           "depth",
           "status",
           "visibility",
+          "reaction_counts",
           "created_at",
           "updated_at"
         ],
@@ -1320,6 +1427,34 @@
         ],
         "type": "object"
       },
+      "CreateFlagResponseDto": {
+        "properties": {
+          "auto_hidden": {
+            "description": "`true` when this flag pushed the target over the community's `auto_hide_flag_threshold` and the target was auto-hidden as a side effect.",
+            "example": false,
+            "type": "boolean"
+          },
+          "created": {
+            "description": "`true` when this call inserted a new flag; `false` when de-duplicated to an existing open flag from the same reporter on the same target.",
+            "example": true,
+            "type": "boolean"
+          },
+          "flag": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FlagResponseDto"
+              }
+            ],
+            "description": "The flag row (existing open flag on de-duplicated retry)."
+          }
+        },
+        "required": [
+          "flag",
+          "created",
+          "auto_hidden"
+        ],
+        "type": "object"
+      },
       "CreateHashtagFollowDto": {
         "properties": {
           "tag": {
@@ -1492,7 +1627,7 @@
           "repost": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/RepostPostResponseDto"
+                "$ref": "#/components/schemas/PostResponseDto"
               }
             ],
             "description": "The newly-created (or existing) repost post row."
@@ -1500,7 +1635,7 @@
           "source": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/RepostPostResponseDto"
+                "$ref": "#/components/schemas/PostResponseDto"
               }
             ],
             "description": "The source post, with refreshed `repost_count`."
@@ -1633,26 +1768,6 @@
         ],
         "type": "object"
       },
-      "CursorPagination": {
-        "properties": {
-          "has_more": {
-            "description": "Whether more pages exist after this one.",
-            "example": false,
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "description": "Opaque base64url cursor; null when no further pages.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "required": [
-          "next_cursor",
-          "has_more"
-        ],
-        "type": "object"
-      },
       "DeleteActorListDto": {
         "properties": {
           "caller_actor_id": {
@@ -1730,8 +1845,9 @@
             "type": "string"
           },
           "latency_ms": {
-            "description": "Total round-trip time in ms.",
+            "description": "Total round-trip time in ms. Null on transport-level failure.",
             "example": 67,
+            "nullable": true,
             "type": "number"
           },
           "request_body": {
@@ -1853,6 +1969,13 @@
             "example": "text",
             "type": "string"
           },
+          "reaction_counts": {
+            "description": "Map of reaction type to count, denormalised on the message row in lock-step with the DM-reaction writes.",
+            "example": {
+              "like": 1
+            },
+            "type": "object"
+          },
           "reply_to_id": {
             "description": "Threaded inline reply target.",
             "example": null,
@@ -1876,6 +1999,7 @@
           "reply_to_id",
           "edited_at",
           "deleted_at",
+          "reaction_counts",
           "created_at"
         ],
         "type": "object"
@@ -2069,6 +2193,13 @@
             "example": "text",
             "type": "string"
           },
+          "reaction_counts": {
+            "description": "Map of reaction type to count, denormalised on the message row in lock-step with the DM-reaction writes.",
+            "example": {
+              "like": 1
+            },
+            "type": "object"
+          },
           "reply_to_id": {
             "description": "Threaded inline reply target.",
             "example": null,
@@ -2092,6 +2223,7 @@
           "reply_to_id",
           "edited_at",
           "deleted_at",
+          "reaction_counts",
           "created_at"
         ],
         "type": "object"
@@ -2099,8 +2231,9 @@
       "DraftListResponseDto": {
         "properties": {
           "data": {
+            "description": "Draft post rows — status is always 'draft' on this endpoint.",
             "items": {
-              "$ref": "#/components/schemas/DraftPostResponseDto"
+              "$ref": "#/components/schemas/PostResponseDto"
             },
             "type": "array"
           },
@@ -2111,122 +2244,6 @@
         "required": [
           "data",
           "pagination"
-        ],
-        "type": "object"
-      },
-      "DraftPostResponseDto": {
-        "properties": {
-          "actor_id": {
-            "description": "Author actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "attributes": {
-            "description": "Free-form attributes blob.",
-            "example": {},
-            "type": "object"
-          },
-          "body": {
-            "description": "Body draft text.",
-            "example": "WIP — half a thought…",
-            "nullable": true,
-            "type": "string"
-          },
-          "comment_count": {
-            "description": "Always 0 for drafts.",
-            "example": 0,
-            "type": "number"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp the draft was created.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "expires_at": {
-            "description": "Optional expires_at carried into the published post.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "description": "Draft post UUID.",
-            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "type": "string"
-          },
-          "kind": {
-            "description": "Free-form post kind.",
-            "example": "text",
-            "type": "string"
-          },
-          "pinned": {
-            "description": "Pinned flag carried into the published post.",
-            "example": false,
-            "type": "boolean"
-          },
-          "reaction_counts": {
-            "description": "Empty for drafts (engagement begins at publish).",
-            "example": {},
-            "type": "object"
-          },
-          "status": {
-            "description": "Always 'draft' for this endpoint.",
-            "enum": [
-              "draft"
-            ],
-            "example": "draft",
-            "type": "string"
-          },
-          "title": {
-            "description": "Optional title.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp of the last update.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "url": {
-            "description": "Optional URL.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "visibility": {
-            "description": "Visibility scope chosen at draft time. Applies once promoted to published.",
-            "enum": [
-              "public",
-              "followers",
-              "close_friends",
-              "private"
-            ],
-            "example": "public",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "actor_id",
-          "kind",
-          "title",
-          "body",
-          "url",
-          "attributes",
-          "visibility",
-          "status",
-          "reaction_counts",
-          "comment_count",
-          "expires_at",
-          "pinned",
-          "created_at",
-          "updated_at"
         ],
         "type": "object"
       },
@@ -2278,7 +2295,13 @@
             "type": "string"
           },
           "kind": {
-            "description": "Edge kind. `follow`, `mute`, `block`, `save`, or `reaction:<type>` for post reactions.",
+            "description": "Edge kind. The actor-edge routes emit exactly these four; post reactions and bookmarks have their own response shapes.",
+            "enum": [
+              "follow",
+              "mute",
+              "block",
+              "restrict"
+            ],
             "example": "follow",
             "type": "string"
           },
@@ -2302,30 +2325,6 @@
           "dst_post_id",
           "payload",
           "created_at"
-        ],
-        "type": "object"
-      },
-      "ErrorResponse": {
-        "properties": {
-          "code": {
-            "description": "Stable error code.",
-            "example": "NOT_FOUND",
-            "type": "string"
-          },
-          "message": {
-            "description": "Human-readable error message.",
-            "example": "Post not found",
-            "type": "object"
-          },
-          "statusCode": {
-            "description": "HTTP status code echoed in the body.",
-            "example": 404,
-            "type": "number"
-          }
-        },
-        "required": [
-          "statusCode",
-          "message"
         ],
         "type": "object"
       },
@@ -2353,131 +2352,11 @@
         ],
         "type": "object"
       },
-      "FeedPostResponseDto": {
-        "properties": {
-          "actor_id": {
-            "description": "Author actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "attributes": {
-            "description": "Free-form attributes blob.",
-            "example": {},
-            "type": "object"
-          },
-          "body": {
-            "description": "Body text/markdown.",
-            "example": "Stories are live!",
-            "nullable": true,
-            "type": "string"
-          },
-          "comment_count": {
-            "description": "Live denormalised comment count.",
-            "example": 4,
-            "type": "number"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp the post was created.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "expires_at": {
-            "description": "ISO timestamp; null = no expiry.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "description": "Post UUID.",
-            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "type": "string"
-          },
-          "kind": {
-            "description": "Free-form post kind.",
-            "example": "text",
-            "type": "string"
-          },
-          "pinned": {
-            "description": "Pinned for highlights.",
-            "example": false,
-            "type": "boolean"
-          },
-          "reaction_counts": {
-            "description": "Live denormalised reaction counts.",
-            "example": {
-              "like": 12
-            },
-            "type": "object"
-          },
-          "status": {
-            "description": "Lifecycle status. Feed only returns `published`.",
-            "enum": [
-              "published",
-              "hidden",
-              "removed"
-            ],
-            "example": "published",
-            "type": "string"
-          },
-          "title": {
-            "description": "Optional title.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp of the last update.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "url": {
-            "description": "Optional URL.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "visibility": {
-            "description": "Visibility scope; the feed is already filtered to what the requester can see.",
-            "enum": [
-              "public",
-              "followers",
-              "close_friends",
-              "private"
-            ],
-            "example": "public",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "actor_id",
-          "kind",
-          "title",
-          "body",
-          "url",
-          "attributes",
-          "visibility",
-          "status",
-          "reaction_counts",
-          "comment_count",
-          "expires_at",
-          "pinned",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
       "FeedResponseDto": {
         "properties": {
           "data": {
             "items": {
-              "$ref": "#/components/schemas/FeedPostResponseDto"
+              "$ref": "#/components/schemas/PostResponseDto"
             },
             "type": "array"
           },
@@ -2742,15 +2621,14 @@
       "HighlightsResponse": {
         "properties": {
           "data": {
-            "description": "Page of pinned posts.",
-            "example": [],
+            "description": "Page of pinned posts (full post rows; expiry is bypassed for pinned rows).",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PostResponseDto"
             },
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/CursorPagination"
+            "$ref": "#/components/schemas/PaginationResponseDto"
           }
         },
         "required": [
@@ -2876,7 +2754,7 @@
       "ModerationActionDto": {
         "properties": {
           "action": {
-            "description": "Action to apply. `hide`/`remove` transition target status; `unhide`/`restore` reverse them. `warn`/`ban` are audit-only. `dismiss` closes the flag with no target change.",
+            "description": "Action to apply. `hide`/`remove` transition target status; `unhide`/`restore` reverse them. `warn`/`ban` are audit-only — they record the decision without touching the target; for actor-level enforcement use PATCH `/actors/:actorId` with `status=suspended` or the shadow-ban endpoints on this controller. `dismiss` closes the flag with no target change.",
             "enum": [
               "hide",
               "remove",
@@ -2928,7 +2806,7 @@
             "type": "string"
           },
           "flag_id": {
-            "description": "Flag UUID this action closed; `null` for unsolicited mod actions.",
+            "description": "Flag UUID this action was applied to.",
             "example": "ffffffff-0000-0000-0000-000000000001",
             "nullable": true,
             "type": "string"
@@ -2973,6 +2851,112 @@
           "action",
           "notes",
           "created_at"
+        ],
+        "type": "object"
+      },
+      "ModerationActorListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ModerationActorResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ModerationActorResponseDto": {
+        "properties": {
+          "avatar_url": {
+            "description": "Avatar URL.",
+            "example": "https://cdn.example.com/avatars/ada.png",
+            "nullable": true,
+            "type": "string"
+          },
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp the row was inserted.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Display name.",
+            "example": "Ada Lovelace",
+            "nullable": true,
+            "type": "string"
+          },
+          "external_id": {
+            "description": "Customer-supplied stable identifier (your user id).",
+            "example": "user_abc123",
+            "type": "string"
+          },
+          "id": {
+            "description": "Social actor UUID.",
+            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Free-form metadata blob.",
+            "example": {
+              "tier": "pro"
+            },
+            "type": "object"
+          },
+          "shadow_banned_at": {
+            "description": "ISO timestamp the shadow ban was applied, or null.",
+            "nullable": true,
+            "type": "string"
+          },
+          "shadow_banned_reason": {
+            "description": "Moderator note attached to the ban.",
+            "nullable": true,
+            "type": "string"
+          },
+          "shadow_banned_until": {
+            "description": "ISO timestamp the shadow ban auto-expires, or null for indefinite.",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "description": "Lifecycle status. `suspended` is moderator-applied via PATCH `status=suspended`; `deleted` is soft-deletion. Shadow-banning is a separate moderation mechanism that does not change `status`.",
+            "enum": [
+              "active",
+              "suspended",
+              "deleted"
+            ],
+            "example": "active",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO timestamp of the last update.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "external_id",
+          "display_name",
+          "avatar_url",
+          "metadata",
+          "status",
+          "created_at",
+          "updated_at",
+          "shadow_banned_at",
+          "shadow_banned_until",
+          "shadow_banned_reason"
         ],
         "type": "object"
       },
@@ -3026,26 +3010,6 @@
         ],
         "type": "object"
       },
-      "NotificationListPagination": {
-        "properties": {
-          "has_more": {
-            "description": "Whether more pages exist after this one.",
-            "example": false,
-            "type": "boolean"
-          },
-          "next_cursor": {
-            "description": "Opaque base64url cursor for the next page; `null` when no further pages.",
-            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0wNS0wMVQxMjowMDowMC4wMDBaIiwiaWQiOiIxMTExMSJ9",
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "required": [
-          "next_cursor",
-          "has_more"
-        ],
-        "type": "object"
-      },
       "NotificationListResponse": {
         "properties": {
           "data": {
@@ -3056,7 +3020,7 @@
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/NotificationListPagination"
+            "$ref": "#/components/schemas/PaginationResponseDto"
           }
         },
         "required": [
@@ -3102,7 +3066,11 @@
               "mention",
               "vote",
               "repost",
-              "quote_post"
+              "quote_post",
+              "dm_new_message",
+              "dm_added_to_group",
+              "dm_role_changed",
+              "dm_reaction"
             ],
             "example": "follow",
             "type": "string"
@@ -3144,19 +3112,26 @@
             "type": "string"
           },
           "kind": {
-            "description": "What happened. `follow` / `reaction` / `comment_on_post` / `reply_to_comment`. `mention` is reserved.",
+            "description": "What happened. Content kinds (`follow`, `reaction`, `comment_on_post`, `reply_to_comment`, `mention`, `vote`, `repost`, `quote_post`) plus the DM kinds (`dm_new_message`, `dm_added_to_group`, `dm_role_changed`, `dm_reaction`).",
             "enum": [
               "follow",
               "reaction",
               "comment_on_post",
               "reply_to_comment",
-              "mention"
+              "mention",
+              "vote",
+              "repost",
+              "quote_post",
+              "dm_new_message",
+              "dm_added_to_group",
+              "dm_role_changed",
+              "dm_reaction"
             ],
             "example": "reaction",
             "type": "string"
           },
           "payload": {
-            "description": "Kind-specific extras. `reaction`: `{type}`. `comment_on_post` / `reply_to_comment`: `{comment_id}`.",
+            "description": "Kind-specific extras. `reaction`: `{type}` (+ `{post_id}` when the target is a comment). `comment_on_post` / `reply_to_comment`: `{comment_id}`. `mention`: `{post_id}` (+ `{comment_id}` for comment mentions).",
             "example": {
               "type": "like"
             },
@@ -3173,17 +3148,23 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "suppressed": {
+            "description": "When `true`, the recipient has restricted the triggering actor — the row is hidden from the default `inbox` slice and surfaces on `?status=requests` (or `all`).",
+            "example": false,
+            "type": "boolean"
+          },
           "target_id": {
             "description": "id of the actor / post / comment the event happened on.",
             "example": "bbbbbbbb-0000-0000-0000-000000000001",
             "type": "string"
           },
           "target_kind": {
-            "description": "Switches what `target_id` references. `actor` for follow; `post` for reaction / comment_on_post; `comment` for reply_to_comment.",
+            "description": "Switches what `target_id` references. `actor` for follow; `post` for vote / repost / quote_post / comment_on_post and post-targeted reactions/mentions; `comment` for reply_to_comment and comment-targeted reactions/mentions; `direct_message` for the dm_* kinds.",
             "enum": [
               "actor",
               "post",
-              "comment"
+              "comment",
+              "direct_message"
             ],
             "example": "post",
             "type": "string"
@@ -3198,6 +3179,7 @@
           "target_kind",
           "target_id",
           "payload",
+          "suppressed",
           "read_at",
           "created_at"
         ],
@@ -3386,7 +3368,7 @@
             "type": "string"
           },
           "kind": {
-            "description": "Free-form post kind. Common: text, link, image, story.",
+            "description": "Free-form post kind. Common: text, link, image, story, repost, quote.",
             "example": "text",
             "type": "string"
           },
@@ -3413,6 +3395,12 @@
             "example": 0,
             "type": "number"
           },
+          "scheduled_for": {
+            "description": "ISO publish-at timestamp, set while status='scheduled'. The scheduler cron promotes the post to published and clears this field; a manual PATCH promotion leaves the last value in place unless the caller also passes scheduled_for: null.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
           "source_post_id": {
             "description": "For kind='repost' / 'quote': the source post UUID.",
             "example": null,
@@ -3420,11 +3408,13 @@
             "type": "string"
           },
           "status": {
-            "description": "Lifecycle status. `removed` rows are hidden from public reads.",
+            "description": "Lifecycle status. Public list/feed surfaces only return `published`; `draft` and `scheduled` rows surface exclusively on the author-scoped drafts / scheduled-posts listings and author reads. `removed` rows are hidden from reads.",
             "enum": [
               "published",
               "hidden",
-              "removed"
+              "removed",
+              "draft",
+              "scheduled"
             ],
             "example": "published",
             "type": "string"
@@ -3447,7 +3437,7 @@
             "type": "string"
           },
           "view_count": {
-            "description": "Denormalised impression count, bumped via POST /posts/views.",
+            "description": "Denormalised impression count, bumped via the batch POST /posts/views endpoint.",
             "example": 0,
             "type": "number"
           },
@@ -3479,11 +3469,12 @@
           "source_post_id",
           "repost_count",
           "quote_count",
-          "view_count",
           "edited_at",
           "edit_count",
+          "view_count",
           "expires_at",
           "pinned",
+          "scheduled_for",
           "created_at",
           "updated_at"
         ],
@@ -3555,7 +3546,7 @@
       "PostSearchHitDto": {
         "properties": {
           "post": {
-            "$ref": "#/components/schemas/SearchPostResponseDto"
+            "$ref": "#/components/schemas/PostResponseDto"
           },
           "rank": {
             "description": "PG ts_rank score on the (title A, body B) tsvector. Higher = more relevant. Returned even when order='recent' so clients can render a relevance badge.",
@@ -3599,6 +3590,62 @@
         ],
         "type": "object"
       },
+      "ReactionEdgeResponseDto": {
+        "properties": {
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "dst_actor_id": {
+            "description": "Destination actor UUID — always `null` for post reactions (the target is `dst_post_id`).",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "dst_post_id": {
+            "description": "Target post UUID.",
+            "example": "pppppppp-pppp-pppp-pppp-pppppppppppp",
+            "type": "string"
+          },
+          "id": {
+            "description": "Edge UUID.",
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Edge kind (`reaction:<type>`).",
+            "example": "reaction:like",
+            "type": "string"
+          },
+          "payload": {
+            "description": "Free-form payload.",
+            "example": {},
+            "type": "object"
+          },
+          "src_actor_id": {
+            "description": "Reactor actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "kind",
+          "src_actor_id",
+          "dst_actor_id",
+          "dst_post_id",
+          "payload",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "ReactionResponseDto": {
         "properties": {
           "created": {
@@ -3607,7 +3654,7 @@
             "type": "boolean"
           },
           "edge": {
-            "$ref": "#/components/schemas/EdgeResponseDto"
+            "$ref": "#/components/schemas/ReactionEdgeResponseDto"
           },
           "reaction_counts": {
             "description": "Denormalised reaction counts after the write.",
@@ -3657,6 +3704,19 @@
         ],
         "type": "object"
       },
+      "RemoveListMemberDto": {
+        "properties": {
+          "caller_actor_id": {
+            "description": "Caller — social actor UUID. Must equal the list owner.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_actor_id"
+        ],
+        "type": "object"
+      },
       "RemoveMemberDto": {
         "properties": {
           "caller_actor_id": {
@@ -3695,7 +3755,7 @@
           "data": {
             "description": "Page of repost post rows, each carrying the reposting actor_id.",
             "items": {
-              "$ref": "#/components/schemas/RepostPostResponseDto"
+              "$ref": "#/components/schemas/PostResponseDto"
             },
             "type": "array"
           },
@@ -3706,325 +3766,6 @@
         "required": [
           "data",
           "pagination"
-        ],
-        "type": "object"
-      },
-      "RepostPostResponseDto": {
-        "properties": {
-          "actor_id": {
-            "description": "Author actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "attributes": {
-            "description": "Free-form attributes blob.",
-            "example": {},
-            "type": "object"
-          },
-          "body": {
-            "description": "Body. Always null for reposts.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "comment_count": {
-            "description": "Live denormalised comment count.",
-            "example": 0,
-            "type": "number"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "expires_at": {
-            "description": "ISO timestamp; null = no expiry.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "description": "Post UUID.",
-            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "type": "string"
-          },
-          "kind": {
-            "description": "Post kind. 'repost' for repost rows.",
-            "example": "repost",
-            "type": "string"
-          },
-          "pinned": {
-            "description": "Pinned for highlights.",
-            "example": false,
-            "type": "boolean"
-          },
-          "reaction_counts": {
-            "description": "Live denormalised reaction counts.",
-            "example": {},
-            "type": "object"
-          },
-          "repost_count": {
-            "description": "Reposts of this post (always 0 for the repost row itself).",
-            "example": 0,
-            "type": "number"
-          },
-          "source_post_id": {
-            "description": "For reposts: source post UUID.",
-            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "nullable": true,
-            "type": "string"
-          },
-          "status": {
-            "description": "Lifecycle status.",
-            "enum": [
-              "published",
-              "hidden",
-              "removed",
-              "draft"
-            ],
-            "example": "published",
-            "type": "string"
-          },
-          "title": {
-            "description": "Optional title.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "url": {
-            "description": "Optional URL.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "visibility": {
-            "description": "Visibility scope (inherited from the source).",
-            "enum": [
-              "public",
-              "followers",
-              "close_friends",
-              "private"
-            ],
-            "example": "public",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "actor_id",
-          "kind",
-          "title",
-          "body",
-          "url",
-          "attributes",
-          "visibility",
-          "status",
-          "reaction_counts",
-          "comment_count",
-          "source_post_id",
-          "repost_count",
-          "expires_at",
-          "pinned",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "SearchActorResponseDto": {
-        "properties": {
-          "avatar_url": {
-            "description": "Avatar URL.",
-            "example": "https://...",
-            "nullable": true,
-            "type": "string"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "display_name": {
-            "description": "Display name.",
-            "example": "Ada Lovelace",
-            "nullable": true,
-            "type": "string"
-          },
-          "external_id": {
-            "description": "Customer-supplied stable identifier.",
-            "example": "ada",
-            "type": "string"
-          },
-          "id": {
-            "description": "Social actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "metadata": {
-            "description": "Free-form metadata.",
-            "example": {},
-            "type": "object"
-          },
-          "status": {
-            "description": "Lifecycle status. Search only surfaces `active` actors.",
-            "enum": [
-              "active",
-              "suspended",
-              "deleted"
-            ],
-            "example": "active",
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "external_id",
-          "display_name",
-          "avatar_url",
-          "metadata",
-          "status",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
-      "SearchPostResponseDto": {
-        "properties": {
-          "actor_id": {
-            "description": "Author actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "attributes": {
-            "description": "Free-form attributes blob.",
-            "example": {},
-            "type": "object"
-          },
-          "body": {
-            "description": "Body text.",
-            "example": "shipping today.",
-            "nullable": true,
-            "type": "string"
-          },
-          "comment_count": {
-            "description": "Live denormalised comment count.",
-            "example": 0,
-            "type": "number"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "expires_at": {
-            "description": "ISO timestamp; null = no expiry.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "description": "Post UUID.",
-            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-            "type": "string"
-          },
-          "kind": {
-            "description": "Free-form post kind.",
-            "example": "text",
-            "type": "string"
-          },
-          "pinned": {
-            "description": "Pinned for highlights.",
-            "example": false,
-            "type": "boolean"
-          },
-          "reaction_counts": {
-            "description": "Live denormalised reaction counts.",
-            "example": {},
-            "type": "object"
-          },
-          "status": {
-            "description": "Lifecycle status. Search only surfaces 'published'.",
-            "enum": [
-              "published",
-              "hidden",
-              "removed",
-              "draft"
-            ],
-            "example": "published",
-            "type": "string"
-          },
-          "title": {
-            "description": "Optional title.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "url": {
-            "description": "Optional URL.",
-            "example": null,
-            "nullable": true,
-            "type": "string"
-          },
-          "visibility": {
-            "description": "Visibility scope.",
-            "enum": [
-              "public",
-              "followers",
-              "close_friends",
-              "private"
-            ],
-            "example": "public",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "actor_id",
-          "kind",
-          "title",
-          "body",
-          "url",
-          "attributes",
-          "visibility",
-          "status",
-          "reaction_counts",
-          "comment_count",
-          "expires_at",
-          "pinned",
-          "created_at",
-          "updated_at"
         ],
         "type": "object"
       },
@@ -4182,7 +3923,7 @@
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/CursorPagination"
+            "$ref": "#/components/schemas/PaginationResponseDto"
           }
         },
         "required": [
@@ -4191,80 +3932,10 @@
         ],
         "type": "object"
       },
-      "SuggestedActorResponseDto": {
-        "properties": {
-          "avatar_url": {
-            "description": "Avatar URL.",
-            "example": "https://cdn.example.com/avatars/ada.png",
-            "nullable": true,
-            "type": "string"
-          },
-          "community_id": {
-            "description": "Owning community UUID.",
-            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-            "type": "string"
-          },
-          "created_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          },
-          "display_name": {
-            "description": "Display name.",
-            "example": "Ada Lovelace",
-            "nullable": true,
-            "type": "string"
-          },
-          "external_id": {
-            "description": "Customer-supplied stable identifier.",
-            "example": "user_abc123",
-            "type": "string"
-          },
-          "id": {
-            "description": "Social actor UUID.",
-            "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-            "type": "string"
-          },
-          "metadata": {
-            "description": "Free-form metadata blob.",
-            "example": {
-              "tier": "pro"
-            },
-            "type": "object"
-          },
-          "status": {
-            "description": "Lifecycle status. Suggestions only surface `active` actors.",
-            "enum": [
-              "active",
-              "suspended",
-              "deleted"
-            ],
-            "example": "active",
-            "type": "string"
-          },
-          "updated_at": {
-            "description": "ISO timestamp.",
-            "example": "2026-05-01T12:00:00.000Z",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "community_id",
-          "external_id",
-          "display_name",
-          "avatar_url",
-          "metadata",
-          "status",
-          "created_at",
-          "updated_at"
-        ],
-        "type": "object"
-      },
       "SuggestedFollowResponseDto": {
         "properties": {
           "actor": {
-            "$ref": "#/components/schemas/SuggestedActorResponseDto"
+            "$ref": "#/components/schemas/ActorResponseDto"
           },
           "reason": {
             "description": "Why this candidate surfaced. `followed_by_friends` is the friend-of-a-friend signal; `top_in_community` is the cold-start fallback used when FoF doesn't fill the requested limit.",
@@ -4556,7 +4227,7 @@
             "type": "string"
           },
           "status": {
-            "description": "Direct status transition. Pass `published` to promote a `draft` or `scheduled`. Prefer the moderation lane for `hidden`/`removed`. Transitions to/from `draft`/`scheduled` other than to `published` are 422.",
+            "description": "Direct status transition. Pass `published` to promote a `draft` or `scheduled`. Prefer the moderation lane for `hidden`/`removed`.",
             "enum": [
               "published",
               "hidden",
@@ -4759,7 +4430,7 @@
   },
   "info": {
     "contact": {},
-    "description": "Social-as-a-Service backend. Generic actor / object / edge primitives. Two callers: PlatformUser admin (cookie/JWT) on /v1/workspaces/..., and customer-backend (PAK + X-Acting-As) on /v1/apps/:appSlug/...",
+    "description": "Social-as-a-Service backend: actors, posts, comments, edges (follow/mute/block/restrict), feeds, stories, DMs, moderation. Two lanes. Customer lane: your backend calls /v1/communities/:communityId/* with a workspace PAK (`Authorization: Bearer pcft_live_...`) and asserts the acting end-user via an actor UUID field (`actor_id` / `src_actor_id` / `requester_id` depending on the route). Admin lane: /v1/workspaces/:workspaceId/* accepts a PAK bearer, a PlatformUser bearer, or the `auth_token` session cookie, and covers community CRUD, moderation, and analytics.",
     "title": "Social API",
     "version": "0.1.0"
   },
@@ -4806,11 +4477,21 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActorListResponseDto"
+                  "$ref": "#/components/schemas/ActorPageResponseDto"
                 }
               }
             },
             "description": "Page of actors with `next_cursor` + `has_more`."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
           },
           "403": {
             "content": {
@@ -4820,7 +4501,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5245,6 +4926,16 @@
             },
             "description": "Page of block edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5253,7 +4944,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5422,21 +5113,21 @@
             },
             "description": "Page of close friends."
           },
-          "401": {
+          "400": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
-            "description": "Missing or invalid PAK."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
           },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -5446,7 +5137,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -5708,7 +5399,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5787,6 +5478,16 @@
             },
             "description": "Page of follow edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5795,7 +5496,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -5874,6 +5575,16 @@
             },
             "description": "Page of follow edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5882,7 +5593,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -6207,11 +5918,12 @@
             }
           },
           {
-            "description": "Requester's external_id. Without it, only public pinned posts surface.",
+            "description": "Requester social actor UUID. Without it, only public pinned posts surface.",
             "in": "query",
             "name": "requester_id",
             "required": false,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -6227,31 +5939,21 @@
             },
             "description": "Page of highlights."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -6639,6 +6341,16 @@
             },
             "description": "Page of mute edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -6647,7 +6359,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -6766,12 +6478,25 @@
             }
           },
           {
-            "description": "NotificationKind label (`follow` | `reaction` | `comment_on_post` | `reply_to_comment` | `mention` | `vote`).",
+            "description": "NotificationKind label.",
             "in": "path",
             "name": "kind",
             "required": true,
             "schema": {
-              "example": "follow",
+              "enum": [
+                "follow",
+                "reaction",
+                "comment_on_post",
+                "reply_to_comment",
+                "mention",
+                "vote",
+                "repost",
+                "quote_post",
+                "dm_new_message",
+                "dm_added_to_group",
+                "dm_role_changed",
+                "dm_reaction"
+              ],
               "type": "string"
             }
           }
@@ -6922,21 +6647,11 @@
             },
             "description": "Page of notifications."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -6946,7 +6661,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7015,27 +6730,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
             "description": "`before` is not a valid ISO timestamp."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7045,7 +6750,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7100,21 +6805,11 @@
             },
             "description": "Count of unread rows."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7124,7 +6819,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7196,27 +6891,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
             "description": "Body validation failed."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7226,7 +6911,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7298,6 +6983,16 @@
             },
             "description": "Page of restrict edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -7306,7 +7001,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -7454,31 +7149,21 @@
             },
             "description": "Story tray entries."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7642,6 +7327,16 @@
               }
             },
             "description": "Community or actors not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot block yourself."
           }
         },
         "security": [
@@ -7690,7 +7385,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unblocked."
+            "description": "Unblocked (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -7710,7 +7405,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -7758,27 +7453,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
             "description": "Body validation failed."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7788,7 +7473,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7798,7 +7483,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7808,7 +7493,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7866,21 +7551,11 @@
           "204": {
             "description": "Removed (or was not in the list)."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -7890,7 +7565,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -9660,11 +9335,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FlagResponseDto"
+                  "$ref": "#/components/schemas/CreateFlagResponseDto"
                 }
               }
             },
-            "description": "Flag created (or de-duplicated to existing open flag)."
+            "description": "Flag created (or de-duplicated to existing open flag). `auto_hidden` reports whether the auto-hide threshold tripped."
           },
           "400": {
             "content": {
@@ -9696,6 +9371,16 @@
             },
             "description": "Community, reporter actor, or target object not found (or belongs to a different community)."
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The target post/comment is already removed; nothing to flag."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -9704,7 +9389,7 @@
                 }
               }
             },
-            "description": "Cannot flag your own content, or the target post/comment is already removed."
+            "description": "Cannot flag your own content."
           }
         },
         "security": [
@@ -9793,6 +9478,16 @@
               }
             },
             "description": "A block exists between the pair (in either direction)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot follow yourself."
           }
         },
         "security": [
@@ -9863,7 +9558,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -10084,6 +9779,16 @@
               }
             },
             "description": "Page of posts."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid tag (empty after normalisation, or longer than 32 chars)."
           },
           "403": {
             "content": {
@@ -10751,7 +10456,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AddMemberDto"
+                "$ref": "#/components/schemas/AddListMemberDto"
               }
             }
           },
@@ -10847,7 +10552,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RemoveMemberDto"
+                "$ref": "#/components/schemas/RemoveListMemberDto"
               }
             }
           },
@@ -10964,6 +10669,16 @@
               }
             },
             "description": "Block exists between the pair."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot mute yourself."
           }
         },
         "security": [
@@ -11012,7 +10727,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unmuted."
+            "description": "Unmuted (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -11032,7 +10747,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -11108,7 +10823,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -11187,7 +10902,17 @@
                 }
               }
             },
-            "description": "Community or actor not found in the PAK's workspace."
+            "description": "Community, actor, or quote source post not found in the PAK's workspace."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Quote rules: `CANNOT_QUOTE_SELF` (kind='quote' with your own post as source) or `CANNOT_QUOTE_PRIVATE` (source post is private)."
           }
         },
         "summary": "Create a post on behalf of an actor.",
@@ -11445,6 +11170,16 @@
               }
             },
             "description": "Post not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`EDIT_WINDOW_EXPIRED` (content edit after the community's edit window), or `scheduled_for` passed while the post is not `status='scheduled'`."
           }
         },
         "summary": "Update post fields. `pinned` is the highlights toggle for stories; status transitions to `hidden`/`removed` should usually go through the moderation lane.",
@@ -11704,7 +11439,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.read`."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -12528,21 +12263,11 @@
             },
             "description": "Aggregated poll results."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -12552,7 +12277,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -12562,7 +12287,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13225,11 +12950,12 @@
             }
           },
           {
-            "description": "Must resolve to the post author.",
+            "description": "Requester social actor UUID — must resolve to the post author.",
             "in": "query",
             "name": "requester_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -13265,31 +12991,21 @@
             },
             "description": "Page of viewers."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
-            "description": "PAK lacks `social.read` OR requester is not the post author."
+            "description": "PAK lacks `social.list` OR requester is not the post author."
           },
           "404": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13351,27 +13067,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
             "description": "Body validation failed."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13381,7 +13087,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13391,7 +13097,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13453,27 +13159,17 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
             "description": "Body validation failed."
           },
-          "401": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            },
-            "description": "Missing or invalid PAK."
-          },
           "403": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13483,7 +13179,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13493,7 +13189,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13503,7 +13199,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             },
@@ -13586,6 +13282,26 @@
               }
             },
             "description": "Community or actors not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Block exists between the pair."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot restrict yourself."
           }
         },
         "security": [
@@ -13634,7 +13350,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unrestricted."
+            "description": "Unrestricted (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -13654,7 +13370,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -13991,11 +13707,16 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WebhookResponseDto"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/WebhookResponseDto"
+                    }
+                  ],
+                  "nullable": true
                 }
               }
             },
-            "description": "Webhook or null."
+            "description": "The active webhook, or a literal JSON `null` body when the community has no active webhook registered."
           },
           "404": {
             "content": {
@@ -14455,7 +14176,7 @@
                 }
               }
             },
-            "description": "Caller lacks `social.read`, or the workspace has not enabled the `social` service."
+            "description": "Caller lacks `social.list`, or the workspace has not enabled the `social` service."
           }
         },
         "security": [
@@ -14888,7 +14609,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActorResponseDto"
+                  "$ref": "#/components/schemas/ModerationActorResponseDto"
                 }
               }
             },
@@ -14963,7 +14684,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActorResponseDto"
+                  "$ref": "#/components/schemas/ModerationActorResponseDto"
                 }
               }
             },
@@ -15383,11 +15104,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ModerationActionResponseDto"
+                  "$ref": "#/components/schemas/ActOnFlagResponseDto"
                 }
               }
             },
-            "description": "Action recorded; target status updated where applicable."
+            "description": "Action recorded; target status updated where applicable. Returns the updated flag and the audit row."
           },
           "400": {
             "content": {
@@ -15427,7 +15148,7 @@
                 }
               }
             },
-            "description": "Flag already actioned/dismissed and the requested action would be a no-op."
+            "description": "FLAG_ALREADY_CLOSED — the flag is already actioned/dismissed and the requested action is punitive (hide/remove/warn/ban). Reversals (unhide/restore/dismiss) stay legal on a closed flag."
           }
         },
         "summary": "Apply a moderation action to a flag. Records an audit entry and updates the target post/comment status.",
@@ -15478,7 +15199,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ActorListResponseDto"
+                  "$ref": "#/components/schemas/ModerationActorListResponseDto"
                 }
               }
             },
