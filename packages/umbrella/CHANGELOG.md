@@ -1,5 +1,15 @@
 # productcraft
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [ee0f176]
+- Updated dependencies [ee0f176]
+  - @productcraft/auth@0.5.2
+  - @productcraft/trawl@0.1.1
+  - @productcraft/social@0.2.0
+
 ## 0.2.0
 
 ### Minor Changes
