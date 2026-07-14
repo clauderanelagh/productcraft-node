@@ -4812,6 +4812,16 @@
             },
             "description": "Page of actors with `next_cursor` + `has_more`."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5245,6 +5255,16 @@
             },
             "description": "Page of block edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5421,6 +5441,16 @@
               }
             },
             "description": "Page of close friends."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
           },
           "401": {
             "content": {
@@ -5787,6 +5817,16 @@
             },
             "description": "Page of follow edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -5873,6 +5913,16 @@
               }
             },
             "description": "Page of follow edges."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
           },
           "403": {
             "content": {
@@ -6639,6 +6689,16 @@
             },
             "description": "Page of mute edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -7298,6 +7358,16 @@
             },
             "description": "Page of restrict edges."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -7690,7 +7760,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unblocked."
+            "description": "Unblocked (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -7710,7 +7780,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -9863,7 +9933,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -11012,7 +11082,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unmuted."
+            "description": "Unmuted (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -11032,7 +11102,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
@@ -13634,7 +13704,7 @@
         ],
         "responses": {
           "204": {
-            "description": "Unrestricted."
+            "description": "Unrestricted (or no edge to remove)."
           },
           "403": {
             "content": {
@@ -13654,7 +13724,7 @@
                 }
               }
             },
-            "description": "Community not found."
+            "description": "Community or actor not found."
           }
         },
         "security": [
