@@ -357,6 +357,32 @@
         ],
         "type": "object"
       },
+      "ActorsByExternalBatchResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Actors found, in request order (after de-duplication).",
+            "items": {
+              "$ref": "#/components/schemas/ActorResponseDto"
+            },
+            "type": "array"
+          },
+          "missing": {
+            "description": "external_ids with no actor in this community.",
+            "example": [
+              "user_ghost"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "missing"
+        ],
+        "type": "object"
+      },
       "AddCommentReactionResponseDto": {
         "properties": {
           "created": {
@@ -474,6 +500,219 @@
         "required": [
           "data",
           "pagination"
+        ],
+        "type": "object"
+      },
+      "BatchActorResultDto": {
+        "properties": {
+          "actor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponseDto"
+              }
+            ],
+            "description": "The upserted actor — present on success."
+          },
+          "created": {
+            "description": "`true` if this item inserted a new row, `false` on an update of an existing external_id. Present on success.",
+            "example": true,
+            "type": "boolean"
+          },
+          "error": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorResponseDto"
+              }
+            ],
+            "description": "The error this item would have returned as a standalone call — present on failure."
+          },
+          "index": {
+            "description": "Position of this result in the request array.",
+            "example": 0,
+            "type": "number"
+          },
+          "success": {
+            "description": "`true` when this item was upserted; `false` when it failed (see `error`).",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "index",
+          "success"
+        ],
+        "type": "object"
+      },
+      "BatchActorsResponseDto": {
+        "properties": {
+          "data": {
+            "description": "One result per input item, same order.",
+            "items": {
+              "$ref": "#/components/schemas/BatchActorResultDto"
+            },
+            "type": "array"
+          },
+          "failed": {
+            "description": "Count of failed items.",
+            "example": 1,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "Count of successful items.",
+            "example": 199,
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "succeeded",
+          "failed"
+        ],
+        "type": "object"
+      },
+      "BatchCountersResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Counters for each actor found, in `actor_ids` order (after de-duplication).",
+            "items": {
+              "$ref": "#/components/schemas/ActorCountersResponseDto"
+            },
+            "type": "array"
+          },
+          "missing": {
+            "description": "actor_ids with no actor in this community.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "missing"
+        ],
+        "type": "object"
+      },
+      "BatchExternalIdsDto": {
+        "properties": {
+          "external_ids": {
+            "description": "external_ids to resolve, 1–200 items (POST body — 256-char ids can't ride a querystring). Duplicates are de-duplicated.",
+            "example": [
+              "user_abc123",
+              "user_def456"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "external_ids"
+        ],
+        "type": "object"
+      },
+      "BatchFollowResultDto": {
+        "properties": {
+          "created": {
+            "description": "`true` if this item created a new edge, `false` on an idempotent retry of an existing follow. Present on success.",
+            "example": true,
+            "type": "boolean"
+          },
+          "edge": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EdgeResponseDto"
+              }
+            ],
+            "description": "The follow edge — present on success."
+          },
+          "error": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorResponseDto"
+              }
+            ],
+            "description": "The error this item would have returned as a standalone call (e.g. 409 block in place, 422 self-follow, 404 unknown actor) — present on failure."
+          },
+          "index": {
+            "description": "Position of this result in the request array.",
+            "example": 0,
+            "type": "number"
+          },
+          "success": {
+            "description": "`true` when this follow was created (or already existed); `false` when it failed (see `error`).",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "index",
+          "success"
+        ],
+        "type": "object"
+      },
+      "BatchFollowsDto": {
+        "properties": {
+          "follows": {
+            "description": "Follow edges to create, in order. 1–200 items; each item follows the single-follow body exactly.",
+            "items": {
+              "$ref": "#/components/schemas/ActorEdgeDto"
+            },
+            "type": "array"
+          },
+          "suppress_notifications": {
+            "default": false,
+            "description": "Import lane: when `true`, the per-item `edge.follow.created` fan-out (follow notifications AND webhooks) is skipped for this batch. Follower/following counters still update. Use when importing an existing graph so long-standing followers don't get \"X followed you\" notifications.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "follows"
+        ],
+        "type": "object"
+      },
+      "BatchFollowsResponseDto": {
+        "properties": {
+          "data": {
+            "description": "One result per input item, same order.",
+            "items": {
+              "$ref": "#/components/schemas/BatchFollowResultDto"
+            },
+            "type": "array"
+          },
+          "failed": {
+            "description": "Count of failed items.",
+            "example": 1,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "Count of successful items.",
+            "example": 4999,
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "succeeded",
+          "failed"
+        ],
+        "type": "object"
+      },
+      "BatchUpsertActorsDto": {
+        "properties": {
+          "actors": {
+            "description": "Actors to upsert, in order. 1–200 items; each item follows the single-upsert body exactly.",
+            "items": {
+              "$ref": "#/components/schemas/UpsertActorDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "actors"
         ],
         "type": "object"
       },
@@ -866,6 +1105,60 @@
         ],
         "type": "object"
       },
+      "CommunityRankingSettingsDto": {
+        "properties": {
+          "candidate_window_days": {
+            "default": 30,
+            "description": "Ranked-feed candidate window in days — posts older than this are not scored. Strictly positive finite number.",
+            "example": 30,
+            "type": "number"
+          },
+          "half_life_hours": {
+            "default": 24,
+            "description": "Recency half-life in hours for the ranked feed. Strictly positive finite number.",
+            "example": 24,
+            "type": "number"
+          },
+          "weights": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunityRankingWeightsDto"
+              }
+            ],
+            "description": "Per-signal weights for the ranked feed. Each key falls back to its default independently."
+          }
+        },
+        "type": "object"
+      },
+      "CommunityRankingWeightsDto": {
+        "properties": {
+          "engagement": {
+            "default": 0.6,
+            "description": "Engagement signal weight (log-scaled comments + reactions). Non-negative finite number.",
+            "example": 0.6,
+            "type": "number"
+          },
+          "follow_bias": {
+            "default": 0.4,
+            "description": "Follow-graph bias weight. Non-negative finite number.",
+            "example": 0.4,
+            "type": "number"
+          },
+          "recency": {
+            "default": 1,
+            "description": "Recency signal weight (exponential decay). Non-negative finite number; anything else falls back to the default.",
+            "example": 1,
+            "type": "number"
+          },
+          "self_boost": {
+            "default": 0.2,
+            "description": "Self-author boost weight (keeps the viewer's own posts visible). Non-negative finite number.",
+            "example": 0.2,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
       "CommunityResponseDto": {
         "properties": {
           "app_id": {
@@ -901,11 +1194,15 @@
             "type": "string"
           },
           "settings": {
-            "description": "Per-community settings blob (ranking, max_comment_depth, auto_hide_flag_threshold, reaction_types).",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunitySettingsDto"
+              }
+            ],
+            "description": "Per-community settings blob. See CommunitySettingsDto for every key the service reads; unrecognized keys are stored and returned unchanged but not consumed.",
             "example": {
               "max_comment_depth": 3
-            },
-            "type": "object"
+            }
           },
           "slug": {
             "description": "URL-friendly community slug.",
@@ -946,6 +1243,49 @@
           "created_at",
           "updated_at"
         ],
+        "type": "object"
+      },
+      "CommunitySettingsDto": {
+        "properties": {
+          "auto_hide_flag_threshold": {
+            "default": 3,
+            "description": "Distinct-reporter count at which a flagged post/comment is auto-hidden. Integer 0..1000; floored. Read by the moderation flag pipeline.",
+            "example": 3,
+            "maximum": 1000,
+            "minimum": 0,
+            "type": "number"
+          },
+          "edit_window_minutes": {
+            "default": 30,
+            "description": "Minutes after publication during which a post body/title may still be edited (`EDIT_WINDOW_EXPIRED` afterwards). Strictly positive finite number. Drafts edit freely.",
+            "example": 30,
+            "type": "number"
+          },
+          "max_comment_depth": {
+            "default": 3,
+            "description": "Maximum comment thread depth (0 = flat). Integer 0..10; floored; out-of-bounds falls back to the default. Replying past the cap returns 409.",
+            "example": 3,
+            "maximum": 10,
+            "minimum": 0,
+            "type": "number"
+          },
+          "max_group_conversation_size": {
+            "default": 50,
+            "description": "Maximum participants in a group conversation. Integer 2..200; floored. Exceeding it returns 409 on create / member add.",
+            "example": 50,
+            "maximum": 200,
+            "minimum": 2,
+            "type": "number"
+          },
+          "ranking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunityRankingSettingsDto"
+              }
+            ],
+            "description": "Ranked-feed tuning (weights, half-life, candidate window). Read at query time by the actor feed, list feeds, and the discover feed."
+          }
+        },
         "type": "object"
       },
       "ConversationAdminListResponseDto": {
@@ -1294,8 +1634,12 @@
             "type": "string"
           },
           "settings": {
-            "description": "Per-community settings blob (ranking, max_comment_depth, auto_hide_flag_threshold).",
-            "type": "object"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunitySettingsDto"
+              }
+            ],
+            "description": "Per-community settings blob. Supported keys are typed on CommunitySettingsDto; unrecognized keys are stored verbatim but not consumed."
           },
           "slug": {
             "description": "URL-friendly community slug. Lowercase letters, digits, and hyphens (3-64 chars).",
@@ -1651,12 +1995,30 @@
       "CreateWebhookDto": {
         "properties": {
           "event_types": {
-            "description": "Event types to subscribe to. Currently supported: `post.created`, `post.updated`, `post.reaction.created`, `repost.created`, `comment.created`, `comment.updated`, `comment.reaction.created`, `edge.follow.created`.",
+            "description": "Event types to subscribe to. Unknown values are rejected with a 400 naming the valid set — see GET /v1/webhook-event-types.",
             "example": [
               "post.created",
               "comment.created"
             ],
             "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created"
+              ],
               "type": "string"
             },
             "type": "array"
@@ -1703,12 +2065,30 @@
             "type": "string"
           },
           "event_types": {
-            "description": "Subscribed event types. Each item is one of the social event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
+            "description": "Subscribed event types. Each item is one of the social event names — see GET /v1/webhook-event-types for the live catalog.",
             "example": [
               "post.created",
               "comment.created"
             ],
             "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created"
+              ],
               "type": "string"
             },
             "type": "array"
@@ -1794,6 +2174,79 @@
         ],
         "type": "object"
       },
+      "DeliveryJobResponseDto": {
+        "properties": {
+          "attempt_count": {
+            "description": "Delivery attempts made so far.",
+            "example": 0,
+            "type": "number"
+          },
+          "created_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "event_id": {
+            "description": "Stable event id (carried in the request body as `id`; stable across retries and redelivers).",
+            "example": "evt_…",
+            "type": "string"
+          },
+          "event_type": {
+            "description": "Event type. `ping` for test deliveries.",
+            "example": "post.created",
+            "type": "string"
+          },
+          "id": {
+            "description": "Delivery job UUID.",
+            "type": "string"
+          },
+          "last_error": {
+            "description": "Error from the most recent failed attempt. Null before the first failure.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "next_attempt_at": {
+            "description": "ISO timestamp of the next scheduled attempt (backoff: 1m, 5m, 30m, 2h, 6h, 24h).",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "status": {
+            "description": "Job state.",
+            "enum": [
+              "pending",
+              "delivering",
+              "succeeded",
+              "exhausted",
+              "canceled"
+            ],
+            "example": "pending",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "webhook_id": {
+            "description": "Webhook UUID the job targets.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "webhook_id",
+          "event_id",
+          "event_type",
+          "status",
+          "attempt_count",
+          "next_attempt_at",
+          "last_error",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "DeliveryListResponseDto": {
         "properties": {
           "data": {
@@ -1815,7 +2268,7 @@
       "DeliveryResponseDto": {
         "properties": {
           "attempt_number": {
-            "description": "Attempt number. Always 1 in v1 (no retry).",
+            "description": "Attempt number, 1-based. Increments per retry along the backoff schedule (1m, 5m, 30m, 2h, 6h, 24h — 7 attempts total).",
             "example": 1,
             "type": "number"
           },
@@ -2247,24 +2700,6 @@
         ],
         "type": "object"
       },
-      "EdgeListResponseDto": {
-        "properties": {
-          "data": {
-            "items": {
-              "$ref": "#/components/schemas/EdgeResponseDto"
-            },
-            "type": "array"
-          },
-          "pagination": {
-            "$ref": "#/components/schemas/PaginationResponseDto"
-          }
-        },
-        "required": [
-          "data",
-          "pagination"
-        ],
-        "type": "object"
-      },
       "EdgeResponseDto": {
         "properties": {
           "community_id": {
@@ -2460,6 +2895,95 @@
           "status",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "FollowerEdgeListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FollowerEdgeResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "FollowerEdgeResponseDto": {
+        "properties": {
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp the edge was created.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "dst_actor_id": {
+            "description": "Destination actor UUID (for actor edges).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nullable": true,
+            "type": "string"
+          },
+          "dst_post_id": {
+            "description": "Destination post UUID (for reaction / save edges).",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Edge UUID.",
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Edge kind. The actor-edge routes emit exactly these four; post reactions and bookmarks have their own response shapes.",
+            "enum": [
+              "follow",
+              "mute",
+              "block",
+              "restrict"
+            ],
+            "example": "follow",
+            "type": "string"
+          },
+          "payload": {
+            "description": "Free-form payload stored on the edge (e.g. mute reason).",
+            "example": {},
+            "type": "object"
+          },
+          "src_actor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponseDto"
+              }
+            ],
+            "description": "The follower's full actor row. Present only when requested via `?expand=src_actor`."
+          },
+          "src_actor_id": {
+            "description": "Source actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "kind",
+          "src_actor_id",
+          "dst_actor_id",
+          "dst_post_id",
+          "payload",
+          "created_at"
         ],
         "type": "object"
       },
@@ -3185,6 +3709,95 @@
         ],
         "type": "object"
       },
+      "OutboundEdgeListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/OutboundEdgeResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "OutboundEdgeResponseDto": {
+        "properties": {
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp the edge was created.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "dst_actor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActorResponseDto"
+              }
+            ],
+            "description": "The destination actor's full row. Present only when requested via `?expand=dst_actor`."
+          },
+          "dst_actor_id": {
+            "description": "Destination actor UUID (for actor edges).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "nullable": true,
+            "type": "string"
+          },
+          "dst_post_id": {
+            "description": "Destination post UUID (for reaction / save edges).",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Edge UUID.",
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Edge kind. The actor-edge routes emit exactly these four; post reactions and bookmarks have their own response shapes.",
+            "enum": [
+              "follow",
+              "mute",
+              "block",
+              "restrict"
+            ],
+            "example": "follow",
+            "type": "string"
+          },
+          "payload": {
+            "description": "Free-form payload stored on the edge (e.g. mute reason).",
+            "example": {},
+            "type": "object"
+          },
+          "src_actor_id": {
+            "description": "Source actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "kind",
+          "src_actor_id",
+          "dst_actor_id",
+          "dst_post_id",
+          "payload",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "PaginationResponseDto": {
         "properties": {
           "has_more": {
@@ -3299,6 +3912,61 @@
           "data": {
             "items": {
               "$ref": "#/components/schemas/PostResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "PostReactionEntryDto": {
+        "properties": {
+          "actor_id": {
+            "description": "Reactor actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "post_id": {
+            "description": "Post UUID.",
+            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "type": "string"
+          },
+          "type": {
+            "description": "Reaction type label.",
+            "example": "like",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id",
+          "actor_id",
+          "community_id",
+          "type",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "PostReactionListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PostReactionEntryDto"
             },
             "type": "array"
           },
@@ -3575,6 +4243,84 @@
         ],
         "type": "object"
       },
+      "PostStateRequestDto": {
+        "properties": {
+          "post_ids": {
+            "description": "UUIDs of the posts to hydrate viewer state for. Capped at 200 (matches the batch-views precedent); ids that are unknown, removed, or from another community resolve to the empty state instead of failing the batch.",
+            "example": [
+              "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+              "cccccccc-cccc-cccc-cccc-cccccccccccc"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "post_ids"
+        ],
+        "type": "object"
+      },
+      "PostStateResponseDto": {
+        "properties": {
+          "data": {
+            "description": "One entry per requested post id (de-duplicated, request order). Unknown / cross-community ids resolve to the empty state.",
+            "items": {
+              "$ref": "#/components/schemas/PostViewerStateEntryDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "PostViewerStateEntryDto": {
+        "properties": {
+          "bookmarked": {
+            "description": "The viewer has bookmarked the post.",
+            "example": true,
+            "type": "boolean"
+          },
+          "post_id": {
+            "description": "Post UUID this entry describes.",
+            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "type": "string"
+          },
+          "reacted_types": {
+            "description": "Reaction types the viewer currently has on the post, sorted ascending. Empty when the viewer has not reacted.",
+            "example": [
+              "fire",
+              "like"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reposted": {
+            "description": "The viewer has a currently-published repost of the post.",
+            "example": false,
+            "type": "boolean"
+          },
+          "voted_option": {
+            "description": "Poll option index the viewer voted for; `null` when the viewer has not voted (or the post has no poll).",
+            "example": null,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "post_id",
+          "reacted_types",
+          "bookmarked",
+          "reposted",
+          "voted_option"
+        ],
+        "type": "object"
+      },
       "ReactionCountsResponseDto": {
         "properties": {
           "reaction_counts": {
@@ -3701,6 +4447,76 @@
         },
         "required": [
           "post_ids"
+        ],
+        "type": "object"
+      },
+      "RelationshipEntryDto": {
+        "properties": {
+          "blocked_by": {
+            "description": "This actor has blocked the source actor — surface it BEFORE attempting a follow/react write instead of handling the 409.",
+            "example": false,
+            "type": "boolean"
+          },
+          "blocking": {
+            "description": "The source actor has blocked this actor.",
+            "example": false,
+            "type": "boolean"
+          },
+          "close_friend": {
+            "description": "This actor is on the source actor's close-friend list.",
+            "example": false,
+            "type": "boolean"
+          },
+          "dst_actor_id": {
+            "description": "Destination actor UUID this entry describes.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "followed_by": {
+            "description": "This actor follows the source actor.",
+            "example": false,
+            "type": "boolean"
+          },
+          "following": {
+            "description": "The source actor follows this actor.",
+            "example": true,
+            "type": "boolean"
+          },
+          "muting": {
+            "description": "The source actor has muted this actor.",
+            "example": false,
+            "type": "boolean"
+          },
+          "restricting": {
+            "description": "The source actor has restricted this actor.",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "dst_actor_id",
+          "following",
+          "followed_by",
+          "muting",
+          "blocking",
+          "blocked_by",
+          "restricting",
+          "close_friend"
+        ],
+        "type": "object"
+      },
+      "RelationshipListResponseDto": {
+        "properties": {
+          "data": {
+            "description": "One entry per requested id (de-duplicated, request order). Unknown ids resolve to all-false flags.",
+            "items": {
+              "$ref": "#/components/schemas/RelationshipEntryDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
         ],
         "type": "object"
       },
@@ -4099,7 +4915,12 @@
             "type": "string"
           },
           "settings": {
-            "type": "object"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunitySettingsDto"
+              }
+            ],
+            "description": "Replaces the settings blob. Supported keys are typed on CommunitySettingsDto; unrecognized keys are stored verbatim but not consumed."
           },
           "status": {
             "enum": [
@@ -4263,9 +5084,32 @@
       },
       "UpdateWebhookDto": {
         "properties": {
+          "disabled": {
+            "description": "Set `false` to re-enable a disabled webhook (clears the auto-disable state and resets the failure streak — no secret rotation required). Set `true` to disable it manually.",
+            "example": false,
+            "type": "boolean"
+          },
           "event_types": {
-            "description": "New subscription set.",
+            "description": "New subscription set. Unknown values are rejected with a 400 naming the valid set.",
             "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created"
+              ],
               "type": "string"
             },
             "type": "array"
@@ -4330,6 +5174,59 @@
         ],
         "type": "object"
       },
+      "WebhookEventTypesResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Every event type a webhook can subscribe to, in catalog order.",
+            "example": [
+              "post.created",
+              "post.deleted",
+              "comment.created"
+            ],
+            "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "WebhookListResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Every webhook on the community — disabled rows included, so auto-disabled subscribers stay discoverable.",
+            "items": {
+              "$ref": "#/components/schemas/WebhookResponseDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
       "WebhookResponseDto": {
         "properties": {
           "community_id": {
@@ -4360,12 +5257,30 @@
             "type": "string"
           },
           "event_types": {
-            "description": "Subscribed event types. Each item is one of the social event names (e.g. `post.created`, `comment.created`, `edge.follow.created`).",
+            "description": "Subscribed event types. Each item is one of the social event names — see GET /v1/webhook-event-types for the live catalog.",
             "example": [
               "post.created",
               "comment.created"
             ],
             "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created"
+              ],
               "type": "string"
             },
             "type": "array"
@@ -4451,7 +5366,7 @@
             }
           },
           {
-            "description": "Page size; capped at 200.",
+            "description": "Page size; capped at 200. Ignored when `ids` is passed.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -4463,9 +5378,18 @@
             }
           },
           {
-            "description": "Opaque cursor from the previous page's `pagination.next_cursor`.",
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Ignored when `ids` is passed.",
             "in": "query",
             "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated actor UUIDs (max 100, de-duplicated) to batch-fetch. Returns matching actors in request order; unknown ids are silently omitted.",
+            "in": "query",
+            "name": "ids",
             "required": false,
             "schema": {
               "type": "string"
@@ -4481,7 +5405,7 @@
                 }
               }
             },
-            "description": "Page of actors with `next_cursor` + `has_more`."
+            "description": "Page of actors with `next_cursor` + `has_more` (batch-fetch responses always report `has_more: false`)."
           },
           "400": {
             "content": {
@@ -4491,7 +5415,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or invalid `ids` (`INVALID_ID_LIST` — empty / non-UUID entry; `TOO_MANY_IDS` — over 100)."
           },
           "403": {
             "content": {
@@ -4519,7 +5443,7 @@
             "bearer": []
           }
         ],
-        "summary": "List actors in a community. 50 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true.",
+        "summary": "List actors in a community. 50 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true. Pass `?ids=<uuid,uuid,…>` (max 100) to batch-fetch specific actors instead — one hydration call for a screenful of ids; unknown ids are silently omitted and `pagination` is the exhausted shape (`next_cursor: null`).",
         "tags": [
           "social-actors"
         ]
@@ -4596,6 +5520,162 @@
           }
         ],
         "summary": "Upsert an actor by external_id. Creates on first call, updates on subsequent calls with the same external_id. Idempotent on `(community, external_id)`. Note: omitted fields on a follow-up call are overwritten with the new body — pass every field you want to keep on each call.",
+        "tags": [
+          "social-actors"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/batch": {
+      "post": {
+        "operationId": "ActorController_batchUpsert",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchUpsertActorsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchActorsResponseDto"
+                }
+              }
+            },
+            "description": "Per-item results, request order. `succeeded` + `failed` summarise the batch."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Envelope validation failure: `actors` missing, empty, over 200 items, or an item shape invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create` for this community."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in the PAK's workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk actor upsert (max 200 per call) — the import lane. Each item runs the exact single-upsert path; results come back per item with partial success (`201` even when some items fail — inspect `success` / `error` per entry). No wrapping transaction.",
+        "tags": [
+          "social-actors"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/by-external/batch": {
+      "post": {
+        "operationId": "ActorController_batchGetByExternal",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchExternalIdsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActorsByExternalBatchResponseDto"
+                }
+              }
+            },
+            "description": "Actors found (request order, de-duplicated) plus the `missing[]` external_ids."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`external_ids` missing, empty, over 200 items, or an entry exceeding 256 chars."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in the PAK's workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Batch-resolve external_ids to actors (max 200 per call). POST-only — external_ids are up to 256 chars and can't ride a querystring. Unknown ids come back in `missing[]` instead of failing the call.",
         "tags": [
           "social-actors"
         ]
@@ -4913,6 +5993,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `dst_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dst_actor"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4920,7 +6012,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EdgeListResponseDto"
+                  "$ref": "#/components/schemas/OutboundEdgeListResponseDto"
                 }
               }
             },
@@ -4934,7 +6026,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or unsupported `expand` value (`INVALID_EXPAND`)."
           },
           "403": {
             "content": {
@@ -4962,7 +6054,7 @@
             "bearer": []
           }
         ],
-        "summary": "List actors this actor has blocked.",
+        "summary": "List actors this actor has blocked. Pass `?expand=dst_actor` to nest each blocked actor's full row on the edge.",
         "tags": [
           "social-edges"
         ]
@@ -5465,6 +6557,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `src_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "src_actor"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5472,7 +6576,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EdgeListResponseDto"
+                  "$ref": "#/components/schemas/FollowerEdgeListResponseDto"
                 }
               }
             },
@@ -5486,7 +6590,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or unsupported `expand` value (`INVALID_EXPAND`)."
           },
           "403": {
             "content": {
@@ -5514,7 +6618,7 @@
             "bearer": []
           }
         ],
-        "summary": "List the actors who follow this actor.",
+        "summary": "List the actors who follow this actor. Pass `?expand=src_actor` to nest each follower's full actor row on the edge — a followers screen renders from this one call.",
         "tags": [
           "social-edges"
         ]
@@ -5562,6 +6666,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `dst_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dst_actor"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5569,7 +6685,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EdgeListResponseDto"
+                  "$ref": "#/components/schemas/OutboundEdgeListResponseDto"
                 }
               }
             },
@@ -5583,7 +6699,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or unsupported `expand` value (`INVALID_EXPAND`)."
           },
           "403": {
             "content": {
@@ -5611,7 +6727,7 @@
             "bearer": []
           }
         ],
-        "summary": "List the actors this actor follows.",
+        "summary": "List the actors this actor follows. Pass `?expand=dst_actor` to nest each followee's full actor row on the edge (no N+1 hydration).",
         "tags": [
           "social-edges"
         ]
@@ -6328,6 +7444,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `dst_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dst_actor"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6335,7 +7463,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EdgeListResponseDto"
+                  "$ref": "#/components/schemas/OutboundEdgeListResponseDto"
                 }
               }
             },
@@ -6349,7 +7477,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or unsupported `expand` value (`INVALID_EXPAND`)."
           },
           "403": {
             "content": {
@@ -6377,7 +7505,7 @@
             "bearer": []
           }
         ],
-        "summary": "List actors this actor has muted.",
+        "summary": "List actors this actor has muted. Pass `?expand=dst_actor` to nest each muted actor's full row on the edge.",
         "tags": [
           "social-edges"
         ]
@@ -6929,6 +8057,95 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/actors/{actorId}/post-state": {
+      "post": {
+        "description": "Read-over-POST (the id list is too large for a query string) — no side effects, no Idempotency-Key needed. Renders a whole feed page's \"liked by you\" / saved / reposted / voted state with one request on top of the feed call.",
+        "operationId": "ViewerStateController_postState",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Viewer actor UUID — the perspective all state is computed from.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostStateRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostStateResponseDto"
+                }
+              }
+            },
+            "description": "One state entry per requested post id."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Empty `post_ids`, more than 200 ids, or a non-UUID in the list."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.list`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Batch viewer-state hydration: the actor's reactions, bookmark, repost, and poll-vote state for up to 200 posts in one call.",
+        "tags": [
+          "social-viewer-state"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/actors/{actorId}/restricts": {
       "get": {
         "operationId": "EdgeController_listRestricts",
@@ -6970,6 +8187,18 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `dst_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dst_actor"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6977,7 +8206,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/EdgeListResponseDto"
+                  "$ref": "#/components/schemas/OutboundEdgeListResponseDto"
                 }
               }
             },
@@ -6991,7 +8220,7 @@
                 }
               }
             },
-            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`."
+            "description": "Invalid cursor (`INVALID_CURSOR`) — legacy raw-id cursors are rejected; restart from the first page and follow `pagination.next_cursor`. Or unsupported `expand` value (`INVALID_EXPAND`)."
           },
           "403": {
             "content": {
@@ -7019,7 +8248,7 @@
             "bearer": []
           }
         ],
-        "summary": "List actors this actor has restricted.",
+        "summary": "List actors this actor has restricted. Pass `?expand=dst_actor` to nest each restricted actor's full row on the edge.",
         "tags": [
           "social-edges"
         ]
@@ -7259,6 +8488,94 @@
         "summary": "Suggested follows for an actor.",
         "tags": [
           "social-suggestions"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{srcActorId}/relationships": {
+      "get": {
+        "description": "One query resolves the seven pairwise flags for a whole profile header or member list — no paging of full edge lists, and `blocked_by` is visible without attempting a write and handling the 409. Unknown or cross-community ids resolve to all-false flags; the id list is de-duplicated preserving request order. Bounded input (max 100 ids), so the response has no pagination envelope.",
+        "operationId": "EdgeController_relationships",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Source actor UUID — the perspective all flags are computed from.",
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated destination actor UUIDs (1-100).",
+            "in": "query",
+            "name": "with",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelationshipListResponseDto"
+                }
+              }
+            },
+            "description": "One relationship entry per requested id."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing `with`, more than 100 ids, or a non-UUID value in the list."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.list`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or source actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Batched pairwise relationship lookup: does this actor follow / mute / block / restrict each of up to 100 others (and is it followed / blocked back)?",
+        "tags": [
+          "social-edges"
         ]
       }
     },
@@ -7696,6 +9013,15 @@
               "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Mostly useful for `kind=\"group\"` (direct conversations are get-or-create by participant pair anyway). Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -7727,7 +9053,7 @@
                 }
               }
             },
-            "description": "Validation failure (missing recipient for direct, missing actor_ids for group, two equal actor ids)."
+            "description": "Validation failure (missing recipient for direct, missing actor_ids for group, two equal actor ids, malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -7757,7 +9083,7 @@
                 }
               }
             },
-            "description": "A block exists, or the group exceeds `community.settings.max_group_conversation_size`."
+            "description": "A block exists, the group exceeds `community.settings.max_group_conversation_size`, or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
         "security": [
@@ -7765,7 +9091,7 @@
             "bearer": []
           }
         ],
-        "summary": "Open a conversation. Default `kind=\"direct\"` is the idempotent 1-on-1 path. Pass `kind=\"group\"` with `actor_ids` for a multi-participant chat (always creates a new row; no idempotency for groups).",
+        "summary": "Open a conversation. Default `kind=\"direct\"` is the naturally-idempotent 1-on-1 path (get-or-create by participant pair). Pass `kind=\"group\"` with `actor_ids` for a multi-participant chat — group creates always insert a new row, so pass an `Idempotency-Key` header to make group-create retries safe.",
         "tags": [
           "social-conversations"
         ]
@@ -8474,6 +9800,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -8505,7 +9840,7 @@
                 }
               }
             },
-            "description": "Validation failure (empty body for text, body too long)."
+            "description": "Validation failure (empty body for text, body too long, malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -8535,7 +9870,7 @@
                 }
               }
             },
-            "description": "A block exists between the sender and another participant."
+            "description": "A block exists between the sender and another participant, or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
         "security": [
@@ -8543,7 +9878,7 @@
             "bearer": []
           }
         ],
-        "summary": "Send a message in the conversation.",
+        "summary": "Send a message in the conversation. Pass an `Idempotency-Key` header to make retries safe — a retried send never delivers the message twice.",
         "tags": [
           "social-conversations"
         ]
@@ -9218,6 +10553,83 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/counters": {
+      "get": {
+        "operationId": "CounterController_getBatchCounters",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Comma-separated actor UUIDs (max 100, de-duplicated).",
+            "in": "query",
+            "name": "actor_ids",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchCountersResponseDto"
+                }
+              }
+            },
+            "description": "Counters for each actor found plus the `missing[]` ids."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`actor_ids` missing or empty, a non-UUID entry (`INVALID_ID_LIST`), or over 100 ids (`TOO_MANY_IDS`)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in the PAK's workspace. (Unknown actors land in `missing[]`, not a 404.)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Batch counters (max 100 actors per call) — render a member list with follower badges from ONE call instead of one per actor. Unknown actor_ids come back in `missing[]` instead of failing the read.",
+        "tags": [
+          "social-counters"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/discover-feed": {
       "get": {
         "operationId": "FeedController_getDiscoverFeed",
@@ -9496,6 +10908,84 @@
           }
         ],
         "summary": "Follow another actor. Idempotent: returns existing edge with `created: false` if the follow already exists. Refused if either side has a block.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/follows/batch": {
+      "post": {
+        "operationId": "EdgeController_batchFollows",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchFollowsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchFollowsResponseDto"
+                }
+              }
+            },
+            "description": "Per-item results, request order. `succeeded` + `failed` summarise the batch."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Envelope validation failure: `follows` missing, empty, over 200 items, or an item shape invalid."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in the PAK's workspace. (Unknown actors fail per item, not the whole call.)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Bulk follow creation (max 200 per call) — the graph-import lane. Each item runs the exact single-follow path (block checks, counters, idempotency), so a blocked pair fails ITS item with a 409 in `error` while the rest of the batch proceeds. `201` even with failures — inspect per-item results. Set `suppress_notifications: true` when importing an existing graph.",
         "tags": [
           "social-edges"
         ]
@@ -9920,6 +11410,15 @@
               "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -9951,7 +11450,7 @@
                 }
               }
             },
-            "description": "Validation failure."
+            "description": "Validation failure (including malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -9972,6 +11471,16 @@
               }
             },
             "description": "Community or owner not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE` — the supplied Idempotency-Key was already used with a different request body."
           }
         },
         "security": [
@@ -9979,7 +11488,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create a new list. Default visibility `private`.",
+        "summary": "Create a new list. Default visibility `private`. List creation has no natural key (an owner can hold many same-named lists), so pass an `Idempotency-Key` header to make retries safe.",
         "tags": [
           "social-lists"
         ]
@@ -10851,6 +12360,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -10882,7 +12400,7 @@
                 }
               }
             },
-            "description": "Validation failure (missing actor_id; body/title/url all empty; bad URL; bad ISO timestamp)."
+            "description": "Validation failure (missing actor_id; body/title/url all empty; bad URL; bad ISO timestamp; malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -10904,6 +12422,16 @@
             },
             "description": "Community, actor, or quote source post not found in the PAK's workspace."
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE` — the supplied Idempotency-Key was already used with a different request body."
+          },
           "422": {
             "content": {
               "application/json": {
@@ -10915,7 +12443,7 @@
             "description": "Quote rules: `CANNOT_QUOTE_SELF` (kind='quote' with your own post as source) or `CANNOT_QUOTE_PRIVATE` (source post is private)."
           }
         },
-        "summary": "Create a post on behalf of an actor.",
+        "summary": "Create a post on behalf of an actor. Pass an `Idempotency-Key` header to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h.",
         "tags": [
           "Post"
         ]
@@ -11484,6 +13012,15 @@
               "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -11515,7 +13052,7 @@
                 }
               }
             },
-            "description": "Validation failure (missing actor_id, empty body, body too long)."
+            "description": "Validation failure (missing actor_id, empty body, body too long, malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -11545,7 +13082,7 @@
                 }
               }
             },
-            "description": "Block exists between commenter and post author, or depth exceeds community.settings.max_comment_depth."
+            "description": "Block exists between commenter and post author, depth exceeds community.settings.max_comment_depth, or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
         "security": [
@@ -11553,7 +13090,7 @@
             "bearer": []
           }
         ],
-        "summary": "Add a comment on a post. Pass `parent_id` to reply; the depth is computed and capped by the community config.",
+        "summary": "Add a comment on a post. Pass `parent_id` to reply; the depth is computed and capped by the community config. Pass an `Idempotency-Key` header to make retries safe.",
         "tags": [
           "social-comments"
         ]
@@ -12387,6 +13924,111 @@
       }
     },
     "/v1/communities/{communityId}/posts/{postId}/reactions": {
+      "get": {
+        "operationId": "PostReactionController_list",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social post UUID.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter to a single reaction type label.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "maxLength": 64,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostReactionListResponseDto"
+                }
+              }
+            },
+            "description": "Page of reactions."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Overlong `type` filter (max 64 chars)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.list`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or post not found (or post removed)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List reactions on a post, newest-first. Cursor encodes `(created_at, actor_id, type)` so multi-reaction-from-same-actor stays stable. Pass `type` to narrow to one reaction type.",
+        "tags": [
+          "social-post-reactions"
+        ]
+      },
       "post": {
         "operationId": "PostReactionController_react",
         "parameters": [
@@ -13689,7 +15331,7 @@
     },
     "/v1/communities/{communityId}/webhooks": {
       "get": {
-        "operationId": "WebhookController_getActive",
+        "operationId": "WebhookController_list",
         "parameters": [
           {
             "description": "Social community UUID.",
@@ -13707,16 +15349,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/WebhookResponseDto"
-                    }
-                  ],
-                  "nullable": true
+                  "$ref": "#/components/schemas/WebhookListResponseDto"
                 }
               }
             },
-            "description": "The active webhook, or a literal JSON `null` body when the community has no active webhook registered."
+            "description": "All webhooks on the community (no pagination — capped at 10 rows)."
           },
           "404": {
             "content": {
@@ -13734,7 +15371,7 @@
             "bearer": []
           }
         ],
-        "summary": "Read the community's active webhook (or null).",
+        "summary": "List the community's webhooks — disabled rows included, so an auto-disabled subscriber stays discoverable.",
         "tags": [
           "social-webhooks"
         ]
@@ -13749,6 +15386,15 @@
             "required": true,
             "schema": {
               "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. The signing secret is returned exactly once; a replay returns the original response (including the secret) with `Idempotent-Replay: true`. Same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
               "type": "string"
             }
           }
@@ -13782,7 +15428,7 @@
                 }
               }
             },
-            "description": "Validation failure (bad url, empty event_types)."
+            "description": "Validation failure (bad url, empty or unknown event_types — the message names the valid set; malformed Idempotency-Key)."
           },
           "403": {
             "content": {
@@ -13812,7 +15458,7 @@
                 }
               }
             },
-            "description": "Community already has an active webhook."
+            "description": "Webhook cap reached (10 per community), or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
         "security": [
@@ -13820,7 +15466,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create the community webhook. One active subscriber per community. Returns the signing secret ONCE — store it.",
+        "summary": "Create a community webhook. Multiple subscribers per community are supported (cap 10). Returns the signing secret ONCE — store it. Pass an `Idempotency-Key` header so a retried create replays the SAME secret instead of minting a duplicate subscriber.",
         "tags": [
           "social-webhooks"
         ]
@@ -14000,7 +15646,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update webhook url + subscribed event types.",
+        "summary": "Update webhook url, subscribed event types, or disabled state. `{ \"disabled\": false }` is the re-enable path after an auto-disable — no secret rotation required.",
         "tags": [
           "social-webhooks"
         ]
@@ -14082,6 +15728,82 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
+      "post": {
+        "operationId": "WebhookController_redeliver",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Webhook UUID.",
+            "in": "path",
+            "name": "webhookId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Delivery row UUID (from GET …/deliveries).",
+            "in": "path",
+            "name": "deliveryId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryJobResponseDto"
+                }
+              }
+            },
+            "description": "Redelivery enqueued."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook or delivery not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook is disabled — re-enable it first."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Re-publish a past delivery from its stored request body. Async (202). The payload is byte-identical to the original (same event id), so subscriber-side event-id dedupe treats it as a redelivery.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/webhooks/{webhookId}/rotate-secret": {
       "post": {
         "operationId": "WebhookController_rotateSecret",
@@ -14104,6 +15826,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. A replay returns the original response (including the new secret) with `Idempotent-Replay: true`; a retry WITHOUT the header rotates the secret again, invalidating the previous one. Same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -14117,6 +15848,16 @@
             },
             "description": "New secret."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed Idempotency-Key header."
+          },
           "404": {
             "content": {
               "application/json": {
@@ -14126,6 +15867,16 @@
               }
             },
             "description": "Webhook not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE` — the supplied Idempotency-Key was already used with a different request body."
           }
         },
         "security": [
@@ -14133,7 +15884,96 @@
             "bearer": []
           }
         ],
-        "summary": "Rotate the signing secret. Also clears any auto-disable flag. Returns the new secret ONCE.",
+        "summary": "Rotate the signing secret. Also clears any auto-disable flag. Returns the new secret ONCE. Pass an `Idempotency-Key` header so a retried rotate replays the SAME new secret instead of rotating twice.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/{webhookId}/test": {
+      "post": {
+        "operationId": "WebhookController_testPing",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Webhook UUID.",
+            "in": "path",
+            "name": "webhookId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryJobResponseDto"
+                }
+              }
+            },
+            "description": "Ping enqueued."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook is disabled — re-enable it first."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Enqueue a `ping` test delivery. Async (202): the dispatch worker signs and POSTs it exactly like a real event — SSRF guard, TLS, HMAC signature and all. Watch the deliveries list for the outcome.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/webhook-event-types": {
+      "get": {
+        "operationId": "WebhookEventTypesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventTypesResponseDto"
+                }
+              }
+            },
+            "description": "The full event-type catalog."
+          }
+        },
+        "summary": "List the webhook event-type catalog. Static metadata, no auth required. Create/update webhooks reject anything not in this list with a 400.",
         "tags": [
           "social-webhooks"
         ]
@@ -14209,6 +16049,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -14240,7 +16089,7 @@
                 }
               }
             },
-            "description": "Validation failure (slug shape, display_name length)."
+            "description": "Validation failure (slug shape, display_name length, malformed Idempotency-Key)."
           },
           "401": {
             "content": {
@@ -14280,7 +16129,7 @@
                 }
               }
             },
-            "description": "Community slug already taken in this workspace, or the supplied `app_id` is already connected to a community."
+            "description": "Community slug already taken in this workspace, the supplied `app_id` is already connected to a community, or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
         "security": [
@@ -14288,7 +16137,7 @@
             "bearer": []
           }
         ],
-        "summary": "Create an social community. `app_id` is optional — when supplied Social connects the community to an Auth app and refuses if the app belongs to a different workspace (cross-tenant gate) or is already connected. Omit `app_id` for a standalone community (no Auth integration; the customer manages actor identity).",
+        "summary": "Create an social community. `app_id` is optional — when supplied Social connects the community to an Auth app and refuses if the app belongs to a different workspace (cross-tenant gate) or is already connected. Omit `app_id` for a standalone community (no Auth integration; the customer manages actor identity). Pass an `Idempotency-Key` header to make retries safe.",
         "tags": [
           "social-communities"
         ]
@@ -14667,6 +16516,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -14698,7 +16556,7 @@
                 }
               }
             },
-            "description": "Invalid duration_hours or reason."
+            "description": "Invalid duration_hours or reason, or malformed Idempotency-Key."
           },
           "403": {
             "content": {
@@ -14719,9 +16577,19 @@
               }
             },
             "description": "Community or actor not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE` — the supplied Idempotency-Key was already used with a different request body."
           }
         },
-        "summary": "Apply a shadow ban to an actor. The actor sees their own content normally; everyone else sees nothing from them. Pass `duration_hours` for a timed ban or omit for indefinite.",
+        "summary": "Apply a shadow ban to an actor. The actor sees their own content normally; everyone else sees nothing from them. Pass `duration_hours` for a timed ban or omit for indefinite. Pass an `Idempotency-Key` header so a retried timed ban doesn't restart the clock.",
         "tags": [
           "social-moderation-admin"
         ]
@@ -15087,6 +16955,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9_\\-:]`) used to deduplicate retries within a 24h window. Replays return the original response with `Idempotent-Replay: true`; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -15118,7 +16995,7 @@
                 }
               }
             },
-            "description": "Invalid action or notes."
+            "description": "Invalid action or notes, or malformed Idempotency-Key."
           },
           "403": {
             "content": {
@@ -15148,10 +17025,10 @@
                 }
               }
             },
-            "description": "FLAG_ALREADY_CLOSED — the flag is already actioned/dismissed and the requested action is punitive (hide/remove/warn/ban). Reversals (unhide/restore/dismiss) stay legal on a closed flag."
+            "description": "FLAG_ALREADY_CLOSED — the flag is already actioned/dismissed and the requested action is punitive (hide/remove/warn/ban); reversals (unhide/restore/dismiss) stay legal on a closed flag. Also `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
           }
         },
-        "summary": "Apply a moderation action to a flag. Records an audit entry and updates the target post/comment status.",
+        "summary": "Apply a moderation action to a flag. Records an audit entry and updates the target post/comment status. Pass an `Idempotency-Key` header so a retried request records ONE audit entry, not two.",
         "tags": [
           "social-moderation-admin"
         ]
