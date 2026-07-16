@@ -83,6 +83,11 @@
       },
       "ActorEdgeDto": {
         "properties": {
+          "actor_id": {
+            "description": "Acting social actor UUID (the one performing the follow / mute / block / restrict). Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "dst_actor_id": {
             "description": "Destination social actor UUID (the one being followed / muted / blocked / restricted).",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
@@ -93,13 +98,13 @@
             "type": "object"
           },
           "src_actor_id": {
-            "description": "Source social actor UUID (the one performing the follow / mute / block / restrict).",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11). Accepted for one more version.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
         },
         "required": [
-          "src_actor_id",
           "dst_actor_id"
         ],
         "type": "object"
@@ -350,10 +355,20 @@
               "$ref": "#/components/schemas/ActorSearchHitDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationResponseDto"
+              }
+            ],
+            "description": "Always `null` — this lane returns a single bounded, ranked page (no cursor in v1). Present for envelope consistency.",
+            "nullable": true
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -1105,6 +1120,24 @@
         ],
         "type": "object"
       },
+      "CommunityListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CommunityResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
       "CommunityRankingSettingsDto": {
         "properties": {
           "candidate_window_days": {
@@ -1594,8 +1627,14 @@
       },
       "CreateCommentReactionDto": {
         "properties": {
+          "actor_id": {
+            "description": "Reactor actor UUID. Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "src_actor_id": {
-            "description": "Reactor actor UUID.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1608,7 +1647,6 @@
           }
         },
         "required": [
-          "src_actor_id",
           "type"
         ],
         "type": "object"
@@ -1700,8 +1738,14 @@
       },
       "CreateDirectMessageReactionDto": {
         "properties": {
+          "actor_id": {
+            "description": "The reactor — social actor UUID. Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "src_actor_id": {
-            "description": "The reactor — social actor UUID.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1714,7 +1758,6 @@
           }
         },
         "required": [
-          "src_actor_id",
           "type"
         ],
         "type": "object"
@@ -1929,8 +1972,14 @@
       },
       "CreateReactionDto": {
         "properties": {
+          "actor_id": {
+            "description": "Reactor — social actor UUID. Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "src_actor_id": {
-            "description": "Reactor — social actor UUID.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -1943,7 +1992,6 @@
           }
         },
         "required": [
-          "src_actor_id",
           "type"
         ],
         "type": "object"
@@ -2150,28 +2198,34 @@
       },
       "DeleteActorListDto": {
         "properties": {
-          "caller_actor_id": {
-            "description": "Caller — social actor UUID. Must equal the list owner.",
+          "actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED — use `?actor_id=`. Caller social actor UUID (must equal the list owner).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "caller_actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "type": "string"
           }
         },
-        "required": [
-          "caller_actor_id"
-        ],
         "type": "object"
       },
       "DeleteMessageDto": {
         "properties": {
-          "sender_id": {
-            "description": "The sender — must match the message's sender_id.",
+          "actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED — use `?actor_id=`. The sender (must match the message's sender_id).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "sender_id": {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "type": "string"
           }
         },
-        "required": [
-          "sender_id"
-        ],
         "type": "object"
       },
       "DeliveryJobResponseDto": {
@@ -2344,6 +2398,17 @@
           "succeeded",
           "created_at"
         ],
+        "type": "object"
+      },
+      "DeprecatedActorIdBodyDto": {
+        "properties": {
+          "actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED — pass the actor via the `?actor_id=` query parameter instead. Accepted from the body for one more version.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "DirectMessageAdminListResponseDto": {
@@ -2994,10 +3059,20 @@
               "$ref": "#/components/schemas/HashtagResponseDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationResponseDto"
+              }
+            ],
+            "description": "Always `null` — autocomplete returns a single bounded, ranked page (no cursor). Present for envelope consistency (task 008 / G13).",
+            "nullable": true
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -3164,14 +3239,12 @@
       "LeaveConversationDto": {
         "properties": {
           "actor_id": {
-            "description": "The participant leaving.",
+            "deprecated": true,
+            "description": "DEPRECATED — use `?actor_id=`. The participant leaving.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
         },
-        "required": [
-          "actor_id"
-        ],
         "type": "object"
       },
       "MarkAllReadDto": {
@@ -3481,6 +3554,24 @@
           "shadow_banned_at",
           "shadow_banned_until",
           "shadow_banned_reason"
+        ],
+        "type": "object"
+      },
+      "MutedTermListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/MutedTermResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -3801,7 +3892,7 @@
       "PaginationResponseDto": {
         "properties": {
           "has_more": {
-            "description": "`true` when at least one more page exists. Mirrors `next_cursor !== null`; published as a separate field so SDKs can drive a `while` loop without parsing the cursor.",
+            "description": "`true` when at least one more page exists. Mirrors `next_cursor !== null`; published as a separate field so SDKs can drive a `while` loop without parsing the cursor. A short or empty `data` array does NOT imply the end of the list when a lane post-filters — always page until this is `false`.",
             "example": true,
             "type": "boolean"
           },
@@ -4236,10 +4327,20 @@
               "$ref": "#/components/schemas/PostSearchHitDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationResponseDto"
+              }
+            ],
+            "description": "Always `null` — this lane returns a single bounded, ranked page (no cursor in v1). Present for envelope consistency.",
+            "nullable": true
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -4420,15 +4521,18 @@
       },
       "RecordViewDto": {
         "properties": {
+          "actor_id": {
+            "description": "Viewer social actor UUID. Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
           "viewer_actor_id": {
-            "description": "Viewer social actor UUID.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           }
         },
-        "required": [
-          "viewer_actor_id"
-        ],
         "type": "object"
       },
       "RecordViewsDto": {
@@ -4522,28 +4626,34 @@
       },
       "RemoveListMemberDto": {
         "properties": {
-          "caller_actor_id": {
-            "description": "Caller — social actor UUID. Must equal the list owner.",
+          "actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED — use `?actor_id=`. Caller social actor UUID (must equal the list owner).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "caller_actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "type": "string"
           }
         },
-        "required": [
-          "caller_actor_id"
-        ],
         "type": "object"
       },
       "RemoveMemberDto": {
         "properties": {
-          "caller_actor_id": {
-            "description": "Social actor UUID of the acting party. Equal to the target for self-leave.",
+          "actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED — use `?actor_id=`. Acting actor UUID (equal to the target for self-leave).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "caller_actor_id": {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "type": "string"
           }
         },
-        "required": [
-          "caller_actor_id"
-        ],
         "type": "object"
       },
       "RenameGroupDto": {
@@ -4587,6 +4697,11 @@
       },
       "SendMessageDto": {
         "properties": {
+          "actor_id": {
+            "description": "The sender — social actor UUID. Standardized name (task 008 / G11); the persisted `sender_id` defaults from it.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "attachments": {
             "items": {
               "$ref": "#/components/schemas/DirectMessageAttachmentDto"
@@ -4616,14 +4731,12 @@
             "type": "string"
           },
           "sender_id": {
-            "description": "The sender — social actor UUID.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
         },
-        "required": [
-          "sender_id"
-        ],
         "type": "object"
       },
       "StoryTrayEntryResponse": {
@@ -4684,10 +4797,20 @@
               "$ref": "#/components/schemas/StoryTrayEntryResponse"
             },
             "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationResponseDto"
+              }
+            ],
+            "description": "Always `null` — the tray is a single bounded page (≤200 entries, no cursor in v1). The key is present for envelope consistency with cursor-paginated lists (task 008 / G13).",
+            "nullable": true
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -4783,10 +4906,20 @@
               "$ref": "#/components/schemas/SuggestedFollowResponseDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationResponseDto"
+              }
+            ],
+            "description": "Always `null` — suggestions are a single bounded, scored page (no cursor in v1). Present for envelope consistency (task 008 / G13).",
+            "nullable": true
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -4976,6 +5109,11 @@
       },
       "UpdateMessageDto": {
         "properties": {
+          "actor_id": {
+            "description": "The sender — must match the message's sender_id. Standardized name (task 008 / G11).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
           "body": {
             "description": "Updated body.",
             "example": "edited",
@@ -4984,14 +5122,14 @@
             "type": "string"
           },
           "sender_id": {
-            "description": "The sender — must match the message's sender_id.",
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           }
         },
         "required": [
-          "body",
-          "sender_id"
+          "body"
         ],
         "type": "object"
       },
@@ -7036,6 +7174,17 @@
           {
             "description": "Requester social actor UUID. Without it, only public pinned posts surface.",
             "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
+            "in": "query",
             "name": "requester_id",
             "required": false,
             "schema": {
@@ -7199,6 +7348,25 @@
               "example": "aaaaaaaa-0000-0000-0000-000000000001",
               "type": "string"
             }
+          },
+          {
+            "description": "Page size (default 50, max 200).",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 50,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor from a prior page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7206,14 +7374,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/MutedTermResponseDto"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/MutedTermListResponseDto"
                 }
               }
             },
-            "description": "Active muted terms."
+            "description": "Active muted terms, paginated."
           },
           "403": {
             "content": {
@@ -7241,7 +7406,7 @@
             "bearer": []
           }
         ],
-        "summary": "List the actor's currently-active muted terms.",
+        "summary": "List the actor's currently-active muted terms, newest-first. Cursor-paginated (task 008 / G13 — previously an unbounded bare array).",
         "tags": [
           "social-muted-terms"
         ]
@@ -9187,6 +9352,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The leaving participant — social actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -9202,6 +9377,16 @@
         "responses": {
           "204": {
             "description": "Caller removed from the conversation."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id."
           },
           "403": {
             "content": {
@@ -9229,7 +9414,7 @@
             "bearer": []
           }
         ],
-        "summary": "Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves.",
+        "summary": "Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-conversations"
         ]
@@ -9523,6 +9708,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Acting actor UUID (equal to the target for self-leave).",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -9538,6 +9733,16 @@
         "responses": {
           "204": {
             "description": "Participant removed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id."
           },
           "403": {
             "content": {
@@ -9915,6 +10120,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "The sender — must match the message's sender_id.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -9930,6 +10145,16 @@
         "responses": {
           "204": {
             "description": "Message soft-deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id."
           },
           "403": {
             "content": {
@@ -9957,7 +10182,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`.",
+        "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`. Pass the sender via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-conversations"
         ]
@@ -10645,6 +10870,18 @@
             }
           },
           {
+            "description": "Viewer actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
             "required": false,
@@ -11327,7 +11564,18 @@
             }
           },
           {
-            "description": "Surface the viewer's own private lists alongside the public catalog.",
+            "description": "Viewer actor UUID — surfaces the viewer's own private lists alongside the public catalog.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
             "required": false,
@@ -11516,6 +11764,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Caller social actor UUID (must equal the list owner).",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -11531,6 +11789,16 @@
         "responses": {
           "204": {
             "description": "List deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id."
           },
           "403": {
             "content": {
@@ -11558,7 +11826,7 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a list. Owner-only.",
+        "summary": "Delete a list. Owner-only. Pass the caller via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-lists"
         ]
@@ -11586,7 +11854,18 @@
             }
           },
           {
-            "description": "Required to see a private list (must equal owner).",
+            "description": "Viewer actor UUID — required to see a private list (must equal owner).",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
             "required": false,
@@ -11750,8 +12029,19 @@
           {
             "description": "Viewer — required for visibility checks + block-filter.",
             "in": "query",
-            "name": "viewer_actor_id",
+            "name": "actor_id",
             "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
+            "in": "query",
+            "name": "viewer_actor_id",
+            "required": false,
             "schema": {
               "format": "uuid",
               "type": "string"
@@ -11810,7 +12100,7 @@
                 }
               }
             },
-            "description": "INVALID_ORDER or INVALID_CURSOR."
+            "description": "Missing/invalid actor_id, INVALID_ORDER, or INVALID_CURSOR."
           },
           "403": {
             "content": {
@@ -11868,6 +12158,18 @@
             }
           },
           {
+            "description": "Viewer actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
             "required": false,
@@ -12055,6 +12357,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Caller social actor UUID (must equal the list owner).",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -12070,6 +12382,16 @@
         "responses": {
           "204": {
             "description": "Member removed."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id."
           },
           "403": {
             "content": {
@@ -12097,7 +12419,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a member from a list. Owner-only. Idempotent — 204 either way.",
+        "summary": "Remove a member from a list. Owner-only. Idempotent — 204 either way. Pass the caller via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-lists"
         ]
@@ -12449,9 +12771,9 @@
         ]
       }
     },
-    "/v1/communities/{communityId}/posts/views": {
+    "/v1/communities/{communityId}/posts/impressions": {
       "post": {
-        "operationId": "PostController_recordViews",
+        "operationId": "PostController_recordImpressions",
         "parameters": [
           {
             "in": "path",
@@ -12474,7 +12796,7 @@
         },
         "responses": {
           "204": {
-            "description": "Views recorded (or no-op if every id was missing)."
+            "description": "Impressions recorded (or no-op if every id was missing)."
           },
           "400": {
             "content": {
@@ -12494,10 +12816,65 @@
                 }
               }
             },
-            "description": "PAK lacks `social.list` on the community URN."
+            "description": "PAK lacks `social.view` on the community URN."
           }
         },
-        "summary": "Batch-increment view counts on a list of posts. Client-side debounced; missing post ids are silently skipped (so a deleted post mid-batch doesn’t fail the rest).",
+        "summary": "Batch-increment impression (`view_count`) counters on a list of posts. Client-side debounced; missing post ids are silently skipped (so a deleted post mid-batch doesn’t fail the rest). Renamed from `POST /posts/views` (task 008 / G14) to disambiguate from the story-side per-post `/posts/:postId/views` route.",
+        "tags": [
+          "Post"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/posts/views": {
+      "post": {
+        "deprecated": true,
+        "operationId": "PostController_recordViewsDeprecated",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordViewsDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Impressions recorded (or no-op if every id was missing)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Empty `post_ids`, more than 200 ids, or a non-UUID in the list."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.view` on the community URN."
+          }
+        },
+        "summary": "DEPRECATED — use `POST /posts/impressions`. Batch-increment impression counters. This alias will be removed in a future version.",
         "tags": [
           "Post"
         ]
@@ -12580,6 +12957,17 @@
           },
           {
             "description": "Social actor UUID of the viewer. Surfaces non-public posts they are entitled to see.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11). Removed in a future version.",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -12739,17 +13127,27 @@
               "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
               "type": "string"
             }
+          },
+          {
+            "description": "Acting actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateBookmarkDto"
+                "$ref": "#/components/schemas/DeprecatedActorIdBodyDto"
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
           "204": {
@@ -12763,7 +13161,7 @@
                 }
               }
             },
-            "description": "Validation failure."
+            "description": "Validation failure (missing/invalid actor_id)."
           },
           "403": {
             "content": {
@@ -12791,7 +13189,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a bookmark on behalf of an actor. Idempotent — 204 either way.",
+        "summary": "Remove a bookmark on behalf of an actor. Idempotent — 204 either way. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-bookmarks"
         ]
@@ -12939,6 +13337,17 @@
           },
           {
             "description": "Viewer actor UUID — surfaces author_only replies they're entitled to see.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -13199,6 +13608,18 @@
             }
           },
           {
+            "description": "Viewer actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -14243,17 +14664,27 @@
               "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
               "type": "string"
             }
+          },
+          {
+            "description": "Acting actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateRepostDto"
+                "$ref": "#/components/schemas/DeprecatedActorIdBodyDto"
               }
             }
           },
-          "required": true
+          "required": false
         },
         "responses": {
           "204": {
@@ -14267,7 +14698,7 @@
                 }
               }
             },
-            "description": "Validation failure."
+            "description": "Validation failure (missing/invalid actor_id)."
           },
           "403": {
             "content": {
@@ -14295,7 +14726,7 @@
             "bearer": []
           }
         ],
-        "summary": "Undo my repost of a source post. Idempotent — 204 either way.",
+        "summary": "Undo my repost of a source post. Idempotent — 204 either way. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
         "tags": [
           "social-reposts"
         ]
@@ -14594,8 +15025,19 @@
           {
             "description": "Requester social actor UUID — must resolve to the post author.",
             "in": "query",
-            "name": "requester_id",
+            "name": "actor_id",
             "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
+            "in": "query",
+            "name": "requester_id",
+            "required": false,
             "schema": {
               "format": "uuid",
               "type": "string"
@@ -14632,6 +15074,16 @@
               }
             },
             "description": "Page of viewers."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id (author-only endpoint)."
           },
           "403": {
             "content": {
@@ -15067,6 +15519,17 @@
           {
             "description": "Viewer social actor UUID — filters out blocked / muted actors.",
             "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
+            "in": "query",
             "name": "requester_id",
             "required": false,
             "schema": {
@@ -15267,6 +15730,18 @@
             }
           },
           {
+            "description": "Viewer social actor UUID.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
             "required": false,
@@ -15992,6 +16467,25 @@
               "example": "11111111-1111-1111-1111-111111111111",
               "type": "string"
             }
+          },
+          {
+            "description": "Page size (default 50, max 200).",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "example": 50,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor from a prior page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -15999,14 +16493,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/CommunityResponseDto"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/CommunityListResponseDto"
                 }
               }
             },
-            "description": "Bare array of communities; not paginated (workspaces have a small handful)."
+            "description": "Paginated communities."
           },
           "403": {
             "content": {
@@ -16024,7 +16515,7 @@
             "bearer": []
           }
         ],
-        "summary": "List communities in a workspace",
+        "summary": "List communities in a workspace, newest-first. Cursor-paginated as of task 008 / G13 (previously a bare array).",
         "tags": [
           "social-communities"
         ]
