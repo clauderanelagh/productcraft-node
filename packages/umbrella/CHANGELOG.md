@@ -1,5 +1,12 @@
 # productcraft
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [be3a774]
+  - @productcraft/social@0.4.0
+
 ## 0.2.2
 
 ### Patch Changes
