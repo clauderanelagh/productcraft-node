@@ -1925,6 +1925,14 @@
             "nullable": true,
             "type": "string"
           },
+          "settings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PostSettingsInputDto"
+              }
+            ],
+            "description": "Per-post interaction settings (comment policy, hide reaction counts, allow repost/quote). Omitted keys default to the open shape. Enforced server-side."
+          },
           "source_post_id": {
             "description": "For `kind='quote'` ONLY: the source post being quoted. Reposts use the dedicated POST /posts/:postId/repost route instead. Validation: when `kind='quote'`, both `source_post_id` and a non-empty `body` are required.",
             "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -4160,6 +4168,14 @@
             "nullable": true,
             "type": "string"
           },
+          "settings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PostSettingsDto"
+              }
+            ],
+            "description": "Typed per-post interaction settings (comment policy, count hiding, repost/quote permission). Enforced server-side."
+          },
           "source_post_id": {
             "description": "For kind='repost' / 'quote': the source post UUID.",
             "example": null,
@@ -4233,6 +4249,7 @@
           "view_count",
           "expires_at",
           "pinned",
+          "settings",
           "scheduled_for",
           "created_at",
           "updated_at"
@@ -4342,6 +4359,70 @@
           "data",
           "pagination"
         ],
+        "type": "object"
+      },
+      "PostSettingsDto": {
+        "properties": {
+          "allow_quote": {
+            "description": "When false, quoting this post (kind='quote') is refused (422 QUOTE_NOT_ALLOWED).",
+            "example": true,
+            "type": "boolean"
+          },
+          "allow_repost": {
+            "description": "When false, reposting this post is refused (422 REPOST_NOT_ALLOWED).",
+            "example": true,
+            "type": "boolean"
+          },
+          "comments": {
+            "description": "Who may comment. `everyone` (default), `followers`, `mentioned` (actors mentioned in the post body), or `off` (author only). Enforced server-side on comment create.",
+            "enum": [
+              "everyone",
+              "followers",
+              "mentioned",
+              "off"
+            ],
+            "example": "everyone",
+            "type": "string"
+          },
+          "hide_reaction_counts": {
+            "description": "When true, `reaction_counts` is suppressed (emitted as `{}`) for everyone except the post author, on every read surface.",
+            "example": false,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "comments",
+          "hide_reaction_counts",
+          "allow_repost",
+          "allow_quote"
+        ],
+        "type": "object"
+      },
+      "PostSettingsInputDto": {
+        "properties": {
+          "allow_quote": {
+            "description": "Allow this post to be quoted. Default true.",
+            "type": "boolean"
+          },
+          "allow_repost": {
+            "description": "Allow this post to be reposted. Default true.",
+            "type": "boolean"
+          },
+          "comments": {
+            "description": "Who may comment. `everyone` (default), `followers`, `mentioned`, or `off` (author only).",
+            "enum": [
+              "everyone",
+              "followers",
+              "mentioned",
+              "off"
+            ],
+            "type": "string"
+          },
+          "hide_reaction_counts": {
+            "description": "Suppress reaction_counts for everyone except the author. Default false.",
+            "type": "boolean"
+          }
+        },
         "type": "object"
       },
       "PostStateRequestDto": {
@@ -5184,6 +5265,14 @@
             "description": "ISO-8601 publish-at timestamp. Updating only valid while the post is `status=\"scheduled\"`. Pass null to clear (typically only the scheduler does this on promotion).",
             "nullable": true,
             "type": "string"
+          },
+          "settings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PostSettingsInputDto"
+              }
+            ],
+            "description": "Partial update of the per-post interaction settings. Only the keys you pass change; the rest keep their current value."
           },
           "status": {
             "description": "Direct status transition. Pass `published` to promote a `draft` or `scheduled`. Prefer the moderation lane for `hidden`/`removed`.",
