@@ -307,6 +307,11 @@
             "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
+          "is_private": {
+            "description": "When true, the actor is private (task 014): effective post visibility is capped at `followers` and following requires an approved follow request.",
+            "example": false,
+            "type": "boolean"
+          },
           "metadata": {
             "description": "Free-form metadata blob.",
             "example": {
@@ -338,6 +343,7 @@
           "avatar_url",
           "metadata",
           "status",
+          "is_private",
           "created_at",
           "updated_at"
         ],
@@ -2113,6 +2119,8 @@
                 "comment.reaction.created",
                 "edge.follow.created",
                 "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
                 "flag.created",
                 "flag.updated",
                 "moderation.action.applied",
@@ -2184,6 +2192,8 @@
                 "comment.reaction.created",
                 "edge.follow.created",
                 "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
                 "flag.created",
                 "flag.updated",
                 "moderation.action.applied",
@@ -3017,6 +3027,102 @@
         ],
         "type": "object"
       },
+      "FollowRequestEntryDto": {
+        "properties": {
+          "created_at": {
+            "description": "When the request was created.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "request_id": {
+            "description": "Follow request UUID.",
+            "example": "ffffffff-1111-0000-0000-000000000001",
+            "type": "string"
+          },
+          "src_actor_id": {
+            "description": "Requesting actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "src_avatar_url": {
+            "description": "Requesting actor avatar URL.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "src_display_name": {
+            "description": "Requesting actor display name.",
+            "example": "Bob",
+            "nullable": true,
+            "type": "string"
+          },
+          "src_external_id": {
+            "description": "Requesting actor's external_id.",
+            "example": "bob",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id",
+          "src_actor_id",
+          "src_external_id",
+          "src_display_name",
+          "src_avatar_url",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "FollowRequestListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/FollowRequestEntryDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "FollowResultDto": {
+        "properties": {
+          "created": {
+            "description": "`true` if the edge / request was created on this call; `false` on idempotent retry.",
+            "example": true,
+            "type": "boolean"
+          },
+          "edge": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EdgeResponseDto"
+              }
+            ],
+            "description": "The follow edge when `status=followed`; null when `pending`.",
+            "nullable": true
+          },
+          "status": {
+            "description": "`followed` = an edge exists; `pending` = a follow request was created (private dst).",
+            "enum": [
+              "followed",
+              "pending"
+            ],
+            "example": "followed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "edge",
+          "created"
+        ],
+        "type": "object"
+      },
       "FollowerEdgeListResponseDto": {
         "properties": {
           "data": {
@@ -3557,6 +3663,11 @@
             "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
+          "is_private": {
+            "description": "When true, the actor is private (task 014): effective post visibility is capped at `followers` and following requires an approved follow request.",
+            "example": false,
+            "type": "boolean"
+          },
           "metadata": {
             "description": "Free-form metadata blob.",
             "example": {
@@ -3603,6 +3714,7 @@
           "avatar_url",
           "metadata",
           "status",
+          "is_private",
           "created_at",
           "updated_at",
           "shadow_banned_at",
@@ -3740,7 +3852,9 @@
               "dm_added_to_group",
               "dm_role_changed",
               "dm_reaction",
-              "tag"
+              "tag",
+              "follow_request",
+              "follow_request_approved"
             ],
             "example": "follow",
             "type": "string"
@@ -3796,7 +3910,9 @@
               "dm_added_to_group",
               "dm_role_changed",
               "dm_reaction",
-              "tag"
+              "tag",
+              "follow_request",
+              "follow_request_approved"
             ],
             "example": "reaction",
             "type": "string"
@@ -4862,6 +4978,11 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
           },
+          "follow_pending": {
+            "description": "The source actor has a pending follow request against this (private) actor (task 014).",
+            "example": false,
+            "type": "boolean"
+          },
           "followed_by": {
             "description": "This actor follows the source actor.",
             "example": false,
@@ -4891,7 +5012,8 @@
           "blocking",
           "blocked_by",
           "restricting",
-          "close_friend"
+          "close_friend",
+          "follow_pending"
         ],
         "type": "object"
       },
@@ -5265,6 +5387,10 @@
             "nullable": true,
             "type": "string"
           },
+          "is_private": {
+            "description": "Make the actor private (task 014). Caps effective post visibility at `followers`; following requires an approved request. Flipping back to public auto-approves pending requests.",
+            "type": "boolean"
+          },
           "metadata": {
             "type": "object"
           },
@@ -5565,6 +5691,8 @@
                 "comment.reaction.created",
                 "edge.follow.created",
                 "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
                 "flag.created",
                 "flag.updated",
                 "moderation.action.applied",
@@ -5658,6 +5786,8 @@
                 "comment.reaction.created",
                 "edge.follow.created",
                 "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
                 "flag.created",
                 "flag.updated",
                 "moderation.action.applied",
@@ -5738,6 +5868,8 @@
                 "comment.reaction.created",
                 "edge.follow.created",
                 "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
                 "flag.created",
                 "flag.updated",
                 "moderation.action.applied",
@@ -7066,6 +7198,82 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/actors/{actorId}/follow-requests": {
+      "get": {
+        "operationId": "EdgeController_listIncomingRequests",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The private actor whose incoming requests to list.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FollowRequestListResponseDto"
+                }
+              }
+            },
+            "description": "Page of incoming follow requests."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List incoming follow requests for a (private) actor, newest-first (task 014).",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/actors/{actorId}/followers": {
       "get": {
         "operationId": "EdgeController_listFollowers",
@@ -8202,7 +8410,9 @@
                 "dm_added_to_group",
                 "dm_role_changed",
                 "dm_reaction",
-                "tag"
+                "tag",
+                "follow_request",
+                "follow_request_approved"
               ],
               "type": "string"
             }
@@ -11545,6 +11755,131 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/follow-requests/{dstActorId}/{srcActorId}": {
+      "delete": {
+        "operationId": "EdgeController_declineFollowRequest",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The private actor (decliner).",
+            "in": "path",
+            "name": "dstActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The requesting actor.",
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Request declined."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No pending request for this pair."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Decline a pending follow request (task 014). Deletes the request; no edge, no notification.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/follow-requests/{dstActorId}/{srcActorId}/approve": {
+      "post": {
+        "operationId": "EdgeController_approveFollowRequest",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The private actor being followed (approver).",
+            "in": "path",
+            "name": "dstActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The requesting actor.",
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateEdgeResponseDto"
+                }
+              }
+            },
+            "description": "Request approved; follow edge created."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No pending request for this pair."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a pending follow request (task 014). The destination (private) actor approves the requesting actor; a follow edge is created.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/follows": {
       "post": {
         "operationId": "EdgeController_follow",
@@ -11575,11 +11910,11 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/CreateEdgeResponseDto"
+                  "$ref": "#/components/schemas/FollowResultDto"
                 }
               }
             },
-            "description": "Follow edge created (or returned via idempotent retry)."
+            "description": "Follow edge created / exists (`status: followed`), or a follow request created (`status: pending`)."
           },
           "400": {
             "content": {
@@ -11637,7 +11972,7 @@
             "bearer": []
           }
         ],
-        "summary": "Follow another actor. Idempotent: returns existing edge with `created: false` if the follow already exists. Refused if either side has a block.",
+        "summary": "Follow another actor. Idempotent. If the destination is private (task 014), a follow request is created instead and the response is `{ status: \"pending\", edge: null }`; approve/decline it via the follow-request routes. Refused if either side has a block.",
         "tags": [
           "social-edges"
         ]
