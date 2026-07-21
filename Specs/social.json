@@ -1018,6 +1018,17 @@
             "nullable": true,
             "type": "string"
           },
+          "pinned": {
+            "description": "True when the post author has pinned this top-level comment (task 012). Pinned comments lead the top-level listing.",
+            "example": false,
+            "type": "boolean"
+          },
+          "pinned_at": {
+            "description": "ISO timestamp the comment was pinned; null when not pinned.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
           "post_id": {
             "description": "Post the comment threads under.",
             "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
@@ -1067,6 +1078,8 @@
           "status",
           "visibility",
           "reaction_counts",
+          "pinned",
+          "pinned_at",
           "created_at",
           "updated_at"
         ],
@@ -1321,6 +1334,14 @@
             "example": 50,
             "maximum": 200,
             "minimum": 2,
+            "type": "number"
+          },
+          "max_pinned_comments": {
+            "default": 3,
+            "description": "Maximum pinned top-level comments per post (task 012). Integer 0..100; floored. Exceeding it returns 409 `PIN_CAP_REACHED`.",
+            "example": 3,
+            "maximum": 100,
+            "minimum": 0,
             "type": "number"
           },
           "ranking": {
@@ -3976,6 +3997,19 @@
         ],
         "type": "object"
       },
+      "PinCommentDto": {
+        "properties": {
+          "actor_id": {
+            "description": "The acting actor — must equal the post.actor_id (task 012).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id"
+        ],
+        "type": "object"
+      },
       "PollResultOptionResponse": {
         "properties": {
           "count": {
@@ -4292,13 +4326,14 @@
             "type": "string"
           },
           "status": {
-            "description": "Lifecycle status. Public list/feed surfaces only return `published`; `draft` and `scheduled` rows surface exclusively on the author-scoped drafts / scheduled-posts listings and author reads. `removed` rows are hidden from reads.",
+            "description": "Lifecycle status. Public list/feed surfaces only return `published`; `draft`, `scheduled`, and `archived` rows surface exclusively on their author-scoped listings and author reads. `removed` rows are hidden from reads. `archived` keeps engagement but is author-only.",
             "enum": [
               "published",
               "hidden",
               "removed",
               "draft",
-              "scheduled"
+              "scheduled",
+              "archived"
             ],
             "example": "published",
             "type": "string"
@@ -5463,13 +5498,14 @@
             "description": "Partial update of the per-post interaction settings. Only the keys you pass change; the rest keep their current value."
           },
           "status": {
-            "description": "Direct status transition. Pass `published` to promote a `draft` or `scheduled`. Prefer the moderation lane for `hidden`/`removed`.",
+            "description": "Direct status transition. Pass `published` to promote a `draft`/`scheduled` or restore an `archived` post; pass `archived` to hide-without-deleting (engagement kept). Prefer the moderation lane for `hidden`/`removed`.",
             "enum": [
               "published",
               "hidden",
               "removed",
               "draft",
-              "scheduled"
+              "scheduled",
+              "archived"
             ],
             "type": "string"
           },
@@ -6377,6 +6413,93 @@
         "summary": "Update actor profile fields. Pass only the fields you want to change.",
         "tags": [
           "social-actors"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{actorId}/archived": {
+      "get": {
+        "description": "Archived posts keep their engagement (reaction / comment counts intact) but fall out of every public surface, and `getById` treats them as author-only. Restore one with PATCH `{ status: 'published' }`. Same end-user authorization rules as drafts: the PAK lane trusts the customer-backend to gate the caller.",
+        "operationId": "DraftController_listArchived",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social actor UUID whose archived posts to list.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftListResponseDto"
+                }
+              }
+            },
+            "description": "Page of archived posts."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.list`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the actor's archived posts (status='archived'), newest-first. Cursor-paginated.",
+        "tags": [
+          "social-drafts"
         ]
       }
     },
@@ -14239,6 +14362,190 @@
           }
         ],
         "summary": "Approve a pending_approval comment (restricted-actor pre-moderation). Reserved to the post-author. No-op if already published.",
+        "tags": [
+          "social-comments"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/posts/{postId}/comments/{commentId}/pin": {
+      "delete": {
+        "description": "Clears the pin; the comment returns to its chronological position. Reserved to the post author (403). Idempotent. Pass the acting actor via the request body.",
+        "operationId": "CommentController_unpin",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social post UUID the comments thread under.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social comment UUID.",
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentResponseDto"
+                }
+              }
+            },
+            "description": "Comment unpinned."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the post-author."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Post or comment not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Unpin a comment (post-author only).",
+        "tags": [
+          "social-comments"
+        ]
+      },
+      "post": {
+        "description": "Pins a published top-level comment so it leads the top-level listing. Reserved to the post author (403 otherwise). 409 on a reply, a non-published comment, or when the per-post pin cap (community.settings.max_pinned_comments, default 3) is reached. Idempotent.",
+        "operationId": "CommentController_pin",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social post UUID the comments thread under.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social comment UUID.",
+            "in": "path",
+            "name": "commentId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinCommentDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentResponseDto"
+                }
+              }
+            },
+            "description": "Comment pinned."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the post-author."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Post or comment not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Reply / non-published comment, or pin cap reached (`PIN_CAP_REACHED`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pin a top-level comment (post-author only).",
         "tags": [
           "social-comments"
         ]
