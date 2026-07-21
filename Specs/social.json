@@ -26,6 +26,19 @@
         ],
         "type": "object"
       },
+      "ActingActorDto": {
+        "properties": {
+          "actor_id": {
+            "description": "The actor performing the action (approve: the tagged actor; remove: the tagged actor or the post author).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id"
+        ],
+        "type": "object"
+      },
       "ActorCountersResponseDto": {
         "properties": {
           "actor_id": {
@@ -1947,6 +1960,16 @@
             ],
             "type": "string"
           },
+          "tags": {
+            "description": "Actor UUIDs to tag in the post (task 011). Each lands as a pending tag the actor approves. Non-actors and blocked pairs are skipped. Max 30.",
+            "example": [
+              "aaaaaaaa-0000-0000-0000-000000000002"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "title": {
             "description": "Optional title (1-240 chars).",
             "example": "Shipping Phase 8",
@@ -2073,7 +2096,8 @@
                 "flag.updated",
                 "moderation.action.applied",
                 "actor.updated",
-                "dm.message.created"
+                "dm.message.created",
+                "tag.created"
               ],
               "type": "string"
             },
@@ -2143,7 +2167,8 @@
                 "flag.updated",
                 "moderation.action.applied",
                 "actor.updated",
-                "dm.message.created"
+                "dm.message.created",
+                "tag.created"
               ],
               "type": "string"
             },
@@ -3693,7 +3718,8 @@
               "dm_new_message",
               "dm_added_to_group",
               "dm_role_changed",
-              "dm_reaction"
+              "dm_reaction",
+              "tag"
             ],
             "example": "follow",
             "type": "string"
@@ -3748,7 +3774,8 @@
               "dm_new_message",
               "dm_added_to_group",
               "dm_role_changed",
-              "dm_reaction"
+              "dm_reaction",
+              "tag"
             ],
             "example": "reaction",
             "type": "string"
@@ -4003,6 +4030,88 @@
           "question",
           "options",
           "total_votes"
+        ],
+        "type": "object"
+      },
+      "PollVoteResponse": {
+        "properties": {
+          "created_at": {
+            "description": "When the vote was cast (or last changed).",
+            "example": "2026-05-01T11:30:00.000Z",
+            "type": "string"
+          },
+          "option_index": {
+            "description": "Zero-based index of the option the actor voted for.",
+            "example": 1,
+            "type": "number"
+          }
+        },
+        "required": [
+          "option_index",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "PollVoterResponse": {
+        "properties": {
+          "option_index": {
+            "description": "The option this voter chose.",
+            "example": 1,
+            "type": "number"
+          },
+          "voted_at": {
+            "description": "When the vote was cast.",
+            "example": "2026-05-01T11:30:00.000Z",
+            "type": "string"
+          },
+          "voter_actor_id": {
+            "description": "Voter actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "voter_avatar_url": {
+            "description": "Voter avatar URL.",
+            "example": "https://...",
+            "nullable": true,
+            "type": "string"
+          },
+          "voter_display_name": {
+            "description": "Voter display name.",
+            "example": "Bob",
+            "nullable": true,
+            "type": "string"
+          },
+          "voter_external_id": {
+            "description": "Voter's external_id.",
+            "example": "bob",
+            "type": "string"
+          }
+        },
+        "required": [
+          "voter_actor_id",
+          "voter_external_id",
+          "voter_display_name",
+          "voter_avatar_url",
+          "option_index",
+          "voted_at"
+        ],
+        "type": "object"
+      },
+      "PollVotersResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PollVoterResponse"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -4456,6 +4565,67 @@
         },
         "required": [
           "data"
+        ],
+        "type": "object"
+      },
+      "PostTagResponseDto": {
+        "properties": {
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp the tag was created.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "id": {
+            "description": "Tag UUID.",
+            "example": "ffffffff-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "metadata": {
+            "description": "Opaque customer-defined metadata blob.",
+            "example": null,
+            "nullable": true,
+            "type": "object"
+          },
+          "post_id": {
+            "description": "Tagged post UUID.",
+            "example": "bbbbbbbb-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "state": {
+            "description": "Lifecycle state.",
+            "enum": [
+              "pending",
+              "approved",
+              "removed"
+            ],
+            "example": "approved",
+            "type": "string"
+          },
+          "tagged_actor_id": {
+            "description": "Tagged actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "ISO timestamp of the last state change.",
+            "example": "2026-05-01T12:05:00.000Z",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "post_id",
+          "tagged_actor_id",
+          "state",
+          "metadata",
+          "created_at",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -5004,6 +5174,24 @@
         ],
         "type": "object"
       },
+      "TaggedPostsResponse": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PostResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
       "UnreadCountResponse": {
         "properties": {
           "count": {
@@ -5285,6 +5473,16 @@
             ],
             "type": "string"
           },
+          "tags": {
+            "description": "Additional actor UUIDs to tag (task 011). Additive — creates new pending tags; never resets existing approved/removed tags. Max 30.",
+            "example": [
+              "aaaaaaaa-0000-0000-0000-000000000002"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "title": {
             "description": "Updated title.",
             "maxLength": 240,
@@ -5335,7 +5533,8 @@
                 "flag.updated",
                 "moderation.action.applied",
                 "actor.updated",
-                "dm.message.created"
+                "dm.message.created",
+                "tag.created"
               ],
               "type": "string"
             },
@@ -5427,7 +5626,8 @@
                 "flag.updated",
                 "moderation.action.applied",
                 "actor.updated",
-                "dm.message.created"
+                "dm.message.created",
+                "tag.created"
               ],
               "type": "string"
             },
@@ -5506,7 +5706,8 @@
                 "flag.updated",
                 "moderation.action.applied",
                 "actor.updated",
-                "dm.message.created"
+                "dm.message.created",
+                "tag.created"
               ],
               "type": "string"
             },
@@ -7877,7 +8078,8 @@
                 "dm_new_message",
                 "dm_added_to_group",
                 "dm_role_changed",
-                "dm_reaction"
+                "dm_reaction",
+                "tag"
               ],
               "type": "string"
             }
@@ -8742,6 +8944,85 @@
         "summary": "Suggested follows for an actor.",
         "tags": [
           "social-suggestions"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{actorId}/tagged": {
+      "get": {
+        "description": "Approved tags only, on published + unexpired posts, newest-tag-first. Visibility- and block-aware: pass the viewer via `requester_id` to surface followers / close-friends posts they may read; without it only public posts appear. Pages may be short (post-visibility filtering) but never skip or duplicate.",
+        "operationId": "PostTagController_listTagged",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The tagged actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Viewer actor UUID for visibility resolution.",
+            "in": "query",
+            "name": "requester_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaggedPostsResponse"
+                }
+              }
+            },
+            "description": "Page of tagged posts."
+          },
+          "404": {
+            "description": "Community or actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List posts an actor is tagged in.",
+        "tags": [
+          "social-tags"
         ]
       }
     },
@@ -15086,6 +15367,153 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/posts/{postId}/tags/{actorId}/approve": {
+      "post": {
+        "description": "The tagged actor accepts being tagged; the tag flips `pending → approved` and the post starts surfacing on their `/tagged` listing. 403 if the acting actor is not the tagged actor. 409 if the tag was already removed.",
+        "operationId": "PostTagController_approve",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post UUID.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Tagged actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActingActorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostTagResponseDto"
+                }
+              }
+            },
+            "description": "Tag approved."
+          },
+          "403": {
+            "description": "Acting actor is not the tagged actor."
+          },
+          "404": {
+            "description": "Post or tag not found."
+          },
+          "409": {
+            "description": "Tag already removed."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve a pending tag (tagged actor only).",
+        "tags": [
+          "social-tags"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/posts/{postId}/tags/{actorId}/remove": {
+      "post": {
+        "description": "Flips the tag to `removed`. Removable by either the tagged actor or the post author (403 otherwise). Idempotent on an already-removed tag.",
+        "operationId": "PostTagController_remove",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post UUID.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Tagged actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActingActorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostTagResponseDto"
+                }
+              }
+            },
+            "description": "Tag removed."
+          },
+          "403": {
+            "description": "Acting actor is neither the tagged actor nor the post author."
+          },
+          "404": {
+            "description": "Post or tag not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a tag (tagged actor or post author).",
+        "tags": [
+          "social-tags"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/posts/{postId}/viewers": {
       "get": {
         "description": "Only the post author can list viewers. The PAK passes `requester_id`; if that resolves to an actor whose id != post.actor_id, returns 403. Viewers are ordered by view timestamp, newest-first.",
@@ -15298,6 +15726,125 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/posts/{postId}/voters": {
+      "get": {
+        "description": "Only the poll author can list voters. Pass the author via `actor_id`; a requester whose id != post.actor_id gets 403. Each entry carries the voter and their `option_index`. Optionally filter to a single option with `option`. Ordered newest-first.",
+        "operationId": "StoryController_listVoters",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post UUID containing the poll.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Requester social actor UUID — must resolve to the poll author.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter to voters who chose this option index.",
+            "in": "query",
+            "name": "option",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor from the prior page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PollVotersResponse"
+                }
+              }
+            },
+            "description": "Page of voters."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/invalid actor_id (author-only endpoint)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.list` OR requester is not the poll author."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or post not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List voters of a poll (author-only).",
+        "tags": [
+          "social-stories"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/posts/{postId}/votes": {
       "post": {
         "description": "Last-vote-wins: an actor changing their vote replaces the prior one. 422 if the post has no poll, if `option_index` is out of range, or on self-vote of own poll. 409 if a block exists between voter and post author. Fires a `vote` notification to the post author.",
@@ -15386,7 +15933,7 @@
                 }
               }
             },
-            "description": "Self-vote / no poll / option_index out of range."
+            "description": "Self-vote / no poll / option_index out of range / `POLL_CLOSED` (past the poll `closes_at`)."
           }
         },
         "security": [
@@ -15395,6 +15942,155 @@
           }
         ],
         "summary": "Cast or change a vote on a poll.",
+        "tags": [
+          "social-stories"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/posts/{postId}/votes/{actorId}": {
+      "delete": {
+        "description": "Deletes the vote edge. Idempotent — 204 whether or not a vote existed. No tally decrement: results are computed from surviving votes.",
+        "operationId": "StoryController_deleteVote",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post UUID containing the poll.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Voter social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000002",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Vote retracted (or no-op)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.vote`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Post not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Retract an actor's vote on a poll.",
+        "tags": [
+          "social-stories"
+        ]
+      },
+      "get": {
+        "description": "Returns the actor's chosen `option_index` and when it was cast. 404 when the post is gone or the actor has not voted. Naturally idempotent — no Idempotency-Key.",
+        "operationId": "StoryController_getVote",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Post UUID containing the poll.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "example": "bbbbbbbb-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Voter social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000002",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PollVoteResponse"
+                }
+              }
+            },
+            "description": "The actor's vote."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Post not found, or the actor has not voted."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Read an actor's vote on a poll.",
         "tags": [
           "social-stories"
         ]
