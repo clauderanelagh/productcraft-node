@@ -750,6 +750,65 @@
         ],
         "type": "object"
       },
+      "BlockedTermListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/BlockedTermResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "BlockedTermResponseDto": {
+        "properties": {
+          "action": {
+            "description": "What a match does.",
+            "enum": [
+              "hide",
+              "pending_approval"
+            ],
+            "example": "hide",
+            "type": "string"
+          },
+          "community_id": {
+            "description": "Owning community UUID.",
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "ISO timestamp the term was added.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "id": {
+            "description": "Blocked term UUID.",
+            "example": "ffffffff-2222-0000-0000-000000000001",
+            "type": "string"
+          },
+          "term": {
+            "description": "The blocked term (lowercased).",
+            "example": "spoiler",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "term",
+          "action",
+          "created_at"
+        ],
+        "type": "object"
+      },
       "BookmarkListResponseDto": {
         "properties": {
           "data": {
@@ -1597,6 +1656,28 @@
         ],
         "type": "object"
       },
+      "CreateBlockedTermDto": {
+        "properties": {
+          "action": {
+            "description": "What a match does. Default `hide`.",
+            "enum": [
+              "hide",
+              "pending_approval"
+            ],
+            "example": "hide",
+            "type": "string"
+          },
+          "term": {
+            "description": "The word/phrase to block (case-insensitive substring). Max 128 chars.",
+            "example": "spoiler",
+            "type": "string"
+          }
+        },
+        "required": [
+          "term"
+        ],
+        "type": "object"
+      },
       "CreateBookmarkDto": {
         "properties": {
           "actor_id": {
@@ -1899,6 +1980,14 @@
       },
       "CreateMutedTermDto": {
         "properties": {
+          "action": {
+            "description": "What matching does. `mute` (default) or `pending_approval` (task 015).",
+            "enum": [
+              "mute",
+              "pending_approval"
+            ],
+            "type": "string"
+          },
           "expires_at": {
             "description": "Optional expiry (ISO timestamp in the future).",
             "nullable": true,
@@ -3377,6 +3466,75 @@
         ],
         "type": "object"
       },
+      "HideEntryDto": {
+        "properties": {
+          "created_at": {
+            "description": "When the post was hidden.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "post_id": {
+            "description": "The hidden post UUID.",
+            "example": "bbbbbbbb-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "post_id",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "HideListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/HideEntryDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "HidePostDto": {
+        "properties": {
+          "actor_id": {
+            "description": "The actor hiding the post.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "post_id": {
+            "description": "The post to hide.",
+            "example": "bbbbbbbb-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "actor_id",
+          "post_id"
+        ],
+        "type": "object"
+      },
+      "HideResultDto": {
+        "properties": {
+          "created": {
+            "description": "`true` if the hide was created on this call; `false` on idempotent retry.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "created"
+        ],
+        "type": "object"
+      },
       "HighlightsResponse": {
         "properties": {
           "data": {
@@ -3743,6 +3901,15 @@
       },
       "MutedTermResponseDto": {
         "properties": {
+          "action": {
+            "description": "What matching does (task 015). `mute` = feed-filter only; `pending_approval` = hold a stranger's comment on your post for review.",
+            "enum": [
+              "mute",
+              "pending_approval"
+            ],
+            "example": "mute",
+            "type": "string"
+          },
           "actor_id": {
             "description": "Owning actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
@@ -3786,6 +3953,7 @@
           "community_id",
           "term",
           "scope",
+          "action",
           "expires_at",
           "created_at"
         ],
@@ -6998,6 +7166,84 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/actors/{actorId}/dismissed-suggestions": {
+      "get": {
+        "operationId": "EdgeController_listDismissedSuggestions",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stripe-style expansion. Pass the response field to expand (supported here: `dst_actor`) and the full object is nested under that field on every item. Omit for the unexpanded (default) shape. Unsupported values return 400 `INVALID_EXPAND`.",
+            "in": "query",
+            "name": "expand",
+            "required": false,
+            "schema": {
+              "enum": [
+                "dst_actor"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboundEdgeListResponseDto"
+                }
+              }
+            },
+            "description": "Page of dismissed-suggestion edges."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List actors this actor has dismissed from suggestions. Pass `?expand=dst_actor` to nest each actor's full row.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/actors/{actorId}/drafts": {
       "get": {
         "description": "Drafts are visible only via this endpoint — they're stripped from public feeds, lists, and `getById`. The PAK lane has no end-user principal, so the customer's backend is responsible for ensuring `actorId` matches the end-user behind the request before exposing the response.",
@@ -7743,6 +7989,72 @@
         "summary": "Unfollow a hashtag. Idempotent — 204 either way.",
         "tags": [
           "social-hashtag-follows"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{actorId}/hides": {
+      "get": {
+        "operationId": "EdgeController_listHides",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HideListResponseDto"
+                }
+              }
+            },
+            "description": "Page of hidden posts."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the posts an actor has hidden, newest-first.",
+        "tags": [
+          "social-edges"
         ]
       }
     },
@@ -11657,6 +11969,123 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/dismissed-suggestions": {
+      "post": {
+        "operationId": "EdgeController_dismissSuggestion",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActorEdgeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateEdgeResponseDto"
+                }
+              }
+            },
+            "description": "Suggestion dismissed."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot dismiss yourself."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Dismiss an actor from your follow suggestions (\"don't suggest\"). Idempotent. The actor never re-appears in your suggestions.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/dismissed-suggestions/{srcActorId}/{dstActorId}": {
+      "delete": {
+        "operationId": "EdgeController_undismissSuggestion",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The dismissing actor UUID.",
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The dismissed actor UUID.",
+            "in": "path",
+            "name": "dstActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Un-dismissed (or no-op)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Un-dismiss a suggestion. Idempotent — 204 either way. The actor becomes eligible for suggestions again.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/flags": {
       "post": {
         "operationId": "FlagController_create",
@@ -12374,6 +12803,113 @@
         "summary": "List posts using a hashtag. Same wire shape as the regular post list.",
         "tags": [
           "social-hashtag-posts"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/hides": {
+      "post": {
+        "operationId": "EdgeController_hidePost",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HidePostDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HideResultDto"
+                }
+              }
+            },
+            "description": "Post hidden."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community, actor, or post not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hide a post from the actor's feeds (\"not interested\"). Idempotent. A hard filter — the post drops out of home + discover for that actor only.",
+        "tags": [
+          "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/hides/{srcActorId}/{postId}": {
+      "delete": {
+        "operationId": "EdgeController_unhidePost",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The actor who hid the post.",
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The hidden post UUID.",
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Un-hidden (or no-op)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Un-hide a post. Idempotent — 204 either way.",
+        "tags": [
+          "social-edges"
         ]
       }
     },
@@ -18583,6 +19119,192 @@
           }
         },
         "summary": "Append-only audit of moderator actions in this community. 50/page (max 200), cursor-paginated.",
+        "tags": [
+          "social-moderation-admin"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/blocked-terms": {
+      "get": {
+        "operationId": "ModerationAdminController_listBlockedTerms",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTermListResponseDto"
+                }
+              }
+            },
+            "description": "Page of blocked terms."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.config.read`."
+          }
+        },
+        "summary": "List the community hidden-words lexicon, newest-first. Cursor-paginated (50/page, max 200).",
+        "tags": [
+          "social-moderation-admin"
+        ]
+      },
+      "post": {
+        "operationId": "ModerationAdminController_addBlockedTerm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBlockedTermDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedTermResponseDto"
+                }
+              }
+            },
+            "description": "Blocked term added."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Empty or over-length term."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.config.update`."
+          }
+        },
+        "summary": "Add a hidden word to the community lexicon. A comment whose body contains the term is routed to `action`: `hide` → lands hidden; `pending_approval` → lands in the approve lane. Re-adding a term updates its action. Case-insensitive.",
+        "tags": [
+          "social-moderation-admin"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/blocked-terms/{term}": {
+      "delete": {
+        "operationId": "ModerationAdminController_removeBlockedTerm",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The blocked term to remove (case-insensitive).",
+            "in": "path",
+            "name": "term",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed (or no-op)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.config.update`."
+          }
+        },
+        "summary": "Remove a hidden word. Idempotent — 204 whether or not it existed.",
         "tags": [
           "social-moderation-admin"
         ]
