@@ -590,6 +590,178 @@
         ],
         "type": "object"
       },
+      "AssetAttachmentDto": {
+        "properties": {
+          "alt_text": {
+            "description": "Per-attachment alt text for accessibility; null when unset.",
+            "example": "A golden retriever on a beach",
+            "nullable": true,
+            "type": "string"
+          },
+          "asset_id": {
+            "description": "The attached asset UUID.",
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id",
+          "alt_text"
+        ],
+        "type": "object"
+      },
+      "AssetAttachmentInputDto": {
+        "properties": {
+          "alt_text": {
+            "description": "Per-attachment alt text (≤1000 chars).",
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "asset_id": {
+            "description": "An uploaded asset UUID (status must be `ready`).",
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id"
+        ],
+        "type": "object"
+      },
+      "AssetListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/AssetResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "AssetRenditionDto": {
+        "properties": {
+          "byte_size": {
+            "example": 184320,
+            "type": "number"
+          },
+          "content_type": {
+            "example": "image/jpeg",
+            "type": "string"
+          },
+          "height": {
+            "example": 960,
+            "type": "number"
+          },
+          "name": {
+            "description": "Ladder rung.",
+            "enum": [
+              "original",
+              "medium",
+              "thumb"
+            ],
+            "example": "medium",
+            "type": "string"
+          },
+          "url": {
+            "description": "Short-lived presigned GET URL (re-minted each read).",
+            "example": "https://…r2.cloudflarestorage.com/…?X-Amz-Signature=…",
+            "type": "string"
+          },
+          "width": {
+            "example": 1280,
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "content_type",
+          "width",
+          "height",
+          "byte_size"
+        ],
+        "type": "object"
+      },
+      "AssetResponseDto": {
+        "properties": {
+          "byte_size": {
+            "description": "Size of the original upload in bytes.",
+            "example": 512000,
+            "type": "number"
+          },
+          "community_id": {
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "content_type": {
+            "example": "image/jpeg",
+            "type": "string"
+          },
+          "created_at": {
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "height": {
+            "example": 4032,
+            "nullable": true,
+            "type": "number"
+          },
+          "id": {
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "owner_actor_id": {
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "renditions": {
+            "items": {
+              "$ref": "#/components/schemas/AssetRenditionDto"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "example": "ready",
+            "type": "string"
+          },
+          "updated_at": {
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "width": {
+            "example": 3024,
+            "nullable": true,
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "owner_actor_id",
+          "status",
+          "content_type",
+          "byte_size",
+          "width",
+          "height",
+          "renditions",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "AuditListResponseDto": {
         "properties": {
           "data": {
@@ -1123,6 +1295,13 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "assets": {
+            "description": "Ordered image attachments (task 019). Ref-only; resolve renditions via GET /assets/:id.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentDto"
+            },
+            "type": "array"
+          },
           "body": {
             "description": "Comment body.",
             "example": "Looks great, shipping today.",
@@ -1216,6 +1395,7 @@
           "reaction_counts",
           "pinned",
           "pinned_at",
+          "assets",
           "created_at",
           "updated_at"
         ],
@@ -1788,6 +1968,13 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "assets": {
+            "description": "Ordered image attachments (task 019). Each references a `ready` asset in this community owned by the author. Max 20.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentInputDto"
+            },
+            "type": "array"
+          },
           "body": {
             "description": "Comment body (1-10000 chars after trim).",
             "example": "Looks great, shipping today.",
@@ -2096,6 +2283,13 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "assets": {
+            "description": "Ordered image attachments (task 019). Each references a `ready` asset in this community owned by the author. Max 20.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentInputDto"
+            },
+            "type": "array"
+          },
           "attributes": {
             "description": "Free-form attributes blob. Polls live here at `attributes.poll`.",
             "example": {
@@ -2288,7 +2482,9 @@
                 "moderation.action.applied",
                 "actor.updated",
                 "dm.message.created",
-                "tag.created"
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
               ],
               "type": "string"
             },
@@ -2361,7 +2557,9 @@
                 "moderation.action.applied",
                 "actor.updated",
                 "dm.message.created",
-                "tag.created"
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
               ],
               "type": "string"
             },
@@ -2657,6 +2855,14 @@
       },
       "DirectMessageAdminResponseDto": {
         "properties": {
+          "assets": {
+            "description": "Ordered image attachments (task 019); ref-only.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "attachments": {
             "description": "Attachments.",
             "example": [],
@@ -2740,6 +2946,7 @@
           "kind",
           "body",
           "attachments",
+          "assets",
           "reply_to_id",
           "edited_at",
           "deleted_at",
@@ -2883,6 +3090,13 @@
       },
       "DirectMessageResponseDto": {
         "properties": {
+          "assets": {
+            "description": "Ordered image attachments (task 019). Ref-only; resolve renditions via GET /assets/:id.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentDto"
+            },
+            "type": "array"
+          },
           "attachments": {
             "items": {
               "$ref": "#/components/schemas/DirectMessageAttachmentDto"
@@ -2964,6 +3178,7 @@
           "kind",
           "body",
           "attachments",
+          "assets",
           "reply_to_id",
           "edited_at",
           "deleted_at",
@@ -4635,6 +4850,13 @@
             "example": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
             "type": "string"
           },
+          "assets": {
+            "description": "Ordered image attachments (task 019). Ref-only; resolve renditions via GET /assets/:id.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentDto"
+            },
+            "type": "array"
+          },
           "attributes": {
             "description": "Free-form attributes blob (polls live at `attributes.poll`).",
             "example": {},
@@ -4801,6 +5023,7 @@
           "pinned",
           "settings",
           "scheduled_for",
+          "assets",
           "created_at",
           "updated_at"
         ],
@@ -5400,6 +5623,13 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "assets": {
+            "description": "Ordered image attachments (task 019). Each references a `ready` asset in this community owned by the sender. Max 20.",
+            "items": {
+              "$ref": "#/components/schemas/AssetAttachmentInputDto"
+            },
+            "type": "array"
+          },
           "attachments": {
             "items": {
               "$ref": "#/components/schemas/DirectMessageAttachmentDto"
@@ -5988,7 +6218,9 @@
                 "moderation.action.applied",
                 "actor.updated",
                 "dm.message.created",
-                "tag.created"
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
               ],
               "type": "string"
             },
@@ -5999,6 +6231,28 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UploadAssetResponseDto": {
+        "properties": {
+          "id": {
+            "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "processing",
+              "ready",
+              "failed"
+            ],
+            "example": "ready",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
         "type": "object"
       },
       "UpsertActorDto": {
@@ -6083,7 +6337,9 @@
                 "moderation.action.applied",
                 "actor.updated",
                 "dm.message.created",
-                "tag.created"
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
               ],
               "type": "string"
             },
@@ -6165,7 +6421,9 @@
                 "moderation.action.applied",
                 "actor.updated",
                 "dm.message.created",
-                "tag.created"
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
               ],
               "type": "string"
             },
@@ -6922,6 +7180,83 @@
         "summary": "List the actor's archived posts (status='archived'), newest-first. Cursor-paginated.",
         "tags": [
           "social-drafts"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{actorId}/assets": {
+      "get": {
+        "operationId": "AssetController_listByActor",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Owner actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetListResponseDto"
+                }
+              }
+            },
+            "description": "Page of the actor's assets."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.assets.read`."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List an actor's uploaded assets — the \"your uploads\" surface + GDPR export walk. 50/page (max 200), cursor-paginated newest-first.",
+        "tags": [
+          "social-assets"
         ]
       }
     },
@@ -9878,6 +10213,232 @@
         "summary": "Batched pairwise relationship lookup: does this actor follow / mute / block / restrict each of up to 100 others (and is it followed / blocked back)?",
         "tags": [
           "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/assets": {
+      "post": {
+        "operationId": "AssetController_upload",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "description": "PNG / JPEG / WEBP, ≤10 MB.",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "owner_actor_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file",
+                  "owner_actor_id"
+                ],
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAssetResponseDto"
+                }
+              }
+            },
+            "description": "Asset stored and ready."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing/oversize/wrong-type file, or the bytes do not match the declared image type."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.assets.write`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or owner actor not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The image could not be decoded/processed."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload an image. Processed synchronously (EXIF stripped, renditions generated) and stored in a private bucket. Returns the asset id + status.",
+        "tags": [
+          "social-assets"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/assets/{assetId}": {
+      "delete": {
+        "operationId": "AssetController_delete",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Asset deleted."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.assets.write`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Asset not found in this community."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete an asset — removes every stored rendition object, then the row.",
+        "tags": [
+          "social-assets"
+        ]
+      },
+      "get": {
+        "operationId": "AssetController_get",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResponseDto"
+                }
+              }
+            },
+            "description": "The asset."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.assets.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Asset not found in this community."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch one asset with freshly-minted presigned rendition URLs.",
+        "tags": [
+          "social-assets"
         ]
       }
     },
