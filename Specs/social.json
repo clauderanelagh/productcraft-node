@@ -1997,7 +1997,18 @@
             "type": "string"
           },
           "muted": {
-            "description": "When true, dm_new_message notifications are suppressed for this participant.",
+            "description": "When true, dm_new_message notifications are suppressed indefinitely for this participant.",
+            "example": false,
+            "type": "boolean"
+          },
+          "muted_until": {
+            "description": "Timed mute (task 024): dm_new_message is suppressed while this is in the future. Additive beside `muted`; a past value is inert. Null when no timed mute.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "pinned": {
+            "description": "When true, the thread is pinned to the top of this actor's inbox (task 024).",
             "example": false,
             "type": "boolean"
           },
@@ -2016,6 +2027,8 @@
           "joined_at",
           "last_read_at",
           "muted",
+          "muted_until",
+          "pinned",
           "role"
         ],
         "type": "object"
@@ -2070,6 +2083,11 @@
             },
             "type": "array"
           },
+          "unread_count": {
+            "description": "Unread messages for the requesting actor (task 024) — messages from others created after the requester's last_read_at. Embedded on list + single GET for inbox badges.",
+            "example": 0,
+            "type": "number"
+          },
           "updated_at": {
             "description": "ISO timestamp.",
             "example": "2026-05-01T12:00:00.000Z",
@@ -2083,6 +2101,7 @@
           "name",
           "created_by",
           "participants",
+          "unread_count",
           "created_at",
           "updated_at",
           "last_message_at"
@@ -6472,7 +6491,18 @@
             "type": "string"
           },
           "muted": {
-            "description": "Mute / unmute on the caller's participant row.",
+            "description": "Mute / unmute indefinitely on the caller's participant row.",
+            "example": true,
+            "type": "boolean"
+          },
+          "muted_until": {
+            "description": "Timed mute until this ISO timestamp (task 024). Additive beside `muted`; pass `null` to clear.",
+            "example": "2026-05-02T12:00:00Z",
+            "nullable": true,
+            "type": "string"
+          },
+          "pinned": {
+            "description": "Pin / unpin the thread to the top of the caller's inbox (task 024).",
             "example": true,
             "type": "boolean"
           }
@@ -12482,7 +12512,7 @@
                 }
               }
             },
-            "description": "Conversation after update."
+            "description": "Conversation after update (with the caller's unread_count)."
           },
           "400": {
             "content": {
@@ -12520,7 +12550,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update the caller's participant row — toggle muted today.",
+        "summary": "Update the caller's participant row — mute (indefinite or timed), and pin/unpin the thread (task 024).",
         "tags": [
           "social-conversations"
         ]
@@ -13129,6 +13159,90 @@
           }
         ],
         "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`. Pass the sender via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "tags": [
+          "social-conversations"
+        ]
+      },
+      "get": {
+        "operationId": "ConversationController_getMessage",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Conversation UUID.",
+            "in": "path",
+            "name": "conversationId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Message UUID.",
+            "in": "path",
+            "name": "messageId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The viewer actor UUID — must be a participant.",
+            "in": "query",
+            "name": "actor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DirectMessageResponseDto"
+                }
+              }
+            },
+            "description": "The message."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Conversation/message not found, or caller not a participant."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch a single message (task 024) — resolves a reply target without paging the whole thread. Participant-gated.",
         "tags": [
           "social-conversations"
         ]
