@@ -19600,6 +19600,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque pagination cursor from a prior response. Valid only for the same `q` (task 022).",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -19611,7 +19620,7 @@
                 }
               }
             },
-            "description": "Ranked actor hits."
+            "description": "Ranked actor hits, cursor-paginated by (rank, id)."
           },
           "400": {
             "content": {
@@ -19740,7 +19749,8 @@
         ],
         "summary": "Prefix-search hashtags for autocomplete.",
         "tags": [
-          "social-hashtags"
+          "social-hashtags",
+          "social-search"
         ]
       }
     },
@@ -19813,6 +19823,15 @@
               "format": "uuid",
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque pagination cursor from a prior response. Valid only for the same `(q, order)` pair (task 022).",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -19824,7 +19843,7 @@
                 }
               }
             },
-            "description": "Ranked post hits."
+            "description": "Ranked post hits, cursor-paginated by (rank, id) for relevance or (created_at, id) for recent."
           },
           "400": {
             "content": {
