@@ -39,6 +39,24 @@
         ],
         "type": "object"
       },
+      "ActorCommentsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CommentResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
       "ActorCountersResponseDto": {
         "properties": {
           "actor_id": {
@@ -260,6 +278,59 @@
           "data": {
             "items": {
               "$ref": "#/components/schemas/ActorResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ActorReactionEntryDto": {
+        "properties": {
+          "created_at": {
+            "description": "ISO timestamp the reaction was recorded.",
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "target_id": {
+            "description": "UUID of the reacted-to post or comment (per `target_type`).",
+            "example": "pppppppp-pppp-pppp-pppp-pppppppppppp",
+            "type": "string"
+          },
+          "target_type": {
+            "description": "What the reaction is on.",
+            "enum": [
+              "post",
+              "comment"
+            ],
+            "example": "post",
+            "type": "string"
+          },
+          "type": {
+            "description": "Reaction type (e.g. `like`).",
+            "example": "like",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_type",
+          "target_id",
+          "type",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "ActorReactionsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ActorReactionEntryDto"
             },
             "type": "array"
           },
@@ -18946,6 +19017,200 @@
         "summary": "Update community display name, description, settings, or status. Status transitions are unrestricted (active ↔ suspended; archived is terminal in v1).",
         "tags": [
           "social-communities"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/actors/{actorId}/comments": {
+      "get": {
+        "operationId": "ExportController_comments",
+        "parameters": [
+          {
+            "description": "Workspace UUID.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "example": "wwwwwwww-wwww-wwww-wwww-wwwwwwwwwwww",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Community UUID (must belong to the workspace).",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The data subject — social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActorCommentsResponseDto"
+                }
+              }
+            },
+            "description": "Page of the actor's comments."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.audit.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every comment an actor authored, all statuses (published / hidden / removed) — the GDPR-export view. 50/page (max 200), cursor-paginated newest-first.",
+        "tags": [
+          "social-export"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/actors/{actorId}/reactions": {
+      "get": {
+        "operationId": "ExportController_reactions",
+        "parameters": [
+          {
+            "description": "Workspace UUID.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "example": "wwwwwwww-wwww-wwww-wwww-wwwwwwwwwwww",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Community UUID (must belong to the workspace).",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The data subject — social actor UUID.",
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActorReactionsResponseDto"
+                }
+              }
+            },
+            "description": "Page of the actor's reactions."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.audit.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found in this workspace."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every reaction an actor has given — post reactions and comment reactions unified into one stream, discriminated by `target_type`. The GDPR-export view. 50/page (max 200), cursor-paginated newest-first.",
+        "tags": [
+          "social-export"
         ]
       }
     },
