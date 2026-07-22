@@ -513,6 +513,30 @@
         ],
         "type": "object"
       },
+      "AddItemDto": {
+        "properties": {
+          "caller_actor_id": {
+            "description": "The caller — must be the owner.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "position": {
+            "description": "Curator ordering position.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "post_id": {
+            "description": "The post to add.",
+            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_actor_id",
+          "post_id"
+        ],
+        "type": "object"
+      },
       "AddListMemberDto": {
         "properties": {
           "actor_id": {
@@ -1197,6 +1221,153 @@
         "required": [
           "data",
           "pagination"
+        ],
+        "type": "object"
+      },
+      "CollectionItemListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CollectionItemResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "CollectionItemResponseDto": {
+        "properties": {
+          "added_at": {
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "collection_id": {
+            "example": "99999999-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "community_id": {
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "position": {
+            "example": 0,
+            "type": "number"
+          },
+          "post_id": {
+            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "type": "string"
+          }
+        },
+        "required": [
+          "collection_id",
+          "post_id",
+          "community_id",
+          "position",
+          "added_at"
+        ],
+        "type": "object"
+      },
+      "CollectionListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/CollectionResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationResponseDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "CollectionResponseDto": {
+        "properties": {
+          "community_id": {
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "cover_asset_id": {
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "cover_url": {
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "id": {
+            "example": "99999999-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "item_count": {
+            "description": "Number of posts in the collection.",
+            "example": 12,
+            "type": "number"
+          },
+          "kind": {
+            "enum": [
+              "bookmark",
+              "highlight"
+            ],
+            "example": "bookmark",
+            "type": "string"
+          },
+          "name": {
+            "example": "Travel",
+            "type": "string"
+          },
+          "owner_actor_id": {
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "position": {
+            "description": "Owner-defined ordering position.",
+            "example": 0,
+            "type": "number"
+          },
+          "updated_at": {
+            "example": "2026-05-01T12:00:00.000Z",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "public",
+              "private"
+            ],
+            "example": "private",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "community_id",
+          "owner_actor_id",
+          "name",
+          "kind",
+          "cover_asset_id",
+          "cover_url",
+          "visibility",
+          "position",
+          "item_count",
+          "created_at",
+          "updated_at"
         ],
         "type": "object"
       },
@@ -1935,6 +2106,16 @@
             "description": "Social actor UUID who is bookmarking — the customer-backend supplies the end-user identity here.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
+          },
+          "collection_ids": {
+            "description": "Optional collection UUIDs (task 020) to file this post into alongside the flat bookmark. Only the actor's own collections are written; unknown/other-owner ids are silently skipped. Max 20.",
+            "example": [
+              "99999999-0000-0000-0000-000000000001"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "required": [
@@ -1958,6 +2139,56 @@
         "required": [
           "owner_actor_id",
           "member_actor_id"
+        ],
+        "type": "object"
+      },
+      "CreateCollectionDto": {
+        "properties": {
+          "cover_asset_id": {
+            "description": "Cover image — a ready asset (task 019) owned by the collection owner.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "cover_url": {
+            "description": "Cover image URL (alternative to cover_asset_id).",
+            "maxLength": 2048,
+            "type": "string"
+          },
+          "kind": {
+            "description": "Default `bookmark` (owner-scoped). `highlight` is profile-public and bypasses story expiry.",
+            "enum": [
+              "bookmark",
+              "highlight"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "description": "Collection name (1-200 chars).",
+            "example": "Travel",
+            "type": "string"
+          },
+          "owner_actor_id": {
+            "description": "The owning actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "position": {
+            "description": "Owner-defined ordering position.",
+            "minimum": 0,
+            "type": "number"
+          },
+          "visibility": {
+            "description": "Default `private`.",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "owner_actor_id",
+          "name"
         ],
         "type": "object"
       },
@@ -2650,6 +2881,18 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "DeleteWithCallerDto": {
+        "properties": {
+          "caller_actor_id": {
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_actor_id"
+        ],
         "type": "object"
       },
       "DeliveryJobResponseDto": {
@@ -5597,6 +5840,25 @@
         ],
         "type": "object"
       },
+      "ReorderItemDto": {
+        "properties": {
+          "caller_actor_id": {
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "position": {
+            "description": "New curator position.",
+            "example": 3,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "caller_actor_id",
+          "position"
+        ],
+        "type": "object"
+      },
       "RepostListResponseDto": {
         "properties": {
           "data": {
@@ -5946,6 +6208,44 @@
           },
           "visibility": {
             "description": "New visibility.",
+            "enum": [
+              "public",
+              "private"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "caller_actor_id"
+        ],
+        "type": "object"
+      },
+      "UpdateCollectionDto": {
+        "properties": {
+          "caller_actor_id": {
+            "description": "The caller — must be the owner.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "cover_asset_id": {
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "cover_url": {
+            "maxLength": 2048,
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "position": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "visibility": {
             "enum": [
               "public",
               "private"
@@ -10760,6 +11060,712 @@
         "summary": "Remove a member from an actor's close-friends list.",
         "tags": [
           "social-stories"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/collections": {
+      "get": {
+        "operationId": "CollectionController_list",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Viewer actor — surfaces their own private collections.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "owner_actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "enum": [
+                "bookmark",
+                "highlight"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionListResponseDto"
+                }
+              }
+            },
+            "description": "Page of collections."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List collections. Public ones are visible to anyone; private ones surface only to their owner via actor_id. Filter by owner_actor_id / kind.",
+        "tags": [
+          "social-collections"
+        ]
+      },
+      "post": {
+        "operationId": "CollectionController_create",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client string; replays return the original response.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollectionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionResponseDto"
+                }
+              }
+            },
+            "description": "Collection created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`, owner suspended, or cover asset not owned."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community, owner, or cover asset not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cover asset is not ready."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a collection. Default kind `bookmark`, visibility `private`. Pass an Idempotency-Key so retries are safe.",
+        "tags": [
+          "social-collections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/collections/{collectionId}": {
+      "delete": {
+        "operationId": "CollectionController_delete",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteWithCallerDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the owner."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a collection (owner only). Items cascade; the posts themselves are untouched.",
+        "tags": [
+          "social-collections"
+        ]
+      },
+      "get": {
+        "operationId": "CollectionController_getById",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionResponseDto"
+                }
+              }
+            },
+            "description": "The collection."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not found (or private and not the owner)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch one collection. Private collections resolve only for their owner (via actor_id).",
+        "tags": [
+          "social-collections"
+        ]
+      },
+      "patch": {
+        "operationId": "CollectionController_update",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollectionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionResponseDto"
+                }
+              }
+            },
+            "description": "Updated."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the owner, or PAK lacks `social.update`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cover asset is not ready."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update a collection (owner only) — rename, cover, visibility, reorder position.",
+        "tags": [
+          "social-collections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/collections/{collectionId}/items": {
+      "get": {
+        "operationId": "CollectionController_listItems",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionItemListResponseDto"
+                }
+              }
+            },
+            "description": "Page of items."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not found (or private and not the owner)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a collection's posts in curator order. Highlight collections bypass story expiry; bookmark collections drop expired posts. 50/page (max 200).",
+        "tags": [
+          "social-collections"
+        ]
+      },
+      "post": {
+        "operationId": "CollectionController_addItem",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddItemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionItemResponseDto"
+                }
+              }
+            },
+            "description": "Item added (or already present)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the owner."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Collection or post not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a post to a collection (owner only). Idempotent per (collection, post).",
+        "tags": [
+          "social-collections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/collections/{collectionId}/items/{postId}": {
+      "delete": {
+        "operationId": "CollectionController_removeItem",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteWithCallerDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Item removed."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the owner."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a post from a collection (owner only).",
+        "tags": [
+          "social-collections"
+        ]
+      },
+      "patch": {
+        "operationId": "CollectionController_reorderItem",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "collectionId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderItemDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionItemResponseDto"
+                }
+              }
+            },
+            "description": "Item repositioned."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not the owner."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Collection or item not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reorder a post within a collection (owner only).",
+        "tags": [
+          "social-collections"
         ]
       }
     },
