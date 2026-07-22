@@ -140,6 +140,53 @@
         ],
         "type": "object"
       },
+      "ActorFollowerPointDto": {
+        "properties": {
+          "day": {
+            "example": "2026-05-01",
+            "type": "string"
+          },
+          "follower_count": {
+            "example": 1240,
+            "type": "number"
+          }
+        },
+        "required": [
+          "day",
+          "follower_count"
+        ],
+        "type": "object"
+      },
+      "ActorInsightsResponseDto": {
+        "properties": {
+          "actor_id": {
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "community_id": {
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/ActorFollowerPointDto"
+            },
+            "type": "array"
+          },
+          "follower_count": {
+            "description": "Live follower count.",
+            "example": 1240,
+            "type": "number"
+          }
+        },
+        "required": [
+          "actor_id",
+          "community_id",
+          "follower_count",
+          "daily"
+        ],
+        "type": "object"
+      },
       "ActorListListResponseDto": {
         "properties": {
           "data": {
@@ -4132,6 +4179,31 @@
         ],
         "type": "object"
       },
+      "InsightsDailyBucketDto": {
+        "properties": {
+          "day": {
+            "description": "ISO date (YYYY-MM-DD).",
+            "example": "2026-05-01",
+            "type": "string"
+          },
+          "reach": {
+            "description": "Distinct viewers that day.",
+            "example": 210,
+            "type": "number"
+          },
+          "views": {
+            "description": "Total impressions that day (repeats + anonymous).",
+            "example": 340,
+            "type": "number"
+          }
+        },
+        "required": [
+          "day",
+          "views",
+          "reach"
+        ],
+        "type": "object"
+      },
       "LeaveConversationDto": {
         "properties": {
           "actor_id": {
@@ -5013,6 +5085,62 @@
         ],
         "type": "object"
       },
+      "PostInsightsResponseDto": {
+        "properties": {
+          "comment_count": {
+            "example": 34,
+            "type": "number"
+          },
+          "community_id": {
+            "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+            "type": "string"
+          },
+          "daily": {
+            "items": {
+              "$ref": "#/components/schemas/InsightsDailyBucketDto"
+            },
+            "type": "array"
+          },
+          "post_id": {
+            "example": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "type": "string"
+          },
+          "quote_count": {
+            "example": 4,
+            "type": "number"
+          },
+          "reaction_count": {
+            "example": 128,
+            "type": "number"
+          },
+          "repost_count": {
+            "example": 9,
+            "type": "number"
+          },
+          "unique_reach": {
+            "description": "All-time distinct viewers.",
+            "example": 3110,
+            "type": "number"
+          },
+          "views": {
+            "description": "All-time total impressions.",
+            "example": 4820,
+            "type": "number"
+          }
+        },
+        "required": [
+          "post_id",
+          "community_id",
+          "views",
+          "unique_reach",
+          "reaction_count",
+          "comment_count",
+          "repost_count",
+          "quote_count",
+          "daily"
+        ],
+        "type": "object"
+      },
       "PostListResponseDto": {
         "properties": {
           "data": {
@@ -5705,6 +5833,12 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "viewer_actor_id": {
+            "description": "Optional viewer actor UUID (task 021). When present, the impressions count toward the post's unique reach (deduped per viewer/day); omit for anonymous views (which count total views but not reach).",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "format": "uuid",
+            "type": "string"
           }
         },
         "required": [
@@ -8923,6 +9057,100 @@
         "summary": "List the actor's pinned posts (highlights).",
         "tags": [
           "social-stories"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/actors/{actorId}/insights": {
+      "get": {
+        "operationId": "InsightsController_actorInsights",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActorInsightsResponseDto"
+                }
+              }
+            },
+            "description": "Actor insights."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid window."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.analytics.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Actor not found in this community."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "An actor's follower time series: live follower_count plus a nightly-snapshot daily series over ?from/?to (default trailing 30 days).",
+        "tags": [
+          "social-insights"
         ]
       }
     },
@@ -17506,6 +17734,102 @@
         "summary": "Unreact. Idempotent: returns 200 with current `reaction_counts` even if there was nothing to remove.",
         "tags": [
           "social-comment-reactions"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/posts/{postId}/insights": {
+      "get": {
+        "operationId": "InsightsController_postInsights",
+        "parameters": [
+          {
+            "description": "Social community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "postId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window start (YYYY-MM-DD).",
+            "in": "query",
+            "name": "from",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window end (YYYY-MM-DD).",
+            "in": "query",
+            "name": "to",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostInsightsResponseDto"
+                }
+              }
+            },
+            "description": "Post insights."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid window (inverted or > 366 days)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.analytics.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Post not found in this community."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Aggregate insights for a post: total views, unique reach, engagement counts, and a daily views/reach series over ?from/?to (default trailing 30 days).",
+        "tags": [
+          "social-insights"
         ]
       }
     },
