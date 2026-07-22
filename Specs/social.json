@@ -3971,12 +3971,19 @@
             "description": "Lowercase tag (1..32 chars from [a-z0-9_]).",
             "example": "storymode",
             "type": "string"
+          },
+          "window_post_count": {
+            "description": "Published posts using the tag inside the trending window; non-null only when `order=trending` (task 023).",
+            "example": null,
+            "nullable": true,
+            "type": "number"
           }
         },
         "required": [
           "community_id",
           "tag",
           "first_used_at",
+          "window_post_count",
           "post_count"
         ],
         "type": "object"
@@ -4082,12 +4089,19 @@
             "description": "Lowercase tag (1..32 chars from [a-z0-9_]).",
             "example": "storymode",
             "type": "string"
+          },
+          "window_post_count": {
+            "description": "Published posts using the tag inside the trending window; non-null only when `order=trending` (task 023).",
+            "example": null,
+            "nullable": true,
+            "type": "number"
           }
         },
         "required": [
           "community_id",
           "tag",
-          "first_used_at"
+          "first_used_at",
+          "window_post_count"
         ],
         "type": "object"
       },
@@ -13841,6 +13855,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional post-kind filter (task 023) — e.g. `image`, `link`. Restricts discovery to that kind.",
+            "in": "query",
+            "name": "kind",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -14576,6 +14599,34 @@
             }
           },
           {
+            "description": "`recent` (default) = newest tags first; `trending` = most posts in the window.",
+            "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "recent",
+              "enum": [
+                "recent",
+                "trending"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Trending window (only meaningful with `order=trending`).",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "24h",
+              "enum": [
+                "24h",
+                "7d"
+              ],
+              "type": "string"
+            }
+          },
+          {
             "in": "query",
             "name": "limit",
             "required": false,
@@ -14606,6 +14657,16 @@
             },
             "description": "Page of hashtags."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid order / window."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -14632,7 +14693,7 @@
             "bearer": []
           }
         ],
-        "summary": "List hashtags in this community. Cursor-paginated by `first_used_at` desc.",
+        "summary": "List hashtags in this community. Default order is `first_used_at` desc; `order=trending` ranks by windowed post count (task 023) — pass `window=24h|7d`. `window_post_count` is populated only when trending.",
         "tags": [
           "social-hashtags"
         ]
@@ -14740,6 +14801,19 @@
           },
           {
             "in": "query",
+            "name": "order",
+            "required": false,
+            "schema": {
+              "default": "chronological",
+              "enum": [
+                "chronological",
+                "ranked"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -14750,6 +14824,7 @@
             }
           },
           {
+            "description": "Chronological pages on (created_at, id); ranked on (score, id). A cursor is not portable across orders.",
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -14777,7 +14852,7 @@
                 }
               }
             },
-            "description": "Invalid tag (empty after normalisation, or longer than 32 chars)."
+            "description": "Invalid tag or order value."
           },
           "403": {
             "content": {
@@ -14805,7 +14880,7 @@
             "bearer": []
           }
         ],
-        "summary": "List posts using a hashtag. Same wire shape as the regular post list.",
+        "summary": "List posts using a hashtag. `order=chronological` (default) or `order=ranked` (task 023) — ranked reuses the discover recency+engagement scoring, paginated on a (score, id) cursor. Same wire shape as the regular post list.",
         "tags": [
           "social-hashtag-posts"
         ]
