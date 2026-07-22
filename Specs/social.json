@@ -1914,15 +1914,17 @@
             "type": "string"
           },
           "target_id": {
-            "description": "UUID of the post or comment being flagged.",
+            "description": "UUID of the target (post / comment / actor / message id per target_kind).",
             "example": "pppppppp-pppp-pppp-pppp-pppppppppppp",
             "type": "string"
           },
           "target_kind": {
-            "description": "What kind of object is being flagged.",
+            "description": "What kind of object is being flagged (task 017 adds actor + direct_message). A direct_message flag requires the reporter to be a participant in the conversation.",
             "enum": [
               "post",
-              "comment"
+              "comment",
+              "actor",
+              "direct_message"
             ],
             "example": "post",
             "type": "string"
@@ -2899,6 +2901,51 @@
         ],
         "type": "object"
       },
+      "DirectModerationActionDto": {
+        "properties": {
+          "action": {
+            "description": "Action. hide/remove act on the target; ban/restore suspend/reinstate an actor; warn is audit-only. The audit row has flag_id=null (unsolicited action).",
+            "enum": [
+              "hide",
+              "remove",
+              "warn",
+              "ban",
+              "dismiss",
+              "unhide",
+              "restore"
+            ],
+            "example": "remove",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Optional moderator notes (up to 2000 chars).",
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "target_id": {
+            "description": "The target UUID (post/comment/actor/message id per target_kind).",
+            "example": "bbbbbbbb-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "target_kind": {
+            "description": "What the action targets (task 017). post/comment → status transition; direct_message → moderator soft-delete; actor → ban=suspend / restore=reinstate.",
+            "enum": [
+              "post",
+              "comment",
+              "actor",
+              "direct_message"
+            ],
+            "example": "direct_message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_kind",
+          "target_id",
+          "action"
+        ],
+        "type": "object"
+      },
       "DraftListResponseDto": {
         "properties": {
           "data": {
@@ -3092,7 +3139,9 @@
             "description": "What kind of object is being flagged.",
             "enum": [
               "post",
-              "comment"
+              "comment",
+              "actor",
+              "direct_message"
             ],
             "example": "post",
             "type": "string"
@@ -3750,7 +3799,9 @@
           "target_kind": {
             "enum": [
               "post",
-              "comment"
+              "comment",
+              "actor",
+              "direct_message"
             ],
             "example": "post",
             "type": "string"
@@ -12087,6 +12138,94 @@
       }
     },
     "/v1/communities/{communityId}/flags": {
+      "get": {
+        "operationId": "FlagController_listMine",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the PAK's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The reporter whose flags to list.",
+            "in": "query",
+            "name": "reporter_actor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "open",
+                "dismissed",
+                "actioned"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagListResponseDto"
+                }
+              }
+            },
+            "description": "Page of the reporter's flags."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing reporter_actor_id or invalid status."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List a reporter's own flags (task 017). Requires `reporter_actor_id` — the customer lane sees only that reporter's reports (\"was my report reviewed?\"), never other reporters' flags. Cursor-paginated newest-first.",
+        "tags": [
+          "social-flags"
+        ]
+      },
       "post": {
         "operationId": "FlagController_create",
         "parameters": [
@@ -18875,6 +19014,94 @@
         "summary": "Community-level analytics rollup: total active actors, published posts, published comments, open flags, and last-7-day windows for each.",
         "tags": [
           "social-analytics"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/actions": {
+      "post": {
+        "operationId": "ModerationAdminController_actDirect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string used to deduplicate retries within a 24h window. Replays return the original response; same key + different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DirectModerationActionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModerationActionResponseDto"
+                }
+              }
+            },
+            "description": "Action recorded (flag_id=null audit row); side-effect applied."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid target_kind / action / notes."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.moderate`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or target not found."
+          }
+        },
+        "summary": "Apply a moderation action directly, without a preceding flag (task 017). Acts on any target — post/comment (status), direct_message (moderator soft-delete), or actor (ban=suspend / restore=reinstate). Writes a flag_id=null audit row.",
+        "tags": [
+          "social-moderation-admin"
         ]
       }
     },
