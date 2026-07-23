@@ -1,5 +1,26 @@
 # productcraft
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies [4688927]
+- Updated dependencies [23adb6c]
+- Updated dependencies [e7711bb]
+- Updated dependencies [25494aa]
+- Updated dependencies [a1b912e]
+- Updated dependencies [01edb35]
+- Updated dependencies [9c0ce88]
+- Updated dependencies [590cfaa]
+- Updated dependencies [e20766a]
+- Updated dependencies [4688927]
+- Updated dependencies [1d817c7]
+- Updated dependencies [4afe599]
+- Updated dependencies [1a255d6]
+- Updated dependencies [86e54d2]
+- Updated dependencies [eceee41]
+  - @productcraft/social@0.5.0
+
 ## 0.2.3
 
 ### Patch Changes

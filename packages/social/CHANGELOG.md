@@ -1,5 +1,63 @@
 # @productcraft/agora
 
+## 0.5.0
+
+### Minor Changes
+
+- 25494aa: Social spec refresh — image assets, phase 1 (task 019): new
+  `social-assets` surface (upload / get / delete / list-by-actor at
+  `/v1/communities/{communityId}/assets` + `.../actors/{actorId}/assets`)
+  plus ordered `assets` attachments (asset_id + alt_text) on post,
+  comment, and DM create/response shapes.
+- a1b912e: Social spec refresh — named collections (task 020): new
+  `social-collections` surface (CRUD + items + reorder at
+  `/v1/communities/{communityId}/collections`) for bookmark folders and
+  profile-public highlight reels, plus an optional `collection_ids` on
+  the flat bookmark create.
+- 01edb35: Social spec refresh — insights slice (task 021): new
+  `social-insights` surface (`GET /posts/{postId}/insights` +
+  `GET /actors/{actorId}/insights`) and an optional `viewer_actor_id` on
+  the batch impression endpoint for unique-reach tracking.
+- e20766a: Social spec refresh — DM inbox management (task 024): conversations
+  carry `unread_count`; participant rows carry `pinned` + `muted_until`
+  (settable on the conversation PATCH); new
+  `GET /conversations/{conversationId}/messages/{messageId}`.
+- 4688927: Social spec refresh — conversation route consolidation (task 025):
+  `PATCH /conversations/:id/members/:actorId` is now the canonical home
+  for member state — admins set `role`, the caller sets their own
+  `muted` / `muted_until` / `pinned` (`UpdateMemberRoleDto` is renamed
+  `UpdateMemberDto`, with `role` now optional). Conversation-level
+  `PATCH /conversations/:id` gains `name` for group renames (admin-only,
+  409 on non-group) and its participant fields plus the old rename route
+  are marked deprecated — removal tracked for the next minor.
+- 1d817c7: Add hidden-words moderation and negative-feedback primitives. Admin `/moderation/blocked-terms` (community lexicon), a muted-term `action` field, plus `/hides` (not-interested) and `/dismissed-suggestions` edges with their list endpoints.
+- 4afe599: Add pinned comments and post archive state. Comments gain `pinned`/`pinned_at` and `POST`/`DELETE /posts/{postId}/comments/{commentId}/pin`. Posts gain the `archived` status and `GET /actors/{actorId}/archived`. Community settings gain `max_pinned_comments`.
+- 1a255d6: Add poll completion and post tagging endpoints. Polls: read/retract a vote (`GET`/`DELETE /posts/{postId}/votes/{actorId}`), author voter breakdown (`GET /posts/{postId}/voters`), and enforced `closes_at`. Tagging: `tags` on post create/PATCH, `approve`/`remove` verb routes, `GET /actors/{actorId}/tagged`, plus the `PostTag`, `PollVote`, and `PollVoter` types and the `tag.created` webhook event.
+- 86e54d2: Add per-post interaction settings to the Post schema: `settings` object with `comments` policy (everyone/followers/mentioned/off), `hide_reaction_counts`, `allow_repost`, and `allow_quote`. Settable on post create and PATCH via `PostSettingsInputDto`.
+- eceee41: Add private accounts and follow requests. Actors gain `is_private`; `POST /follows` against a private actor returns `{ status: "pending" }` and creates a follow request. New routes: approve/decline (`/follow-requests/{dst}/{src}`) and list incoming (`/actors/{actorId}/follow-requests`). The relationships lookup gains `follow_pending`, plus `edge.follow.requested` / `edge.follow.request_approved` webhook events.
+
+### Patch Changes
+
+- 4688927: Refresh social OpenAPI types from production.
+- 23adb6c: Social spec refresh — moderation enforcement completeness (task 017):
+  `GET /v1/communities/{communityId}/flags` (reporter-scoped listing),
+  `POST /v1/workspaces/{workspaceId}/communities/{communityId}/moderation/actions`
+  (direct admin-lane action), and `actor` + `direct_message` added to the
+  flag `target_kind` enum.
+- e7711bb: Social spec refresh — GDPR export enumeration (task 018): two new
+  admin-lane per-actor listings,
+  `GET /v1/workspaces/{workspaceId}/communities/{communityId}/actors/{actorId}/comments`
+  (all statuses) and `.../actors/{actorId}/reactions` (post + comment
+  reactions unified), for assembling Art. 15/20 data-subject exports.
+- 9c0ce88: Social spec refresh — search cursor pagination (task 022): both search
+  verticals now return a real `{ next_cursor, has_more }` and accept a
+  `cursor` query param; the hashtag autocomplete route joins the
+  `social-search` tag.
+- 590cfaa: Social spec refresh — trending hashtags + ranked tag feeds (task 023):
+  `order=trending`/`window=` on the hashtag directory (adds
+  `window_post_count`), `order=ranked` on the tag-posts feed, and an
+  optional `kind` filter on the discover feed.
+
 ## 0.4.0
 
 ### Minor Changes
