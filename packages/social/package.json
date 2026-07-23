@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/social",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Social. Generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
