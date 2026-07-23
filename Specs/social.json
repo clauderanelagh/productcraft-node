@@ -728,15 +728,19 @@
             "type": "string"
           },
           "height": {
+            "description": "Null on the un-probed video original.",
             "example": 960,
+            "nullable": true,
             "type": "number"
           },
           "name": {
-            "description": "Ladder rung.",
+            "description": "Ladder rung — original/medium/thumb for images, original/video/poster for videos.",
             "enum": [
               "original",
               "medium",
-              "thumb"
+              "thumb",
+              "video",
+              "poster"
             ],
             "example": "medium",
             "type": "string"
@@ -747,7 +751,9 @@
             "type": "string"
           },
           "width": {
+            "description": "Null on the un-probed video original.",
             "example": 1280,
+            "nullable": true,
             "type": "number"
           }
         },
@@ -780,6 +786,18 @@
             "example": "2026-05-01T12:00:00.000Z",
             "type": "string"
           },
+          "duration_s": {
+            "description": "Output duration in seconds — ready videos only.",
+            "example": 12.48,
+            "nullable": true,
+            "type": "number"
+          },
+          "failure_reason": {
+            "description": "Stable code when status='failed' — ASSET_TOO_LARGE, ASSET_INVALID_CONTAINER, ASSET_DURATION_EXCEEDED, ASSET_TRANSCODE_FAILED, ASSET_PROCESSING_FAILED.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
           "height": {
             "example": 4032,
             "nullable": true,
@@ -787,6 +805,14 @@
           },
           "id": {
             "example": "eeeeeeee-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "image",
+              "video"
+            ],
+            "example": "image",
             "type": "string"
           },
           "owner_actor_id": {
@@ -800,7 +826,9 @@
             "type": "array"
           },
           "status": {
+            "description": "Videos: uploading → processing → ready | failed. Images never enter 'uploading'.",
             "enum": [
+              "uploading",
               "processing",
               "ready",
               "failed"
@@ -822,14 +850,53 @@
           "id",
           "community_id",
           "owner_actor_id",
+          "kind",
           "status",
           "content_type",
           "byte_size",
           "width",
           "height",
+          "duration_s",
+          "failure_reason",
           "renditions",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "AssetUploadDto": {
+        "properties": {
+          "expires_at": {
+            "description": "Signature expiry — finish the PUT before this.",
+            "example": "2026-05-01T12:15:00.000Z",
+            "type": "string"
+          },
+          "headers": {
+            "description": "Headers the PUT must carry — they are bound into the signature. Keys arrive lowercase (HTTP header names are case-insensitive).",
+            "example": {
+              "content-length": "10485760",
+              "content-type": "video/mp4"
+            },
+            "type": "object"
+          },
+          "method": {
+            "enum": [
+              "PUT"
+            ],
+            "example": "PUT",
+            "type": "string"
+          },
+          "url": {
+            "description": "Presigned PUT URL — upload the raw bytes here.",
+            "example": "https://…r2.cloudflarestorage.com/…?X-Amz-Signature=…",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "method",
+          "headers",
+          "expires_at"
         ],
         "type": "object"
       },
@@ -6744,12 +6811,21 @@
           },
           "status": {
             "enum": [
+              "uploading",
               "processing",
               "ready",
               "failed"
             ],
             "example": "ready",
             "type": "string"
+          },
+          "upload": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssetUploadDto"
+              }
+            ],
+            "description": "Present only on video creation — PUT the bytes here, then POST /assets/:id/complete."
           }
         },
         "required": [
@@ -10826,16 +10902,49 @@
               "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
               "type": "string"
             }
+          },
+          {
+            "description": "Makes retries safe.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
           "content": {
-            "multipart/form-data": {
+            "application/json": {
               "schema": {
                 "properties": {
+                  "byte_size": {
+                    "description": "Video path: declared size in bytes (≤512 MB).",
+                    "maximum": 536870912,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "content_type": {
+                    "description": "Video path: declared container type.",
+                    "enum": [
+                      "video/mp4",
+                      "video/quicktime",
+                      "video/webm"
+                    ],
+                    "type": "string"
+                  },
                   "file": {
-                    "description": "PNG / JPEG / WEBP, ≤10 MB.",
+                    "description": "PNG / JPEG / WEBP, ≤10 MB — image path (multipart) only.",
                     "format": "binary",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "default": "image",
+                    "description": "Pass 'video' (JSON body) for the presigned-PUT flow.",
+                    "enum": [
+                      "image",
+                      "video"
+                    ],
                     "type": "string"
                   },
                   "owner_actor_id": {
@@ -10844,7 +10953,49 @@
                   }
                 },
                 "required": [
-                  "file",
+                  "owner_actor_id"
+                ],
+                "type": "object"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "byte_size": {
+                    "description": "Video path: declared size in bytes (≤512 MB).",
+                    "maximum": 536870912,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "content_type": {
+                    "description": "Video path: declared container type.",
+                    "enum": [
+                      "video/mp4",
+                      "video/quicktime",
+                      "video/webm"
+                    ],
+                    "type": "string"
+                  },
+                  "file": {
+                    "description": "PNG / JPEG / WEBP, ≤10 MB — image path (multipart) only.",
+                    "format": "binary",
+                    "type": "string"
+                  },
+                  "kind": {
+                    "default": "image",
+                    "description": "Pass 'video' (JSON body) for the presigned-PUT flow.",
+                    "enum": [
+                      "image",
+                      "video"
+                    ],
+                    "type": "string"
+                  },
+                  "owner_actor_id": {
+                    "format": "uuid",
+                    "type": "string"
+                  }
+                },
+                "required": [
                   "owner_actor_id"
                 ],
                 "type": "object"
@@ -10862,7 +11013,7 @@
                 }
               }
             },
-            "description": "Asset stored and ready."
+            "description": "Image stored and ready, or video created in `uploading` with `upload` instructions."
           },
           "400": {
             "content": {
@@ -10872,7 +11023,7 @@
                 }
               }
             },
-            "description": "Missing/oversize/wrong-type file, or the bytes do not match the declared image type."
+            "description": "Missing/oversize/wrong-type file or declaration, or the bytes do not match the declared image type."
           },
           "403": {
             "content": {
@@ -10903,6 +11054,16 @@
               }
             },
             "description": "The image could not be decoded/processed."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`TOO_MANY_ACTIVE_UPLOADS` — the community already has the max videos uploading/processing."
           }
         },
         "security": [
@@ -10910,7 +11071,7 @@
             "bearer": []
           }
         ],
-        "summary": "Upload an image. Processed synchronously (EXIF stripped, renditions generated) and stored in a private bucket. Returns the asset id + status.",
+        "summary": "Upload media. Images (multipart): processed synchronously, returns ready. Videos (JSON, kind:'video' + declared content_type/byte_size): returns an `uploading` asset with a presigned PUT — upload the bytes, then POST /assets/:id/complete.",
         "tags": [
           "social-assets"
         ]
@@ -11034,6 +11195,93 @@
           }
         ],
         "summary": "Fetch one asset with freshly-minted presigned rendition URLs.",
+        "tags": [
+          "social-assets"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/assets/{assetId}/complete": {
+      "post": {
+        "operationId": "AssetController_complete",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Video asset UUID (status `uploading`).",
+            "in": "path",
+            "name": "assetId",
+            "required": true,
+            "schema": {
+              "example": "eeeeeeee-0000-0000-0000-000000000001",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Makes retries safe.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadAssetResponseDto"
+                }
+              }
+            },
+            "description": "Finalized (`processing`) — or the current status on replay."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.assets.write`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Asset not found in this community."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`ASSET_UPLOAD_INCOMPLETE` (no object / size mismatch — still retryable), `ASSET_TOO_LARGE` or `ASSET_INVALID_CONTAINER` (upload failed + object deleted), or `ASSET_NOT_VIDEO`."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Finalize a presigned-PUT video upload. Verifies the stored object (existence, size, container magic bytes) and enqueues the transcode. Replaying on a finalized asset returns its current status without re-enqueueing.",
         "tags": [
           "social-assets"
         ]
