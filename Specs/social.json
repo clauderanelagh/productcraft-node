@@ -127,15 +127,10 @@
           "payload": {
             "description": "Optional free-form payload stored on the edge (e.g. mute reason).",
             "type": "object"
-          },
-          "src_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11). Accepted for one more version.",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
           }
         },
         "required": [
+          "actor_id",
           "dst_actor_id"
         ],
         "type": "object"
@@ -2375,12 +2370,6 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
-          "src_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
           "type": {
             "description": "Reaction type (free-form short label, e.g. `like`, `fire`, `heart`).",
             "example": "like",
@@ -2390,6 +2379,7 @@
           }
         },
         "required": [
+          "actor_id",
           "type"
         ],
         "type": "object"
@@ -2486,12 +2476,6 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
-          "src_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
           "type": {
             "description": "Reaction type (emoji or label, 1..64 chars).",
             "example": "heart",
@@ -2501,6 +2485,7 @@
           }
         },
         "required": [
+          "actor_id",
           "type"
         ],
         "type": "object"
@@ -2755,12 +2740,6 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
-          "src_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
           "type": {
             "description": "Reaction type (1..64 chars).",
             "example": "like",
@@ -2770,6 +2749,7 @@
           }
         },
         "required": [
+          "actor_id",
           "type"
         ],
         "type": "object"
@@ -2985,35 +2965,11 @@
         "type": "object"
       },
       "DeleteActorListDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — use `?actor_id=`. Caller social actor UUID (must equal the list owner).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
-          "caller_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "DeleteMessageDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — use `?actor_id=`. The sender (must match the message's sender_id).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
-          "sender_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "DeleteWithCallerDto": {
@@ -3201,14 +3157,7 @@
         "type": "object"
       },
       "DeprecatedActorIdBodyDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — pass the actor via the `?actor_id=` query parameter instead. Accepted from the body for one more version.",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "DirectMessageAdminListResponseDto": {
@@ -4305,14 +4254,7 @@
         "type": "object"
       },
       "LeaveConversationDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — use `?actor_id=`. The participant leaving.",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "MarkAllReadDto": {
@@ -5911,14 +5853,11 @@
             "description": "Viewer social actor UUID. Standardized name (task 008 / G11).",
             "example": "aaaaaaaa-0000-0000-0000-000000000002",
             "type": "string"
-          },
-          "viewer_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000002",
-            "type": "string"
           }
         },
+        "required": [
+          "actor_id"
+        ],
         "type": "object"
       },
       "RecordViewsDto": {
@@ -6023,55 +5962,11 @@
         "type": "object"
       },
       "RemoveListMemberDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — use `?actor_id=`. Caller social actor UUID (must equal the list owner).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
-          "caller_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "type": "string"
-          }
-        },
+        "properties": {},
         "type": "object"
       },
       "RemoveMemberDto": {
-        "properties": {
-          "actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED — use `?actor_id=`. Acting actor UUID (equal to the target for self-leave).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
-          "caller_actor_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "RenameGroupDto": {
-        "properties": {
-          "caller_actor_id": {
-            "description": "Social actor UUID of the renaming admin.",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
-          },
-          "name": {
-            "description": "New display name. Pass null or empty to clear.",
-            "maxLength": 200,
-            "nullable": true,
-            "type": "string"
-          }
-        },
-        "required": [
-          "caller_actor_id",
-          "name"
-        ],
+        "properties": {},
         "type": "object"
       },
       "ReorderItemDto": {
@@ -6115,7 +6010,7 @@
       "SendMessageDto": {
         "properties": {
           "actor_id": {
-            "description": "The sender — social actor UUID. Standardized name (task 008 / G11); the persisted `sender_id` defaults from it.",
+            "description": "The sender — social actor UUID. Standardized name (task 008 / G11); the persisted `sender_id` is set from it.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
@@ -6153,14 +6048,11 @@
             "description": "Threaded inline reply target.",
             "nullable": true,
             "type": "string"
-          },
-          "sender_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
           }
         },
+        "required": [
+          "actor_id"
+        ],
         "type": "object"
       },
       "StoryTrayEntryResponse": {
@@ -6557,31 +6449,12 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
-          "muted": {
-            "deprecated": true,
-            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Mute / unmute indefinitely on the caller's participant row.",
-            "example": true,
-            "type": "boolean"
-          },
-          "muted_until": {
-            "deprecated": true,
-            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Timed mute until this ISO timestamp; pass `null` to clear.",
-            "example": "2026-05-02T12:00:00Z",
-            "nullable": true,
-            "type": "string"
-          },
           "name": {
-            "description": "Rename a group conversation (task 025) — group-only, admin-only. The canonical rename home, absorbing the deprecated PATCH /:id/name route.",
+            "description": "Rename a group conversation (task 025) — group-only, admin-only. The canonical rename home.",
             "example": "Weekend plans",
             "maxLength": 200,
             "nullable": true,
             "type": "string"
-          },
-          "pinned": {
-            "deprecated": true,
-            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Pin / unpin the thread in the caller's inbox.",
-            "example": true,
-            "type": "boolean"
           }
         },
         "required": [
@@ -6640,16 +6513,11 @@
             "maxLength": 10000,
             "minLength": 1,
             "type": "string"
-          },
-          "sender_id": {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
-            "example": "aaaaaaaa-0000-0000-0000-000000000001",
-            "type": "string"
           }
         },
         "required": [
-          "body"
+          "body",
+          "actor_id"
         ],
         "type": "object"
       },
@@ -7068,7 +6936,7 @@
   },
   "info": {
     "contact": {},
-    "description": "Social-as-a-Service backend: actors, posts, comments, edges (follow/mute/block/restrict), feeds, stories, DMs, moderation. Two lanes. Customer lane: your backend calls /v1/communities/:communityId/* with a workspace PAK (`Authorization: Bearer pcft_live_...`) and asserts the acting end-user via an actor UUID field (`actor_id` / `src_actor_id` / `requester_id` depending on the route). Admin lane: /v1/workspaces/:workspaceId/* accepts a PAK bearer, a PlatformUser bearer, or the `auth_token` session cookie, and covers community CRUD, moderation, and analytics.",
+    "description": "Social-as-a-Service backend: actors, posts, comments, edges (follow/mute/block/restrict), feeds, stories, DMs, moderation. Two lanes. Customer lane: your backend calls /v1/communities/:communityId/* with a workspace PAK (`Authorization: Bearer pcft_live_...`) and asserts the acting end-user via the standardized `actor_id` (body field or `?actor_id=` query parameter). Admin lane: /v1/workspaces/:workspaceId/* accepts a PAK bearer, a PlatformUser bearer, or the `auth_token` session cookie, and covers community CRUD, moderation, and analytics.",
     "title": "Social API",
     "version": "0.1.0"
   },
@@ -9096,7 +8964,7 @@
     },
     "/v1/communities/{communityId}/actors/{actorId}/highlights": {
       "get": {
-        "description": "Pinned posts appear here regardless of their `expires_at`. Visibility still applies — pass `requester_id` to surface non-public pinned posts the requester is allowed to see. Without that param, only `public` pinned rows are returned (legacy-safe default). Cursor-paginated on `(created_at DESC, id DESC)`.",
+        "description": "Pinned posts appear here regardless of their `expires_at`. Visibility still applies — pass `actor_id` to surface non-public pinned posts the requester is allowed to see. Without that param, only `public` pinned rows are returned (legacy-safe default). Cursor-paginated on `(created_at DESC, id DESC)`.",
         "operationId": "StoryController_getHighlights",
         "parameters": [
           {
@@ -9151,13 +9019,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -12663,7 +12528,7 @@
             "bearer": []
           }
         ],
-        "summary": "Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves. Pass the actor via `?actor_id=`.",
         "tags": [
           "social-conversations"
         ]
@@ -12833,7 +12698,7 @@
             "bearer": []
           }
         ],
-        "summary": "Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. The participant fields (muted / muted_until / pinned) are the DEPRECATED alias for PATCH /:id/members/:actorId.",
+        "summary": "Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. Participant state (muted / muted_until / pinned) lives on PATCH /:id/members/:actorId.",
         "tags": [
           "social-conversations"
         ]
@@ -13039,7 +12904,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a participant. Admin-only unless caller_actor_id equals the target (self-leave).",
+        "summary": "Remove a participant. Admin-only unless the acting `?actor_id=` equals the target (self-leave).",
         "tags": [
           "social-conversations"
         ]
@@ -13133,7 +12998,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update a participant (task 025). Field-level authz: `role` is admin-only; `muted` / `muted_until` / `pinned` are self-only (the caller must be the path actor). The canonical home for participant state — the participant fields on PATCH /conversations/:id are the deprecated alias.",
+        "summary": "Update a participant (task 025). Field-level authz: `role` is admin-only; `muted` / `muted_until` / `pinned` are self-only (the caller must be the path actor). The canonical home for participant state.",
         "tags": [
           "social-conversations"
         ]
@@ -13441,7 +13306,7 @@
             "bearer": []
           }
         ],
-        "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`. Pass the sender via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `\"(deleted)\"`. Pass the sender via `?actor_id=`.",
         "tags": [
           "social-conversations"
         ]
@@ -13944,104 +13809,6 @@
         ]
       }
     },
-    "/v1/communities/{communityId}/conversations/{conversationId}/name": {
-      "patch": {
-        "deprecated": true,
-        "operationId": "ConversationController_renameGroup",
-        "parameters": [
-          {
-            "description": "Social community UUID. Must belong to the PAK's workspace.",
-            "in": "path",
-            "name": "communityId",
-            "required": true,
-            "schema": {
-              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Conversation UUID.",
-            "in": "path",
-            "name": "conversationId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RenameGroupDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConversationResponseDto"
-                }
-              }
-            },
-            "description": "Group renamed."
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Validation failure (name too long)."
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Caller is not an admin."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Conversation not found."
-          },
-          "409": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Conversation is not a group."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "DEPRECATED (task 025) — rename via PATCH /conversations/:id with `name`. Rename a group conversation. Admin-only.",
-        "tags": [
-          "social-conversations"
-        ]
-      }
-    },
     "/v1/communities/{communityId}/conversations/{conversationId}/read": {
       "post": {
         "operationId": "ConversationController_markRead",
@@ -14224,13 +13991,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -14301,7 +14065,7 @@
             "bearer": []
           }
         ],
-        "summary": "Discover / explore feed (task 019). Ranked surface over every public post in the community — Instagram Explore / X \"For You without follow constraint\". Optional `viewer_actor_id` filters the viewer's blocks and applies a small self-boost; without one, the result is the global discovery slice.",
+        "summary": "Discover / explore feed (task 019). Ranked surface over every public post in the community — Instagram Explore / X \"For You without follow constraint\". Optional `actor_id` filters the viewer's blocks and applies a small self-boost; without one, the result is the global discovery slice.",
         "tags": [
           "social-feed"
         ]
@@ -15416,13 +15180,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -15483,7 +15244,7 @@
             "bearer": []
           }
         ],
-        "summary": "List discoverable lists in this community. Public lists are visible to anyone; private lists surface only when `viewer_actor_id` is their owner.",
+        "summary": "List discoverable lists in this community. Public lists are visible to anyone; private lists surface only when `actor_id` is their owner.",
         "tags": [
           "social-lists"
         ]
@@ -15668,7 +15429,7 @@
             "bearer": []
           }
         ],
-        "summary": "Delete a list. Owner-only. Pass the caller via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Delete a list. Owner-only. Pass the caller via `?actor_id=`.",
         "tags": [
           "social-lists"
         ]
@@ -15706,13 +15467,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -15879,13 +15637,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -16010,13 +15765,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "viewer_actor_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -16077,7 +15829,7 @@
             "bearer": []
           }
         ],
-        "summary": "List members of a list. Public lists are visible to anyone; private lists surface only when viewer_actor_id is the owner.",
+        "summary": "List members of a list. Public lists are visible to anyone; private lists surface only when `actor_id` is the owner.",
         "tags": [
           "social-lists"
         ]
@@ -16261,7 +16013,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a member from a list. Owner-only. Idempotent — 204 either way. Pass the caller via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Remove a member from a list. Owner-only. Idempotent — 204 either way. Pass the caller via `?actor_id=`.",
         "tags": [
           "social-lists"
         ]
@@ -16667,61 +16419,6 @@
         ]
       }
     },
-    "/v1/communities/{communityId}/posts/views": {
-      "post": {
-        "deprecated": true,
-        "operationId": "PostController_recordViewsDeprecated",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "communityId",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RecordViewsDto"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "Impressions recorded (or no-op if every id was missing)."
-          },
-          "400": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Empty `post_ids`, more than 200 ids, or a non-UUID in the list."
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "PAK lacks `social.view` on the community URN."
-          }
-        },
-        "summary": "DEPRECATED — use `POST /posts/impressions`. Batch-increment impression counters. This alias will be removed in a future version.",
-        "tags": [
-          "Post"
-        ]
-      }
-    },
     "/v1/communities/{communityId}/posts/{postId}": {
       "delete": {
         "operationId": "PostController_delete",
@@ -16776,7 +16473,7 @@
         ]
       },
       "get": {
-        "description": "Without `requester_id`, only `public` posts return. With one, `followers` / `close_friends` / the requester's own `private` posts surface per the visibility matrix. Returns 404 (opacity) when the requester is not allowed to read the post — never 403.",
+        "description": "Without `actor_id`, only `public` posts return. With one, `followers` / `close_friends` / the requester's own `private` posts surface per the visibility matrix. Returns 404 (opacity) when the requester is not allowed to read the post — never 403.",
         "operationId": "PostController_getById",
         "parameters": [
           {
@@ -16808,13 +16505,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11). Removed in a future version.",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -16851,7 +16545,7 @@
             "description": "Post not found, removed, expired, or not visible to the requester."
           }
         },
-        "summary": "Get a post by id. Visibility-aware: pass `requester_id` for non-public posts.",
+        "summary": "Get a post by id. Visibility-aware: pass `actor_id` for non-public posts.",
         "tags": [
           "Post"
         ]
@@ -16989,7 +16683,7 @@
               }
             }
           },
-          "required": false
+          "required": true
         },
         "responses": {
           "204": {
@@ -17031,7 +16725,7 @@
             "bearer": []
           }
         ],
-        "summary": "Remove a bookmark on behalf of an actor. Idempotent — 204 either way. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Remove a bookmark on behalf of an actor. Idempotent — 204 either way. Pass the actor via `?actor_id=`.",
         "tags": [
           "social-bookmarks"
         ]
@@ -17188,13 +16882,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -17236,7 +16927,7 @@
             "bearer": []
           }
         ],
-        "summary": "List comments on a post. Default returns top-level comments newest-first; pass `parent_id` to expand a thread (oldest-first). Pass `requester_id` so DM-style `author_only` replies surface only to the post-author and the comment-author pair.",
+        "summary": "List comments on a post. Default returns top-level comments newest-first; pass `parent_id` to expand a thread (oldest-first). Pass `actor_id` so DM-style `author_only` replies surface only to the post-author and the comment-author pair.",
         "tags": [
           "social-comments"
         ]
@@ -17460,13 +17151,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           }
@@ -18059,7 +17747,7 @@
                 }
               }
             },
-            "description": "Validation failure (missing src_actor_id; empty / overlong type)."
+            "description": "Validation failure (missing actor_id; empty / overlong type)."
           },
           "403": {
             "content": {
@@ -18806,7 +18494,7 @@
               }
             }
           },
-          "required": false
+          "required": true
         },
         "responses": {
           "204": {
@@ -18848,7 +18536,7 @@
             "bearer": []
           }
         ],
-        "summary": "Undo my repost of a source post. Idempotent — 204 either way. Pass the actor via `?actor_id=` (task 008 / G12 — the request body is deprecated).",
+        "summary": "Undo my repost of a source post. Idempotent — 204 either way. Pass the actor via `?actor_id=`.",
         "tags": [
           "social-reposts"
         ]
@@ -19268,7 +18956,7 @@
     },
     "/v1/communities/{communityId}/posts/{postId}/viewers": {
       "get": {
-        "description": "Only the post author can list viewers. The PAK passes `requester_id`; if that resolves to an actor whose id != post.actor_id, returns 403. Viewers are ordered by view timestamp, newest-first.",
+        "description": "Only the post author can list viewers. The PAK passes `actor_id`; if that resolves to an actor whose id != post.actor_id, returns 403. Viewers are ordered by view timestamp, newest-first.",
         "operationId": "StoryController_listViewers",
         "parameters": [
           {
@@ -19302,13 +18990,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -20017,7 +19702,7 @@
     },
     "/v1/communities/{communityId}/search/actors": {
       "get": {
-        "description": "Postgres FTS over a generated tsvector column (display_name A + external_id B + bio C, `simple` locale). Returns up to `limit` (default 20, max 50) hits ordered by `ts_rank`. Pass `requester_id` to filter out actors the requester has muted or blocked, and actors who have blocked the requester. Trigram fuzzy matching is intentionally out of scope — that's a follow-up.",
+        "description": "Postgres FTS over a generated tsvector column (display_name A + external_id B + bio C, `simple` locale). Returns up to `limit` (default 20, max 50) hits ordered by `ts_rank`. Pass `actor_id` to filter out actors the requester has muted or blocked, and actors who have blocked the requester. Trigram fuzzy matching is intentionally out of scope — that's a follow-up.",
         "operationId": "SearchController_searchActors",
         "parameters": [
           {
@@ -20064,13 +19749,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
@@ -20229,7 +19911,7 @@
     },
     "/v1/communities/{communityId}/search/posts": {
       "get": {
-        "description": "Postgres FTS over a generated tsvector column on the post table (title A + body B, simple locale). `order='relevance'` (default) ranks by ts_rank; `order='recent'` keeps the FTS filter but orders by created_at desc. Filters out drafts / removed / hidden / expired posts. Pass `requester_id` to drop posts authored by anyone the requester has muted / blocked, or who has blocked the requester. Without `requester_id`, only posts with `visibility='public'` surface.",
+        "description": "Postgres FTS over a generated tsvector column on the post table (title A + body B, simple locale). `order='relevance'` (default) ranks by ts_rank; `order='recent'` keeps the FTS filter but orders by created_at desc. Filters out drafts / removed / hidden / expired posts. Pass `actor_id` to drop posts authored by anyone the requester has muted / blocked, or who has blocked the requester. Without `actor_id`, only posts with `visibility='public'` surface.",
         "operationId": "SearchController_searchPosts",
         "parameters": [
           {
@@ -20287,13 +19969,10 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "DEPRECATED alias of `actor_id` (task 008 / G11).",
             "in": "query",
             "name": "requester_id",
-            "required": false,
+            "required": true,
             "schema": {
-              "format": "uuid",
               "type": "string"
             }
           },
