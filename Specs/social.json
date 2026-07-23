@@ -6491,18 +6491,28 @@
             "type": "string"
           },
           "muted": {
-            "description": "Mute / unmute indefinitely on the caller's participant row.",
+            "deprecated": true,
+            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Mute / unmute indefinitely on the caller's participant row.",
             "example": true,
             "type": "boolean"
           },
           "muted_until": {
-            "description": "Timed mute until this ISO timestamp (task 024). Additive beside `muted`; pass `null` to clear.",
+            "deprecated": true,
+            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Timed mute until this ISO timestamp; pass `null` to clear.",
             "example": "2026-05-02T12:00:00Z",
             "nullable": true,
             "type": "string"
           },
+          "name": {
+            "description": "Rename a group conversation (task 025) — group-only, admin-only. The canonical rename home, absorbing the deprecated PATCH /:id/name route.",
+            "example": "Weekend plans",
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
           "pinned": {
-            "description": "Pin / unpin the thread to the top of the caller's inbox (task 024).",
+            "deprecated": true,
+            "description": "DEPRECATED (task 025): use PATCH /:id/members/:actorId. Pin / unpin the thread in the caller's inbox.",
             "example": true,
             "type": "boolean"
           }
@@ -6512,15 +6522,31 @@
         ],
         "type": "object"
       },
-      "UpdateMemberRoleDto": {
+      "UpdateMemberDto": {
         "properties": {
           "caller_actor_id": {
-            "description": "The admin performing the role change — social actor UUID.",
+            "description": "The actor performing the change — social actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "muted": {
+            "description": "Mute the thread indefinitely (self-only — caller must be the path actor). Task 024/025.",
+            "example": true,
+            "type": "boolean"
+          },
+          "muted_until": {
+            "description": "Timed mute until this ISO timestamp (self-only). Pass null to clear.",
+            "example": "2026-05-02T12:00:00Z",
+            "nullable": true,
+            "type": "string"
+          },
+          "pinned": {
+            "description": "Pin / unpin the thread in the caller's inbox (self-only).",
+            "example": true,
+            "type": "boolean"
+          },
           "role": {
-            "description": "Target role.",
+            "description": "Target role (admin-only). Omit to leave unchanged.",
             "enum": [
               "member",
               "admin"
@@ -6530,8 +6556,7 @@
           }
         },
         "required": [
-          "caller_actor_id",
-          "role"
+          "caller_actor_id"
         ],
         "type": "object"
       },
@@ -12532,7 +12557,7 @@
                 }
               }
             },
-            "description": "PAK lacks `social.update`."
+            "description": "Not an admin (rename), or PAK lacks `social.update`."
           },
           "404": {
             "content": {
@@ -12543,6 +12568,16 @@
               }
             },
             "description": "Conversation not found or caller not a participant."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rename on a non-group conversation."
           }
         },
         "security": [
@@ -12550,7 +12585,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update the caller's participant row — mute (indefinite or timed), and pin/unpin the thread (task 024).",
+        "summary": "Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. The participant fields (muted / muted_until / pinned) are the DEPRECATED alias for PATCH /:id/members/:actorId.",
         "tags": [
           "social-conversations"
         ]
@@ -12762,7 +12797,7 @@
         ]
       },
       "patch": {
-        "operationId": "ConversationController_updateMemberRole",
+        "operationId": "ConversationController_updateMember",
         "parameters": [
           {
             "description": "Social community UUID. Must belong to the PAK's workspace.",
@@ -12797,7 +12832,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateMemberRoleDto"
+                "$ref": "#/components/schemas/UpdateMemberDto"
               }
             }
           },
@@ -12812,7 +12847,7 @@
                 }
               }
             },
-            "description": "Role updated."
+            "description": "Participant updated."
           },
           "403": {
             "content": {
@@ -12822,7 +12857,7 @@
                 }
               }
             },
-            "description": "Caller is not an admin."
+            "description": "Not an admin (role) or not the target (self-only fields)."
           },
           "404": {
             "content": {
@@ -12850,7 +12885,7 @@
             "bearer": []
           }
         ],
-        "summary": "Promote / demote a participant. Admin-only.",
+        "summary": "Update a participant (task 025). Field-level authz: `role` is admin-only; `muted` / `muted_until` / `pinned` are self-only (the caller must be the path actor). The canonical home for participant state — the participant fields on PATCH /conversations/:id are the deprecated alias.",
         "tags": [
           "social-conversations"
         ]
@@ -13663,6 +13698,7 @@
     },
     "/v1/communities/{communityId}/conversations/{conversationId}/name": {
       "patch": {
+        "deprecated": true,
         "operationId": "ConversationController_renameGroup",
         "parameters": [
           {
@@ -13752,7 +13788,7 @@
             "bearer": []
           }
         ],
-        "summary": "Rename a group conversation. Admin-only.",
+        "summary": "DEPRECATED (task 025) — rename via PATCH /conversations/:id with `name`. Rename a group conversation. Admin-only.",
         "tags": [
           "social-conversations"
         ]
