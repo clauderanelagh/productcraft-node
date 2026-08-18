@@ -1,5 +1,21 @@
 # @productcraft/heimdall
 
+## 0.6.0
+
+### Minor Changes
+
+- 85a1454: Add `consumer(slug).auth.sendPasswordResetEmail()` — mints a password-reset code **and** dispatches it via Mail in one call, the counterpart to the existing `sendVerificationEmail()`.
+
+  The `send-password-reset-email` route has existed on the API for a while but was never exposed on the SDK, so the only reachable reset method was `requestReset()` — which mints a code and returns it without sending anything. Apps wiring a plain "forgot password" flow to `requestReset()` got a `2xx`, discarded the returned code, and silently sent no mail. `requestReset()`'s docs now state that it does not email, and both methods cross-reference each other.
+
+  `requestReset()` also now carries its real return type (`ConsumerCodeIssueResponseDto`) instead of an inferred one.
+
+### Patch Changes
+
+- d37513a: README: document the mint-vs-dispatch distinction for one-time codes.
+
+  The consumer quick start taught `requestReset()` as the forgot-password recipe. That method mints a code and returns it without sending anything, so following the README verbatim produced a flow that returned `2xx` and silently emailed nobody. The quick start now uses `sendPasswordResetEmail()`, and a new table contrasts all four `request*` / `send*` methods, notes the separate PAK permissions, and covers the typed `412` Mail-precondition errors. Also fixes `resetPassword` in the example, which named a `token` field that doesn't exist (it's `code`).
+
 ## 0.5.2
 
 ### Patch Changes
