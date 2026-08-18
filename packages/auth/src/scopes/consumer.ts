@@ -19,6 +19,7 @@ import { consumerAuthControllerSignin } from "../_generated/clients/consumerAuth
 import { consumerAuthControllerRefresh } from "../_generated/clients/consumerAuth/consumerAuthControllerRefresh.js";
 import { consumerAuthControllerLogout } from "../_generated/clients/consumerAuth/consumerAuthControllerLogout.js";
 import { consumerAuthControllerRequestPasswordReset } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestPasswordReset.js";
+import { consumerAuthControllerSendPasswordResetEmail } from "../_generated/clients/consumerAuth/consumerAuthControllerSendPasswordResetEmail.js";
 import { consumerAuthControllerResetPassword } from "../_generated/clients/consumerAuth/consumerAuthControllerResetPassword.js";
 import { consumerAuthControllerRequestVerification } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestVerification.js";
 import { consumerAuthControllerSendVerificationEmail } from "../_generated/clients/consumerAuth/consumerAuthControllerSendVerificationEmail.js";
@@ -40,6 +41,7 @@ import type { ConsumerSignupDto } from "../_generated/types/ConsumerSignupDto.js
 import type { ConsumerRefreshDto } from "../_generated/types/ConsumerRefreshDto.js";
 import type { ConsumerLogoutDto } from "../_generated/types/ConsumerLogoutDto.js";
 import type { ConsumerRequestPasswordResetDto } from "../_generated/types/ConsumerRequestPasswordResetDto.js";
+import type { ConsumerSendPasswordResetEmailDto } from "../_generated/types/ConsumerSendPasswordResetEmailDto.js";
 import type { ConsumerResetPasswordDto } from "../_generated/types/ConsumerResetPasswordDto.js";
 import type { ConsumerRequestVerificationDto } from "../_generated/types/ConsumerRequestVerificationDto.js";
 import type { ConsumerSendVerificationEmailDto } from "../_generated/types/ConsumerSendVerificationEmailDto.js";
@@ -205,16 +207,57 @@ export class ConsumerScope {
       ),
 
     /**
-     * PAK-required: caller must instantiate `Auth` with
+     * Mint a 6-digit password-reset code. **Sends no email.** Returns
+     * `{ code, expires_at }` for delivery via your own channel — or
+     * `{}` when the contact doesn't match a verified account (uniform
+     * shape — no account enumeration).
+     *
+     * If you want Mail to deliver the code for you, call
+     * {@link sendPasswordResetEmail} instead. Calling this one and
+     * discarding the `code` means the user never hears anything.
+     *
+     * PAK-required with `auth.user.password-reset.create`: caller must
+     * instantiate `Auth` with
      * `auth: { type: "apiKey", key: "pcft_live_..." }`. The
      * kubb-generated `headers.authorization` slot is a stub — the
      * HTTP client's auth middleware overrides whatever's passed.
      */
-    requestReset: (data: ConsumerRequestPasswordResetDto) =>
+    requestReset: (
+      data: ConsumerRequestPasswordResetDto,
+    ): Promise<ConsumerCodeIssueResponseDto> =>
       consumerAuthControllerRequestPasswordReset(
         { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
-      ),
+      ) as Promise<ConsumerCodeIssueResponseDto>,
+
+    /**
+     * Mint + dispatch a password-reset email via Mail in one call.
+     * Returns `{ expires_at }` on success; the plaintext code is NOT
+     * returned. Returns `{}` when the contact is missing or unverified
+     * (same enumeration defence as {@link requestReset}).
+     *
+     * This is the counterpart to {@link sendVerificationEmail} for the
+     * reset slot, and the method you want for a plain "forgot
+     * password" flow — {@link requestReset} only mints, it does not
+     * email.
+     *
+     * PAK-required with `auth.user.password-reset.send-email` —
+     * distinct permission from the bare mint so customers can enable
+     * mint without enabling outbound Mail traffic. Surfaces typed 412
+     * precondition errors (e.g. `ENVOI_NOT_ENABLED`,
+     * `ENVOI_TEMPLATE_NOT_CONFIGURED`) rather than failing silently.
+     */
+    sendPasswordResetEmail: (
+      data: ConsumerSendPasswordResetEmailDto,
+    ): Promise<ConsumerCodeDispatchResponseDto> =>
+      consumerAuthControllerSendPasswordResetEmail(
+        {
+          appSlug: this.appSlug,
+          data,
+          headers: { authorization: "" },
+        },
+        { client: this.client },
+      ) as Promise<ConsumerCodeDispatchResponseDto>,
 
     resetPassword: (data: ConsumerResetPasswordDto) =>
       consumerAuthControllerResetPassword(
