@@ -244,6 +244,63 @@ describe("ConsumerScope — appSlug pre-bound", () => {
     expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
   });
 
+  it("auth.requestReset POSTs to /{slug}/v1/auth/request-password-reset with the PAK on Authorization", async () => {
+    const ff = makeFakeFetch();
+    const auth = new Auth({
+      auth: { type: "apiKey", key: "pcft_live_test" },
+      baseUrl: "https://api.auth.example",
+      fetch: ff.fetch,
+    });
+    await auth
+      .consumer("my-app")
+      .auth.requestReset({ email: "user@example.com" });
+    expect(ff.calls[0]!.method).toBe("POST");
+    expect(ff.calls[0]!.url).toBe(
+      "https://api.auth.example/my-app/v1/auth/request-password-reset",
+    );
+    expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
+    expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
+  });
+
+  it("auth.sendPasswordResetEmail POSTs to /{slug}/v1/auth/send-password-reset-email with the PAK on Authorization", async () => {
+    const ff = makeFakeFetch();
+    const auth = new Auth({
+      auth: { type: "apiKey", key: "pcft_live_test" },
+      baseUrl: "https://api.auth.example",
+      fetch: ff.fetch,
+    });
+    await auth
+      .consumer("my-app")
+      .auth.sendPasswordResetEmail({ email: "user@example.com" });
+    expect(ff.calls[0]!.method).toBe("POST");
+    expect(ff.calls[0]!.url).toBe(
+      "https://api.auth.example/my-app/v1/auth/send-password-reset-email",
+    );
+    expect(ff.calls[0]!.body).toEqual({ email: "user@example.com" });
+    expect(ff.calls[0]!.headers.authorization).toBe("Bearer pcft_live_test");
+  });
+
+  it("auth.sendPasswordResetEmail surfaces the 412 Mail precondition error", async () => {
+    const ff = makeFakeFetch();
+    (ff.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
+      async () =>
+        new Response(
+          JSON.stringify({ code: "ENVOI_TEMPLATE_NOT_CONFIGURED" }),
+          { status: 412 },
+        ),
+    );
+    const auth = new Auth({
+      auth: { type: "apiKey", key: "pcft_live_test" },
+      baseUrl: "https://api.auth.example",
+      fetch: ff.fetch,
+    });
+    await expect(
+      auth
+        .consumer("my-app")
+        .auth.sendPasswordResetEmail({ email: "user@example.com" }),
+    ).rejects.toThrow();
+  });
+
   it("auth.requestVerification (no PAK) propagates the upstream 401", async () => {
     const ff = makeFakeFetch();
     (ff.fetch as ReturnType<typeof vi.fn>).mockImplementationOnce(
