@@ -90,8 +90,11 @@ await consumer.auth.signup({
 
 await consumer.auth.refresh({ refresh_token });
 await consumer.auth.logout({ refresh_token });
-await consumer.auth.requestReset({ email });
-await consumer.auth.resetPassword({ token, new_password: "..." });
+
+// Forgot password. `sendPasswordResetEmail` mints the code AND emails it
+// via Mail — this is what you want for a normal reset flow.
+await consumer.auth.sendPasswordResetEmail({ email });
+await consumer.auth.resetPassword({ code, new_password: "..." });
 
 // Sign in with Apple (native iOS flow). See "Federated sign-in" below.
 await consumer.auth.signinWithProvider({
@@ -115,6 +118,27 @@ await consumer.oauth.clientCredentials({ clientId, clientSecret, scope });
 ```
 
 > **Wire-shape note.** Auth's JSON wire is snake_case, and the SDK returns response objects as-is (e.g. `access_token`, `refresh_token`, `token_type`, `expires_in`). Request DTOs follow the same convention; some convenience fields (`identifier`, `password`, `nonce`) are unaffected, but anywhere the spec uses an underscore the SDK does too.
+
+### One-time codes: who sends the email?
+
+Verification and password-reset each come in two flavours. **Picking the wrong one is silent** — you get a `2xx` and no email is ever sent — so choose deliberately:
+
+| Method | Mints a code | Sends the email | Returns |
+| --- | --- | --- | --- |
+| `auth.requestVerification()` | ✅ | ❌ | `{ code, expires_at }` |
+| `auth.sendVerificationEmail()` | ✅ | ✅ via Mail | `{ expires_at }` |
+| `auth.requestReset()` | ✅ | ❌ | `{ code, expires_at }` |
+| `auth.sendPasswordResetEmail()` | ✅ | ✅ via Mail | `{ expires_at }` |
+
+**Use `send*` for a normal flow.** Mail delivers the code using your app's configured sender and template, and you never handle the plaintext code.
+
+**Use `request*` only when you are delivering the code yourself** — your own SMTP, an SMS provider, or consuming it in-process (e.g. provisioning a test account). If you call `request*` and drop the returned `code` on the floor, your users get nothing and nothing is logged anywhere, because no send was ever attempted.
+
+Each pair is gated by a *separate* PAK permission (`auth.user.verify.create` vs `auth.user.verify.send-email`, and likewise for `password-reset`), so a workspace can enable minting without enabling outbound mail.
+
+The `send*` methods fail loudly with a typed `412` when Mail isn't ready — `ENVOI_NOT_ENABLED`, `ENVOI_SENDER_NOT_CONFIGURED`, `ENVOI_TEMPLATE_NOT_CONFIGURED`, `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` — or `503 ENVOI_DISPATCH_FAILED`. If your endpoint returns a uniform response to prevent account enumeration, catch and **log** these rather than discarding them; a swallowed 412 is indistinguishable from the silent failure above.
+
+Both `request*` and `send*` return `{}` when the contact doesn't match (or is already verified / unverified as appropriate). That's the anti-enumeration contract, not an error — there is nothing to branch on.
 
 ## Federated sign-in (Apple, Google)
 
