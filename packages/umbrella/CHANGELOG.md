@@ -1,5 +1,13 @@
 # productcraft
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [d37513a]
+- Updated dependencies [85a1454]
+  - @productcraft/auth@0.6.0
+
 ## 0.2.6
 
 ### Patch Changes
