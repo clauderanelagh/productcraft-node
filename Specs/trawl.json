@@ -24,7 +24,8 @@
             "type": "object"
           },
           "max_steps": {
-            "description": "Maximum number of worker steps before the job stops.",
+            "default": 20,
+            "description": "Maximum number of agent steps (one LLM call each) before the job stops. Defaults to 20. Multi-source extractions typically need 40+. The server additionally clamps this to an operator ceiling, so a very large value does not guarantee a very long run — `timeout_s` still applies.",
             "maximum": 1000,
             "minimum": 1,
             "type": "number"

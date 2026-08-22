@@ -1951,6 +1951,46 @@
         },
         "type": "object"
       },
+      "ConnectionRequestDto": {
+        "properties": {
+          "dst_actor_id": {
+            "description": "Actor being invited to connect.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "src_actor_id": {
+            "description": "Requesting actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "src_actor_id",
+          "dst_actor_id"
+        ],
+        "type": "object"
+      },
+      "ConnectionResultDto": {
+        "properties": {
+          "created": {
+            "description": "False when the call was an idempotent replay.",
+            "type": "boolean"
+          },
+          "status": {
+            "description": "'pending' — a connection request now awaits the destination's accept. 'connected' — both follow edges exist.",
+            "enum": [
+              "pending",
+              "connected"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "created"
+        ],
+        "type": "object"
+      },
       "ConversationAdminListResponseDto": {
         "properties": {
           "data": {
@@ -12176,6 +12216,244 @@
         "summary": "Reorder a post within a collection (owner only).",
         "tags": [
           "social-collections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections": {
+      "post": {
+        "operationId": "ConnectionController_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResultDto"
+                }
+              }
+            },
+            "description": "`pending` (request created / already open) or `connected` (both edges in place)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing / invalid src_actor_id / dst_actor_id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A block exists between the pair."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot connect with yourself."
+          }
+        },
+        "summary": "Request a connection (mutual follow). Runs the standard follow path: a private destination yields `pending` (accept via the accept route); a public destination connects immediately — the reverse edge is created in the same call. Idempotent; refused on blocks (409) and self-connection (422) exactly like a follow.",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections/{actorId}/{otherActorId}": {
+      "delete": {
+        "operationId": "ConnectionController_sever",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "otherActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Severed (or nothing to sever)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed actor id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.delete`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "summary": "Sever a connection COMPLETELY: deletes the follow edges in both directions and withdraws any pending requests either way. There is no one-sided removal — this is the connections invariant. 204 whether or not anything existed.",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections/{dstActorId}/{srcActorId}/accept": {
+      "post": {
+        "operationId": "ConnectionController_accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dstActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResultDto"
+                }
+              }
+            },
+            "description": "Connected — both follow edges exist."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed actor id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community/actor not found, or no request to accept and src does not follow dst."
+          }
+        },
+        "summary": "Accept `srcActorId`'s connection request as `dstActorId`: approves the follow request AND creates the reverse follow edge, so both directions exist afterwards. Convergent on retry — if the request was already consumed by a partially-completed accept (src already follows dst) the reverse edge is still ensured.",
+        "tags": [
+          "connections"
         ]
       }
     },

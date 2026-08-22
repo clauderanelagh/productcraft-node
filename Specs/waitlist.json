@@ -1,6 +1,101 @@
 {
   "components": {
     "schemas": {
+      "AnalyticsTimelinePointDto": {
+        "properties": {
+          "count": {
+            "description": "Signups on that day (0 for gap days).",
+            "type": "number"
+          },
+          "date": {
+            "description": "UTC day, `YYYY-MM-DD`.",
+            "example": "2026-08-01",
+            "type": "string"
+          }
+        },
+        "required": [
+          "date",
+          "count"
+        ],
+        "type": "object"
+      },
+      "AnalyticsTimelineResponseDto": {
+        "properties": {
+          "granularity": {
+            "enum": [
+              "day"
+            ],
+            "type": "string"
+          },
+          "points": {
+            "description": "Oldest first; every day in [since, until) is present.",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsTimelinePointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "AnalyticsTopReferralDto": {
+        "properties": {
+          "effective_position": {
+            "description": "`position - referral_count * referral_boost`, floored at 1.",
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "description": "Immutable signup position.",
+            "type": "number"
+          },
+          "referral_code": {
+            "type": "string"
+          },
+          "referral_count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "referral_code",
+          "referral_count",
+          "position",
+          "effective_position"
+        ],
+        "type": "object"
+      },
+      "AnalyticsTopReferrerDto": {
+        "properties": {
+          "count": {
+            "type": "number"
+          },
+          "referrer": {
+            "description": "Free-text referrer value; null groups entries without one.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "referrer",
+          "count"
+        ],
+        "type": "object"
+      },
       "BulkEntryActionDto": {
         "properties": {
           "action": {
@@ -41,6 +136,72 @@
         "required": [
           "ids",
           "action"
+        ],
+        "type": "object"
+      },
+      "BulkEntryActionResponseDto": {
+        "properties": {
+          "failed": {
+            "type": "number"
+          },
+          "requested": {
+            "description": "Number of unique ids processed (after de-dupe).",
+            "type": "number"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/BulkEntryResultDto"
+            },
+            "type": "array"
+          },
+          "succeeded": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "requested",
+          "succeeded",
+          "failed",
+          "results"
+        ],
+        "type": "object"
+      },
+      "BulkEntryErrorDto": {
+        "properties": {
+          "code": {
+            "description": "HTTP-style status code for the per-row failure.",
+            "type": "number"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "type": "object"
+      },
+      "BulkEntryResultDto": {
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/BulkEntryErrorDto"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ok",
+              "error"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
         ],
         "type": "object"
       },
@@ -189,6 +350,18 @@
         ],
         "type": "object"
       },
+      "EntryCountResponseDto": {
+        "properties": {
+          "count": {
+            "description": "Total number of entries on the waitlist.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "type": "object"
+      },
       "EntryListPaginationDto": {
         "properties": {
           "has_more": {
@@ -320,6 +493,289 @@
             "type": "boolean"
           }
         },
+        "type": "object"
+      },
+      "InviteToAppResponseDto": {
+        "properties": {
+          "entry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EntryResponseDto"
+              }
+            ],
+            "description": "The entry row after `invited_at` / `invited_to_app_slug` were stamped."
+          },
+          "invite_id": {
+            "description": "Auth invite id created in the linked app.",
+            "type": "string"
+          },
+          "invite_url": {
+            "description": "Invite acceptance URL, when the Auth app returned one. Baked into the approval email when send_email is enabled.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry",
+          "invite_id"
+        ],
+        "type": "object"
+      },
+      "PublicEntryCreatedDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "effective_position": {
+            "description": "Visible position after applying the referral boost — \"you would be #N if approved now\". Equals `position` at signup time (no referrals yet).",
+            "type": "number"
+          },
+          "email": {
+            "description": "Normalised (lower-cased) email.",
+            "type": "string"
+          },
+          "id": {
+            "description": "Entry id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "description": "Immutable signup position (1-based order of signup).",
+            "type": "number"
+          },
+          "referral_code": {
+            "description": "Referral code for this signup. Build your referral URL from it and pass it as `referral_code` on subsequent signups.",
+            "type": "string"
+          },
+          "status": {
+            "description": "`approved` when the waitlist auto-approves; `pending` when admin approval is required.",
+            "enum": [
+              "pending",
+              "approved"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "position",
+          "status",
+          "referral_code",
+          "created_at",
+          "effective_position"
+        ],
+        "type": "object"
+      },
+      "PublicLeaderboardEntryDto": {
+        "properties": {
+          "masked_email": {
+            "description": "Masked email, e.g. `a***@example.com`.",
+            "example": "a***@example.com",
+            "type": "string"
+          },
+          "position": {
+            "description": "Signup position on the waitlist.",
+            "type": "number"
+          },
+          "referral_count": {
+            "description": "Number of honoured referrals.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "position",
+          "referral_count",
+          "masked_email"
+        ],
+        "type": "object"
+      },
+      "PublicReferralRewardMilestoneDto": {
+        "properties": {
+          "count": {
+            "description": "Referral count that unlocks the reward.",
+            "type": "number"
+          },
+          "reward": {
+            "description": "Reward description shown to the signer-up.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "reward"
+        ],
+        "type": "object"
+      },
+      "PublicReferralRewardsDto": {
+        "properties": {
+          "milestones": {
+            "description": "Milestones sorted by count, ascending. Empty when the waitlist has no referral rewards configured.",
+            "items": {
+              "$ref": "#/components/schemas/PublicReferralRewardMilestoneDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "milestones"
+        ],
+        "type": "object"
+      },
+      "PublicWaitlistBrandDto": {
+        "properties": {
+          "brand_logo_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "brand_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "primary_color": {
+            "description": "Primary brand colour as #RRGGBB.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "brand_name",
+          "brand_logo_url",
+          "primary_color"
+        ],
+        "type": "object"
+      },
+      "PublicWaitlistCustomFieldDto": {
+        "properties": {
+          "key": {
+            "description": "Stable field key. Submit values under this key in the entry `metadata` object.",
+            "type": "string"
+          },
+          "label": {
+            "description": "Human-readable label for the field.",
+            "type": "string"
+          },
+          "options": {
+            "description": "Choices for select-style fields.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "type": {
+            "description": "Field type hint (e.g. `text`, `select`).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "type": "object"
+      },
+      "PublicWaitlistInfoDto": {
+        "properties": {
+          "brand": {
+            "$ref": "#/components/schemas/PublicWaitlistBrandDto"
+          },
+          "canonical_workspace_slug": {
+            "description": "Canonical workspace slug. When the request URL used a stale slug, compare with the URL slug and 301-redirect.",
+            "type": "string"
+          },
+          "confirmation_message": {
+            "description": "Message to show after a successful signup.",
+            "type": "string"
+          },
+          "custom_fields": {
+            "items": {
+              "$ref": "#/components/schemas/PublicWaitlistCustomFieldDto"
+            },
+            "type": "array"
+          },
+          "description": {
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Display name (active variant copy wins over the stored name).",
+            "type": "string"
+          },
+          "recaptcha_site_key": {
+            "description": "reCAPTCHA v3 site key. When non-null, POST .../entries requires a `recaptcha_token`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "referral_rewards": {
+            "$ref": "#/components/schemas/PublicReferralRewardsDto"
+          },
+          "slug": {
+            "description": "Waitlist slug.",
+            "type": "string"
+          },
+          "status": {
+            "description": "Always `active` — non-active waitlists return 404.",
+            "type": "string"
+          },
+          "variant": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicWaitlistVariantDto"
+              }
+            ],
+            "description": "Active A/B or locale variant served for this request; null when none configured.",
+            "nullable": true
+          },
+          "workspace_slug": {
+            "description": "Workspace slug the request resolved against.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "workspace_slug",
+          "canonical_workspace_slug",
+          "display_name",
+          "description",
+          "status",
+          "custom_fields",
+          "confirmation_message",
+          "recaptcha_site_key",
+          "referral_rewards",
+          "variant",
+          "brand"
+        ],
+        "type": "object"
+      },
+      "PublicWaitlistVariantDto": {
+        "properties": {
+          "id": {
+            "description": "Active variant id. Round-trip it as `variant_id` on POST .../entries to attribute the signup.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "ab",
+              "locale"
+            ],
+            "type": "string"
+          },
+          "locale": {
+            "description": "BCP-47 locale of the served copy.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "locale",
+          "kind"
+        ],
         "type": "object"
       },
       "TestWebhookDto": {
@@ -563,6 +1019,70 @@
         ],
         "type": "object"
       },
+      "WaitlistAnalyticsResponseDto": {
+        "properties": {
+          "by_status": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Entry counts keyed by status (`pending` / `approved` / `rejected`).",
+            "example": {
+              "approved": 40,
+              "pending": 12,
+              "rejected": 3
+            },
+            "type": "object"
+          },
+          "referred_count": {
+            "type": "number"
+          },
+          "signups_this_month": {
+            "type": "number"
+          },
+          "signups_this_week": {
+            "type": "number"
+          },
+          "signups_today": {
+            "type": "number"
+          },
+          "top_referrals": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsTopReferralDto"
+            },
+            "type": "array"
+          },
+          "top_referrers": {
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsTopReferrerDto"
+            },
+            "type": "array"
+          },
+          "total_entries": {
+            "type": "number"
+          },
+          "viral_coefficient": {
+            "description": "referrals / total_entries — the K-factor proxy. 0 when no entries.",
+            "type": "number"
+          },
+          "waitlist_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "waitlist_id",
+          "total_entries",
+          "by_status",
+          "signups_today",
+          "signups_this_week",
+          "signups_this_month",
+          "viral_coefficient",
+          "referred_count",
+          "top_referrers",
+          "top_referrals"
+        ],
+        "type": "object"
+      },
       "WaitlistListPaginationDto": {
         "properties": {
           "has_more": {
@@ -666,6 +1186,79 @@
         ],
         "type": "object"
       },
+      "WaitlistSettingsResponseDto": {
+        "properties": {
+          "approved_template_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "brand_logo_url": {
+            "nullable": true,
+            "type": "string"
+          },
+          "brand_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_heimdall_app_slug": {
+            "description": "Auth consumer-app slug approved entries are invited into.",
+            "nullable": true,
+            "type": "string"
+          },
+          "default_sender_address": {
+            "nullable": true,
+            "type": "string"
+          },
+          "default_sender_domain_id": {
+            "description": "Mail domain UUID used as default sender for Waitlist notifications.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "notifications_via_envoi": {
+            "description": "Whether Waitlist notifications are routed through the Mail service.",
+            "type": "boolean"
+          },
+          "primary_color": {
+            "description": "Primary brand colour as #RRGGBB",
+            "nullable": true,
+            "type": "string"
+          },
+          "rejected_template_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "updated_at": {
+            "description": "null when the workspace has no explicit settings row yet.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "welcome_template_name": {
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "default_sender_domain_id",
+          "default_heimdall_app_slug",
+          "brand_name",
+          "brand_logo_url",
+          "primary_color",
+          "notifications_via_envoi",
+          "default_sender_address",
+          "welcome_template_name",
+          "approved_template_name",
+          "rejected_template_name",
+          "updated_at"
+        ],
+        "type": "object"
+      },
       "WebhookCreateResponseDto": {
         "properties": {
           "active": {
@@ -731,6 +1324,82 @@
           "first_failure_at",
           "created_at",
           "signing_secret"
+        ],
+        "type": "object"
+      },
+      "WebhookDeliveryAttemptDto": {
+        "properties": {
+          "attempt_number": {
+            "description": "1-based retry counter for the event.",
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error_message": {
+            "nullable": true,
+            "type": "string"
+          },
+          "event_id": {
+            "description": "Idempotency id of the dispatched event.",
+            "type": "string"
+          },
+          "event_type": {
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "latency_ms": {
+            "nullable": true,
+            "type": "number"
+          },
+          "response_body_truncated": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "description": "HTTP status from the destination; null when the request errored before a response.",
+            "nullable": true,
+            "type": "number"
+          },
+          "webhook_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "webhook_id",
+          "event_id",
+          "event_type",
+          "attempt_number",
+          "status_code",
+          "response_body_truncated",
+          "error_message",
+          "latency_ms",
+          "attempted_at"
+        ],
+        "type": "object"
+      },
+      "WebhookDeliveryListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
         ],
         "type": "object"
       },
@@ -810,6 +1479,23 @@
           "created_at"
         ],
         "type": "object"
+      },
+      "WebhookRotateSecretResponseDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "secret": {
+            "description": "New plaintext signing secret, returned EXACTLY ONCE. Persist immediately — it does not appear on subsequent GETs.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "secret"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -860,6 +1546,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicWaitlistInfoDto"
+                }
+              }
+            },
             "description": "Public waitlist info"
           },
           "404": {
@@ -905,7 +1598,14 @@
         },
         "responses": {
           "201": {
-            "description": "Entry created"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicEntryCreatedDto"
+                }
+              }
+            },
+            "description": "Entry created. Persist `referral_code` client-side to build the referral URL; `status` is `approved` when the waitlist auto-approves."
           },
           "400": {
             "description": "Validation or spam check failed"
@@ -961,6 +1661,16 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PublicLeaderboardEntryDto"
+                  },
+                  "type": "array"
+                }
+              }
+            },
             "description": "Array of `{ position, referral_count, masked_email }`"
           },
           "404": {
@@ -988,6 +1698,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistSettingsResponseDto"
+                }
+              }
+            },
             "description": "Workspace Waitlist settings."
           },
           "403": {
@@ -1031,6 +1748,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistSettingsResponseDto"
+                }
+              }
+            },
             "description": "Updated workspace Waitlist settings."
           },
           "400": {
@@ -1063,6 +1787,7 @@
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -1126,6 +1851,7 @@
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -1192,6 +1918,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1223,6 +1958,15 @@
             "name": "id",
             "required": true,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -1260,6 +2004,15 @@
             "name": "id",
             "required": true,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -1312,6 +2065,15 @@
             "name": "id",
             "required": true,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -1378,6 +2140,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistAnalyticsResponseDto"
+                }
+              }
+            },
             "description": "Aggregated analytics payload for the waitlist."
           },
           "403": {
@@ -1439,6 +2208,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsTimelineResponseDto"
+                }
+              }
+            },
             "description": "Daily timeline array, oldest first, zero-count days included."
           },
           "400": {
@@ -1574,6 +2350,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkEntryActionResponseDto"
+                }
+              }
+            },
             "description": "`{ requested, succeeded, failed, results }`. Each row in `results` carries `{ id, status: \"ok\" | \"error\", error?: { code, message } }` so a partial failure (one bad id) doesn't fail the whole batch."
           },
           "400": {
@@ -1620,7 +2403,17 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryCountResponseDto"
+                }
+              }
+            },
+            "description": "Total entry count."
+          },
+          "404": {
+            "description": "Waitlist not found in this workspace."
           }
         },
         "security": [
@@ -1657,7 +2450,14 @@
         ],
         "responses": {
           "200": {
-            "description": "CSV stream"
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "text/csv stream — one header row + one row per entry. Content-Disposition: attachment."
           }
         },
         "security": [
@@ -1885,6 +2685,13 @@
         },
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteToAppResponseDto"
+                }
+              }
+            },
             "description": "Invite created in Auth"
           },
           "422": {
@@ -2317,7 +3124,17 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookResponseDto"
+                }
+              }
+            },
+            "description": "Updated webhook row (secret masked)."
+          },
+          "404": {
+            "description": "Webhook not found."
           }
         },
         "security": [
@@ -2354,7 +3171,17 @@
         ],
         "responses": {
           "200": {
-            "description": "`{ data: Array<{ id, event_id, event_type, attempt_number, status_code, response_body, error_message, latency_ms, created_at }> }`"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryListResponseDto"
+                }
+              }
+            },
+            "description": "`{ data: Array<{ id, webhook_id, event_id, event_type, attempt_number, status_code, response_body_truncated, error_message, latency_ms, attempted_at }> }`, newest first."
+          },
+          "404": {
+            "description": "Webhook not found."
           }
         },
         "security": [
@@ -2391,7 +3218,17 @@
         ],
         "responses": {
           "201": {
-            "description": ""
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookRotateSecretResponseDto"
+                }
+              }
+            },
+            "description": "Secret rotated. Includes the new plaintext secret exactly once."
+          },
+          "404": {
+            "description": "Webhook not found."
           }
         },
         "security": [
