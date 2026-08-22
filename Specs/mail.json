@@ -4357,7 +4357,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Attachment stream"
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Binary attachment stream. `Content-Type` reflects the stored attachment media type; `Content-Disposition: attachment`."
           },
           "404": {
             "description": "Attachment not found"
@@ -4405,7 +4413,15 @@
         ],
         "responses": {
           "200": {
-            "description": "Raw message stream"
+            "content": {
+              "message/rfc822": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Raw RFC5322 message stream (`Content-Disposition: attachment`, `.eml`)."
           },
           "404": {
             "description": "Message not found"
@@ -4678,6 +4694,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "description": "text/csv stream with one header row + one row per message. Content-Disposition: attachment."
           },
           "429": {
