@@ -2,7 +2,23 @@
   "components": {
     "schemas": {
       "AddSuppressionDto": {
-        "properties": {},
+        "properties": {
+          "email": {
+            "description": "Address to suppress. Once listed, sends to it are dropped before delivery.",
+            "example": "bounced@example.com",
+            "format": "email",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Why it was suppressed. Free text, for the operator reading the list later.",
+            "example": "hard bounce",
+            "maxLength": 255,
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
         "type": "object"
       },
       "BounceWebhookResponseDto": {
@@ -566,10 +582,14 @@
               "$ref": "#/components/schemas/DomainDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -662,10 +682,14 @@
               "$ref": "#/components/schemas/SuppressionEntryDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -690,10 +714,14 @@
               "$ref": "#/components/schemas/TemplateDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -802,6 +830,7 @@
             "type": "array"
           },
           "body_preview": {
+            "description": "First 512 bytes of the plaintext body. This is message content, not metadata, so it is only populated for callers holding `mail.message.body.read`; everyone else sees null. The full body is at /:mid/raw, behind the same action.",
             "nullable": true,
             "type": "string"
           },
@@ -926,6 +955,7 @@
       "MessageDto": {
         "properties": {
           "body_preview": {
+            "description": "First 512 bytes of the plaintext body. This is message content, not metadata, so it is only populated for callers holding `mail.message.body.read`; everyone else sees null. The full body is at /:mid/raw, behind the same action.",
             "nullable": true,
             "type": "string"
           },
@@ -1091,6 +1121,7 @@
             "type": "string"
           },
           "delivered_at": {
+            "description": "When the message was confirmed delivered to the recipient. Null unless there is recipient-side evidence — a relay accept is not delivery, and neither is the destination MX returning 250.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
@@ -1113,6 +1144,12 @@
           },
           "id": {
             "format": "uuid",
+            "type": "string"
+          },
+          "sent_at": {
+            "description": "When the message left our relay. This is the fact the send path actually establishes.",
+            "format": "date-time",
+            "nullable": true,
             "type": "string"
           },
           "smtp_transcript": {
@@ -1167,6 +1204,7 @@
           "bounce_code",
           "bounce_detail",
           "created_at",
+          "sent_at",
           "delivered_at"
         ],
         "type": "object"
@@ -1230,6 +1268,7 @@
             "type": "string"
           },
           "delivered_at": {
+            "description": "When the message was confirmed delivered to the recipient. Null unless there is recipient-side evidence — a relay accept is not delivery, and neither is the destination MX returning 250.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
@@ -1252,6 +1291,12 @@
           },
           "id": {
             "format": "uuid",
+            "type": "string"
+          },
+          "sent_at": {
+            "description": "When the message left our relay. This is the fact the send path actually establishes.",
+            "format": "date-time",
+            "nullable": true,
             "type": "string"
           },
           "smtp_transcript": {
@@ -1306,6 +1351,7 @@
           "bounce_code",
           "bounce_detail",
           "created_at",
+          "sent_at",
           "delivered_at",
           "body_html",
           "body_text"
@@ -1344,6 +1390,11 @@
             "nullable": true,
             "type": "number"
           },
+          "response_body_truncated": {
+            "description": "The receiver's response body, truncated to 1KB by the dispatcher. Null when the request never got a response (DNS / connect / timeout) — read `error_message` in that case.",
+            "nullable": true,
+            "type": "string"
+          },
           "status_code": {
             "nullable": true,
             "type": "number"
@@ -1359,6 +1410,7 @@
           "attempt_number",
           "status_code",
           "error_message",
+          "response_body_truncated",
           "latency_ms",
           "attempted_at",
           "url",
@@ -1959,7 +2011,7 @@
             "type": "string"
           },
           "to": {
-            "description": "To email address or list of addresses",
+            "description": "Recipient address. One address — the suppression check, the stored `to_address` and the relay envelope all treat this field as a single mailbox, so a comma-joined list was never actually sent to more than the first. Use `/send-batch` for many.",
             "example": "user@example.com",
             "type": "string"
           }
@@ -2489,11 +2541,12 @@
           "event_types": {
             "description": "Events the destination subscribes to.",
             "example": [
-              "message.delivered",
+              "message.sent",
               "message.bounced"
             ],
             "items": {
               "enum": [
+                "message.sent",
                 "message.delivered",
                 "message.bounced"
               ],
@@ -2987,6 +3040,51 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Page size. Defaults to 20; values above 100 are clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Omit for the first page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Case-insensitive substring match on the domain fqdn.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by verification status. Unrecognised values are rejected with a 400.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pending",
+                "active",
+                "disabled"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2999,6 +3097,9 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "description": "Invalid cursor, search term, or status filter."
           }
         },
         "security": [
@@ -3006,7 +3107,7 @@
             "bearer": []
           }
         ],
-        "summary": "List domains registered to this workspace",
+        "summary": "List domains registered to this workspace (newest first), cursor-paginated.",
         "tags": [
           "domains"
         ]
@@ -4312,7 +4413,7 @@
             "bearer": []
           }
         ],
-        "summary": "Get a single message (metadata)",
+        "summary": "Get a single message (metadata + attachment manifest; `body_preview` is null without `mail.message.body.read`). Use /:mid/raw for content.",
         "tags": [
           "messages"
         ]
@@ -4357,7 +4458,18 @@
         ],
         "responses": {
           "200": {
-            "description": "Attachment stream"
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Binary attachment stream. `Content-Type` reflects the stored attachment media type; `Content-Disposition: attachment`."
+          },
+          "403": {
+            "description": "Policy denies `mail.message.body.read`."
           },
           "404": {
             "description": "Attachment not found"
@@ -4368,7 +4480,7 @@
             "bearer": []
           }
         ],
-        "summary": "Stream a single attachment by its position",
+        "summary": "Stream a single attachment by its position. Gated by `mail.message.body.read`: an attachment is message content, and /:mid already names it without handing over the bytes.",
         "tags": [
           "messages"
         ]
@@ -4405,7 +4517,18 @@
         ],
         "responses": {
           "200": {
-            "description": "Raw message stream"
+            "content": {
+              "message/rfc822": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Raw RFC5322 message stream (`Content-Disposition: attachment`, `.eml`)."
+          },
+          "403": {
+            "description": "Policy denies `mail.message.body.read`."
           },
           "404": {
             "description": "Message not found"
@@ -4416,7 +4539,7 @@
             "bearer": []
           }
         ],
-        "summary": "Stream the raw RFC5322 .eml for a message",
+        "summary": "Stream the raw RFC5322 .eml for a message. Gated by `mail.message.body.read` (admin+ by default; not granted to plain members) — the outbound lane's /messages/:id/body action.",
         "tags": [
           "messages"
         ]
@@ -4538,7 +4661,7 @@
             }
           },
           {
-            "description": "Opaque cursor from previous page.",
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Omit for the first page.",
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -4678,6 +4801,13 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
             "description": "text/csv stream with one header row + one row per message. Content-Disposition: attachment."
           },
           "429": {
@@ -5204,6 +5334,51 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Page size. Defaults to 20; values above 100 are clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Omit for the first page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Case-insensitive substring match on the suppressed email address.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Filter by where the row originated. Unrecognised values are rejected with a 400.",
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "enum": [
+                "manual",
+                "bounce",
+                "complaint"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -5216,6 +5391,9 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "description": "Invalid cursor, search term, or source filter."
           }
         },
         "security": [
@@ -5223,7 +5401,7 @@
             "bearer": []
           }
         ],
-        "summary": "List suppressed recipients in the workspace (most-recent first, capped at 500).",
+        "summary": "List suppressed recipients in the workspace (most-recent first), cursor-paginated.",
         "tags": [
           "suppression"
         ]
@@ -5332,17 +5510,55 @@
             }
           },
           {
+            "description": "Comma-separated tag list. A template matches when any of its tags appears in the list.",
             "in": "query",
             "name": "tags",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Restrict to one kind. Unrecognised values are ignored (no kind filter applied), preserving the pre-pagination behaviour.",
             "in": "query",
             "name": "kind",
-            "required": true,
+            "required": false,
+            "schema": {
+              "enum": [
+                "template",
+                "layout",
+                "partial"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Case-insensitive substring match on the template name.",
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 200,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size. Defaults to 20; values above 100 are clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Omit for the first page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5358,6 +5574,9 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "description": "Invalid cursor or search term."
           }
         },
         "security": [
@@ -5365,7 +5584,7 @@
             "bearer": []
           }
         ],
-        "summary": "List templates / layouts / partials in a workspace. Filter via ?kind=template|layout|partial (default: all). Filter by tags via ?tags=foo,bar (comma-separated).",
+        "summary": "List templates / layouts / partials in a workspace, name-ascending and cursor-paginated. Filter via ?kind=template|layout|partial (default: all), ?tags=foo,bar (comma-separated), ?search=<substring of the name>.",
         "tags": [
           "templates"
         ]
@@ -6009,11 +6228,15 @@
             }
           },
           {
+            "description": "How many of the most recent attempts to return. This endpoint is not cursor-paginated; a larger limit is the only way to look further back.",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
-              "type": "string"
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
             }
           }
         ],
