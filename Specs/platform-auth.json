@@ -14,6 +14,22 @@
         ],
         "type": "object"
       },
+      "AssertionAuthorizationRequestDto": {
+        "properties": {
+          "action": {
+            "description": "Action to decide, `<service>.<resource>.<verb>`.",
+            "type": "string"
+          },
+          "resource": {
+            "description": "URN the action targets. Omitted means `*`, the strict reading.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
       "AuditFeedResponseDto": {
         "properties": {
           "data": {
@@ -37,6 +53,135 @@
           "data",
           "pagination",
           "sources"
+        ],
+        "type": "object"
+      },
+      "AuthorizationServerMetadataDto": {
+        "properties": {
+          "authority_model": {
+            "description": "Non-standard. Declares that authority on this server is an IAM policy document stored on the grant, intersected per request with the authorizing human’s current workspace policy — so a demotion or an offboarding takes effect on the next call rather than at token expiry. The `scope` parameter only names a preset the human then narrows.",
+            "example": "policy",
+            "type": "string"
+          },
+          "authorization_endpoint": {
+            "description": "RFC 6749 authorization endpoint.",
+            "type": "string"
+          },
+          "code_challenge_methods_supported": {
+            "description": "S256 only. `plain` is rejected, and an authorization request without a challenge is rejected.",
+            "example": [
+              "S256"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "grant_types_supported": {
+            "example": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "introspection_endpoint": {
+            "description": "RFC 7662 token introspection endpoint.",
+            "type": "string"
+          },
+          "issuer": {
+            "description": "Issuer identifier. Matches the `iss` claim on every access token this server mints.",
+            "example": "https://api.platform-auth.productcraft.co",
+            "type": "string"
+          },
+          "jwks_uri": {
+            "description": "JWKS the access-token signature verifies against.",
+            "type": "string"
+          },
+          "registration_endpoint": {
+            "description": "RFC 7591 dynamic client registration endpoint.",
+            "type": "string"
+          },
+          "resource_indicators_supported": {
+            "description": "RFC 8707 resource indicators this server will mint an audience for.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "response_types_supported": {
+            "description": "Only `code` — the implicit and password grants do not exist here.",
+            "example": [
+              "code"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revocation_endpoint": {
+            "description": "RFC 7009 token revocation endpoint.",
+            "type": "string"
+          },
+          "scope_descriptions": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Plain-language description per preset. Non-standard, published so a client can render the same wording the consent screen uses.",
+            "type": "object"
+          },
+          "scopes_supported": {
+            "description": "Preset names accepted in the `scope` parameter. A preset is a policy *template*, never authority in itself — see `authority_model`. Ordinary OAuth scopes do not exist on this server.",
+            "example": [
+              "readonly",
+              "mail",
+              "support",
+              "full"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "service_documentation": {
+            "description": "Human-readable documentation for this authorization server.",
+            "type": "string"
+          },
+          "token_endpoint": {
+            "description": "RFC 6749 token endpoint.",
+            "type": "string"
+          },
+          "token_endpoint_auth_methods_supported": {
+            "example": [
+              "none",
+              "client_secret_basic",
+              "client_secret_post"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "issuer",
+          "authorization_endpoint",
+          "token_endpoint",
+          "registration_endpoint",
+          "revocation_endpoint",
+          "introspection_endpoint",
+          "jwks_uri",
+          "response_types_supported",
+          "grant_types_supported",
+          "code_challenge_methods_supported",
+          "token_endpoint_auth_methods_supported",
+          "scopes_supported",
+          "scope_descriptions",
+          "authority_model",
+          "resource_indicators_supported",
+          "service_documentation"
         ],
         "type": "object"
       },
@@ -98,6 +243,461 @@
         },
         "required": [
           "state"
+        ],
+        "type": "object"
+      },
+      "ClientMetadataDto": {
+        "properties": {
+          "client_id": {
+            "example": "pcft_cli_2f5c...",
+            "type": "string"
+          },
+          "client_id_issued_at": {
+            "description": "Unix seconds at which the client_id was issued.",
+            "type": "number"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "client_secret_expires_at": {
+            "description": "0 — the client secret does not expire on its own.",
+            "example": 0,
+            "type": "number"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "is_verified": {
+            "description": "Always false for a dynamically registered client. The consent screen shows this to the human.",
+            "example": false,
+            "type": "boolean"
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "registration_client_uri": {
+            "description": "Endpoint the registration access token is used against.",
+            "type": "string"
+          },
+          "response_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_id_issued_at",
+          "client_secret_expires_at",
+          "registration_client_uri",
+          "redirect_uris",
+          "client_name",
+          "grant_types",
+          "response_types",
+          "token_endpoint_auth_method",
+          "scope",
+          "is_verified"
+        ],
+        "type": "object"
+      },
+      "ClientRegistrationRequestDto": {
+        "properties": {
+          "client_name": {
+            "description": "Display name shown on the consent screen next to an \"unverified\" badge. Control characters are stripped; the client cannot supply any other consent-screen copy.",
+            "example": "Claude Desktop",
+            "maxLength": 120,
+            "type": "string"
+          },
+          "client_uri": {
+            "description": "Absolute https homepage for the client.",
+            "nullable": true,
+            "type": "string"
+          },
+          "grant_types": {
+            "description": "Must include `authorization_code`. `refresh_token` is the only other supported value.",
+            "example": [
+              "authorization_code",
+              "refresh_token"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "logo_uri": {
+            "description": "Absolute https logo URL. Stored but deliberately never rendered on the consent screen — a client-supplied image is client-supplied display text by another name.",
+            "nullable": true,
+            "type": "string"
+          },
+          "redirect_uris": {
+            "description": "Exact redirect URIs. Matched byte-for-byte at `/authorize`; the only relaxation is the RFC 8252 §7.3 loopback port. `https` anywhere, `http` on `127.0.0.1` / `[::1]` only, or a reverse-DNS private-use scheme. No wildcards, no fragments.",
+            "example": [
+              "http://127.0.0.1:33418/callback"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "response_types": {
+            "description": "Only `code` is supported.",
+            "example": [
+              "code"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "description": "Space-delimited ceiling of scopes this client may ever request. Defaults to the full published scope list; the human still approves each one.",
+            "example": "workspace:read mail:read mail:send",
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "description": "`none` for a public client (PKCE only), or `client_secret_basic` / `client_secret_post` for a confidential client. Defaults to `none`.",
+            "example": "none",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirect_uris",
+          "client_name"
+        ],
+        "type": "object"
+      },
+      "ClientRegistrationResponseDto": {
+        "properties": {
+          "client_id": {
+            "example": "pcft_cli_2f5c...",
+            "type": "string"
+          },
+          "client_id_issued_at": {
+            "description": "Unix seconds at which the client_id was issued.",
+            "type": "number"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "Returned exactly once, and only for confidential clients. Stored hashed; it cannot be retrieved again.",
+            "nullable": true,
+            "type": "string"
+          },
+          "client_secret_expires_at": {
+            "description": "0 — the client secret does not expire on its own.",
+            "example": 0,
+            "type": "number"
+          },
+          "grant_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "is_verified": {
+            "description": "Always false for a dynamically registered client. The consent screen shows this to the human.",
+            "example": false,
+            "type": "boolean"
+          },
+          "redirect_uris": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "registration_access_token": {
+            "description": "Bearer token that reads and updates THIS registration and nothing else. Returned once.",
+            "type": "string"
+          },
+          "registration_client_uri": {
+            "description": "Endpoint the registration access token is used against.",
+            "type": "string"
+          },
+          "response_types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "token_endpoint_auth_method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_id_issued_at",
+          "client_secret_expires_at",
+          "registration_client_uri",
+          "redirect_uris",
+          "client_name",
+          "grant_types",
+          "response_types",
+          "token_endpoint_auth_method",
+          "scope",
+          "is_verified",
+          "client_secret",
+          "registration_access_token"
+        ],
+        "type": "object"
+      },
+      "ConnectedClientDto": {
+        "properties": {
+          "account_id": {
+            "description": "The human who consented to this grant.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "grant_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_verified": {
+            "type": "boolean"
+          },
+          "policy": {
+            "description": "Policy the human approved. Effective authority is this intersected with the human's current workspace policy, per request.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "preset": {
+            "description": "Preset the grant started from, when it started from one.",
+            "example": "mail",
+            "nullable": true,
+            "type": "string"
+          },
+          "resource": {
+            "type": "string"
+          },
+          "revoked_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_id",
+          "client_id",
+          "client_name",
+          "is_verified",
+          "account_id",
+          "workspace_id",
+          "preset",
+          "policy",
+          "resource",
+          "created_at",
+          "revoked_at"
+        ],
+        "type": "object"
+      },
+      "ConnectedClientListDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/ConnectedClientDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ConsentDecisionDto": {
+        "properties": {
+          "approved": {
+            "description": "True to approve, false to deny.",
+            "type": "boolean"
+          },
+          "policy": {
+            "description": "The policy the human approved. Defaults to the policy the requested presets resolve to. May narrow it, and may add an escalation action a preset withheld — but never beyond the human's own authority: a grant that exceeds the granter is refused with 403 and the response names the refused statements.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "workspace_id": {
+            "description": "Workspace the grant is scoped to. Required when approving.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved"
+        ],
+        "type": "object"
+      },
+      "ConsentDecisionResponseDto": {
+        "properties": {
+          "redirect_to": {
+            "description": "Absolute URL the browser must be sent to. Always the redirect URI captured when the request was created.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "redirect_to"
+        ],
+        "type": "object"
+      },
+      "ConsentPresetDto": {
+        "properties": {
+          "description": {
+            "description": "Server-authored plain-language wording. The client cannot influence it.",
+            "example": "Read and send email from your verified domains.",
+            "type": "string"
+          },
+          "preset": {
+            "description": "Preset name the client asked for. A preset is a policy *template*, never authority in itself.",
+            "enum": [
+              "readonly",
+              "mail",
+              "support",
+              "full"
+            ],
+            "example": "mail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "preset",
+          "description"
+        ],
+        "type": "object"
+      },
+      "ConsentRequestDto": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "description": "Display name the client registered with.",
+            "type": "string"
+          },
+          "client_uri": {
+            "nullable": true,
+            "type": "string"
+          },
+          "escalation_actions": {
+            "description": "Escalation actions (credential minting, role/policy editing, m2m issuance) the requested policy would grant. Always empty for a preset; the consent screen must surface any entry here in its own section, not among ordinary permissions.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "expires_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "is_verified": {
+            "description": "False for every dynamically registered client. The screen must show this prominently.",
+            "type": "boolean"
+          },
+          "presets": {
+            "description": "Presets the client requested. The consent screen renders these in one line each.",
+            "items": {
+              "$ref": "#/components/schemas/ConsentPresetDto"
+            },
+            "type": "array"
+          },
+          "request_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "requested_policy": {
+            "description": "The policy the presets resolve to — the starting point the human narrows. Authority is whatever they approve.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "resource": {
+            "description": "RFC 8707 resource the token will be audience-bound to.",
+            "type": "string"
+          },
+          "workspaces": {
+            "description": "Workspaces the human may pick from. Access is scoped to exactly one.",
+            "items": {
+              "$ref": "#/components/schemas/ConsentWorkspaceDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "request_id",
+          "client_id",
+          "client_name",
+          "client_uri",
+          "is_verified",
+          "presets",
+          "requested_policy",
+          "escalation_actions",
+          "resource",
+          "workspaces",
+          "expires_at"
+        ],
+        "type": "object"
+      },
+      "ConsentWorkspaceDto": {
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "role": {
+            "description": "Caller's role in this workspace.",
+            "example": "owner",
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "display_name",
+          "role"
         ],
         "type": "object"
       },
@@ -274,6 +874,146 @@
         },
         "required": [
           "name"
+        ],
+        "type": "object"
+      },
+      "DelegatedActionDecisionDto": {
+        "properties": {
+          "action": {
+            "description": "The action that was decided.",
+            "example": "mail.send",
+            "type": "string"
+          },
+          "allowed": {
+            "description": "Whether the effective policy allows this action at the requested resource right now.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "action",
+          "allowed"
+        ],
+        "type": "object"
+      },
+      "DelegatedAuthorizationBatchRequestDto": {
+        "properties": {
+          "actions": {
+            "description": "Actions to decide, in `<service>.<resource>.<verb>` form. Duplicates are evaluated once and echoed per entry.",
+            "example": [
+              "mail.send",
+              "mail.list"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 500,
+            "type": "array"
+          },
+          "resource": {
+            "description": "Resource URN every action is decided against. Omitted means `*`, which the human’s URN-narrowed denies still constrain.",
+            "example": "pcft:envoi:domain/8f14e45f-ceea-467a-9c1a-2b8a4f2a11c3",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [
+          "actions"
+        ],
+        "type": "object"
+      },
+      "DelegatedAuthorizationBatchResponseDto": {
+        "properties": {
+          "decisions": {
+            "description": "One decision per requested action, in the order they were requested.",
+            "items": {
+              "$ref": "#/components/schemas/DelegatedActionDecisionDto"
+            },
+            "type": "array"
+          },
+          "reason": {
+            "description": "Machine-readable outcome for the token as a whole: `evaluated`, `token_inactive`, `token_expired`, `grant_revoked`, `granter_not_a_member`, or `granter_account_inactive`. Anything but `evaluated` means every decision is `false`.",
+            "example": "evaluated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decisions",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "DelegatedAuthorizationRequestDto": {
+        "properties": {
+          "action": {
+            "description": "The action to decide, in `<service>.<resource>.<verb>` form — the same catalogue the workspace-role and PAK lanes evaluate against.",
+            "example": "mail.message.send",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "resource": {
+            "description": "Resource URN the action targets. Omitted means `*`, which the human’s URN-narrowed denies still constrain.",
+            "example": "pcft:envoi:domain/8f14e45f-ceea-467a-9c1a-2b8a4f2a11c3",
+            "maxLength": 500,
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "type": "object"
+      },
+      "DelegatedAuthorizationResponseDto": {
+        "properties": {
+          "allowed": {
+            "description": "Whether the effective policy — the grant’s policy AND the authorizing human’s current workspace policy — allows this action right now.",
+            "type": "boolean"
+          },
+          "reason": {
+            "description": "Machine-readable outcome: `allowed`, `denied_by_effective_policy`, `token_inactive`, `token_expired`, `grant_revoked`, `granter_not_a_member`, or `granter_account_inactive` (the authorizing human’s account is suspended or deactivated).",
+            "example": "allowed",
+            "type": "string"
+          }
+        },
+        "required": [
+          "allowed",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "DownstreamAssertionRequestDto": {
+        "properties": {
+          "audience": {
+            "description": "Hostname of the service the assertion is for, e.g. `api.mail.productcraft.co`. Must be one we issue for; anything else is 400. This is an allowlist and not a free-text audience, because the audience string is what separates this family from the session lane.",
+            "example": "api.mail.productcraft.co",
+            "type": "string"
+          }
+        },
+        "required": [
+          "audience"
+        ],
+        "type": "object"
+      },
+      "DownstreamAssertionResponseDto": {
+        "properties": {
+          "assertion": {
+            "description": "The signed assertion. Verifies offline against the platform JWKS. Carries identity only — no policy.",
+            "type": "string"
+          },
+          "audience": {
+            "description": "The audience it was minted for, echoed back.",
+            "example": "api.mail.productcraft.co",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Seconds until it expires. Deliberately short.",
+            "example": 60,
+            "type": "number"
+          }
+        },
+        "required": [
+          "assertion",
+          "expires_in",
+          "audience"
         ],
         "type": "object"
       },
@@ -605,6 +1345,74 @@
         ],
         "type": "object"
       },
+      "IntrospectionRequestDto": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          },
+          "token": {
+            "description": "The access token to introspect.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
+      "IntrospectionResponseDto": {
+        "properties": {
+          "active": {
+            "description": "False for an unknown, expired, revoked, or foreign token — the four are deliberately indistinguishable.",
+            "type": "boolean"
+          },
+          "aud": {
+            "description": "Resource indicator the token is bound to.",
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "effective_policy": {
+            "description": "Effective authority: the token's policy intersected with the human's CURRENT workspace policy, recomputed on every call with no cache. An action the human's role loses disappears here without anyone revoking the token; a human who left the workspace makes the token report `active: false`. This is a report — the authorization decision itself re-evaluates both policies per (action, resource) cell.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "exp": {
+            "description": "Expiry, unix seconds.",
+            "type": "number"
+          },
+          "policy": {
+            "description": "The policy stored on the token — the ceiling the human approved at consent.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
+          "scope": {
+            "description": "Preset name(s) the grant started from. Not authority.",
+            "type": "string"
+          },
+          "sub": {
+            "description": "The human who consented.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "active"
+        ],
+        "type": "object"
+      },
       "JwkDto": {
         "properties": {
           "alg": {
@@ -658,10 +1466,32 @@
               "$ref": "#/components/schemas/ManagedPolicyResponseDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListPlatformApiKeysResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PublicApiKeyDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -726,10 +1556,14 @@
               "$ref": "#/components/schemas/WorkspaceRoleResponseDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -1163,6 +1997,28 @@
         ],
         "type": "object"
       },
+      "RevocationRequestDto": {
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          },
+          "token": {
+            "description": "The access or refresh token to revoke.",
+            "type": "string"
+          },
+          "token_type_hint": {
+            "description": "`access_token` or `refresh_token`. Advisory only.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
       "SessionDto": {
         "properties": {
           "account_id": {
@@ -1319,33 +2175,96 @@
         ],
         "type": "object"
       },
+      "TokenRequestDto": {
+        "properties": {
+          "client_id": {
+            "description": "Client identifier. Required for public clients; confidential clients may instead use HTTP Basic.",
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "Client secret for `client_secret_post` authentication.",
+            "type": "string"
+          },
+          "code": {
+            "description": "The single-use authorization code. `authorization_code` grant only.",
+            "type": "string"
+          },
+          "code_verifier": {
+            "description": "PKCE verifier. Required on the `authorization_code` grant — there is no non-PKCE path.",
+            "type": "string"
+          },
+          "grant_type": {
+            "description": "`authorization_code` or `refresh_token`.",
+            "example": "authorization_code",
+            "type": "string"
+          },
+          "redirect_uri": {
+            "description": "Must be byte-identical to the `redirect_uri` used at `/authorize`. `authorization_code` grant only.",
+            "type": "string"
+          },
+          "refresh_token": {
+            "description": "The rotating refresh token. `refresh_token` grant only.",
+            "type": "string"
+          },
+          "resource": {
+            "description": "RFC 8707 resource indicator. Must match the one the grant was created for.",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Narrowed preset name(s) on the `refresh_token` grant. A preset the original grant did not carry is rejected; narrowing keeps every deny and only removes actions, so it can never widen.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type"
+        ],
+        "type": "object"
+      },
       "TokenResponseDto": {
         "properties": {
           "access_token": {
-            "description": "Access token (JWT)",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "description": "Signed JWT, audience-bound to the resource indicator and carrying the workspace, the preset name and the client id. It carries no policy — authority is resolved per request from the grant row and the human’s live policy.",
             "type": "string"
           },
           "expires_in": {
-            "description": "Access token TTL in seconds",
-            "example": 3600,
+            "description": "Seconds until the access token expires (≤ 900).",
+            "example": 900,
             "type": "number"
           },
+          "policy": {
+            "description": "The policy this token carries. Effective authority is this intersected with the authorizing human's current workspace policy, re-evaluated on every call.",
+            "items": {
+              "$ref": "#/components/schemas/PolicyStatementDto"
+            },
+            "type": "array"
+          },
           "refresh_token": {
-            "description": "Refresh token (JWT)",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+            "description": "Rotating refresh token. The one presented is consumed; replaying it revokes the whole grant family.",
+            "type": "string"
+          },
+          "scope": {
+            "description": "Preset name(s) the grant started from. Present for RFC 6749 §5.1 compliance; it is not the authority — `policy` is.",
+            "example": "mail",
             "type": "string"
           },
           "token_type": {
-            "description": "Token type",
             "example": "Bearer",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "Workspace the grant is scoped to.",
+            "format": "uuid",
             "type": "string"
           }
         },
         "required": [
           "access_token",
           "token_type",
-          "expires_in"
+          "expires_in",
+          "refresh_token",
+          "scope",
+          "policy",
+          "workspace_id"
         ],
         "type": "object"
       },
@@ -1826,6 +2745,11 @@
             "format": "uuid",
             "type": "string"
           },
+          "avatar_url": {
+            "description": "Presigned URL for the member's uploaded avatar, or null when they have none. Short-lived — mint a fresh one by re-reading this endpoint rather than caching the URL.",
+            "nullable": true,
+            "type": "string"
+          },
           "display_name": {
             "nullable": true,
             "type": "string"
@@ -1862,6 +2786,7 @@
           "username",
           "display_name",
           "primary_email",
+          "avatar_url",
           "role_id",
           "role",
           "role_is_system",
@@ -2049,13 +2974,36 @@
         ]
       }
     },
+    "/.well-known/oauth-authorization-server": {
+      "get": {
+        "description": "Discovery document for third-party clients (Claude Desktop, Cursor, the ProductCraft MCP server). PKCE with `S256` is mandatory; no other code-challenge method is advertised or accepted. `scopes_supported` lists **presets**, not scopes: authority is the policy document on the grant (`authority_model`).",
+        "operationId": "AuthorizationServerMetadataController_metadata",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizationServerMetadataDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "OAuth 2.1 authorization server metadata (RFC 8414)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
     "/v1/account": {
       "delete": {
         "operationId": "AccountController_deleteAccount",
         "parameters": [],
         "responses": {
           "204": {
-            "description": "Account deleted. All sessions revoked."
+            "description": "Account deleted. All sessions revoked, and any linked Sign in with Apple grant is queued for revocation with Apple. The revocation is durable and retried in the background, so a 204 does not depend on Apple being reachable."
           },
           "403": {
             "description": "The session lacks the required action for self-account deletion (defence-in-depth — the route is guarded but the cookie may be present without action access)."
@@ -2064,7 +3012,7 @@
             "description": "No account row exists for the session principal. Should never fire for a valid session — surfaced for SDKs."
           }
         },
-        "summary": "Delete the calling account. Auto-promotes the oldest admin (or oldest non-self member) to owner in any workspace where the departing account is the sole owner.",
+        "summary": "Delete the calling account. Auto-promotes the oldest admin (or oldest non-self member) to owner in any workspace where the departing account is the sole owner. Linked provider grants that require server-side revocation (Sign in with Apple) are revoked with the provider.",
         "tags": [
           "account"
         ]
@@ -2230,8 +3178,8 @@
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "Reset request accepted. If the email matches an account, an email has been queued."
+          "204": {
+            "description": "Reset request accepted. Identical whether or not the email matched an account — if it did, an email has been queued."
           }
         },
         "summary": "Request a password reset email. The response shape never reveals whether the email matched an account.",
@@ -2255,7 +3203,7 @@
           "required": true
         },
         "responses": {
-          "201": {
+          "204": {
             "description": "Password reset; all active sessions revoked."
           }
         },
@@ -2607,6 +3555,805 @@
         ]
       }
     },
+    "/v1/oauth/authorize": {
+      "get": {
+        "description": "Requires PKCE with `code_challenge_method=S256`; `plain` and a missing challenge are both rejected. `redirect_uri` must match a registered URI exactly, with only the RFC 8252 §7.3 loopback port relaxation. Responds 302 either to sign-in (no session) or to the consent screen.",
+        "operationId": "OAuthAuthorizeController_authorize",
+        "parameters": [
+          {
+            "description": "RFC 8707 resource indicator. Becomes the access token `aud`.",
+            "in": "query",
+            "name": "resource",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "code_challenge_method",
+            "required": true,
+            "schema": {
+              "example": "S256"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code_challenge",
+            "required": true,
+            "schema": {}
+          },
+          {
+            "description": "Space-delimited preset names (`readonly`, `mail`, `support`, `full`). A preset resolves to a policy template the human narrows on the consent screen; it is never authority in itself.",
+            "in": "query",
+            "name": "scope",
+            "required": true,
+            "schema": {
+              "example": "mail"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {}
+          },
+          {
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "schema": {
+              "example": "code"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to sign-in or to the consent screen."
+          },
+          "400": {
+            "description": "Rendered `{ error, error_description }` when the failure is in `client_id` or `redirect_uri` — those are never bounced to an unvalidated URI."
+          }
+        },
+        "summary": "OAuth 2.1 authorization endpoint",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/connections": {
+      "get": {
+        "description": "The user-facing half of revocation: which third-party clients hold a grant, in which workspace, carrying which policy.",
+        "operationId": "OAuthAuthorizeController_connections",
+        "parameters": [
+          {
+            "description": "Page size. Defaults to 20, clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque `next_cursor` from the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectedClientListDto"
+                }
+              }
+            },
+            "description": "Page of connections, newest first, with `next_cursor` and `has_more`."
+          },
+          "400": {
+            "description": "Malformed `cursor`."
+          }
+        },
+        "summary": "List clients this human has connected",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/connections/{grant_id}": {
+      "delete": {
+        "description": "Revokes the whole grant family — the grant, its authorization codes, its refresh tokens and every live access token — in one transaction.",
+        "operationId": "OAuthAuthorizeController_disconnect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected."
+          },
+          "404": {
+            "description": "No such connection for this human."
+          }
+        },
+        "summary": "Disconnect a client",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/consent/{request_id}": {
+      "get": {
+        "description": "Backs the consent screen (task 002). Readable only by the signed-in human the request was created for; anyone else gets the same 404 a nonexistent request gets.",
+        "operationId": "OAuthAuthorizeController_consentRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentRequestDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "No such pending request for this human."
+          },
+          "409": {
+            "description": "Request already used."
+          },
+          "410": {
+            "description": "Request expired."
+          }
+        },
+        "summary": "Read a pending consent request",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      },
+      "post": {
+        "description": "Approving mints a single-use authorization code bound to the client, the redirect URI, the PKCE challenge, the chosen workspace and the approved policy. The policy is narrowed against the human's own authority through the same `assertCallerCanGrant` the workspace-role and PAK lanes use; a grant that exceeds the granter is refused, never trimmed. Denying returns a redirect carrying `error=access_denied`.\n\nCSRF: the session must be presented as an `Authorization: Bearer` header. The ambient `auth_token` cookie is not accepted on its own, and a request whose `Sec-Fetch-Site` / `Origin` says a browser on another origin is driving it is refused — cookie policy cannot be the only CSRF control on the endpoint that mints a code.",
+        "operationId": "OAuthAuthorizeController_decide",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "request_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentDecisionDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentDecisionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Malformed policy, empty policy, or too many statements."
+          },
+          "403": {
+            "description": "Refused before authentication with `CROSS_ORIGIN_REJECTED` when the request carries no bearer or a browser on another origin is driving it. Otherwise: not a member of the chosen workspace, or the approved policy exceeds the human’s own authority — `details.refused_statements` names which statements and why. Also `ACCOUNT_SUSPENDED` / `ACCOUNT_DEACTIVATED` when the account is no longer active, and `OAUTH_GRANT_ADMIN_REVOKED` when a workspace administrator revoked this connection and has not lifted it."
+          },
+          "404": {
+            "description": "No such pending request for this human."
+          },
+          "409": {
+            "description": "Request already used."
+          }
+        },
+        "summary": "Record the human’s consent decision",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/delegated/authorize": {
+      "post": {
+        "description": "Returns the live effective-policy decision for a single `(action, resource)` pair. Evaluated per call against the grant’s policy AND the authorizing human’s current workspace policy — never from a decision cached at consent time. The delegated access token is presented as the bearer.",
+        "operationId": "OAuthDelegatedAuthorizationController_authorize",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DelegatedAuthorizationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegatedAuthorizationResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "Missing or malformed `Authorization` header."
+          }
+        },
+        "summary": "Decide one action for a delegated access token",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/delegated/authorize-assertion": {
+      "post": {
+        "description": "The REST-service counterpart of `POST /authorize`. A service holds only the short-lived assertion, never the delegated access token, so it asks here. Evaluated against the grant’s consented policy AND the authorizing human’s current workspace policy, live and uncached — a revoked grant, a demoted human or an offboarded one is refused on the next call.",
+        "operationId": "OAuthDelegatedAuthorizationController_authorizeAssertion",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssertionAuthorizationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegatedAuthorizationResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "Missing or malformed `Authorization` header."
+          }
+        },
+        "summary": "Decide one action for a downstream assertion",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/delegated/authorize-batch": {
+      "post": {
+        "description": "Evaluates a list of actions against the same live effective policy as `POST /authorize`, in one pass. Exists so an MCP server can filter a several-hundred-tool catalog down to what the session actually permits without a round trip per tool. It is a **listing** aid: a tool invocation is still decided on its own, per call.",
+        "operationId": "OAuthDelegatedAuthorizationController_authorizeBatch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DelegatedAuthorizationBatchRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DelegatedAuthorizationBatchResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Empty or oversized `actions` list."
+          },
+          "401": {
+            "description": "Missing or malformed `Authorization` header."
+          }
+        },
+        "summary": "Decide many actions for a delegated access token",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/delegated/downstream-assertion": {
+      "post": {
+        "description": "Exchanges a delegated access token for a ~60s assertion audienced at ONE named service, so that service can verify the caller offline without calling back (`docs/mcp.md` §5b). The assertion carries identity — account, workspace, client, grant — and deliberately no policy: the target resolves the delegated effective policy per request through `/v1/introspect`, so a revoked grant or a demoted human is refused on the next call rather than at this assertion’s expiry.",
+        "operationId": "OAuthDelegatedAuthorizationController_downstreamAssertion",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DownstreamAssertionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownstreamAssertionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "The requested `audience` is not a service we issue assertions for."
+          },
+          "401": {
+            "description": "Missing or malformed `Authorization` header, or the token/grant behind it is no longer live."
+          }
+        },
+        "summary": "Mint a short-lived assertion for one downstream service",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/introspect": {
+      "post": {
+        "description": "Client-authenticated, and a client may only introspect its own tokens. `policy` is the ceiling the human approved; `effective_policy` is that intersected with the human's current workspace policy, resolved live on every call with no cache, so a demotion or an offboarding lands on the next call rather than at token expiry.",
+        "operationId": "OAuthTokenController_introspect",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntrospectionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntrospectionResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "`invalid_client` — client authentication failed."
+          }
+        },
+        "summary": "Introspect an access token (RFC 7662)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/register": {
+      "post": {
+        "description": "Public endpoint, rate-limited per source IP. Every client registered here is marked **unverified** and stays that way; the consent screen shows the badge. `client_secret` and `registration_access_token` are returned once and stored only as hashes.",
+        "operationId": "OAuthRegistrationController_register",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRegistrationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientRegistrationResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "`invalid_redirect_uri` or `invalid_client_metadata` (RFC 7591 §3.2.2)."
+          },
+          "429": {
+            "description": "Too many registrations from this IP."
+          },
+          "503": {
+            "description": "`temporarily_unavailable` — the rate-limit backend is unreachable, so registration fails closed."
+          }
+        },
+        "summary": "Register an OAuth client dynamically (RFC 7591)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/register/{client_id}": {
+      "get": {
+        "description": "Requires `Authorization: Bearer <registration_access_token>`. The token addresses exactly one registration; presenting it for a different `client_id` fails.",
+        "operationId": "OAuthRegistrationController_read",
+        "parameters": [
+          {
+            "description": "The `client_id` to read.",
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientMetadataDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "`invalid_client` — bad registration access token."
+          }
+        },
+        "summary": "Read a client registration (RFC 7592)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      },
+      "put": {
+        "description": "Requires `Authorization: Bearer <registration_access_token>`. Only display metadata, redirect URIs and the scope ceiling can change — a client cannot promote itself to verified, nor change its authentication method.",
+        "operationId": "OAuthRegistrationController_update",
+        "parameters": [
+          {
+            "description": "The `client_id` to update.",
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientRegistrationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClientMetadataDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "description": "`invalid_client` — bad registration access token."
+          }
+        },
+        "summary": "Update a client registration (RFC 7592)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/revoke": {
+      "post": {
+        "description": "Revoking a refresh token takes the whole grant family with it. Always answers 200, including for an unknown token — otherwise the endpoint would be a token-validity oracle.",
+        "operationId": "OAuthTokenController_revoke",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RevocationRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Revoked, or the token was already unknown."
+          },
+          "401": {
+            "description": "`invalid_client` — client authentication failed."
+          }
+        },
+        "summary": "Revoke a token (RFC 7009)",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/token": {
+      "post": {
+        "description": "Accepts `authorization_code` (with a mandatory `code_verifier`) and `refresh_token`. Both credentials are single-use: replaying a code or a refresh token issues nothing and revokes the entire grant family, so anything already minted from that grant stops working immediately.",
+        "operationId": "OAuthTokenController_token",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "`invalid_request`, `invalid_grant`, `invalid_scope`, `invalid_target`, or `unsupported_grant_type`."
+          },
+          "401": {
+            "description": "`invalid_client` — client authentication failed."
+          }
+        },
+        "summary": "OAuth 2.1 token endpoint",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/workspaces/{workspace_id}/connections": {
+      "get": {
+        "description": "The workspace-side half of revocation, for owners and admins: every grant made against this workspace, by any member, including grants made by people who have since left. Requires `workspace.connection.read`.",
+        "operationId": "OAuthAuthorizeController_workspaceConnections",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size. Defaults to 20, clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque `next_cursor` from the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectedClientListDto"
+                }
+              }
+            },
+            "description": "Page of connections, newest first, with `next_cursor` and `has_more`."
+          },
+          "400": {
+            "description": "Malformed `cursor`."
+          },
+          "403": {
+            "description": "Not a member, or lacks `workspace.connection.read`."
+          }
+        },
+        "summary": "List every client connected to a workspace",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/workspaces/{workspace_id}/connections/{grant_id}": {
+      "delete": {
+        "description": "Revokes the whole grant family for a grant made by any member of this workspace — the lever a workspace owner needs when an employee leaves and their MCP client is still running. Requires `workspace.connection.revoke`.",
+        "operationId": "OAuthAuthorizeController_disconnectWorkspaceConnection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Disconnected."
+          },
+          "403": {
+            "description": "Not a member, or lacks `workspace.connection.revoke`."
+          },
+          "404": {
+            "description": "No such connection in this workspace."
+          }
+        },
+        "summary": "Disconnect a client on behalf of the workspace",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
+    "/v1/oauth/workspaces/{workspace_id}/connections/{grant_id}/restore": {
+      "post": {
+        "description": "A workspace revocation is durable: the member re-running the connect flow does not undo it, so an administrator has to. This clears the block only — every token minted under the old grant stays revoked and the member still has to approve a fresh consent screen. Requires `workspace.connection.revoke`.",
+        "operationId": "OAuthAuthorizeController_restoreWorkspaceConnection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "grant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Revocation lifted."
+          },
+          "403": {
+            "description": "Not a member, or lacks `workspace.connection.revoke`."
+          },
+          "404": {
+            "description": "No such connection in this workspace."
+          },
+          "409": {
+            "description": "The connection was not revoked by an administrator — there is nothing to lift."
+          }
+        },
+        "summary": "Lift a workspace revocation so the member may reconnect",
+        "tags": [
+          "oauth-authorization-server"
+        ]
+      }
+    },
     "/v1/session": {
       "get": {
         "operationId": "SessionController_getSessions",
@@ -2924,6 +4671,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Page size. Defaults to 20, clamped to 100. Sending it (at any value) also opts the response into the `{data, pagination}` envelope.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque `next_cursor` from the previous page. Sending it also opts the response into the `{data, pagination}` envelope.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2931,14 +4696,24 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/PublicApiKeyDto"
-                  },
-                  "type": "array"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/ListPlatformApiKeysResponseDto"
+                    },
+                    {
+                      "items": {
+                        "$ref": "#/components/schemas/PublicApiKeyDto"
+                      },
+                      "type": "array"
+                    }
+                  ]
                 }
               }
             },
-            "description": ""
+            "description": "Two shapes, selected by the request — see `oneOf`.\n\n- **`?limit=` or `?cursor=` present** → the standard `{data, pagination}` envelope with `next_cursor` + `has_more`. Use this; it is the only shape that pages.\n- **neither present** → the legacy bare JSON array of every PAK in the workspace (capped at 1000). DEPRECATED as of 2026-09 and retained only so `@productcraft/platform-auth` <= 0.0.12 clients, which cannot send either query param, keep working. It will be removed once those clients are off it; new integrations must send `?limit=`."
+          },
+          "400": {
+            "description": "Malformed `cursor`."
           }
         },
         "security": [
@@ -2946,7 +4721,7 @@
             "bearer": []
           }
         ],
-        "summary": "List PAKs in this workspace. Plaintext tokens are NOT returned — only prefixes + metadata.",
+        "summary": "List PAKs in this workspace, newest first. Plaintext tokens are NOT returned — only prefixes + metadata. Pass `?limit=`/`?cursor=` to get the standard cursor-paginated `{data, pagination}` envelope (20/page, max 100); callers that pass neither still get the legacy bare JSON array.",
         "tags": [
           "platform-api-keys"
         ]
@@ -3219,11 +4994,41 @@
             }
           },
           {
-            "description": "ISO-8601 lower bound on `timestamp`. Items older than `since` are not returned.",
+            "description": "ISO-8601 inclusive lower bound on `timestamp`. Items older than `since` are not returned.",
             "in": "query",
             "name": "since",
             "required": false,
             "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "ISO-8601 inclusive upper bound on `timestamp`. Composes with `since`, `action`, `actor_id` and with the cursor. A bare date resolves to midnight UTC, so `until=2026-05-01` excludes that day’s later entries.",
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact-match filter on the action identifier (e.g. `workspace.member.removed`). A partial string matches nothing.",
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact-match filter on the acting account UUID. Must be a well-formed UUID — anything else is a 400, not an empty page. System rows have a null actor and are excluded by this filter.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -3242,7 +5047,10 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "type": "number"
+              "default": 100,
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
             }
           },
           {
@@ -3267,7 +5075,7 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid query params — `since` not parseable as ISO-8601, or `sources` references an unknown source name. Unrecognized sources are silently dropped; an empty result set after that filter still returns 200."
+            "description": "Invalid query params — `actor_id` is not a well-formed UUID, or `cursor` is not a cursor this endpoint minted. `since`/`until` that do not parse as ISO-8601 are ignored rather than rejected, and `sources` silently drops unknown names; an empty result set after those filters still returns 200."
           },
           "403": {
             "description": "The caller is signed in but lacks `workspace.audit.read` for this workspace."
@@ -3295,18 +5103,59 @@
             }
           },
           {
+            "description": "Page size. Defaults to 20, clamped to 100.",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Opaque `next_cursor` from the previous page.",
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact-match filter on the action identifier (e.g. `workspace.member.removed`).",
+            "in": "query",
+            "name": "action",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact-match filter on the acting account UUID. System rows have a null actor and are excluded by this filter.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Inclusive lower bound on `created_at`. ISO-8601 date (`2026-05-01`, midnight UTC) or date-time (`2026-05-01T09:00:00Z`). Composes with `action` / `actor_id` / `until` and with the cursor.",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Inclusive upper bound on `created_at`. Same formats as `since`. Note a bare date resolves to midnight UTC, so `until=2026-05-01` excludes that day’s later entries.",
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "format": "date-time",
               "type": "string"
             }
           }
@@ -3320,10 +5169,13 @@
                 }
               }
             },
-            "description": ""
+            "description": "Page of audit entries with `next_cursor` and `has_more`."
+          },
+          "400": {
+            "description": "Malformed `cursor`, `since`, or `until`."
           }
         },
-        "summary": "List workspace audit log entries",
+        "summary": "List workspace audit log entries, newest first. Filter by `?action=`, `?actor_id=`, and/or the `?since=` / `?until=` date range. 20/page (max 100), cursor-paginated.",
         "tags": [
           "workspace-audit-logs"
         ]
@@ -3418,17 +5270,19 @@
             }
           },
           {
+            "description": "Page size. Defaults to 20, clamped to 100.",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Opaque `next_cursor` from the previous page.",
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -3446,7 +5300,7 @@
             "description": ""
           }
         },
-        "summary": "List workspace invites",
+        "summary": "List workspace invites, newest first. Cursor-paginated.",
         "tags": [
           "workspaces"
         ]
@@ -3536,17 +5390,37 @@
             }
           },
           {
+            "description": "Page size. Defaults to 20, clamped to 100.",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Opaque `next_cursor` from the previous page.",
             "in": "query",
             "name": "cursor",
-            "required": true,
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Case-insensitive substring matched against the member’s display name, username OR primary email. `%` and `_` are matched literally.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact role name the membership is bound to — `owner`, `admin`, `member`, or a custom role’s name. Composes with `q` and with the cursor.",
+            "in": "query",
+            "name": "role",
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -3564,7 +5438,7 @@
             "description": ""
           }
         },
-        "summary": "List workspace members",
+        "summary": "List workspace members, oldest join first. Narrow with `?q=` (name / username / email substring) and/or `?role=`. Cursor-paginated.",
         "tags": [
           "workspaces"
         ]
@@ -3662,6 +5536,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Page size. Defaults to 20, clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque `next_cursor` from the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3673,10 +5565,13 @@
                 }
               }
             },
-            "description": ""
+            "description": "Page of managed policies with `next_cursor` and `has_more`."
+          },
+          "400": {
+            "description": "Malformed `cursor`."
           }
         },
-        "summary": "List every managed policy in a workspace",
+        "summary": "List managed policies in a workspace, alphabetically. 20/page (max 100), cursor-paginated.",
         "tags": [
           "workspace-policies"
         ]
@@ -3900,6 +5795,24 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Page size. Defaults to 20, clamped to 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque `next_cursor` from the previous page.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3911,10 +5824,13 @@
                 }
               }
             },
-            "description": ""
+            "description": "Page of roles with `next_cursor` and `has_more`."
+          },
+          "400": {
+            "description": "Malformed `cursor`."
           }
         },
-        "summary": "List all roles in a workspace",
+        "summary": "List roles in a workspace. System roles first, then alphabetical. 20/page (max 100), cursor-paginated.",
         "tags": [
           "workspace-roles"
         ]
@@ -4100,7 +6016,7 @@
             "description": ""
           }
         },
-        "summary": "List services activated on this workspace",
+        "summary": "List services activated on this workspace. Complete — one row per product, not paginated.",
         "tags": [
           "workspace-services"
         ]
