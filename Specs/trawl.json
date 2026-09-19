@@ -24,7 +24,8 @@
             "type": "object"
           },
           "max_steps": {
-            "description": "Maximum number of worker steps before the job stops.",
+            "default": 20,
+            "description": "Maximum number of agent steps (one LLM call each) before the job stops. Defaults to 20. Multi-source extractions typically need 40+. The server additionally clamps this to an operator ceiling, so a very large value does not guarantee a very long run — `timeout_s` still applies.",
             "maximum": 1000,
             "minimum": 1,
             "type": "number"
@@ -268,6 +269,96 @@
         ],
         "type": "object"
       },
+      "WebhookDeliveryListResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryResponseDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/WebhookListPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "WebhookDeliveryResponseDto": {
+        "properties": {
+          "attempt_number": {
+            "type": "number"
+          },
+          "attempted_at": {
+            "type": "string"
+          },
+          "error_message": {
+            "nullable": true,
+            "type": "string"
+          },
+          "event_id": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "job_id": {
+            "type": "string"
+          },
+          "latency_ms": {
+            "nullable": true,
+            "type": "number"
+          },
+          "response_body_truncated": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "description": "HTTP status returned by the destination; null when no response was received.",
+            "nullable": true,
+            "type": "number"
+          },
+          "webhook_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "webhook_id",
+          "job_id",
+          "event_id",
+          "event_type",
+          "attempt_number",
+          "status_code",
+          "response_body_truncated",
+          "error_message",
+          "latency_ms",
+          "attempted_at"
+        ],
+        "type": "object"
+      },
+      "WebhookListPaginationDto": {
+        "properties": {
+          "has_more": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
       "WebhookListResponseDto": {
         "properties": {
           "data": {
@@ -275,10 +366,14 @@
               "$ref": "#/components/schemas/WebhookResponseDto"
             },
             "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/WebhookListPaginationDto"
           }
         },
         "required": [
-          "data"
+          "data",
+          "pagination"
         ],
         "type": "object"
       },
@@ -350,6 +445,46 @@
   },
   "openapi": "3.0.0",
   "paths": {
+    "/v1/workspaces/{workspace_id}/credits": {
+      "get": {
+        "operationId": "CreditsController_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance and recent entries."
+          },
+          "403": {
+            "description": "Caller lacks `trawl.read`, or the service is not enabled."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remaining Trawl steps for this workspace, with recent ledger entries",
+        "tags": [
+          "credits"
+        ]
+      }
+    },
     "/v1/workspaces/{workspace_id}/jobs": {
       "get": {
         "operationId": "JobController_list",
@@ -595,6 +730,27 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Opaque cursor from the previous response's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size. Defaults to 20, capped at 100.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
@@ -606,7 +762,7 @@
                 }
               }
             },
-            "description": ""
+            "description": "Page of webhooks with a pagination cursor."
           }
         },
         "security": [
@@ -614,7 +770,7 @@
             "bearer": []
           }
         ],
-        "summary": "List webhooks for the workspace (secrets masked)",
+        "summary": "List webhooks for the workspace (paginated, newest first, secrets masked)",
         "tags": [
           "webhooks"
         ]
@@ -826,11 +982,55 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Filter by derived outcome. `succeeded` = 2xx response; `failed` = any non-2xx, including attempts where the destination never responded.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "succeeded",
+                "failed"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor from the previous response's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size. Defaults to 50, capped at 200.",
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Recent delivery attempts."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryListResponseDto"
+                }
+              }
+            },
+            "description": "Page of delivery attempts with a pagination cursor."
+          },
+          "404": {
+            "description": "Webhook not found in this workspace."
           }
         },
         "security": [
@@ -838,7 +1038,7 @@
             "bearer": []
           }
         ],
-        "summary": "Recent delivery attempts for a webhook (default 50, max 200, newest first)",
+        "summary": "Delivery attempts for a webhook (paginated, default 50, max 200, newest first)",
         "tags": [
           "webhooks"
         ]
