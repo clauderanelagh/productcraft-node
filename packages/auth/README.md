@@ -217,6 +217,56 @@ await consumer.auth.signinWithProvider({
 
 No SDK upgrade required — the per-provider TS enum widens automatically with the next spec refresh.
 
+## Passkeys (WebAuthn)
+
+Passkeys are switched on per app in the console (relying-party id + the
+site origin in `allowed_redirect_origins`). Once they are, each ceremony
+is one call on `auth.consumer(appSlug).passkeys`. The helpers run
+**in the browser** — they drive `navigator.credentials` — but importing
+the package anywhere is safe; nothing touches a browser global until you
+call them.
+
+```ts
+import { Auth, isPasskeySupported, PasskeyError } from "@productcraft/auth";
+
+if (!isPasskeySupported()) hidePasskeyButton(); // false in Node and in insecure contexts
+
+// Enrol — signed-in user adds a passkey as an MFA factor
+const me = new Auth({ auth: { type: "bearer", token: accessToken } }).consumer("acme");
+const { factor, recovery_codes } = await me.passkeys.enroll({ label: "MacBook" });
+// show recovery_codes once — they are not retrievable later
+
+// Passwordless sign-in — no password, no email; discoverable credential
+const anon = new Auth().consumer("acme");
+const session = await anon.passkeys.signIn({ mediation: "conditional" }); // amr: ["webauthn"]
+
+// MFA step of a password sign-in — when signin() answered { mfa_required, mfa_token, factors }
+const session2 = await anon.passkeys.completeMfaChallenge({ mfa_token: signin.mfa_token });
+
+// Step-up inside a live session
+const { amr, mfa_at } = await me.passkeys.stepUp();
+```
+
+Each helper does the options call → `navigator.credentials.create()` /
+`.get()` → verify call, with every buffer base64url-encoded in both
+directions and the `public_key` members renamed to the WebAuthn spec's
+camelCase (the Auth wire is snake_case). Browser-side failures reject
+with `PasskeyError` (`code`: `unsupported`, `cancelled`, `timeout`,
+`invalid_state`, `security`, `no_credential`, `unknown`; `cause` holds
+the DOM error); server-side failures stay `AuthHttpError`, so a 401 on
+a forged or replayed assertion is distinguishable from the user
+dismissing the prompt. Pass `signal: AbortSignal.timeout(ms)` to bound
+the prompt yourself.
+
+The encoding layer is exported for anyone who wants the pieces:
+`toB64u`, `fromB64u`, `decodeOptions`, `encodeCredential`, plus
+`createPasskeyCredential(public_key)` / `getPasskeyCredential(public_key)`
+which wrap `navigator.credentials` on their own.
+
+`signIn()` never sends an identifier: `/auth/passkey/options` takes none
+by design (it would be an account-existence oracle), so sign-in relies on
+a discoverable (resident) credential.
+
 ## JWT verification
 
 Every Auth app publishes a JWKS at `/{appSlug}/v1/.well-known/jwks.json`. The SDK gives you a verified-claims helper and a jose-compatible JWKS resolver.

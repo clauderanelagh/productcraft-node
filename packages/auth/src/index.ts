@@ -170,3 +170,30 @@ export type { SetScopesDto } from "./_generated/types/SetScopesDto.js";
 export type { IdpNativeSigninDto } from "./_generated/types/IdpNativeSigninDto.js";
 export type { IdpNativeUserHintDto } from "./_generated/types/IdpNativeUserHintDto.js";
 export type { IdpTokenResponseDto } from "./_generated/types/IdpTokenResponseDto.js";
+export type { ConfirmEnrollmentResponseDto } from "./_generated/types/ConfirmEnrollmentResponseDto.js";
+export type { StepUpResponseDto } from "./_generated/types/StepUpResponseDto.js";
+export type { PublicFactorDto } from "./_generated/types/PublicFactorDto.js";
+export type { WebauthnCredentialDto } from "./_generated/types/WebauthnCredentialDto.js";
+
+// Passkeys — encoding layer + browser bridge. Safe to import in Node;
+// only the ceremony calls need a browser.
+export {
+  toB64u,
+  fromB64u,
+  decodeOptions,
+  encodeCredential,
+  isPasskeySupported,
+  createPasskeyCredential,
+  getPasskeyCredential,
+  PasskeyError,
+} from "./passkeys.js";
+export type {
+  PasskeyPublicKeyOptions,
+  PasskeyDecodedOptions,
+  PasskeyCredentialLike,
+  EncodedPasskeyCredential,
+  PasskeyCredentialsContainer,
+  PasskeyMediation,
+  PasskeyErrorCode,
+  PasskeyBrowserOptions,
+} from "./passkeys.js";

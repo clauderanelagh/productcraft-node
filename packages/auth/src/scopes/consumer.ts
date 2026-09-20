@@ -3,7 +3,7 @@
  *
  * Returned by `auth.consumer(appSlug)`. The appSlug is pre-bound
  * so callers don't repeat it; each resource namespace (`auth`, `me`,
- * `verify`, `oauth`) forwards into the matching kubb-generated client
+ * `verify`, `passkeys`, `oauth`) forwards into the matching kubb-generated client
  * function with the slug injected.
  *
  * JWT verification + JWKS resolution live here too — they're scoped to
@@ -26,6 +26,14 @@ import { consumerAuthControllerSendVerificationEmail } from "../_generated/clien
 import { consumerAuthControllerVerify } from "../_generated/clients/consumerAuth/consumerAuthControllerVerify.js";
 import { consumerAuthControllerAcceptInvite } from "../_generated/clients/consumerAuth/consumerAuthControllerAcceptInvite.js";
 import { consumerIdpControllerNativeSignIn } from "../_generated/clients/consumerOauthSignIn/consumerIdpControllerNativeSignIn.js";
+import { consumerAuthControllerPasskeyOptions } from "../_generated/clients/consumerAuth/consumerAuthControllerPasskeyOptions.js";
+import { consumerAuthControllerPasskeyVerify } from "../_generated/clients/consumerAuth/consumerAuthControllerPasskeyVerify.js";
+import { consumerAuthControllerMfaWebauthnOptions } from "../_generated/clients/consumerAuth/consumerAuthControllerMfaWebauthnOptions.js";
+import { consumerAuthControllerMfaVerify } from "../_generated/clients/consumerAuth/consumerAuthControllerMfaVerify.js";
+import { consumerMfaControllerStartEnrollment } from "../_generated/clients/consumerMfa/consumerMfaControllerStartEnrollment.js";
+import { consumerMfaControllerConfirmEnrollment } from "../_generated/clients/consumerMfa/consumerMfaControllerConfirmEnrollment.js";
+import { consumerMfaControllerStepUpWebauthnOptions } from "../_generated/clients/consumerMfa/consumerMfaControllerStepUpWebauthnOptions.js";
+import { consumerMfaControllerStepUp } from "../_generated/clients/consumerMfa/consumerMfaControllerStepUp.js";
 
 // consumerMe — all six endpoints have spec bugs (appSlug not declared
 // in spec parameters[] despite being in the URL); use callDirect below.
@@ -57,6 +65,23 @@ import type { AuthorizeBatchBody } from "../_generated/types/AuthorizeBatchBody.
 import type { ClientCredentialsDto } from "../_generated/types/ClientCredentialsDto.js";
 import type { IdpNativeSigninDto } from "../_generated/types/IdpNativeSigninDto.js";
 import type { ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey } from "../_generated/types/consumerOauthSignIn/ConsumerIdpControllerNativeSignIn.js";
+import type { ConsumerTokenResponseDto } from "../_generated/types/ConsumerTokenResponseDto.js";
+import type { ConsumerPasskeyOptionsDto } from "../_generated/types/ConsumerPasskeyOptionsDto.js";
+import type { ConsumerWebauthnOptionsResponseDto } from "../_generated/types/ConsumerWebauthnOptionsResponseDto.js";
+import type { WebauthnOptionsResponseDto } from "../_generated/types/WebauthnOptionsResponseDto.js";
+import type { StartEnrollmentResponseDto } from "../_generated/types/StartEnrollmentResponseDto.js";
+import type { WebauthnEnrollmentDataDto } from "../_generated/types/WebauthnEnrollmentDataDto.js";
+import type { ConfirmEnrollmentResponseDto } from "../_generated/types/ConfirmEnrollmentResponseDto.js";
+import type { StepUpResponseDto } from "../_generated/types/StepUpResponseDto.js";
+
+import {
+  createPasskeyCredential,
+  getPasskeyCredential,
+  resolveCredentials,
+  type PasskeyBrowserOptions,
+  type PasskeyMediation,
+  type PasskeyPublicKeyOptions,
+} from "../passkeys.js";
 
 import { JwksCache } from "../jwt/jwks-cache.js";
 import { verifyAuthToken, type VerifyOptions, type AuthClaims } from "../jwt/verify.js";
@@ -450,6 +475,159 @@ export class ConsumerScope {
         { appSlug: this.appSlug, data, headers: { authorization: "" } },
         { client: this.client },
       ),
+  };
+
+  // ─────────────────────────────────────────────────────────────
+  // Passkeys — WebAuthn ceremonies, one call each. BROWSER ONLY at
+  // call time (they drive navigator.credentials); importing is safe
+  // anywhere. Base64url in both directions is handled here; the
+  // wire stays snake_case except the spec-fixed response members
+  // (clientDataJSON, attestationObject, authenticatorData, signature,
+  // userHandle), which travel verbatim.
+  // ─────────────────────────────────────────────────────────────
+  readonly passkeys = {
+    /**
+     * Enrol a passkey as an MFA factor for the signed-in end-user.
+     * Requires the scope to carry the user's access token
+     * (`new Auth({ auth: { type: "bearer", token } })`).
+     *
+     * `POST /me/mfa/factors { type: "webauthn" }` →
+     * `navigator.credentials.create()` →
+     * `POST /me/mfa/factors/:id/verify { credential }`.
+     *
+     * Resolves with the now-enabled factor and the user's recovery
+     * codes — show those once, they are not retrievable later. The
+     * factor stays disabled until the verify call succeeds, so an
+     * abandoned prompt leaves nothing usable behind.
+     */
+    enroll: async (
+      opts: PasskeyBrowserOptions & { label?: string } = {},
+    ): Promise<ConfirmEnrollmentResponseDto> => {
+      // Fail before the options call: an unsupported client must not mint
+      // a server-side challenge it can never answer.
+      const credentials = resolveCredentials(opts);
+      const start = (await consumerMfaControllerStartEnrollment(
+        {
+          appSlug: this.appSlug,
+          data: { type: "webauthn", ...(opts.label ? { label: opts.label } : {}) },
+        },
+        { client: this.client },
+      )) as StartEnrollmentResponseDto;
+      const publicKey = (start.enrollment as WebauthnEnrollmentDataDto)
+        .public_key as PasskeyPublicKeyOptions;
+      const credential = await createPasskeyCredential(publicKey, { ...opts, credentials });
+      return (await consumerMfaControllerConfirmEnrollment(
+        { appSlug: this.appSlug, id: start.factor.id, data: { credential } },
+        { client: this.client },
+      )) as ConfirmEnrollmentResponseDto;
+    },
+
+    /**
+     * Passwordless sign-in with a discoverable passkey. No password,
+     * no email address: the authenticator finds its own passkey for
+     * the app's rp_id.
+     *
+     * `POST /auth/passkey/options {}` → `navigator.credentials.get()`
+     * → `POST /auth/passkey/verify { credential }`.
+     *
+     * Resolves with the session (`access_token`, `refresh_token`,
+     * …; `amr: ["webauthn"]`). Rejects with `PasskeyError`
+     * (`code: "cancelled"`) when the user dismisses the prompt or no
+     * passkey matches, and with `AuthHttpError` 401 for a forged,
+     * unknown, replayed or expired assertion — the server answers
+     * those uniformly on purpose.
+     *
+     * The options call deliberately takes no identifier (it would be
+     * an account-existence oracle); `tenant_id` is the only
+     * accepted body member and only matters for multi-tenant apps.
+     * Pass `mediation: "conditional"` for autofill-style UI.
+     */
+    signIn: async (
+      opts: PasskeyBrowserOptions & {
+        mediation?: PasskeyMediation;
+        tenant_id?: ConsumerPasskeyOptionsDto["tenant_id"];
+      } = {},
+    ): Promise<ConsumerTokenResponseDto> => {
+      const credentials = resolveCredentials(opts);
+      const { public_key } = (await consumerAuthControllerPasskeyOptions(
+        {
+          appSlug: this.appSlug,
+          data: opts.tenant_id ? { tenant_id: opts.tenant_id } : {},
+        },
+        { client: this.client },
+      )) as ConsumerWebauthnOptionsResponseDto;
+      const credential = await getPasskeyCredential(
+        public_key as PasskeyPublicKeyOptions,
+        { ...opts, credentials },
+      );
+      return (await consumerAuthControllerPasskeyVerify(
+        { appSlug: this.appSlug, data: { credential } },
+        { client: this.client },
+      )) as ConsumerTokenResponseDto;
+    },
+
+    /**
+     * Satisfy the MFA step of a password sign-in with a passkey.
+     * Call it when `auth.signin()` answered
+     * `{ mfa_required: true, mfa_token, factors }` and `factors`
+     * contains a `webauthn` entry.
+     *
+     * `POST /auth/mfa/webauthn/options { mfa_token }` →
+     * `navigator.credentials.get()` →
+     * `POST /auth/mfa/verify { mfa_token, credential }`.
+     *
+     * Resolves with the session (`amr: ["pwd", "webauthn"]`, fresh
+     * `mfa_at`). Possession of the `mfa_token` — a correct password
+     * — is the authority for the options call.
+     */
+    completeMfaChallenge: async (
+      args: PasskeyBrowserOptions & { mfa_token: string; mediation?: PasskeyMediation },
+    ): Promise<ConsumerTokenResponseDto> => {
+      const { mfa_token, ...browserOpts } = args;
+      const credentials = resolveCredentials(browserOpts);
+      const { public_key } = (await consumerAuthControllerMfaWebauthnOptions(
+        { appSlug: this.appSlug, data: { mfa_token } },
+        { client: this.client },
+      )) as ConsumerWebauthnOptionsResponseDto;
+      const credential = await getPasskeyCredential(
+        public_key as PasskeyPublicKeyOptions,
+        { ...browserOpts, credentials },
+      );
+      return (await consumerAuthControllerMfaVerify(
+        { appSlug: this.appSlug, data: { mfa_token, credential } },
+        { client: this.client },
+      )) as ConsumerTokenResponseDto;
+    },
+
+    /**
+     * Re-confirm the signed-in user's identity inside a live session
+     * (before a sensitive action). Requires the scope to carry the
+     * user's access token.
+     *
+     * `POST /me/mfa/step-up/webauthn/options` →
+     * `navigator.credentials.get()` →
+     * `POST /me/mfa/step-up { credential }`.
+     *
+     * Resolves with `{ amr, mfa_at }`. A passkey assertion is never
+     * tried as a recovery code, so a failed step-up never burns one.
+     */
+    stepUp: async (
+      opts: PasskeyBrowserOptions & { mediation?: PasskeyMediation } = {},
+    ): Promise<StepUpResponseDto> => {
+      const credentials = resolveCredentials(opts);
+      const { public_key } = (await consumerMfaControllerStepUpWebauthnOptions(
+        { appSlug: this.appSlug },
+        { client: this.client },
+      )) as WebauthnOptionsResponseDto;
+      const credential = await getPasskeyCredential(
+        public_key as PasskeyPublicKeyOptions,
+        { ...opts, credentials },
+      );
+      return (await consumerMfaControllerStepUp(
+        { appSlug: this.appSlug, data: { credential } },
+        { client: this.client },
+      )) as StepUpResponseDto;
+    },
   };
 
   // ─────────────────────────────────────────────────────────────
