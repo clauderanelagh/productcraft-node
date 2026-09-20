@@ -1,5 +1,11 @@
 # productcraft
 
+## 0.2.9
+
+### Patch Changes
+
+- Hotfix: depend on the published `@productcraft/auth@^0.6.0` instead of the workspace version. `0.2.8` was released depending on `@productcraft/auth@^0.7.0`, which could not be published (npm now requires 2FA for the `@productcraft/*` names and the CI token was refused), so a fresh `npm install productcraft` failed to resolve. Switch back to `workspace:^` once `@productcraft/auth@0.7.0` is on npm.
+
 ## 0.2.8
 
 ### Patch Changes
