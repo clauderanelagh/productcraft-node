@@ -1,0 +1,42 @@
+name: npm dist-tag
+
+# Manual escape hatch for the case release.yml can only half-publish: a
+# package whose publish the token IS allowed to make (e.g. the umbrella)
+# lands while one it is NOT allowed to make (a @productcraft/* package
+# whose settings require 2FA) fails, leaving `latest` pointing at a
+# version with an unresolvable dependency. First used 2026-09-20 to move
+# productcraft `latest` back to 0.2.7 after 0.2.8 shipped depending on an
+# unpublished @productcraft/auth@0.7.0.
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: "npm package name (e.g. productcraft or @productcraft/auth)"
+        required: true
+      version:
+        description: "existing published version to point the tag at"
+        required: true
+      tag:
+        description: "dist-tag to move"
+        required: true
+        default: latest
+
+permissions:
+  contents: read
+
+jobs:
+  retag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Move the tag
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "before:"; npm view "${{ inputs.package }}" dist-tags --json
+          npm dist-tag add "${{ inputs.package }}@${{ inputs.version }}" "${{ inputs.tag }}"
+          echo "after:"; npm view "${{ inputs.package }}" dist-tags --json
