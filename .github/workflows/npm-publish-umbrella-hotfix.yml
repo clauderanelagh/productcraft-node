@@ -66,18 +66,19 @@ jobs:
             fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
             console.log(JSON.stringify({ version: j.version, dependencies: j.dependencies }, null, 2));
           ' "${{ inputs.version }}" "${{ inputs.dep }}" "${{ inputs.range }}"
-      - name: Publish
+      - name: Publish (tokenless, OIDC trusted publishing)
         working-directory: packages/umbrella
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: "true"
         run: |
           set -euo pipefail
-          # Same client and auth file shape as changesets/action, which is
-          # the path that published 0.2.8 with this token; pnpm publish did
-          # not pick the token up and 404'd.
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > "$HOME/.npmrc"
-          npm whoami
+          # The NPM_TOKEN secret is dead (npm whoami -> 401). What published
+          # 0.2.8 was npm trusted publishing via the runner's OIDC token,
+          # which is configured on npmjs.com for this pre-rename name and
+          # NOT for the @productcraft/* names. npm >= 11.5 authenticates
+          # with it automatically when no token is present.
+          npm install -g npm@11
+          npm --version
           npm publish --access public
           echo "published:"; npm view "productcraft@${{ inputs.version }}" version dependencies --json
           echo "dist-tags:"; npm view productcraft dist-tags --json
