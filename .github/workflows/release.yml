@@ -66,22 +66,17 @@ jobs:
           title: "chore(release): version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Token-based publish. The 2026-07 package rename created new
-          # names (@productcraft/auth, auth-passport, mail, waitlist,
-          # social) that have no trusted-publisher config on npmjs.com
-          # yet — OIDC can't publish them, and configuring it is
-          # web-UI-only (Cloudflare-blocked from the headless dev box).
-          # Provenance still works: npm attests via the runner OIDC
-          # token (`id-token: write`) independently of auth method.
-          # TODO: once trusted publishers are configured for the five
-          # new names via an interactive browser, drop NODE_AUTH_TOKEN
-          # and the NPM_TOKEN secret to go back to tokenless OIDC.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # changesets/action decides HOW to publish by looking for an
-          # env var literally named NPM_TOKEN. With only NODE_AUTH_TOKEN
-          # set it logged "No NPM_TOKEN found, but OIDC is available -
-          # using npm trusted publishing" and every publish 404'd
-          # (2026-09-20, the 0.7.0 passkeys release). Both names stay
-          # until the trusted-publisher TODO above is done.
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Tokenless publish via npm trusted publishing (runner OIDC,
+          # `id-token: write`). The NPM_TOKEN secret is DEAD as of
+          # 2026-09-20 (`npm whoami` -> 401), and when it was passed the
+          # action preferred it over OIDC and every publish failed. With no
+          # token, npm >= 11 authenticates through OIDC for packages that
+          # have a trusted publisher configured on npmjs.com for THIS
+          # workflow file. Today that is the pre-rename names (e.g. the
+          # `productcraft` umbrella). The rebranded @productcraft/* names
+          # (auth, auth-passport, mail, waitlist, social, trawl,
+          # platform-auth, core) still need a trusted publisher added in
+          # the npmjs.com web UI (Cloudflare blocks headless Chromium from
+          # the dev box, and the account's 2FA device is not on it) — until
+          # then their publishes 404 here and need that one-time config.
           NPM_CONFIG_PROVENANCE: "true"
