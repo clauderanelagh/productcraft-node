@@ -262,6 +262,22 @@ describe("passkeys — browser bridge error mapping", () => {
     expect((err as PasskeyError).cause).toBe(dom);
   });
 
+  it("maps TimeoutError (AbortSignal.timeout) → timeout with a clear message", async () => {
+    const dom = Object.assign(new Error("signal timed out"), { name: "TimeoutError" });
+    const creds: PasskeyCredentialsContainer = {
+      create: async () => null,
+      get: async () => {
+        throw dom;
+      },
+    };
+    const err = await getPasskeyCredential(publicKey, { credentials: creds }).catch(
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(PasskeyError);
+    expect((err as PasskeyError).code).toBe("timeout");
+    expect((err as PasskeyError).message).toMatch(/timed out/i);
+  });
+
   it("maps a null credential → no_credential", async () => {
     const creds: PasskeyCredentialsContainer = {
       create: async () => null,

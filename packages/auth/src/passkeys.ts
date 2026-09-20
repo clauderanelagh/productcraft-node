@@ -199,8 +199,10 @@ export type PasskeyMediation = "silent" | "optional" | "conditional" | "required
 export type PasskeyErrorCode =
   /** No WebAuthn in this environment — see {@link isPasskeySupported}. */
   | "unsupported"
-  /** The user dismissed the prompt, timed out, or no passkey matched (`NotAllowedError`). */
+  /** The user dismissed the prompt, or no passkey matched (`NotAllowedError`). */
   | "cancelled"
+  /** The prompt ran out of time — the options' `timeout` or your `signal` fired (`TimeoutError`). */
+  | "timeout"
   /** The authenticator refused (e.g. credential already registered — `InvalidStateError`). */
   | "invalid_state"
   /** The page origin does not match the app's `rp_id` (`SecurityError`). */
@@ -275,6 +277,12 @@ function mapDomError(err: unknown): PasskeyError {
       );
     case "AbortError":
       return new PasskeyError("cancelled", `Passkey ceremony aborted: ${message}`, err);
+    case "TimeoutError":
+      return new PasskeyError(
+        "timeout",
+        `Passkey prompt timed out before a credential was produced: ${message}`,
+        err,
+      );
     default:
       return new PasskeyError("unknown", `navigator.credentials failed: ${message}`, err);
   }
