@@ -1,0 +1,68 @@
+name: npm publish umbrella hotfix
+
+# One-shot repair for a half-published release: release.yml published the
+# `productcraft` umbrella pointing at a @productcraft/* version the token
+# was then refused to publish, so `latest` resolves to nothing installable.
+# Tokens are also refused for dist-tag moves, but a publish of THIS package
+# is allowed, and a publish moves `latest`. So: publish the umbrella again
+# at a new version with the offending dependency range set back to the
+# newest version that exists on npm. Everything else about the package is
+# main as-is. After it lands, commit the same version + range to the repo
+# so changesets does not try to republish it.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "new umbrella version to publish"
+        required: true
+      dep:
+        description: "dependency to override (e.g. @productcraft/auth)"
+        required: true
+        default: "@productcraft/auth"
+      range:
+        description: "range to publish for that dependency (e.g. ^0.6.0)"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run codegen
+      - run: pnpm run build
+      - name: Rewrite umbrella version + dependency range
+        run: |
+          set -euo pipefail
+          node -e '
+            const fs = require("fs");
+            const p = "packages/umbrella/package.json";
+            const j = JSON.parse(fs.readFileSync(p, "utf8"));
+            j.version = process.argv[1];
+            if (!(process.argv[2] in j.dependencies)) throw new Error("no such dependency: " + process.argv[2]);
+            j.dependencies[process.argv[2]] = process.argv[3];
+            fs.writeFileSync(p, JSON.stringify(j, null, 2) + "\n");
+            console.log(JSON.stringify({ version: j.version, dependencies: j.dependencies }, null, 2));
+          ' "${{ inputs.version }}" "${{ inputs.dep }}" "${{ inputs.range }}"
+      - name: Publish
+        working-directory: packages/umbrella
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: "true"
+        run: |
+          set -euo pipefail
+          # pnpm publish resolves the remaining workspace:^ ranges to the
+          # workspace versions; the overridden one is already a literal.
+          pnpm publish --no-git-checks --access public
+          echo "published:"; npm view "productcraft@${{ inputs.version }}" version dependencies --json
+          echo "dist-tags:"; npm view productcraft dist-tags --json
