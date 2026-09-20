@@ -451,12 +451,21 @@ describe("consumer.passkeys — ceremonies", () => {
     expect(calls[0]!.body).toEqual({ tenant_id: "ten_1" });
   });
 
-  it("signIn: rejects with PasskeyError(unsupported) after the options call when no authenticator exists", async () => {
+  it("every ceremony rejects PasskeyError(unsupported) BEFORE its options call when no authenticator exists", async () => {
+    // An unsupported client must not mint a server-side challenge it can
+    // never answer, so the check runs before the first request.
     const { scope, calls } = makeScope([{ public_key: requestPublicKey }]);
-    const err = await scope.passkeys.signIn().catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(PasskeyError);
-    expect((err as PasskeyError).code).toBe("unsupported");
-    expect(calls).toHaveLength(1); // verify was never attempted
+    for (const run of [
+      () => scope.passkeys.signIn(),
+      () => scope.passkeys.enroll(),
+      () => scope.passkeys.stepUp(),
+      () => scope.passkeys.completeMfaChallenge({ mfa_token: "mfa_abc" }),
+    ]) {
+      const err = await run().catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(PasskeyError);
+      expect((err as PasskeyError).code).toBe("unsupported");
+    }
+    expect(calls).toHaveLength(0); // nothing reached the network
   });
 
   it("completeMfaChallenge: POST /auth/mfa/webauthn/options {mfa_token} → get → POST /auth/mfa/verify {mfa_token, credential}", async () => {

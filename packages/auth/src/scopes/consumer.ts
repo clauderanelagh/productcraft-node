@@ -77,6 +77,7 @@ import type { StepUpResponseDto } from "../_generated/types/StepUpResponseDto.js
 import {
   createPasskeyCredential,
   getPasskeyCredential,
+  resolveCredentials,
   type PasskeyBrowserOptions,
   type PasskeyMediation,
   type PasskeyPublicKeyOptions,
@@ -502,6 +503,9 @@ export class ConsumerScope {
     enroll: async (
       opts: PasskeyBrowserOptions & { label?: string } = {},
     ): Promise<ConfirmEnrollmentResponseDto> => {
+      // Fail before the options call: an unsupported client must not mint
+      // a server-side challenge it can never answer.
+      const credentials = resolveCredentials(opts);
       const start = (await consumerMfaControllerStartEnrollment(
         {
           appSlug: this.appSlug,
@@ -511,7 +515,7 @@ export class ConsumerScope {
       )) as StartEnrollmentResponseDto;
       const publicKey = (start.enrollment as WebauthnEnrollmentDataDto)
         .public_key as PasskeyPublicKeyOptions;
-      const credential = await createPasskeyCredential(publicKey, opts);
+      const credential = await createPasskeyCredential(publicKey, { ...opts, credentials });
       return (await consumerMfaControllerConfirmEnrollment(
         { appSlug: this.appSlug, id: start.factor.id, data: { credential } },
         { client: this.client },
@@ -544,6 +548,7 @@ export class ConsumerScope {
         tenant_id?: ConsumerPasskeyOptionsDto["tenant_id"];
       } = {},
     ): Promise<ConsumerTokenResponseDto> => {
+      const credentials = resolveCredentials(opts);
       const { public_key } = (await consumerAuthControllerPasskeyOptions(
         {
           appSlug: this.appSlug,
@@ -553,7 +558,7 @@ export class ConsumerScope {
       )) as ConsumerWebauthnOptionsResponseDto;
       const credential = await getPasskeyCredential(
         public_key as PasskeyPublicKeyOptions,
-        opts,
+        { ...opts, credentials },
       );
       return (await consumerAuthControllerPasskeyVerify(
         { appSlug: this.appSlug, data: { credential } },
@@ -579,13 +584,14 @@ export class ConsumerScope {
       args: PasskeyBrowserOptions & { mfa_token: string; mediation?: PasskeyMediation },
     ): Promise<ConsumerTokenResponseDto> => {
       const { mfa_token, ...browserOpts } = args;
+      const credentials = resolveCredentials(browserOpts);
       const { public_key } = (await consumerAuthControllerMfaWebauthnOptions(
         { appSlug: this.appSlug, data: { mfa_token } },
         { client: this.client },
       )) as ConsumerWebauthnOptionsResponseDto;
       const credential = await getPasskeyCredential(
         public_key as PasskeyPublicKeyOptions,
-        browserOpts,
+        { ...browserOpts, credentials },
       );
       return (await consumerAuthControllerMfaVerify(
         { appSlug: this.appSlug, data: { mfa_token, credential } },
@@ -608,13 +614,14 @@ export class ConsumerScope {
     stepUp: async (
       opts: PasskeyBrowserOptions & { mediation?: PasskeyMediation } = {},
     ): Promise<StepUpResponseDto> => {
+      const credentials = resolveCredentials(opts);
       const { public_key } = (await consumerMfaControllerStepUpWebauthnOptions(
         { appSlug: this.appSlug },
         { client: this.client },
       )) as WebauthnOptionsResponseDto;
       const credential = await getPasskeyCredential(
         public_key as PasskeyPublicKeyOptions,
-        opts,
+        { ...opts, credentials },
       );
       return (await consumerMfaControllerStepUp(
         { appSlug: this.appSlug, data: { credential } },

@@ -189,6 +189,7 @@ export {
 } from "./passkeys.js";
 export type {
   PasskeyPublicKeyOptions,
+  PasskeyDecodedOptions,
   PasskeyCredentialLike,
   EncodedPasskeyCredential,
   PasskeyCredentialsContainer,

@@ -95,15 +95,22 @@ function camelizeKeys(value: unknown): unknown {
  * decamelizes them (`rp_id`, `pub_key_cred_params`) and always emits
  * the spec's camelCase, which is the only shape the browser accepts.
  */
-export function decodeOptions<T extends PasskeyPublicKeyOptions>(
-  publicKey: T,
-): Omit<T, "challenge" | "user" | "excludeCredentials" | "allowCredentials"> & {
-  challenge: Uint8Array;
-  user?: Omit<NonNullable<T["user"]>, "id"> & { id: Uint8Array };
-  excludeCredentials?: Array<{ id: Uint8Array; [k: string]: unknown }>;
-  allowCredentials?: Array<{ id: Uint8Array; [k: string]: unknown }>;
-} {
-  const pk = camelizeKeys(publicKey) as PasskeyPublicKeyOptions;
+/**
+ * Decoded options are typed loosely ON PURPOSE. The exact browser types
+ * (`PublicKeyCredentialCreationOptions` / `PublicKeyCredentialRequestOptions`)
+ * live in lib.dom, which this package does not depend on so that it keeps
+ * loading in Node. An `any` here is what lets a lib.dom customer write
+ * `navigator.credentials.create({ publicKey: decodeOptions(pk) })` with no
+ * cast — a structural return type could never satisfy the DOM's required
+ * members without depending on them.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type PasskeyDecodedOptions = any;
+
+export function decodeOptions(
+  publicKey: PasskeyPublicKeyOptions | Record<string, unknown>,
+): PasskeyDecodedOptions {
+  const pk = camelizeKeys(publicKey as Record<string, unknown>) as PasskeyPublicKeyOptions;
   const out: Record<string, unknown> = {
     ...pk,
     challenge: fromB64u(pk.challenge),
@@ -117,7 +124,7 @@ export function decodeOptions<T extends PasskeyPublicKeyOptions>(
       out[list] = entries.map((c) => ({ ...c, id: fromB64u(c.id) }));
     }
   }
-  return out as ReturnType<typeof decodeOptions<T>>;
+  return out;
 }
 
 /**
@@ -182,16 +189,16 @@ export function encodeCredential(
  * stand-in.
  */
 export interface PasskeyCredentialsContainer {
-  create(options: {
-    publicKey: unknown;
-    signal?: AbortSignal;
-  }): Promise<PasskeyCredentialLike | null>;
-  get(options: {
-    publicKey: unknown;
+  create(options?: { publicKey?: unknown; signal?: AbortSignal }): Promise<unknown>;
+  get(options?: {
+    publicKey?: unknown;
     mediation?: PasskeyMediation;
     signal?: AbortSignal;
-  }): Promise<PasskeyCredentialLike | null>;
+  }): Promise<unknown>;
 }
+// The real `navigator.credentials` (lib.dom `CredentialsContainer`) is
+// assignable to this: its options are a superset and it resolves
+// `Credential | null`, which the helpers narrow with `isCredentialLike`.
 
 /** `CredentialMediationRequirement` from the Credential Management spec. */
 export type PasskeyMediation = "silent" | "optional" | "conditional" | "required";
@@ -300,14 +307,14 @@ export interface PasskeyBrowserOptions {
 }
 
 /**
- * `navigator.credentials.create()` with base64url handled: takes the
- * `public_key` from an Auth enrolment response, returns the encoded
- * `credential` to POST back. Throws {@link PasskeyError}.
+ * The credentials container a ceremony will use, or a {@link PasskeyError}
+ * with code `unsupported` if there is none. The ceremony helpers call this
+ * BEFORE their options request, so an unsupported client never mints a
+ * server-side challenge it can never answer.
  */
-export async function createPasskeyCredential(
-  publicKey: PasskeyPublicKeyOptions,
+export function resolveCredentials(
   opts: PasskeyBrowserOptions = {},
-): Promise<EncodedPasskeyCredential> {
+): PasskeyCredentialsContainer {
   const creds = opts.credentials ?? browserCredentials();
   if (!creds) {
     throw new PasskeyError(
@@ -315,14 +322,36 @@ export async function createPasskeyCredential(
       "navigator.credentials is not available — passkeys need a browser with WebAuthn (check isPasskeySupported())",
     );
   }
-  let cred: PasskeyCredentialLike | null;
+  return creds;
+}
+
+function isCredentialLike(value: unknown): value is PasskeyCredentialLike {
+  if (!value || typeof value !== "object") return false;
+  const v = value as { id?: unknown; response?: unknown };
+  return typeof v.id === "string" && !!v.response && typeof v.response === "object";
+}
+
+/**
+ * `navigator.credentials.create()` with base64url handled: takes the
+ * `public_key` from an Auth enrolment response, returns the encoded
+ * `credential` to POST back. Throws {@link PasskeyError}.
+ */
+export async function createPasskeyCredential(
+  publicKey: PasskeyPublicKeyOptions | Record<string, unknown>,
+  opts: PasskeyBrowserOptions = {},
+): Promise<EncodedPasskeyCredential> {
+  const creds = resolveCredentials(opts);
+  let cred: unknown;
   try {
     cred = await creds.create({ publicKey: decodeOptions(publicKey), signal: opts.signal });
   } catch (err) {
     throw mapDomError(err);
   }
-  if (!cred) {
-    throw new PasskeyError("no_credential", "navigator.credentials.create() returned null");
+  if (!isCredentialLike(cred)) {
+    throw new PasskeyError(
+      "no_credential",
+      "navigator.credentials.create() returned no usable credential",
+    );
   }
   return encodeCredential(cred);
 }
@@ -333,17 +362,11 @@ export async function createPasskeyCredential(
  * `credential` to POST back. Throws {@link PasskeyError}.
  */
 export async function getPasskeyCredential(
-  publicKey: PasskeyPublicKeyOptions,
+  publicKey: PasskeyPublicKeyOptions | Record<string, unknown>,
   opts: PasskeyBrowserOptions & { mediation?: PasskeyMediation } = {},
 ): Promise<EncodedPasskeyCredential> {
-  const creds = opts.credentials ?? browserCredentials();
-  if (!creds) {
-    throw new PasskeyError(
-      "unsupported",
-      "navigator.credentials is not available — passkeys need a browser with WebAuthn (check isPasskeySupported())",
-    );
-  }
-  let cred: PasskeyCredentialLike | null;
+  const creds = resolveCredentials(opts);
+  let cred: unknown;
   try {
     cred = await creds.get({
       publicKey: decodeOptions(publicKey),
@@ -353,8 +376,11 @@ export async function getPasskeyCredential(
   } catch (err) {
     throw mapDomError(err);
   }
-  if (!cred) {
-    throw new PasskeyError("no_credential", "navigator.credentials.get() returned null");
+  if (!isCredentialLike(cred)) {
+    throw new PasskeyError(
+      "no_credential",
+      "navigator.credentials.get() returned no usable credential",
+    );
   }
   return encodeCredential(cred);
 }
