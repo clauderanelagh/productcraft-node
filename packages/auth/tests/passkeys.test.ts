@@ -147,6 +147,56 @@ describe("passkeys — base64url encoding layer", () => {
     expect(out.userVerification).toBe("required");
   });
 
+  it("decodeOptions accepts the snake_case public_key Auth actually emits and yields WebAuthn member names", () => {
+    // Captured live from POST /:slug/v1/me/mfa/factors {type:webauthn} and
+    // /auth/passkey/options: the global wire decamelizer reaches inside
+    // public_key, so the browser would never see pubKeyCredParams et al.
+    const creation = decodeOptions({
+      challenge: "-_8",
+      rp: { id: "localhost", name: "Demo" },
+      user: { id: "Pj_7_w", name: "passkey", display_name: "passkey" },
+      pub_key_cred_params: [{ type: "public-key", alg: -7 }, { type: "public-key", alg: -257 }],
+      timeout: 300000,
+      attestation: "none",
+      exclude_credentials: [{ type: "public-key", id: "_-8", transports: ["internal"] }],
+      authenticator_selection: {
+        resident_key: "preferred",
+        require_resident_key: false,
+        user_verification: "required",
+      },
+    } as never);
+    expect(Array.from(creation.challenge)).toEqual([0xfb, 0xff]);
+    expect(Array.from(creation.user!.id)).toEqual([0x3e, 0x3f, 0xfb, 0xff]);
+    expect((creation.user as { displayName?: string }).displayName).toBe("passkey");
+    expect(creation).not.toHaveProperty("pub_key_cred_params");
+    expect(creation.pubKeyCredParams).toEqual([
+      { type: "public-key", alg: -7 },
+      { type: "public-key", alg: -257 },
+    ]);
+    expect(creation.authenticatorSelection).toEqual({
+      residentKey: "preferred",
+      requireResidentKey: false,
+      userVerification: "required",
+    });
+    expect(creation).not.toHaveProperty("exclude_credentials");
+    expect(Array.from(creation.excludeCredentials![0]!.id)).toEqual([0xff, 0xef]);
+    expect(creation.excludeCredentials![0]!.type).toBe("public-key"); // values untouched
+    expect(creation.attestation).toBe("none");
+
+    const request = decodeOptions({
+      challenge: "-_8",
+      rp_id: "localhost",
+      timeout: 300000,
+      user_verification: "required",
+      allow_credentials: [],
+    } as never);
+    expect(request.rpId).toBe("localhost");
+    expect(request).not.toHaveProperty("rp_id");
+    expect(request.userVerification).toBe("required");
+    expect(request.allowCredentials).toEqual([]);
+    expect(request).not.toHaveProperty("allow_credentials");
+  });
+
   it("decodeOptions leaves user/excludeCredentials absent when the server omits them", () => {
     const out = decodeOptions({ challenge: "-_8", rpId: "localhost", allowCredentials: [] });
     expect(out).not.toHaveProperty("user");

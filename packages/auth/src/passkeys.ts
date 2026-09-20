@@ -59,12 +59,41 @@ export interface PasskeyPublicKeyOptions {
   [k: string]: unknown;
 }
 
+const snakeToCamel = (k: string): string =>
+  k.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+
+/**
+ * Deep-rename snake_case keys to camelCase; values (including string
+ * values like `"public-key"`) are never touched. The Auth API's global
+ * wire convention decamelizes every response key, `public_key`'s
+ * members included, but `navigator.credentials` only understands the
+ * WebAuthn spec's camelCase names (`rpId`, `pubKeyCredParams`,
+ * `authenticatorSelection`, `allowCredentials`, …). Idempotent on
+ * input that is already camelCase.
+ */
+function camelizeKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(camelizeKeys);
+  if (value && typeof value === "object" && !(value instanceof Uint8Array)) {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+      out[snakeToCamel(k)] = camelizeKeys(v);
+    }
+    return out;
+  }
+  return value;
+}
+
 /**
  * Auth returns `public_key` with every buffer base64url-encoded;
  * `navigator.credentials` wants real ArrayBuffers. Decodes
  * `challenge`, `user.id`, and the `id` of every entry in
  * `excludeCredentials` / `allowCredentials`; everything else passes
- * through untouched.
+ * through with its value untouched.
+ *
+ * Accepts the member names either as the WebAuthn spec writes them
+ * (`rpId`, `pubKeyCredParams`) or as the Auth wire convention
+ * decamelizes them (`rp_id`, `pub_key_cred_params`) and always emits
+ * the spec's camelCase, which is the only shape the browser accepts.
  */
 export function decodeOptions<T extends PasskeyPublicKeyOptions>(
   publicKey: T,
@@ -74,15 +103,16 @@ export function decodeOptions<T extends PasskeyPublicKeyOptions>(
   excludeCredentials?: Array<{ id: Uint8Array; [k: string]: unknown }>;
   allowCredentials?: Array<{ id: Uint8Array; [k: string]: unknown }>;
 } {
+  const pk = camelizeKeys(publicKey) as PasskeyPublicKeyOptions;
   const out: Record<string, unknown> = {
-    ...publicKey,
-    challenge: fromB64u(publicKey.challenge),
+    ...pk,
+    challenge: fromB64u(pk.challenge),
   };
-  if (publicKey.user) {
-    out.user = { ...publicKey.user, id: fromB64u(publicKey.user.id) };
+  if (pk.user) {
+    out.user = { ...pk.user, id: fromB64u(pk.user.id) };
   }
   for (const list of ["excludeCredentials", "allowCredentials"] as const) {
-    const entries = publicKey[list];
+    const entries = pk[list];
     if (entries) {
       out[list] = entries.map((c) => ({ ...c, id: fromB64u(c.id) }));
     }
