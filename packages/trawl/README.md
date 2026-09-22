@@ -29,7 +29,7 @@ const trawl = new Trawl({ auth: { type: "apiKey", key: process.env.PCFT_KEY! } }
 const { data, error } = await trawl.client.POST(
   "/v1/workspaces/{workspaceId}/jobs",
   {
-    params: { path: { workspaceId: "ws_..." } },
+    params: { path: { workspaceId: "<workspace-uuid>" } },
     body: {
       description: "Extract the product title and price from each page.",
       json_schema: {
@@ -43,7 +43,7 @@ const { data, error } = await trawl.client.POST(
 );
 
 if (error) throw error;
-console.log(data.id, data.status); // → "job_...", "queued"
+console.log(data.id, data.status); // → "<job-uuid>", "queued"
 ```
 
 Poll `GET /v1/workspaces/{workspaceId}/jobs/{id}` for the result, or
