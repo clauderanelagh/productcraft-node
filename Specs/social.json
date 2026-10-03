@@ -504,6 +504,39 @@
         ],
         "type": "object"
       },
+      "ActorSummaryDto": {
+        "properties": {
+          "avatar_url": {
+            "description": "Avatar URL. May be a presigned URL that expires (~15 min), so treat a load failure as normal and fall back to initials.",
+            "example": "https://cdn.productcraft.co/actors/aaaa.png",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Actor display name. Null when the actor never set one — render the id, not an empty string.",
+            "example": "Alice Nguyen",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Social actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          },
+          "status": {
+            "description": "Actor lifecycle status.",
+            "example": "active",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_name",
+          "avatar_url",
+          "status"
+        ],
+        "type": "object"
+      },
       "ActorsByExternalBatchResponseDto": {
         "properties": {
           "data": {
@@ -1951,6 +1984,46 @@
         },
         "type": "object"
       },
+      "ConnectionRequestDto": {
+        "properties": {
+          "dst_actor_id": {
+            "description": "Actor being invited to connect.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000002",
+            "type": "string"
+          },
+          "src_actor_id": {
+            "description": "Requesting actor UUID.",
+            "example": "aaaaaaaa-0000-0000-0000-000000000001",
+            "type": "string"
+          }
+        },
+        "required": [
+          "src_actor_id",
+          "dst_actor_id"
+        ],
+        "type": "object"
+      },
+      "ConnectionResultDto": {
+        "properties": {
+          "created": {
+            "description": "False when the call was an idempotent replay.",
+            "type": "boolean"
+          },
+          "status": {
+            "description": "'pending' — a connection request now awaits the destination's accept. 'connected' — both follow edges exist.",
+            "enum": [
+              "pending",
+              "connected"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "created"
+        ],
+        "type": "object"
+      },
       "ConversationAdminListResponseDto": {
         "properties": {
           "data": {
@@ -1999,6 +2072,12 @@
             "example": "2026-05-01T12:00:00.000Z",
             "type": "string"
           },
+          "name": {
+            "description": "Group title. Null for `direct` conversations and for untitled groups — the console labelled every group \"Group conversation\" because this was not exposed.",
+            "example": "Release crew",
+            "nullable": true,
+            "type": "string"
+          },
           "participants": {
             "items": {
               "$ref": "#/components/schemas/ParticipantSummaryDto"
@@ -2015,6 +2094,7 @@
           "id",
           "community_id",
           "kind",
+          "name",
           "participants",
           "created_at",
           "updated_at",
@@ -3257,6 +3337,15 @@
             "nullable": true,
             "type": "string"
           },
+          "sender": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActorSummaryDto"
+              }
+            ],
+            "description": "Identity of the sending actor, joined server-side so a moderated timeline shows a person rather than a truncated UUID. Null when the actor has been deleted — the message outlives the account.",
+            "nullable": true
+          },
           "sender_id": {
             "description": "Sender actor UUID.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
@@ -3268,6 +3357,7 @@
           "conversation_id",
           "community_id",
           "sender_id",
+          "sender",
           "kind",
           "body",
           "attachments",
@@ -3726,6 +3816,15 @@
             "example": "Spam — same link posted 6 times in 5 minutes.",
             "type": "string"
           },
+          "reporter_actor": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActorSummaryDto"
+              }
+            ],
+            "description": "Identity of the reporting actor, joined server-side so a moderation queue can show a person rather than a UUID. Null when that actor has since been deleted — the flag outlives the account that raised it.",
+            "nullable": true
+          },
           "reporter_actor_id": {
             "description": "Social actor UUID who reported.",
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
@@ -3769,6 +3868,7 @@
           "target_kind",
           "target_id",
           "reporter_actor_id",
+          "reporter_actor",
           "reason",
           "status",
           "created_at",
@@ -4435,8 +4535,9 @@
             "type": "string"
           },
           "target_id": {
-            "description": "UUID of the targeted post / comment.",
+            "description": "UUID of the post, comment, actor or message acted on. Null when that target has since been deleted — the record of a moderator's decision outlives the content it was about.",
             "example": "pppppppp-pppp-pppp-pppp-pppppppppppp",
+            "nullable": true,
             "type": "string"
           },
           "target_kind": {
@@ -4950,6 +5051,18 @@
             "example": "aaaaaaaa-0000-0000-0000-000000000001",
             "type": "string"
           },
+          "avatar_url": {
+            "description": "Participant avatar URL. May be presigned and short-lived; a load failure is normal, fall back to initials.",
+            "example": "https://cdn.productcraft.co/actors/aaaa.png",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Participant display name, joined server-side so a conversation row can be labelled with people rather than UUIDs. Null when the actor set none or has been deleted.",
+            "example": "Alice Nguyen",
+            "nullable": true,
+            "type": "string"
+          },
           "joined_at": {
             "description": "ISO timestamp the actor joined.",
             "example": "2026-05-01T12:00:00.000Z",
@@ -4971,7 +5084,9 @@
           "actor_id",
           "joined_at",
           "last_read_at",
-          "muted"
+          "muted",
+          "display_name",
+          "avatar_url"
         ],
         "type": "object"
       },
@@ -9017,14 +9132,6 @@
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -10589,7 +10696,7 @@
     },
     "/v1/communities/{communityId}/actors/{actorId}/tagged": {
       "get": {
-        "description": "Approved tags only, on published + unexpired posts, newest-tag-first. Visibility- and block-aware: pass the viewer via `requester_id` to surface followers / close-friends posts they may read; without it only public posts appear. Pages may be short (post-visibility filtering) but never skip or duplicate.",
+        "description": "Approved tags only, on published + unexpired posts, newest-tag-first. Visibility- and block-aware: pass the viewer via `actor_id` to surface followers / close-friends posts they may read; without it only public posts appear. Pages may be short (post-visibility filtering) but never skip or duplicate.",
         "operationId": "PostTagController_listTagged",
         "parameters": [
           {
@@ -10613,7 +10720,7 @@
           {
             "description": "Viewer actor UUID for visibility resolution.",
             "in": "query",
-            "name": "requester_id",
+            "name": "actor_id",
             "required": false,
             "schema": {
               "format": "uuid",
@@ -10638,6 +10745,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated alias for `actor_id`, kept working because this route never offered any other spelling. `actor_id` wins when both are sent. Will be removed in a future major.",
+            "in": "query",
+            "name": "requester_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -10650,6 +10768,9 @@
               }
             },
             "description": "Page of tagged posts."
+          },
+          "400": {
+            "description": "`actor_id` / `requester_id` is not a UUID."
           },
           "404": {
             "description": "Community or actor not found."
@@ -12176,6 +12297,244 @@
         "summary": "Reorder a post within a collection (owner only).",
         "tags": [
           "social-collections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections": {
+      "post": {
+        "operationId": "ConnectionController_request",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectionRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResultDto"
+                }
+              }
+            },
+            "description": "`pending` (request created / already open) or `connected` (both edges in place)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing / invalid src_actor_id / dst_actor_id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A block exists between the pair."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Cannot connect with yourself."
+          }
+        },
+        "summary": "Request a connection (mutual follow). Runs the standard follow path: a private destination yields `pending` (accept via the accept route); a public destination connects immediately — the reverse edge is created in the same call. Idempotent; refused on blocks (409) and self-connection (422) exactly like a follow.",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections/{actorId}/{otherActorId}": {
+      "delete": {
+        "operationId": "ConnectionController_sever",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "actorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "otherActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Severed (or nothing to sever)."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed actor id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.delete`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "summary": "Sever a connection COMPLETELY: deletes the follow edges in both directions and withdraws any pending requests either way. There is no one-sided removal — this is the connections invariant. 204 whether or not anything existed.",
+        "tags": [
+          "connections"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/connections/{dstActorId}/{srcActorId}/accept": {
+      "post": {
+        "operationId": "ConnectionController_accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "dstActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "srcActorId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConnectionResultDto"
+                }
+              }
+            },
+            "description": "Connected — both follow edges exist."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed actor id."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK lacks `social.create`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community/actor not found, or no request to accept and src does not follow dst."
+          }
+        },
+        "summary": "Accept `srcActorId`'s connection request as `dstActorId`: approves the follow request AND creates the reverse follow edge, so both directions exist afterwards. Convergent on retry — if the request was already consumed by a partially-completed accept (src already follows dst) the reverse edge is still ensured.",
+        "tags": [
+          "connections"
         ]
       }
     },
@@ -16503,14 +16862,6 @@
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -16880,14 +17231,6 @@
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
@@ -17147,14 +17490,6 @@
             "required": false,
             "schema": {
               "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
               "type": "string"
             }
           }
@@ -18991,14 +19326,6 @@
           },
           {
             "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
             "name": "limit",
             "required": false,
             "schema": {
@@ -19749,14 +20076,6 @@
             }
           },
           {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "description": "Opaque pagination cursor from a prior response. Valid only for the same `q` (task 022).",
             "in": "query",
             "name": "cursor",
@@ -19965,14 +20284,6 @@
             "required": false,
             "schema": {
               "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "in": "query",
-            "name": "requester_id",
-            "required": true,
-            "schema": {
               "type": "string"
             }
           },
@@ -20721,6 +21032,30 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Case-insensitive substring matched against the community display name OR slug. `%` and `_` are matched literally. Blank means no filter; over 128 chars is a 400.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "maxLength": 128,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact community status filter. Blank means no filter; an unknown value is a 400.",
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "active",
+                "suspended",
+                "archived"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -20733,6 +21068,16 @@
               }
             },
             "description": "Paginated communities."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid `status`, over-length `q`, or a malformed cursor."
           },
           "403": {
             "content": {
@@ -20750,7 +21095,7 @@
             "bearer": []
           }
         ],
-        "summary": "List communities in a workspace, newest-first. Cursor-paginated as of task 008 / G13 (previously a bare array).",
+        "summary": "List communities in a workspace, newest-first. Cursor-paginated as of task 008 / G13 (previously a bare array). Optional `?q=` substring search (display name OR slug) and `?status=` filter, both composable with each other and with the cursor — the ordering is fixed, so keep the same filters on every follow-up page.",
         "tags": [
           "social-communities"
         ]
@@ -21624,18 +21969,71 @@
             }
           },
           {
+            "description": "Page size (default 50, max 200).",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from a prior page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Exact moderation-action filter. Blank means no filter; an unknown action is a 400.",
             "in": "query",
-            "name": "cursor",
-            "required": true,
+            "name": "action",
+            "required": false,
             "schema": {
+              "enum": [
+                "hide",
+                "remove",
+                "warn",
+                "ban",
+                "dismiss",
+                "unhide",
+                "restore"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Exact moderator filter — the platform account UUID recorded as `moderator_account_id`. Named to match the users-api app-audit filter. A non-UUID value is a 400.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "INCLUSIVE lower bound on `created_at` (ISO-8601). Unparseable input is a 400.",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "EXCLUSIVE upper bound on `created_at` (ISO-8601), so adjacent windows tile without repeating the boundary row. Unparseable input is a 400.",
+            "in": "query",
+            "name": "until",
+            "required": false,
+            "schema": {
+              "format": "date-time",
               "type": "string"
             }
           }
@@ -21650,6 +22048,16 @@
               }
             },
             "description": "Page of audit entries with next-cursor and has-more."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid `action`, `actor_id`, `since`/`until`, or a malformed cursor."
           },
           "403": {
             "content": {
@@ -21672,7 +22080,7 @@
             "description": "Community not found in this workspace."
           }
         },
-        "summary": "Append-only audit of moderator actions in this community. 50/page (max 200), cursor-paginated.",
+        "summary": "Append-only audit of moderator actions in this community. 50/page (max 200), cursor-paginated. Filter by `?action=`, `?actor_id=` (the moderator), and/or the `?since=` / `?until=` window — all optional and composable. The ordering is fixed newest-first, so keep the same filters on every follow-up page.",
         "tags": [
           "social-moderation-admin"
         ]
@@ -21716,6 +22124,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Case-insensitive substring matched against the blocked term. `%` and `_` are matched literally. Blank means no filter; over 128 chars is a 400.",
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "maxLength": 128,
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -21729,6 +22147,16 @@
             },
             "description": "Page of blocked terms."
           },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Over-length `q` or a malformed cursor."
+          },
           "403": {
             "content": {
               "application/json": {
@@ -21740,7 +22168,7 @@
             "description": "Caller lacks `social.config.read`."
           }
         },
-        "summary": "List the community hidden-words lexicon, newest-first. Cursor-paginated (50/page, max 200).",
+        "summary": "List the community hidden-words lexicon, newest-first. Cursor-paginated (50/page, max 200). Optional `?q=` substring search over the term, composable with the cursor.",
         "tags": [
           "social-moderation-admin"
         ]
@@ -22249,18 +22677,33 @@
             }
           },
           {
+            "description": "Page size (default 50, max 200).",
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from a prior page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
+            "description": "Case-insensitive substring matched against the actor display name OR external id. `%` and `_` are matched literally. Blank means no filter; over 128 chars is a 400.",
             "in": "query",
-            "name": "cursor",
-            "required": true,
+            "name": "q",
+            "required": false,
             "schema": {
+              "maxLength": 128,
               "type": "string"
             }
           }
@@ -22275,6 +22718,16 @@
               }
             },
             "description": "Page of shadow-banned actors."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Over-length `q` or a malformed cursor."
           },
           "403": {
             "content": {
@@ -22297,7 +22750,7 @@
             "description": "Community not found."
           }
         },
-        "summary": "List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first.",
+        "summary": "List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first. Optional `?q=` substring search over display name OR external id, composable with the cursor.",
         "tags": [
           "social-moderation-admin"
         ]
