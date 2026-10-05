@@ -1,5 +1,22 @@
 # productcraft
 
+## 0.2.10
+
+### Patch Changes
+
+- Updated dependencies [5adf146]
+- Updated dependencies [5adf146]
+- Updated dependencies [5adf146]
+- Updated dependencies [5adf146]
+- Updated dependencies [5adf146]
+- Updated dependencies [5adf146]
+  - @productcraft/auth@0.7.1
+  - @productcraft/mail@0.1.2
+  - @productcraft/platform-auth@0.0.13
+  - @productcraft/social@0.7.1
+  - @productcraft/trawl@0.1.2
+  - @productcraft/waitlist@0.1.2
+
 ## 0.2.9
 
 ### Patch Changes
