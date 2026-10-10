@@ -6173,6 +6173,169 @@
         ],
         "type": "object"
       },
+      "SocialStatsInWindowDto": {
+        "properties": {
+          "active_members": {
+            "description": "Distinct members (actors) who published a post, published a comment or reacted in the window. A member active on several days counts once; actors belong to one community, so a person active in two communities counts in each.",
+            "example": 57,
+            "type": "number"
+          },
+          "comments": {
+            "description": "Comments published in the window.",
+            "example": 430,
+            "type": "number"
+          },
+          "posts": {
+            "description": "Posts published in the window.",
+            "example": 112,
+            "type": "number"
+          },
+          "reactions": {
+            "description": "Reactions to posts and comments in the window.",
+            "example": 1904,
+            "type": "number"
+          }
+        },
+        "required": [
+          "active_members",
+          "posts",
+          "comments",
+          "reactions"
+        ],
+        "type": "object"
+      },
+      "SocialStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "Distinct members who published a post, published a comment or reacted, per UTC day, across every community in the workspace.",
+            "enum": [
+              "active_members"
+            ],
+            "example": "active_members",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/SocialStatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "SocialStatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "type": "object"
+      },
+      "SocialStatsTotalsDto": {
+        "properties": {
+          "communities": {
+            "description": "Communities in the workspace, in any status.",
+            "example": 3,
+            "type": "number"
+          },
+          "published_posts": {
+            "description": "Posts currently published across those communities, all time.",
+            "example": 1280,
+            "type": "number"
+          }
+        },
+        "required": [
+          "communities",
+          "published_posts"
+        ],
+        "type": "object"
+      },
+      "SocialWorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsInWindowDto"
+              }
+            ],
+            "description": "Counts for the window."
+          },
+          "last_activity_at": {
+            "description": "Most recent post, comment or reaction in any of the workspace's communities (activity is kept for 400 days). Null when there has been none.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsSeriesDto"
+              }
+            ],
+            "description": "Daily active members."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsTotalsDto"
+              }
+            ],
+            "description": "All-time counts."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
+        ],
+        "type": "object"
+      },
       "StoryTrayEntryResponse": {
         "properties": {
           "actor_avatar_url": {
@@ -22717,6 +22880,91 @@
         "summary": "List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first. Optional `?q=` substring search over display name OR external id, composable with the cursor.",
         "tags": [
           "social-moderation-admin"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/stats": {
+      "get": {
+        "description": "Community count, published posts, active members, posts, comments and reactions in the window, the most recent activity and a daily active-members series, across every community in the workspace.\n\n**Active** means the member published a post, published a comment or reacted.\n\nDays are UTC. Counts only: no member ids, handles or author lists. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window` and the length of `series`, in UTC days ending today.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialWorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Social stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`window` is not one of 1d, 7d, 30d."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.analytics.read` on the workspace, or Social is not enabled on it (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: the id is unknown, is not a UUID, or is not visible to the caller. Same answer as the service's other workspace routes."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Social stats for a workspace",
+        "tags": [
+          "stats"
         ]
       }
     }

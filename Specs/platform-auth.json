@@ -1037,6 +1037,40 @@
         },
         "type": "object"
       },
+      "ErrorResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Stable error code for programmatic handling, when the route sets one.",
+            "example": "NOT_A_MEMBER",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable error message. May be a class-validator array on 400.",
+            "example": "Not a member of this workspace",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "status_code": {
+            "description": "HTTP status code echoed in the body.",
+            "example": 403,
+            "type": "number"
+          }
+        },
+        "required": [
+          "status_code",
+          "message"
+        ],
+        "type": "object"
+      },
       "FeedItemDto": {
         "properties": {
           "action": {
@@ -2054,6 +2088,19 @@
         ],
         "type": "object"
       },
+      "RevokeSessionResponseDto": {
+        "properties": {
+          "revoked": {
+            "description": "True when this call revoked the session; false when it was already revoked.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revoked"
+        ],
+        "type": "object"
+      },
       "RotatePakDto": {
         "properties": {
           "grace_hours": {
@@ -2249,6 +2296,26 @@
           "source",
           "included",
           "count"
+        ],
+        "type": "object"
+      },
+      "StatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 7,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
         ],
         "type": "object"
       },
@@ -3011,6 +3078,139 @@
           "settings"
         ],
         "type": "object"
+      },
+      "WorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceStatsInWindowDto"
+              }
+            ],
+            "description": "Counts for the window."
+          },
+          "last_activity_at": {
+            "description": "Most recent admin change (same definition as `in_window.audit_events`: reads, sign-ins and MCP tool-call rows excluded), any time. Null when none.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceStatsSeriesDto"
+              }
+            ],
+            "description": "Daily admin changes."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkspaceStatsTotalsDto"
+              }
+            ],
+            "description": "Current counts."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
+        ],
+        "type": "object"
+      },
+      "WorkspaceStatsInWindowDto": {
+        "properties": {
+          "audit_events": {
+            "description": "Admin changes in the window: workspace audit events that record a mutation (member, role, invite, service, API-key, policy, settings and consent changes, and the same from other products). Not counted: reads (any action ending `.read`, e.g. `workspace.member.read`, `workspace.audit.read`), sign-ins (`auth.signin.succeeded`) and MCP tool-call rows (`workspace.mcp_tool.*`; a mutating tool is counted through the change it makes). Opening the console does not move this number.",
+            "example": 57,
+            "type": "number"
+          },
+          "last_api_key_use_at": {
+            "description": "Most recent use of any of the workspace's platform API keys within the window. Null when no key was used in the window.",
+            "example": "2026-10-07T06:12:40.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "audit_events",
+          "last_api_key_use_at"
+        ],
+        "type": "object"
+      },
+      "WorkspaceStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "Admin-change audit events per UTC day of `created_at` (same rows as `in_window.audit_events`: reads, sign-ins and MCP tool-call rows excluded).",
+            "enum": [
+              "audit_events"
+            ],
+            "example": "audit_events",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/StatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "WorkspaceStatsTotalsDto": {
+        "properties": {
+          "active_api_keys": {
+            "description": "Platform API keys that are neither revoked nor expired.",
+            "example": 2,
+            "type": "number"
+          },
+          "members": {
+            "description": "Members of the workspace.",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "members",
+          "active_api_keys"
+        ],
+        "type": "object"
       }
     },
     "securitySchemes": {
@@ -3257,6 +3457,26 @@
         "responses": {
           "204": {
             "description": "Reset request accepted. Identical whether or not the email matched an account — in status, body, cost, and in what the server is left doing afterwards (see PasswordService.requestPasswordReset). Accepted is not delivered: if the address matched an account the mail was handed to the broker, but a broker outage is logged server-side and still answers 204, so never treat this status as proof an email was sent."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation (`email` missing or not an email address). Depends only on the request shape, never on whether an account exists."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set."
           }
         },
         "summary": "Request a password reset email. Neither the response nor its timing reveals whether the email matched an account.",
@@ -3282,6 +3502,26 @@
         "responses": {
           "204": {
             "description": "Password reset; all active sessions revoked."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation, the new password fails the password policy, or the reset token is invalid or expired (`PASSWORD_RESET_INVALID`)."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set."
           }
         },
         "summary": "Reset password using the email-delivered reset token.",
@@ -3419,6 +3659,16 @@
               }
             },
             "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: more than 60 requests/min from this IP (default bucket). Anonymous callers otherwise get 200 with `is_authenticated: false`, never 401."
           }
         },
         "summary": "Introspect current user with workspace list",
@@ -3450,6 +3700,16 @@
               }
             },
             "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or malformed `Authorization: Bearer` header, or the PAK is unknown, revoked or expired."
           }
         },
         "summary": "Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Downstream services use this with a 60s LRU cache and evaluate the policy via @repo/authz-nestjs evaluatePolicy().",
@@ -3481,6 +3741,26 @@
               }
             },
             "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id). Known workspaces the caller is not a member of answer 200 with `is_member: false`."
           }
         },
         "summary": "Introspect caller's membership + effective policy + enabled services in a workspace",
@@ -4489,7 +4769,24 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeSessionResponseDto"
+                }
+              }
+            },
             "description": "`revoked` is false when the session was already revoked, so repeating the call is safe."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`id` is not a UUID."
           },
           "401": {
             "description": "Unauthorized"
@@ -4605,6 +4902,26 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed `cursor`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
           }
         },
         "summary": "List workspaces the current user belongs to",
@@ -4670,11 +4987,166 @@
               }
             },
             "description": "The joined workspace."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation (`code` missing or empty)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invite code not found (`INVITE_INVALID`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is already a member of this workspace (`ALREADY_A_MEMBER`)."
+          },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invite revoked (`INVITE_REVOKED`), expired (`INVITE_EXPIRED`) or out of uses (`INVITE_EXHAUSTED`)."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set."
           }
         },
         "summary": "Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a human identity to a workspace.",
         "tags": [
           "workspaces"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/stats": {
+      "get": {
+        "description": "Member count, active platform API keys, admin changes in the window with a daily series, the last admin change and the last API-key use, for the console dashboard.\n\nAdmin changes are workspace audit events that record a mutation. Reads (any action ending `.read`), sign-ins (`auth.signin.succeeded`) and MCP tool-call rows (`workspace.mcp_tool.*`) are not counted, so opening the console does not move the numbers. Days are UTC. Counts and timestamps only: no actor identifiers. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window` and the length of `series`, in UTC days ending today.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Workspace stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`window` is not one of 1d, 7d, 30d, or `workspaceId` is the slug of a workspace the caller can read rather than its UUID."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of the workspace (`NOT_A_MEMBER`) or lacks `workspace.audit.read` on it."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: no workspace has this id (or slug). Same answer as the service's other workspace routes."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Workspace stats",
+        "tags": [
+          "workspace-stats"
         ]
       }
     },
@@ -4726,6 +5198,36 @@
               }
             },
             "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "Get workspace details",
@@ -4929,6 +5431,46 @@
         "responses": {
           "204": {
             "description": "PAK revoked."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). Revoking an already-revoked PAK is a 204 no-op."
           }
         },
         "security": [
@@ -4971,6 +5513,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`)."
           }
         },
         "security": [
@@ -5023,6 +5605,56 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`id` is not a UUID, body failed validation, or `name` is blank (`PAK_NAME_REQUIRED`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "PAK is revoked (`PAK_REVOKED`)."
           }
         },
         "security": [
@@ -5429,6 +6061,20 @@
         ],
         "responses": {
           "200": {
+            "content": {
+              "application/x-ndjson": {
+                "schema": {
+                  "description": "Newline-delimited JSON: one audit-row object per line.",
+                  "type": "string"
+                }
+              },
+              "text/csv": {
+                "schema": {
+                  "description": "RFC 4180 CSV, header row first, one audit row per line.",
+                  "type": "string"
+                }
+              }
+            },
             "description": "Streamed export. `application/x-ndjson` (one JSON object per line) or `text/csv` (RFC 4180, header row first)."
           },
           "400": {
@@ -5466,6 +6112,36 @@
         "responses": {
           "204": {
             "description": "Avatar cleared."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.settings.update`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "Clear the workspace avatar and delete the stored object. Gated by `workspace.settings.update`.",
@@ -5567,6 +6243,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed `cursor`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "List workspace invites, newest first. Cursor-paginated.",
@@ -5606,6 +6322,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, or a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`)."
           }
         },
         "summary": "Create a workspace invite link. Cookie/JWT only — invites bring new humans into the workspace.",
@@ -5638,6 +6394,36 @@
         "responses": {
           "204": {
             "description": "Invite revoked."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or invite not found (`INVITE_NOT_FOUND`)."
           }
         },
         "summary": "Revoke a workspace invite. Cookie/JWT only.",
@@ -5705,6 +6491,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Malformed `cursor`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.member.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "List workspace members, oldest join first. Narrow with `?q=` (name / username / email substring) and/or `?role=`. Cursor-paginated.",
@@ -5737,6 +6563,46 @@
         "responses": {
           "204": {
             "description": "Member removed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.member.remove` (not required for self-leave)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or target account is not a member (`NOT_A_MEMBER`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Target is the last member (`LAST_MEMBER`) or the sole owner (`SOLE_OWNER`)."
           }
         },
         "summary": "Remove a member from a workspace (or self-leave)",
@@ -5786,6 +6652,56 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, or a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, target account is not a member (`NOT_A_MEMBER`), or role not found in this workspace (`ROLE_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Would demote the only owner (`SOLE_OWNER`). Assign another owner first."
           }
         },
         "summary": "Update a member's role. Body: { roleId } or { role: \"owner\"|\"admin\"|\"member\" }.",
@@ -5911,6 +6827,36 @@
               }
             },
             "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.policy.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "List every known workspace action (catalog of statement actions).",
@@ -6136,6 +7082,56 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Body failed validation, invalid role name, malformed policy, both `policy_id` and `policy` sent, or an action pattern matches no known permission (`POLICY_INVALID`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or `policy_id` not found in this workspace (`POLICY_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Role name already in use or reserved for a system role (`ROLE_NAME_TAKEN`)."
           }
         },
         "summary": "Create a new custom role. Cookie/JWT only — role authoring is a human-admin surface.",
@@ -6168,6 +7164,56 @@
         "responses": {
           "204": {
             "description": "Custom role deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`roleId` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Role is a system role (`ROLE_SYSTEM_IMMUTABLE`) or still has members (`ROLE_HAS_MEMBERS`)."
           }
         },
         "summary": "Delete a custom role (fails if it has members). Cookie/JWT only — role authoring is a human-admin surface.",
@@ -6205,6 +7251,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`roleId` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`)."
           }
         },
         "summary": "Get a role + its permissions",
@@ -6252,6 +7338,56 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`roleId` is not a UUID, body failed validation, malformed policy, both `policy_id` and `policy` sent, or an action pattern matches no known permission."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace, role (`ROLE_NOT_FOUND`) or bound policy (`POLICY_NOT_FOUND`) not found in this workspace."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "System roles cannot be renamed, edited or bound (`ROLE_SYSTEM_IMMUTABLE`), or the new name is taken (`ROLE_NAME_TAKEN`)."
           }
         },
         "summary": "Update a role or replace its permission set. Cookie/JWT only — role authoring is a human-admin surface.",
@@ -6283,6 +7419,36 @@
               }
             },
             "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.read`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "List services activated on this workspace. Complete — one row per product, not paginated.",
@@ -6315,6 +7481,56 @@
         "responses": {
           "204": {
             "description": "Service disabled. Settings preserved for re-enable."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown service name (`SERVICE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.disable`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Service is not currently enabled (`SERVICE_NOT_ENABLED`)."
           }
         },
         "summary": "Disable a service (settings are retained)",
@@ -6362,6 +7578,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown service name (`SERVICE_UNKNOWN`) or body failed validation."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.enable`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found (unknown slug or id)."
           }
         },
         "summary": "Enable (or re-enable) a service for this workspace",
@@ -6416,6 +7672,46 @@
               }
             },
             "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown service name (`SERVICE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only)."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.enable`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, or the service was never activated on it (`SERVICE_NOT_ACTIVATED`)."
           }
         },
         "summary": "Replace the settings jsonb for an active service",
@@ -6425,6 +7721,60 @@
       }
     }
   },
-  "servers": [],
-  "tags": []
+  "servers": [
+    {
+      "description": "Platform Auth API",
+      "url": "https://api.platform-auth.productcraft.co"
+    }
+  ],
+  "tags": [
+    {
+      "name": "OAuth Sign-In"
+    },
+    {
+      "name": "account"
+    },
+    {
+      "name": "authentication"
+    },
+    {
+      "name": "introspect"
+    },
+    {
+      "name": "jwks"
+    },
+    {
+      "name": "me"
+    },
+    {
+      "name": "oauth-authorization-server"
+    },
+    {
+      "name": "platform-api-keys"
+    },
+    {
+      "name": "session"
+    },
+    {
+      "name": "verification"
+    },
+    {
+      "name": "workspace-audit-logs"
+    },
+    {
+      "name": "workspace-policies"
+    },
+    {
+      "name": "workspace-roles"
+    },
+    {
+      "name": "workspace-services"
+    },
+    {
+      "name": "workspace-stats"
+    },
+    {
+      "name": "workspaces"
+    }
+  ]
 }

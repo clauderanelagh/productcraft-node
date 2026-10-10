@@ -436,6 +436,40 @@
         ],
         "type": "object"
       },
+      "ErrorResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Stable error code for programmatic handling, when the route sets one.",
+            "example": "SERVICE_NOT_ENABLED",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable error message. May be a class-validator array on 400.",
+            "example": "mail is not enabled on this workspace",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "status_code": {
+            "description": "HTTP status code echoed in the body.",
+            "example": 403,
+            "type": "number"
+          }
+        },
+        "required": [
+          "status_code",
+          "message"
+        ],
+        "type": "object"
+      },
       "GetSmtpConfigResponseDto": {
         "properties": {
           "data": {
@@ -835,6 +869,161 @@
         "required": [
           "data",
           "pagination"
+        ],
+        "type": "object"
+      },
+      "MailStatsInWindowDto": {
+        "properties": {
+          "bounced": {
+            "description": "Messages hard-bounced.",
+            "example": 12,
+            "type": "number"
+          },
+          "deferred": {
+            "description": "Messages currently deferred.",
+            "example": 3,
+            "type": "number"
+          },
+          "delivered": {
+            "description": "Messages with a delivery confirmation back from the relay. Same as the deliverability `confirmed`.",
+            "example": 1100,
+            "type": "number"
+          },
+          "sent": {
+            "description": "Messages that left the queue: sent + delivered + bounced + complained + failed + deferred + suppressed. Same as the deliverability `left_queue`.",
+            "example": 1180,
+            "type": "number"
+          },
+          "suppressed": {
+            "description": "Messages not sent because the recipient is suppressed.",
+            "example": 5,
+            "type": "number"
+          },
+          "unconfirmed": {
+            "description": "Messages that left the relay with nothing back in either direction (status `sent`). Not a synonym for delivered.",
+            "example": 60,
+            "type": "number"
+          }
+        },
+        "required": [
+          "sent",
+          "delivered",
+          "bounced",
+          "deferred",
+          "suppressed",
+          "unconfirmed"
+        ],
+        "type": "object"
+      },
+      "MailStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "Messages that left the queue, per UTC day of `created_at` (same statuses as `in_window.sent`).",
+            "enum": [
+              "sent"
+            ],
+            "example": "sent",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/StatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "MailStatsTotalsDto": {
+        "properties": {
+          "domains": {
+            "description": "Domains registered in the workspace.",
+            "example": 3,
+            "type": "number"
+          },
+          "verified_domains": {
+            "description": "Domains with `verified_at` set.",
+            "example": 2,
+            "type": "number"
+          }
+        },
+        "required": [
+          "domains",
+          "verified_domains"
+        ],
+        "type": "object"
+      },
+      "MailWorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MailStatsInWindowDto"
+              }
+            ],
+            "description": "Outbound counts in the window."
+          },
+          "last_activity_at": {
+            "description": "Most recent outbound message `created_at` still on record (30-day retention). Null when none.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MailStatsSeriesDto"
+              }
+            ],
+            "description": "Daily sent messages."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MailStatsTotalsDto"
+              }
+            ],
+            "description": "All-time counts."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
         ],
         "type": "object"
       },
@@ -2305,6 +2494,26 @@
         "required": [
           "sync_id",
           "started_at"
+        ],
+        "type": "object"
+      },
+      "StatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 42,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
         ],
         "type": "object"
       },
@@ -5519,6 +5728,91 @@
         "summary": "List every SMTP config in the workspace (default + per-domain overrides)",
         "tags": [
           "smtp-config"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/stats": {
+      "get": {
+        "description": "Outbound sent, delivered, bounced, deferred, suppressed and unconfirmed counts in the window, domain totals, the last send time and a daily sent series.\n\n`delivered` means a delivery confirmation came back from the relay; `unconfirmed` means the message left the relay and nothing came back either way, which is not the same as delivered. Days are UTC. Outbound messages are kept for 30 days, so 30d is the longest window. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window` and the length of `series`, in UTC days ending today. 30d is the maximum because outbound messages are kept for 30 days.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MailWorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Mail stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`workspaceId` is not a UUID or `window` is not one of 1d, 7d, 30d."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `mail.message.read` on the workspace (including non-members), or Mail is not enabled on it (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found. Today an unknown workspace answers 403 like every other workspace route."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mail stats for a workspace",
+        "tags": [
+          "stats"
         ]
       }
     },

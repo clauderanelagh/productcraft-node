@@ -75,6 +75,40 @@
         ],
         "type": "object"
       },
+      "ErrorResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Stable error code for programmatic handling, when the route sets one.",
+            "example": "SERVICE_NOT_ENABLED",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable error message. May be a class-validator array on 400.",
+            "example": "Policy denies trawl.read on pcft:workspace/7a0c2f7e-2b8d-4f7f-9a51-3f1f0e1f3c11",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "status_code": {
+            "description": "HTTP status code echoed in the body.",
+            "example": 403,
+            "type": "number"
+          }
+        },
+        "required": [
+          "status_code",
+          "message"
+        ],
+        "type": "object"
+      },
       "JobListPaginationDto": {
         "properties": {
           "has_more": {
@@ -197,6 +231,169 @@
           "started_at",
           "completed_at",
           "created_at"
+        ],
+        "type": "object"
+      },
+      "TrawlStatsInWindowDto": {
+        "properties": {
+          "failed": {
+            "description": "Of those, jobs that failed.",
+            "example": 3,
+            "type": "number"
+          },
+          "jobs": {
+            "description": "Jobs created in the window, in any status.",
+            "example": 37,
+            "type": "number"
+          },
+          "steps_used": {
+            "description": "Steps consumed by the jobs created in the window. Jobs still running, and jobs from before metering, add nothing.",
+            "example": 512,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "Of those, jobs that succeeded.",
+            "example": 33,
+            "type": "number"
+          }
+        },
+        "required": [
+          "jobs",
+          "succeeded",
+          "failed",
+          "steps_used"
+        ],
+        "type": "object"
+      },
+      "TrawlStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "Jobs created per UTC day in the workspace, in any status.",
+            "enum": [
+              "jobs"
+            ],
+            "example": "jobs",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/TrawlStatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "TrawlStatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "type": "object"
+      },
+      "TrawlStatsTotalsDto": {
+        "properties": {
+          "balance_steps": {
+            "description": "Remaining Trawl steps: the sum of the credit ledger, the same number `GET /v1/workspaces/{workspaceId}/credits` returns. Zero before the first job; can be slightly negative after the last job of a budget.",
+            "example": 8650,
+            "type": "number"
+          },
+          "jobs": {
+            "description": "Jobs in the workspace, all time, in any status.",
+            "example": 418,
+            "type": "number"
+          }
+        },
+        "required": [
+          "jobs",
+          "balance_steps"
+        ],
+        "type": "object"
+      },
+      "TrawlWorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrawlStatsInWindowDto"
+              }
+            ],
+            "description": "Counts for the window."
+          },
+          "last_activity_at": {
+            "description": "When the workspace's most recent job was created. Null when there has never been one.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrawlStatsSeriesDto"
+              }
+            ],
+            "description": "Daily jobs."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrawlStatsTotalsDto"
+              }
+            ],
+            "description": "All-time counts and the credit balance."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
         ],
         "type": "object"
       },
@@ -716,6 +913,91 @@
         "summary": "Cancel a queued or running trawl job",
         "tags": [
           "jobs"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/stats": {
+      "get": {
+        "description": "Total jobs, jobs created / succeeded / failed and steps used in the window, the credit balance, when the latest job was created and a daily jobs series.\n\n**Active** means a job was created.\n\nDays are UTC. Counts only: no target URLs, descriptions or job results. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window` and the length of `series`, in UTC days ending today.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrawlWorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Trawl stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`window` is not one of 1d, 7d, 30d."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `trawl.read` on the workspace, or Trawl is not enabled on it (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: the id is unknown, is not a UUID, or is not visible to the caller. Same answer as the service's other workspace routes."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Trawl stats for a workspace",
+        "tags": [
+          "stats"
         ]
       }
     },
