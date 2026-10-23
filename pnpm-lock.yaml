@@ -120,8 +120,8 @@ importers:
   packages/umbrella:
     dependencies:
       '@productcraft/auth':
-        specifier: ^0.6.0
-        version: 0.6.0
+        specifier: workspace:^
+        version: link:../auth
       '@productcraft/core':
         specifier: workspace:^
         version: link:../core
@@ -702,14 +702,6 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
-  '@productcraft/auth@0.6.0':
-    resolution: {integrity: sha512-IfcoraOmsWrad1cwPUPQzbxPLGMM/PU7mdSxBaOcSUDpL6bptxeUEEyli8w8MeQnk/K36v2RlReNvHUQT4K4pA==}
-    engines: {node: '>=18'}
-
-  '@productcraft/core@0.2.0':
-    resolution: {integrity: sha512-EllYqhwaxonkuAGuFOLo+xcdF3+3fGy4yVWiEsilcAwcJEcnN1D2L1B8WUUBrtv5QP7FqC0tkFT+xqyZY8Wepg==}
-    engines: {node: '>=18'}
-
   '@readme/better-ajv-errors@2.4.0':
     resolution: {integrity: sha512-9WODaOAKSl/mU+MYNZ2aHCrkoRSvmQ+1YkLj589OEqqjOAhbn8j7Z+ilYoiTu/he6X63/clsxxAB4qny9/dDzg==}
     engines: {node: '>=18'}
@@ -1288,6 +1280,7 @@ packages:
   eslint@9.39.4:
     resolution: {integrity: sha512-XoMjdBOwe/esVgEvLmNsD3IRHkm7fbKIUGvrleloJXUZgDHig2IPWNniv+GwjyJXzuNqVjlr5+4yVUZjycJwfQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -2929,15 +2922,6 @@ snapshots:
     dependencies:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
-
-  '@productcraft/auth@0.6.0':
-    dependencies:
-      '@productcraft/core': 0.2.0
-      jose: 6.2.3
-
-  '@productcraft/core@0.2.0':
-    dependencies:
-      openapi-fetch: 0.13.8
 
   '@readme/better-ajv-errors@2.4.0(ajv@8.20.0)':
     dependencies:
