@@ -226,7 +226,7 @@
             "type": "string"
           },
           "recaptcha_token": {
-            "description": "reCAPTCHA v3 token; verified server-side when the waitlist has settings.recaptcha_site_key",
+            "description": "reCAPTCHA v3 token, created with the action `waitlist_signup`. Required when the waitlist has a reCAPTCHA site key; verified server-side with the secret key saved on the waitlist.",
             "type": "string"
           },
           "referral_code": {
@@ -247,6 +247,27 @@
           "email",
           "name"
         ],
+        "type": "object"
+      },
+      "CreateTestEntryDto": {
+        "properties": {
+          "name": {
+            "description": "Name on the test entry. Defaults to \"Test signup\".",
+            "example": "Test signup",
+            "maxLength": 200,
+            "type": "string"
+          },
+          "send_welcome_email": {
+            "default": false,
+            "description": "Send the welcome email for this entry. It goes to the entry's mailbox-simulator address, which accepts it without delivering to a real inbox. Default `false`.",
+            "type": "boolean"
+          },
+          "trigger_webhooks": {
+            "default": false,
+            "description": "Send `entry.created` (and `entry.approved` when the waitlist auto-approves) to your webhook endpoints for this entry. The payload carries `is_test: true`. Default `false`.",
+            "type": "boolean"
+          }
+        },
         "type": "object"
       },
       "CreateVariantDto": {
@@ -292,6 +313,19 @@
       },
       "CreateWaitlistDto": {
         "properties": {
+          "allowed_origins": {
+            "default": [],
+            "description": "Web origins (scheme and host, for example `https://acme.com` or `http://localhost:3000`) that browsers may submit public sign-ups from. `https://*.acme.com` matches any subdomain. An empty list means any origin. A browser request from another origin gets 403 `ORIGIN_NOT_ALLOWED`; server-side calls without an `Origin` header are not checked. Entries are normalised (lower case, no trailing slash, default port dropped).",
+            "example": [
+              "https://acme.com",
+              "https://*.acme.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
           "description": {
             "description": "Description returned in the public waitlist payload — customer frontends typically render it under the display name on their signup form.",
             "type": "string"
@@ -302,12 +336,21 @@
             "type": "string"
           },
           "settings": {
-            "description": "Waitlist settings (max_entries, approval_required, custom_fields, confirmation_message, referral_boost)",
+            "description": "Waitlist settings (max_entries, approval_required, custom_fields, confirmation_message, referral_boost, referral_rewards, recaptcha_site_key). To turn on reCAPTCHA v3, send recaptcha_site_key together with recaptcha_secret_key (both from your reCAPTCHA admin console); the secret is stored encrypted and is never returned. Send recaptcha_site_key: null to turn it off.",
             "type": "object"
           },
           "slug": {
             "description": "URL-safe slug",
             "example": "early-access",
+            "type": "string"
+          },
+          "status": {
+            "default": "draft",
+            "description": "Start state. `active` accepts public sign-ups straight away; `draft` (the default) refuses them with 422 until the status is changed to `active`.",
+            "enum": [
+              "draft",
+              "active"
+            ],
             "type": "string"
           }
         },
@@ -350,10 +393,152 @@
         ],
         "type": "object"
       },
+      "CreateWebhookEndpointDto": {
+        "properties": {
+          "description": {
+            "example": "Production receiver",
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "description": "Create it switched off.",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Event types from `GET …/webhooks/event-types`. Empty or omitted means every event, including types added later.",
+            "example": [
+              "entry.created",
+              "entry.approved"
+            ],
+            "items": {
+              "enum": [
+                "entry.created",
+                "entry.approved",
+                "entry.rejected"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "description": "Where to send events: an absolute https:// URL on a public host.",
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "EffectiveSenderDto": {
+        "properties": {
+          "address": {
+            "description": "The From Waitlist emails go out with (a bare address or `Name <address>`); null when none is set, or when the workspace default could not be read (`verified: null`).",
+            "example": "Acme <hello@acme.com>",
+            "nullable": true,
+            "type": "string"
+          },
+          "domain_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SenderDomainStatus"
+              }
+            ],
+            "description": "The sender domain's live `verification_status` in Mail (`verified`, `pending`, `temporary_failure`, `failed`, …) in both modes, `deleted` when the domain behind the workspace default was removed, `not_found` for a custom sender domain that is gone (or receive-only), or null when unknown or there is no address. The shared `SenderDomainStatus` enum, the same in Mail and Auth.",
+            "example": "verified",
+            "nullable": true
+          },
+          "source": {
+            "description": "`workspace`: the workspace default sender set in Mail. `custom`: the Waitlist sender domain + address.",
+            "enum": [
+              "workspace",
+              "custom"
+            ],
+            "example": "workspace",
+            "type": "string"
+          },
+          "verified": {
+            "description": "Whether mail from this sender goes out right now, checked live in Mail (cached up to 60 seconds). null: not checked (your role cannot read Mail, or Mail did not answer).",
+            "example": true,
+            "nullable": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source",
+          "address",
+          "verified",
+          "domain_status"
+        ],
+        "type": "object"
+      },
+      "EmailSetupDto": {
+        "properties": {
+          "mail_checked": {
+            "description": "Whether the sender domain and template names were checked against Mail on this read (results are cached for up to 60 seconds). `false` when Mail could not be asked, for example because the caller cannot read Mail domains or templates; nothing is reported missing on an unchecked item.",
+            "example": true,
+            "type": "boolean"
+          },
+          "missing": {
+            "description": "What is missing, in a fixed order. `not_enabled`: notifications are off. `no_sender_domain`: no sender domain is chosen, or the chosen one no longer exists in Mail (or is receive-only). `sender_domain_unverified`: the sender domain is not verified in Mail yet. `no_sender_address`: no From address is set. `no_template`: at least one email has no template, or its template was deleted in Mail; `missing_templates` says which. Empty when `state` is `ready`.",
+            "example": [
+              "no_template"
+            ],
+            "items": {
+              "enum": [
+                "not_enabled",
+                "no_sender_domain",
+                "sender_domain_unverified",
+                "no_sender_address",
+                "no_template"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "missing_templates": {
+            "description": "The emails whose template is not set or no longer exists in Mail: `welcome` (on signup), `approved`, `rejected`.",
+            "example": [
+              "welcome"
+            ],
+            "items": {
+              "enum": [
+                "welcome",
+                "approved",
+                "rejected"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "state": {
+            "description": "`ready`: every piece is in place and emails go out. `incomplete`: notifications are on but something in `missing` stops some or all emails. `off`: notifications are off (`notifications_via_envoi = false`), so Waitlist sends no email and webhooks are the way to reach signups.",
+            "enum": [
+              "ready",
+              "incomplete",
+              "off"
+            ],
+            "example": "incomplete",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "missing",
+          "missing_templates",
+          "mail_checked"
+        ],
+        "type": "object"
+      },
       "EntryCountResponseDto": {
         "properties": {
           "count": {
-            "description": "Total number of entries on the waitlist.",
+            "description": "Number of entries on the waitlist. Test entries are left out unless `include_test=true`.",
             "type": "number"
           }
         },
@@ -419,6 +604,11 @@
             "nullable": true,
             "type": "string"
           },
+          "is_test": {
+            "description": "Made with \"Add test signup\". Test entries use a mailbox-simulator address and are left out of counts, analytics, exports and webhooks unless asked.",
+            "example": false,
+            "type": "boolean"
+          },
           "metadata": {
             "type": "object"
           },
@@ -426,6 +616,7 @@
             "type": "string"
           },
           "position": {
+            "description": "Place in the queue, from 1. Test entries have negative positions (-1, -2…) so they never take a real place.",
             "type": "number"
           },
           "referral_code": {
@@ -472,12 +663,48 @@
           "referral_count",
           "referred_by_entry_id",
           "position",
+          "is_test",
           "status",
           "invited_at",
           "invited_to_app_slug",
           "metadata",
           "created_at",
           "updated_at"
+        ],
+        "type": "object"
+      },
+      "ErrorResponseDto": {
+        "properties": {
+          "code": {
+            "description": "Stable, machine-readable error code; branch on this, not on `message`. Always present. A route-specific code when the route defines one (e.g. `WEBHOOK_ENDPOINT_NOT_FOUND`, `SERVICE_NOT_ENABLED`), otherwise the generic code for the status: `BAD_REQUEST`, `VALIDATION_ERROR` (400 from request validation), `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `PAYLOAD_TOO_LARGE`, `UNPROCESSABLE_ENTITY`, `RATE_LIMITED`, `INTERNAL_SERVER_ERROR`, `SERVICE_UNAVAILABLE`.",
+            "example": "SERVICE_NOT_ENABLED",
+            "type": "string"
+          },
+          "message": {
+            "description": "Human-readable error message. May be a class-validator array on 400.",
+            "example": "Policy denies waitlist.read on pcft:workspace/7a0c2f7e-2b8d-4f7f-9a51-3f1f0e1f3c11",
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "statusCode": {
+            "description": "HTTP status code echoed in the body. Spelled `statusCode` (camelCase) in every ProductCraft API.",
+            "example": 403,
+            "type": "number"
+          }
+        },
+        "required": [
+          "statusCode",
+          "message",
+          "code"
         ],
         "type": "object"
       },
@@ -520,6 +747,190 @@
         ],
         "type": "object"
       },
+      "LegacyWebhookDeliveryAttemptDto": {
+        "properties": {
+          "attempt_number": {
+            "description": "Which attempt this was for the event: 1 for the first delivery, then 2 to 7 for the automatic retries (1m, 5m, 30m, 2h, 6h and 24h after each failure). Retries keep the same `event_id`. A test or a replay is numbered in the same sequence.",
+            "minimum": 1,
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error_message": {
+            "nullable": true,
+            "type": "string"
+          },
+          "event_id": {
+            "description": "Id of the event (`evt_…`), the same across retries.",
+            "type": "string"
+          },
+          "event_type": {
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "latency_ms": {
+            "nullable": true,
+            "type": "number"
+          },
+          "response_body_truncated": {
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "description": "HTTP status from the destination; null when the request errored before a response.",
+            "nullable": true,
+            "type": "number"
+          },
+          "webhook_id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "webhook_id",
+          "event_id",
+          "event_type",
+          "attempt_number",
+          "status_code",
+          "response_body_truncated",
+          "error_message",
+          "latency_ms",
+          "attempted_at"
+        ],
+        "type": "object"
+      },
+      "ListWebhookEndpointsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEndpointDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaginationDto"
+              }
+            ],
+            "description": "Always one page (an endpoint limit applies)."
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListWebhookEventTypesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventTypeDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListWebhookEventsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/WebhookPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "NotificationTestResponseDto": {
+        "properties": {
+          "from": {
+            "description": "The From it went out with.",
+            "example": "Acme <hello@acme.com>",
+            "nullable": true,
+            "type": "string"
+          },
+          "message_id": {
+            "description": "The Mail message id; look it up in Mail > Emails to follow delivery.",
+            "example": "0d6c1c3e-5f2a-4b8e-9d17-3a4b5c6d7e8f",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "template_name": {
+            "description": "The Mail template that was sent.",
+            "example": "waitlist-welcome",
+            "type": "string"
+          },
+          "to": {
+            "description": "Your own verified account address: tests only ever go to the person who asked.",
+            "example": "you@acme.com",
+            "format": "email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "to",
+          "template_name",
+          "from",
+          "message_id"
+        ],
+        "type": "object"
+      },
+      "OriginNotAllowedErrorDto": {
+        "properties": {
+          "code": {
+            "enum": [
+              "ORIGIN_NOT_ALLOWED"
+            ],
+            "example": "ORIGIN_NOT_ALLOWED",
+            "type": "string"
+          },
+          "message": {
+            "example": "Sign-ups from https://evil.test are not allowed for this waitlist. Add the origin to the waitlist's allowed origins.",
+            "type": "string"
+          },
+          "origin": {
+            "description": "The `Origin` header the request carried.",
+            "example": "https://evil.test",
+            "type": "string"
+          },
+          "statusCode": {
+            "example": 403,
+            "type": "number"
+          }
+        },
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "origin"
+        ],
+        "type": "object"
+      },
       "PaginationDto": {
         "properties": {
           "has_more": {
@@ -547,7 +958,7 @@
             "type": "string"
           },
           "effective_position": {
-            "description": "Visible position after applying the referral boost — \"you would be #N if approved now\". Equals `position` at signup time (no referrals yet).",
+            "description": "Visible position after applying the referral boost — \"you would be #N if approved now\". Equals `position` at signup time (no referrals yet), and always for a test sign-up.",
             "type": "number"
           },
           "email": {
@@ -559,11 +970,15 @@
             "format": "uuid",
             "type": "string"
           },
+          "is_test": {
+            "description": "`true` when the email is an Amazon SES mailbox-simulator address (`…@simulator.amazonses.com`). Such a sign-up is stored as a test entry: it is left out of counts, analytics, exports and webhooks, and only the welcome email (to the simulator) goes out.",
+            "type": "boolean"
+          },
           "name": {
             "type": "string"
           },
           "position": {
-            "description": "Immutable signup position (1-based order of signup).",
+            "description": "Immutable signup position (1-based order of signup). Negative for a test sign-up (`is_test: true`), which takes no place in line.",
             "type": "number"
           },
           "referral_code": {
@@ -584,6 +999,7 @@
           "email",
           "name",
           "position",
+          "is_test",
           "status",
           "referral_code",
           "created_at",
@@ -727,7 +1143,7 @@
             "type": "string"
           },
           "recaptcha_site_key": {
-            "description": "reCAPTCHA v3 site key. When non-null, POST .../entries requires a `recaptcha_token`.",
+            "description": "reCAPTCHA v3 site key. When non-null, POST .../entries requires a `recaptcha_token` created with the action `waitlist_signup`.",
             "nullable": true,
             "type": "string"
           },
@@ -798,6 +1214,90 @@
         ],
         "type": "object"
       },
+      "ReplayWebhookEventResponseDto": {
+        "properties": {
+          "attempts": {
+            "description": "One attempt per endpoint it was sent to.",
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+            },
+            "type": "array"
+          },
+          "event_id": {
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "attempts"
+        ],
+        "type": "object"
+      },
+      "RotateWebhookSecretDto": {
+        "properties": {
+          "grace_hours": {
+            "default": 24,
+            "description": "Hours the previous secret keeps signing too (0 ends it now).",
+            "maximum": 168,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "type": "object"
+      },
+      "SendWebhookTestDto": {
+        "properties": {
+          "event_type": {
+            "description": "Which event to send; its catalogue example is the `data`.",
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "example": "entry.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_type"
+        ],
+        "type": "object"
+      },
+      "SenderDomainStatus": {
+        "enum": [
+          "not_started",
+          "pending",
+          "partially_verified",
+          "verified",
+          "temporary_failure",
+          "failed",
+          "disabled",
+          "deleted",
+          "not_found"
+        ],
+        "type": "string"
+      },
+      "StatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "type": "object"
+      },
       "TestWebhookDto": {
         "properties": {
           "event": {
@@ -810,7 +1310,7 @@
             "type": "string"
           },
           "waitlist_id": {
-            "description": "Waitlist UUID to reference in the synthetic payload. Defaults to a placeholder UUID when omitted.",
+            "description": "Accepted for older clients and ignored: the test delivers the event's example payload from `GET …/webhooks/event-types`.",
             "type": "string"
           }
         },
@@ -856,7 +1356,8 @@
             "type": "string"
           },
           "default_sender_address": {
-            "description": "Verified sender address used as the From envelope on Waitlist notifications. Must belong to default_sender_domain_id. null clears the override.",
+            "description": "The From used when `sender_mode` is `custom` (kept, but unused, in `workspace` mode). Must belong to default_sender_domain_id. null clears it.",
+            "format": "email",
             "nullable": true,
             "type": "string"
           },
@@ -866,7 +1367,7 @@
             "type": "string"
           },
           "notifications_via_envoi": {
-            "description": "Route Waitlist notifications through the Mail service (workspace sender domain + per-event template selection) instead of staying silent. Requires default_sender_domain_id, default_sender_address, and a template name for every supported event. Default false; when off, Waitlist sends no notification emails and the customer is expected to handle email via the webhook lane.",
+            "description": "Route Waitlist notifications through the Mail service instead of staying silent. Needs a sender (the workspace default in `workspace` mode, or the custom domain + address) and a template for every event. Turning it on (from off) creates the default templates `waitlist-welcome`, `waitlist-approved` and `waitlist-rejected` in Mail for every empty slot, reusing a template that already has that name, with your own Mail access. Default false; when off, Waitlist sends no notification emails and the customer is expected to handle email via the webhook lane.",
             "type": "boolean"
           },
           "primary_color": {
@@ -876,6 +1377,15 @@
           "rejected_template_name": {
             "description": "Mail template name used for entry.rejected notifications. Must already exist in the workspace template store.",
             "nullable": true,
+            "type": "string"
+          },
+          "sender_mode": {
+            "description": "Where the From comes from. `workspace` (the default): the workspace default sender set in Mail, resolved at send time, so changing it in Mail changes it for every product. `custom`: `default_sender_domain_id` + `default_sender_address`. Sending `default_sender_address` without `sender_mode` sets `custom`; sending it as null sets `workspace`.",
+            "enum": [
+              "workspace",
+              "custom"
+            ],
+            "example": "workspace",
             "type": "string"
           },
           "welcome_template_name": {
@@ -907,6 +1417,17 @@
       },
       "UpdateWaitlistDto": {
         "properties": {
+          "allowed_origins": {
+            "description": "Web origins (scheme and host, for example `https://acme.com` or `http://localhost:3000`) that browsers may submit public sign-ups from. `https://*.acme.com` matches any subdomain. An empty list means any origin. A browser request from another origin gets 403 `ORIGIN_NOT_ALLOWED`; server-side calls without an `Origin` header are not checked. Entries are normalised (lower case, no trailing slash, default port dropped). Replaces the whole list; send `[]` to allow any origin again.",
+            "example": [
+              "https://acme.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "type": "array"
+          },
           "description": {
             "description": "New description",
             "type": "string"
@@ -916,7 +1437,7 @@
             "type": "string"
           },
           "settings": {
-            "description": "Updated settings (merged shallow)",
+            "description": "Updated settings, merged shallowly into the saved ones. Keys: max_entries, approval_required, custom_fields, confirmation_message, referral_boost, referral_rewards, recaptcha_site_key. To turn on reCAPTCHA v3, send recaptcha_site_key together with recaptcha_secret_key (both from your reCAPTCHA admin console); the secret is stored encrypted and is never returned. Send recaptcha_site_key: null to turn it off.",
             "type": "object"
           }
         },
@@ -960,6 +1481,38 @@
           },
           "url": {
             "description": "New URL",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateWebhookEndpointDto": {
+        "properties": {
+          "description": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Switch it on or off. Switching on also clears an automatic disable.",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Replaces the subscription. Event types from `GET …/webhooks/event-types`. Empty or omitted means every event, including types added later.",
+            "items": {
+              "enum": [
+                "entry.created",
+                "entry.approved",
+                "entry.rejected"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "maxLength": 2048,
             "type": "string"
           }
         },
@@ -1143,6 +1696,19 @@
       },
       "WaitlistResponseDto": {
         "properties": {
+          "accepting_signups": {
+            "description": "Whether the public sign-up endpoint accepts entries right now (only an `active` waitlist does).",
+            "example": false,
+            "type": "boolean"
+          },
+          "allowed_origins": {
+            "description": "Web origins (scheme and host, for example `https://acme.com` or `http://localhost:3000`) that browsers may submit public sign-ups from. `https://*.acme.com` matches any subdomain. An empty list means any origin. A browser request from another origin gets 403 `ORIGIN_NOT_ALLOWED`; server-side calls without an `Origin` header are not checked. Entries are normalised (lower case, no trailing slash, default port dropped).",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "created_at": {
             "type": "string"
           },
@@ -1166,8 +1732,14 @@
             "type": "string"
           },
           "settings": {
-            "description": "Waitlist settings (max_entries, approval_required, custom_fields, confirmation_message, referral_boost).",
+            "description": "Waitlist settings (max_entries, approval_required, custom_fields, confirmation_message, referral_boost, referral_rewards, recaptcha_site_key). The reCAPTCHA secret key is never returned; recaptcha_secret_configured says whether one is saved.",
             "type": "object"
+          },
+          "signups_note": {
+            "description": "Plain explanation when public sign-ups are refused, and how to open them; null when the waitlist is active.",
+            "example": "This waitlist is a draft, so public sign-ups are refused (422) until you change its status to active.",
+            "nullable": true,
+            "type": "string"
           },
           "slug": {
             "example": "early-access",
@@ -1202,6 +1774,9 @@
           "display_name",
           "description",
           "status",
+          "accepting_signups",
+          "signups_note",
+          "allowed_origins",
           "settings",
           "created_by",
           "previous_workspace_slug",
@@ -1230,6 +1805,7 @@
             "type": "string"
           },
           "default_sender_address": {
+            "description": "The From used when `sender_mode` is `custom`.",
             "nullable": true,
             "type": "string"
           },
@@ -1238,6 +1814,22 @@
             "format": "uuid",
             "nullable": true,
             "type": "string"
+          },
+          "effective_sender": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EffectiveSenderDto"
+              }
+            ],
+            "description": "The sender Waitlist emails actually go out from, with its live status in Mail."
+          },
+          "email_setup": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailSetupDto"
+              }
+            ],
+            "description": "Whether Waitlist emails can go out and, if not, what is missing. Computed on the server on every read."
           },
           "notifications_via_envoi": {
             "description": "Whether Waitlist notifications are routed through the Mail service.",
@@ -1251,6 +1843,23 @@
           "rejected_template_name": {
             "nullable": true,
             "type": "string"
+          },
+          "sender_mode": {
+            "description": "Where the From comes from: `workspace` (the workspace default sender set in Mail; the default) or `custom` (`default_sender_domain_id` + `default_sender_address`). Workspaces that had an address before this setting existed are `custom`.",
+            "enum": [
+              "workspace",
+              "custom"
+            ],
+            "example": "workspace",
+            "type": "string"
+          },
+          "skipped_sends": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistSkippedEmailsDto"
+              }
+            ],
+            "description": "Emails Waitlist did not send in the last 7 days because the setup was incomplete."
           },
           "updated_at": {
             "description": "null when the workspace has no explicit settings row yet.",
@@ -1275,20 +1884,180 @@
           "brand_logo_url",
           "primary_color",
           "notifications_via_envoi",
+          "sender_mode",
+          "effective_sender",
           "default_sender_address",
           "welcome_template_name",
           "approved_template_name",
           "rejected_template_name",
-          "updated_at"
+          "updated_at",
+          "email_setup",
+          "skipped_sends"
+        ],
+        "type": "object"
+      },
+      "WaitlistSkippedEmailsDto": {
+        "properties": {
+          "count": {
+            "description": "Emails not sent in the last 7 days because the setup was incomplete (`email_setup.missing`). Emails not sent because notifications are off are not counted.",
+            "example": 3,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "last_7_days": {
+            "deprecated": true,
+            "description": "The same number as `count`, under its old name. Read `count`.",
+            "example": 3,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "last_at": {
+            "description": "When the most recent counted email was skipped; null when none in the last 7 days.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "last_at",
+          "last_7_days"
+        ],
+        "type": "object"
+      },
+      "WaitlistStatsInWindowDto": {
+        "properties": {
+          "signups": {
+            "description": "Entries created in the requested window.",
+            "example": 212,
+            "type": "number"
+          }
+        },
+        "required": [
+          "signups"
+        ],
+        "type": "object"
+      },
+      "WaitlistStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "New waitlist entries per UTC day across every waitlist in the workspace.",
+            "enum": [
+              "signups"
+            ],
+            "example": "signups",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/StatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "WaitlistStatsTotalsDto": {
+        "properties": {
+          "entries": {
+            "description": "Entries across those waitlists, all time, in any status.",
+            "example": 1380,
+            "type": "number"
+          },
+          "waitlists": {
+            "description": "Waitlists in the workspace, in any status.",
+            "example": 2,
+            "type": "number"
+          }
+        },
+        "required": [
+          "waitlists",
+          "entries"
+        ],
+        "type": "object"
+      },
+      "WaitlistWorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistStatsInWindowDto"
+              }
+            ],
+            "description": "Counts for the window."
+          },
+          "last_activity_at": {
+            "description": "Most recent signup on any of the workspace's waitlists. Null when there has never been one.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistStatsSeriesDto"
+              }
+            ],
+            "description": "Daily signups."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistStatsTotalsDto"
+              }
+            ],
+            "description": "All-time counts."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
         ],
         "type": "object"
       },
       "WebhookCreateResponseDto": {
         "properties": {
           "active": {
+            "description": "Whether it receives events (`enabled` on the new routes).",
             "type": "boolean"
           },
           "auto_disabled_at": {
+            "description": "Set when it was switched off automatically after sustained failures.",
             "nullable": true,
             "type": "string"
           },
@@ -1296,6 +2065,7 @@
             "type": "string"
           },
           "events": {
+            "description": "Subscribed events (`event_types` on the new routes).",
             "items": {
               "enum": [
                 "entry.created",
@@ -1307,6 +2077,7 @@
             "type": "array"
           },
           "failure_count": {
+            "description": "Failed deliveries in a row (`consecutive_failures` on the new routes).",
             "type": "number"
           },
           "first_failure_at": {
@@ -1317,15 +2088,25 @@
             "type": "string"
           },
           "last_attempt_at": {
+            "description": "When the latest attempt was made.",
             "nullable": true,
             "type": "string"
           },
           "last_status_code": {
+            "description": "HTTP status of the latest attempt.",
             "nullable": true,
             "type": "number"
           },
+          "secret_one_time_reveal": {
+            "description": "The same secret as `signing_secret`, under the name older clients read.",
+            "type": "string"
+          },
+          "secret_set": {
+            "description": "Always true: every webhook has a signing secret.",
+            "type": "boolean"
+          },
           "signing_secret": {
-            "description": "Plaintext signing secret returned EXACTLY ONCE on create + rotate. Persist immediately — it does not appear on subsequent GETs.",
+            "description": "Plaintext signing secret (`whsec_…`), returned EXACTLY ONCE. Persist immediately; it does not appear on later reads.",
             "type": "string"
           },
           "url": {
@@ -1347,34 +2128,37 @@
           "auto_disabled_at",
           "first_failure_at",
           "created_at",
-          "signing_secret"
+          "signing_secret",
+          "secret_one_time_reveal"
         ],
         "type": "object"
       },
       "WebhookDeliveryAttemptDto": {
         "properties": {
           "attempt_number": {
-            "description": "1-based retry counter for the event.",
+            "description": "1 for the first delivery; retries and replays count up.",
             "type": "number"
           },
           "attempted_at": {
             "format": "date-time",
             "type": "string"
           },
+          "endpoint_id": {
+            "format": "uuid",
+            "type": "string"
+          },
           "error_message": {
+            "example": "request timed out",
             "nullable": true,
             "type": "string"
           },
           "event_id": {
-            "description": "Idempotency id of the dispatched event.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           },
           "event_type": {
-            "enum": [
-              "entry.created",
-              "entry.approved",
-              "entry.rejected"
-            ],
+            "example": "user.created",
             "type": "string"
           },
           "id": {
@@ -1385,29 +2169,47 @@
             "nullable": true,
             "type": "number"
           },
-          "response_body_truncated": {
+          "response_body": {
+            "description": "The first 1 KiB of the response body.",
             "nullable": true,
             "type": "string"
           },
           "status_code": {
-            "description": "HTTP status from the destination; null when the request errored before a response.",
+            "description": "HTTP status; null when no response came back.",
             "nullable": true,
             "type": "number"
           },
-          "webhook_id": {
-            "format": "uuid",
+          "succeeded": {
+            "description": "True for a 2xx response.",
+            "type": "boolean"
+          },
+          "trigger": {
+            "description": "`automatic` (first delivery or a retry), `replay` or `test`.",
+            "enum": [
+              "automatic",
+              "replay",
+              "test"
+            ],
+            "type": "string"
+          },
+          "url": {
+            "description": "Where it was sent.",
+            "format": "uri",
             "type": "string"
           }
         },
         "required": [
           "id",
-          "webhook_id",
           "event_id",
+          "endpoint_id",
           "event_type",
           "attempt_number",
+          "trigger",
+          "url",
           "status_code",
-          "response_body_truncated",
+          "succeeded",
           "error_message",
+          "response_body",
           "latency_ms",
           "attempted_at"
         ],
@@ -1417,7 +2219,7 @@
         "properties": {
           "data": {
             "items": {
-              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+              "$ref": "#/components/schemas/LegacyWebhookDeliveryAttemptDto"
             },
             "type": "array"
           },
@@ -1428,6 +2230,449 @@
         "required": [
           "data",
           "pagination"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointDto": {
+        "properties": {
+          "consecutive_failures": {
+            "description": "Failed automatic deliveries in a row; a success resets it.",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "example": "Production receiver",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "enum": [
+              "manual",
+              "failing"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "The on/off switch (`PATCH … { enabled }`).",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Subscribed event types. Empty means every event, including types added later.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "first_failure_at": {
+            "description": "Start of the current failure streak.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "legacy_signature": {
+            "description": "True for endpoints carried over from the product's previous webhook system: they also receive the old signature header until its sunset date.",
+            "type": "boolean"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while the previous secret still signs too (after a rotation, for its grace period).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "description": "Until then the previous secret signs too (after a rotation).",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "scope_id": {
+            "description": "Id of the owning workspace, app or community.",
+            "type": "string"
+          },
+          "scope_type": {
+            "description": "What owns the endpoint: `workspace`, `app` or `community`.",
+            "example": "workspace",
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 characters of the signing secret.",
+            "example": "x9Q=",
+            "type": "string"
+          },
+          "status": {
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto_disabled"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_type",
+          "scope_id",
+          "url",
+          "description",
+          "event_types",
+          "enabled",
+          "status",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "first_failure_at",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "legacy_signature",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointWithSecretDto": {
+        "properties": {
+          "consecutive_failures": {
+            "description": "Failed automatic deliveries in a row; a success resets it.",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "example": "Production receiver",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "enum": [
+              "manual",
+              "failing"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "The on/off switch (`PATCH … { enabled }`).",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Subscribed event types. Empty means every event, including types added later.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "first_failure_at": {
+            "description": "Start of the current failure streak.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "legacy_signature": {
+            "description": "True for endpoints carried over from the product's previous webhook system: they also receive the old signature header until its sunset date.",
+            "type": "boolean"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while the previous secret still signs too (after a rotation, for its grace period).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "description": "Until then the previous secret signs too (after a rotation).",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "scope_id": {
+            "description": "Id of the owning workspace, app or community.",
+            "type": "string"
+          },
+          "scope_type": {
+            "description": "What owns the endpoint: `workspace`, `app` or `community`.",
+            "example": "workspace",
+            "type": "string"
+          },
+          "signing_secret": {
+            "description": "The signing secret, shown once: pass it unchanged to any Standard Webhooks verifier. Store it now; it cannot be shown again.",
+            "example": "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw",
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 characters of the signing secret.",
+            "example": "x9Q=",
+            "type": "string"
+          },
+          "status": {
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto_disabled"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_type",
+          "scope_id",
+          "url",
+          "description",
+          "event_types",
+          "enabled",
+          "status",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "first_failure_at",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "legacy_signature",
+          "created_at",
+          "updated_at",
+          "signing_secret"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDeliveryDto": {
+        "properties": {
+          "attempt_number": {
+            "description": "Number of the latest attempt; retries and replays count up.",
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endpoint_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "next_attempt_at": {
+            "description": "When the next automatic attempt is due; null when none is queued.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "True when the latest attempt got a 2xx.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "endpoint_id",
+          "attempt_number",
+          "status_code",
+          "succeeded",
+          "attempted_at",
+          "next_attempt_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDetailDto": {
+        "properties": {
+          "attempts": {
+            "description": "Every attempt, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+            },
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveries": {
+            "description": "Latest attempt per endpoint (an endpoint whose first attempt is still queued is not listed yet).",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDeliveryDto"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "The JSON body exactly as sent.",
+            "type": "object"
+          },
+          "status": {
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed",
+              "not_sent"
+            ],
+            "type": "string"
+          },
+          "test": {
+            "description": "Made by \"Send test\".",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "example": "entry.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "test",
+          "status",
+          "payload",
+          "deliveries",
+          "attempts"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveries": {
+            "description": "Latest attempt per endpoint (an endpoint whose first attempt is still queued is not listed yet).",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDeliveryDto"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "The JSON body exactly as sent.",
+            "type": "object"
+          },
+          "status": {
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed",
+              "not_sent"
+            ],
+            "type": "string"
+          },
+          "test": {
+            "description": "Made by \"Send test\".",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "example": "entry.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "test",
+          "status",
+          "payload",
+          "deliveries"
+        ],
+        "type": "object"
+      },
+      "WebhookEventTypeDto": {
+        "properties": {
+          "category": {
+            "description": "Group shown in the event picker.",
+            "example": "Users",
+            "type": "string"
+          },
+          "description": {
+            "example": "A user signed up or was created by an admin.",
+            "type": "string"
+          },
+          "example": {
+            "additionalProperties": true,
+            "description": "An example `data` object; \"Send test\" delivers exactly this.",
+            "type": "object"
+          },
+          "type": {
+            "enum": [
+              "entry.created",
+              "entry.approved",
+              "entry.rejected"
+            ],
+            "example": "entry.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "description",
+          "category",
+          "example"
         ],
         "type": "object"
       },
@@ -1449,12 +2694,32 @@
         ],
         "type": "object"
       },
+      "WebhookPaginationDto": {
+        "properties": {
+          "has_more": {
+            "description": "Whether another page follows.",
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "description": "Pass as `cursor` to get the next page; null on the last page.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
       "WebhookResponseDto": {
         "properties": {
           "active": {
+            "description": "Whether it receives events (`enabled` on the new routes).",
             "type": "boolean"
           },
           "auto_disabled_at": {
+            "description": "Set when it was switched off automatically after sustained failures.",
             "nullable": true,
             "type": "string"
           },
@@ -1462,6 +2727,7 @@
             "type": "string"
           },
           "events": {
+            "description": "Subscribed events (`event_types` on the new routes).",
             "items": {
               "enum": [
                 "entry.created",
@@ -1473,6 +2739,7 @@
             "type": "array"
           },
           "failure_count": {
+            "description": "Failed deliveries in a row (`consecutive_failures` on the new routes).",
             "type": "number"
           },
           "first_failure_at": {
@@ -1483,12 +2750,18 @@
             "type": "string"
           },
           "last_attempt_at": {
+            "description": "When the latest attempt was made.",
             "nullable": true,
             "type": "string"
           },
           "last_status_code": {
+            "description": "HTTP status of the latest attempt.",
             "nullable": true,
             "type": "number"
+          },
+          "secret_set": {
+            "description": "Always true: every webhook has a signing secret.",
+            "type": "boolean"
           },
           "url": {
             "type": "string"
@@ -1588,6 +2861,13 @@
             "description": "Public waitlist info"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found or not active"
           }
         },
@@ -1637,21 +2917,66 @@
                 }
               }
             },
-            "description": "Entry created. Persist `referral_code` client-side to build the referral URL; `status` is `approved` when the waitlist auto-approves."
+            "description": "Entry created. Persist `referral_code` client-side to build the referral URL; `status` is `approved` when the waitlist auto-approves. A sign-up from an Amazon SES mailbox-simulator address (`…@simulator.amazonses.com`) is stored as a test entry (`is_test: true`, negative `position`), so test runs never land on the real list."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Validation or spam check failed"
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OriginNotAllowedErrorDto"
+                }
+              }
+            },
+            "description": "The request came from a web origin (`Origin` header) that is not on the waitlist's `allowed_origins` list. Requests without an `Origin` header (server-side calls) are not checked. A CORS preflight from such an origin gets the same 403."
+          },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found"
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Email already on this waitlist"
           },
           "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist is not active or is full"
           },
           "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Too many requests from this IP"
           }
         },
@@ -1706,6 +3031,13 @@
             "description": "Array of `{ position, referral_count, masked_email }`"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found or not active"
           }
         },
@@ -1715,8 +3047,94 @@
         ]
       }
     },
+    "/v1/workspaces/{workspace_id}/stats": {
+      "get": {
+        "description": "Waitlist count, total entries, signups in the window, the most recent signup and a daily signup series, across every waitlist in the workspace.\n\n**Active** means a signup: a new waitlist entry.\n\nDays are UTC. Counts only: no entrant emails, names, referrers or IPs. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window.signups` and the length of `series`, in UTC days ending today.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistWorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Waitlist stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`window` is not one of 1d, 7d, 30d."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.read` on the workspace, or Waitlist is not enabled on it (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: the id is unknown, is not a UUID, or is not visible to the caller. Same answer as the service's other workspace routes."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Waitlist stats for a workspace",
+        "tags": [
+          "stats"
+        ]
+      }
+    },
     "/v1/workspaces/{workspace_id}/waitlist/settings": {
       "get": {
+        "description": "The settings plus `email_setup` (whether Waitlist emails can go out and what is missing; the sender domain and template names are checked against Mail, cached for up to 60 seconds) and `skipped_sends` (emails not sent in the last 7 days because the setup was incomplete). Waitlist never falls back to a ProductCraft sender: an email that cannot go out is recorded, not sent.",
         "operationId": "SettingsController_get",
         "parameters": [
           {
@@ -1737,12 +3155,36 @@
                 }
               }
             },
-            "description": "Workspace Waitlist settings."
+            "description": "Workspace Waitlist settings with the email setup state."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No valid session or API key."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.settings.read` on the workspace."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
@@ -1787,15 +3229,46 @@
                 }
               }
             },
-            "description": "Updated workspace Waitlist settings."
+            "description": "Updated workspace Waitlist settings with the email setup state."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Validation failure on the patch body (per `UpdateSettingsDto`)."
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No valid session or API key."
+          },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.settings.update` on the workspace."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Workspace does not exist or is not Waitlist-enabled."
           }
         },
@@ -1805,6 +3278,156 @@
           }
         ],
         "summary": "Update workspace-level Waitlist defaults",
+        "tags": [
+          "waitlist-settings"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlist/settings/notifications/{slot}/test": {
+      "post": {
+        "description": "Sends the slot's real Mail template, with the workspace's real Waitlist sender (the workspace default or the custom address) and example values, to your own verified account address. It cannot be sent anywhere else. It uses your own Mail access, goes through the same send path as real emails, and shows up in Mail > Emails. At most 10 tests per person per hour. Not available to API keys (a key has no inbox).",
+        "operationId": "SettingsController_sendTest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Stripe-style idempotency key. A retried request with the same key returns the first response instead of sending a second email. 24h TTL.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The email to test.",
+            "in": "path",
+            "name": "slot",
+            "required": true,
+            "schema": {
+              "enum": [
+                "welcome",
+                "approved",
+                "rejected"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationTestResponseDto"
+                }
+              }
+            },
+            "description": "Accepted by Mail and queued for delivery."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown `slot`, or `workspaceId` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No valid session or API key."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.settings.update`, or Mail refused the send for your role (you need Mail send access in this workspace)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not Waitlist-enabled, or the slot's template no longer exists in Mail."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "412": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`no_template`: the slot has no template. `no_sender_address`: custom sender mode with no address."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`operator_email_unavailable`: the caller has no verified account email (API keys included). From Mail: `no_default_sender` (workspace mode and no default sender set in Mail), `from_domain_not_verified`, `domain_not_verified_by_provider`, a suppressed address, or a render failure."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 10 tests by you in the last hour (`RATE_LIMITED`), or over a Mail send limit."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`MAIL_UNREACHABLE`: Mail did not answer."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send me a test of one Waitlist email",
         "tags": [
           "waitlist-settings"
         ]
@@ -1876,6 +3499,7 @@
         ]
       },
       "post": {
+        "description": "Pass `status: \"active\"` to accept public sign-ups straight away. Without it the waitlist starts as a draft, and the response says so in `accepting_signups: false` and `signups_note`.",
         "operationId": "WaitlistController_create",
         "parameters": [
           {
@@ -1919,12 +3543,33 @@
             "description": "Waitlist created."
           },
           "400": {
-            "description": "Validation failure."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, including an `allowed_origins` entry that is not a plain origin."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.create`, or workspace has not enabled the `waitlist` service."
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Slug already taken in this workspace."
           }
         },
@@ -1966,9 +3611,23 @@
             "description": "Waitlist deleted."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.delete`."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found."
           }
         },
@@ -2015,6 +3674,13 @@
             "description": "Waitlist row."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found."
           }
         },
@@ -2071,9 +3737,23 @@
             "description": "Waitlist updated."
           },
           "400": {
-            "description": "Validation failure."
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, including an `allowed_origins` entry that is not a plain origin."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found."
           }
         },
@@ -2132,9 +3812,23 @@
             "description": "Status updated."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid status transition."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found."
           }
         },
@@ -2151,6 +3845,7 @@
     },
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics": {
       "get": {
+        "description": "Test entries (\"Add test signup\") are left out unless `include_test=true`.",
         "operationId": "AnalyticsController_get",
         "parameters": [
           {
@@ -2168,6 +3863,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Count test entries (\"Add test signup\") too. Default `false`: they are left out.",
+            "in": "query",
+            "name": "include_test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2182,9 +3887,23 @@
             "description": "Aggregated analytics payload for the waitlist."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist does not exist or is not in the path workspace."
           }
         },
@@ -2236,6 +3955,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Count test entries (\"Add test signup\") too. Default `false`: they are left out.",
+            "in": "query",
+            "name": "include_test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2250,12 +3979,33 @@
             "description": "Daily timeline array, oldest first, zero-count days included."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "`since` / `until` missing, malformed, or `until <= since`."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `waitlist.read` on the workspace."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist does not exist or is not in the path workspace."
           }
         },
@@ -2348,6 +4098,15 @@
               "format": "date-time",
               "type": "string"
             }
+          },
+          {
+            "description": "`true` lists only test entries (\"Add test signup\"), `false` only real ones. Omitted lists both; test entries come first (negative positions).",
+            "in": "query",
+            "name": "is_test",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2362,12 +4121,33 @@
             "description": "Page of entries with pagination cursor."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid cursor, overlong `search`, malformed `since` / `until`, or `until <= since`."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `entry.read`, or workspace has not enabled the `waitlist` service."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found in this workspace."
           }
         },
@@ -2425,12 +4205,33 @@
             "description": "`{ requested, succeeded, failed, results }`. Each row in `results` carries `{ id, status: \"ok\" | \"error\", error?: { code, message } }` so a partial failure (one bad id) doesn't fail the whole batch."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Empty `ids`, more than 100 ids, or unknown action."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `entry.update`."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found."
           }
         },
@@ -2464,6 +4265,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Count test entries (\"Add test signup\") too. Default `false`: they are left out.",
+            "in": "query",
+            "name": "include_test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2475,9 +4286,16 @@
                 }
               }
             },
-            "description": "Total entry count."
+            "description": "Entry count."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found in this workspace."
           }
         },
@@ -2486,7 +4304,7 @@
             "bearer": []
           }
         ],
-        "summary": "Total entry count for a waitlist",
+        "summary": "Entry count for a waitlist (test entries left out unless include_test=true)",
         "tags": [
           "entries"
         ]
@@ -2511,6 +4329,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Count test entries (\"Add test signup\") too. Default `false`: they are left out.",
+            "in": "query",
+            "name": "include_test",
+            "required": false,
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -2523,6 +4351,26 @@
               }
             },
             "description": "text/csv stream — one header row + one row per entry. Content-Disposition: attachment."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.export`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist not found in this workspace."
           }
         },
         "security": [
@@ -2530,7 +4378,7 @@
             "bearer": []
           }
         ],
-        "summary": "Stream every entry as CSV (admin export)",
+        "summary": "Stream every entry as CSV (admin export; test entries left out unless include_test=true)",
         "tags": [
           "entries"
         ]
@@ -2570,9 +4418,23 @@
             "description": "Entry deleted."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `entry.update`."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Entry not found."
           }
         },
@@ -2626,6 +4488,13 @@
             "description": "Entry row."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Entry not found."
           }
         },
@@ -2689,12 +4558,33 @@
             "description": "Entry status updated."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid status transition."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Caller lacks `entry.update`."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Entry not found in this waitlist."
           }
         },
@@ -2760,6 +4650,13 @@
             "description": "Invite created in Auth"
           },
           "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "No linked Auth app for this workspace"
           }
         },
@@ -2769,6 +4666,120 @@
           }
         ],
         "summary": "Invite an approved entry into a linked Auth consumer app (one-click cross-product handoff)",
+        "tags": [
+          "entries"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/test-entries": {
+      "post": {
+        "description": "Creates an entry marked `is_test` with a generated Amazon SES mailbox-simulator address (`success+test-…@simulator.amazonses.com`). Works on draft and paused waitlists and ignores `max_entries`. The entry shows in the entries list, takes a negative position, and is left out of counts, analytics, exports and webhooks unless asked. No email is sent unless `send_welcome_email` is true. Delete it like any other entry.",
+        "operationId": "TestEntryController_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Idempotency key (24 h). A retry with the same key returns the first test entry instead of adding a second one.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTestEntryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponseDto"
+                }
+              }
+            },
+            "description": "Test entry created."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.update`, or workspace has not enabled the `waitlist` service."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist not found in this workspace."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The waitlist is closed."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a test signup",
         "tags": [
           "entries"
         ]
@@ -2828,9 +4839,23 @@
             "description": "Page of variants in (kind, locale, created_at) order with a pagination cursor."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid cursor."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found in this workspace"
           }
         },
@@ -2886,9 +4911,23 @@
             "description": "Variant created"
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Validation failure"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Waitlist not found in this workspace"
           }
         },
@@ -2937,6 +4976,13 @@
             "description": "Variant deleted"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Variant not found"
           }
         },
@@ -3000,6 +5046,13 @@
             "description": "Variant updated"
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Variant not found"
           }
         },
@@ -3016,6 +5069,8 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_list",
         "parameters": [
           {
@@ -3060,6 +5115,13 @@
             "description": "Page of webhooks for the workspace."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid cursor."
           }
         },
@@ -3074,6 +5136,8 @@
         ]
       },
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_create",
         "parameters": [
           {
@@ -3114,6 +5178,16 @@
               }
             },
             "description": "Webhook created. Includes plaintext `signing_secret` exactly once."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The workspace already has 10 webhooks."
           }
         },
         "security": [
@@ -3121,7 +5195,1100 @@
             "bearer": []
           }
         ],
-        "summary": "Create a workspace webhook. The response includes the per-row signing secret in clear EXACTLY ONCE — copy it now.",
+        "summary": "Create a workspace webhook. The response includes the signing secret in clear EXACTLY ONCE — copy it now.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
+      "get": {
+        "description": "At most 10, so this is always one page. Signing secrets are never returned here, only their last 4 characters.",
+        "operationId": "WebhooksController_waitlist_workspace_listEndpoints",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEndpointsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The scope id in the path is malformed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook endpoints, oldest first.",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "post": {
+        "description": "Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-timestamp` and `webhook-signature` (`v1,<base64 HMAC-SHA256 of \"<id>.<timestamp>.<body>\">`); the returned `whsec_…` secret works unchanged with any Standard Webhooks library. Failed deliveries are retried after 1 min, 5 min, 30 min, 2 h, 6 h and 24 h.",
+        "operationId": "WebhooksController_waitlist_workspace_createEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure: URL not https with a public host, or an unknown event type (`WEBHOOK_EVENT_TYPE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a webhook endpoint. Returns its signing secret once.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
+      "delete": {
+        "description": "Queued retries are dropped. Its past attempts stay in the event log until the events expire.",
+        "operationId": "WebhooksController_waitlist_workspace_deleteEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook endpoint.",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "get": {
+        "operationId": "WebhooksController_waitlist_workspace_getEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook endpoint (without its secret).",
+        "tags": [
+          "webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Only the fields sent change. `enabled: true` (or a new URL) also clears an automatic disable. Switching off cancels queued retries. The secret is unchanged; rotate it with `POST …/rotate-secret`.",
+        "operationId": "WebhooksController_waitlist_workspace_updateEndpoint",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The new URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a webhook endpoint: URL, description, events, on/off.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
+      "post": {
+        "description": "For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-signature` then lists one `v1,` signature per secret, so receivers can switch over without dropping a delivery.",
+        "operationId": "WebhooksController_waitlist_workspace_rotateSecret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateWebhookSecretDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`grace_hours` out of range, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the signing secret. The new one is returned once.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
+      "post": {
+        "description": "Delivers the catalogue example of `event_type`, signed like any delivery, with `\"test\": true` in the body. Works while the endpoint is switched off or not subscribed to that type, is logged in the event log, and is never retried or counted toward an automatic disable. Waits up to 15 s for your receiver.",
+        "operationId": "WebhooksController_waitlist_workspace_sendTest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpoint_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendWebhookTestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+                }
+              }
+            },
+            "description": "The attempt, successful or not."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown `event_type`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test event to this endpoint now and return the result.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/event-types": {
+      "get": {
+        "description": "Each type with a plain description, its group and an example `data` object (what \"Send test\" delivers).",
+        "operationId": "WebhooksController_waitlist_workspace_listEventTypes",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventTypesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the events an endpoint can subscribe to.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/events": {
+      "get": {
+        "description": "Every event logged while at least one endpoint existed, with the latest state per endpoint and when the next retry is due.",
+        "operationId": "WebhooksController_waitlist_workspace_listEvents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only these types. Repeat the parameter or comma-separate.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "items": {
+                "enum": [
+                  "entry.created",
+                  "entry.approved",
+                  "entry.rejected"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "Only events sent (or queued) to this endpoint.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pending",
+                "delivered",
+                "failed",
+                "not_sent"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created at or after this instant.",
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created before this instant.",
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "The previous page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid filter value or cursor."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook events, newest first (kept for 30 days).",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
+      "get": {
+        "operationId": "WebhooksController_waitlist_workspace_getEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetailDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook event with every delivery attempt.",
+        "tags": [
+          "webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
+      "post": {
+        "description": "Same body and `webhook-id`, freshly signed, to every switched-on endpoint that receives this event type now, or only to `endpoint_id`. Waits for the receivers (up to 15 s each) and returns the attempts. A success cancels a retry still queued for that endpoint.",
+        "operationId": "WebhooksController_waitlist_workspace_replay",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Send to this endpoint only.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayWebhookEventResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.webhook.read` (reads) or `waitlist.webhook.manage` (changes, Send test, replay), or Waitlist is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a logged event again, to its endpoints or to one endpoint.",
         "tags": [
           "webhooks"
         ]
@@ -3129,6 +6296,8 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}": {
       "delete": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_remove",
         "parameters": [
           {
@@ -3150,7 +6319,17 @@
         ],
         "responses": {
           "204": {
-            "description": ""
+            "description": "Deleted."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook not found."
           }
         },
         "security": [
@@ -3164,6 +6343,8 @@
         ]
       },
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_get",
         "parameters": [
           {
@@ -3192,9 +6373,26 @@
                 }
               }
             },
-            "description": "Webhook row."
+            "description": "Webhook."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`id` is not a UUID."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Webhook not found."
           }
         },
@@ -3209,6 +6407,8 @@
         ]
       },
       "patch": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_update",
         "parameters": [
           {
@@ -3247,9 +6447,16 @@
                 }
               }
             },
-            "description": "Updated webhook row (secret masked)."
+            "description": "Updated webhook (secret masked)."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Webhook not found."
           }
         },
@@ -3258,7 +6465,7 @@
             "bearer": []
           }
         ],
-        "summary": "Update url / events / active flag",
+        "summary": "Update url / events / active flag. `active: true` also clears an automatic switch-off.",
         "tags": [
           "webhooks"
         ]
@@ -3266,6 +6473,8 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_recentDeliveries",
         "parameters": [
           {
@@ -3285,7 +6494,7 @@
             }
           },
           {
-            "description": "Page size. Defaults to 50 (the pre-pagination hard cap); values above 200 are clamped to 200.",
+            "description": "Page size. Defaults to 50; values above 200 are clamped to 200.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -3306,7 +6515,7 @@
             }
           },
           {
-            "description": "Filter by delivery outcome, derived from `status_code` using the dispatcher's rule: `success` is a 2xx response; `failed` is everything else — 3xx (redirects are not followed, so the redirect status is what was stored), 4xx, 5xx, and attempts that never got a response at all (null `status_code`). Unrecognised values are rejected with a 400.",
+            "description": "`success` is a 2xx response; `failed` is everything else, including attempts that got no response at all (null `status_code`). Unrecognised values are rejected with a 400.",
             "in": "query",
             "name": "status",
             "required": false,
@@ -3328,12 +6537,26 @@
                 }
               }
             },
-            "description": "`{ data: Array<{ id, webhook_id, event_id, event_type, attempt_number, status_code, response_body_truncated, error_message, latency_ms, attempted_at }>, pagination }`, newest first."
+            "description": "Delivery attempts, newest first."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Invalid cursor or unknown `status` filter."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Webhook not found."
           }
         },
@@ -3350,6 +6573,8 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_rotateSecret",
         "parameters": [
           {
@@ -3381,6 +6606,13 @@
             "description": "Secret rotated. Includes the new plaintext secret exactly once."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Webhook not found."
           }
         },
@@ -3389,7 +6621,7 @@
             "bearer": []
           }
         ],
-        "summary": "Rotate the signing secret. Returns the new secret in clear EXACTLY ONCE.",
+        "summary": "Rotate the signing secret. Returns the new secret in clear EXACTLY ONCE; the old one stops at once.",
         "tags": [
           "webhooks"
         ]
@@ -3397,6 +6629,8 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/workspaces/{workspace_id}/webhooks/endpoints` (event descriptions, Send test that reports the result, event log, replay, rotation with a grace period). Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_fireTest",
         "parameters": [
           {
@@ -3428,7 +6662,27 @@
         },
         "responses": {
           "202": {
-            "description": ""
+            "description": "Sent. Read the outcome from `/deliveries`."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Webhook not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The webhook is switched off."
           }
         },
         "security": [
@@ -3436,7 +6690,7 @@
             "bearer": []
           }
         ],
-        "summary": "Fire a synthetic test event to this webhook (asynchronous; check the destination logs)",
+        "summary": "Send the example of an event to this webhook; the attempt shows in `/deliveries`",
         "tags": [
           "webhooks"
         ]

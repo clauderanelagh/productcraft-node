@@ -2927,6 +2927,66 @@
         ],
         "type": "object"
       },
+      "CreateWebhookEndpointDto": {
+        "properties": {
+          "description": {
+            "example": "Production receiver",
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "default": true,
+            "description": "Create it switched off.",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Event types from `GET …/webhooks/event-types`. Empty or omitted means every event, including types added later.",
+            "example": [
+              "post.created",
+              "post.updated"
+            ],
+            "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created",
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "description": "Where to send events: an absolute https:// URL on a public host.",
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
       "CreatedWebhookResponseDto": {
         "properties": {
           "community_id": {
@@ -2951,7 +3011,7 @@
             "type": "string"
           },
           "disabled_reason": {
-            "description": "Reason the dispatcher auto-disabled the row.",
+            "description": "Why the webhook is off: `manual` (switched off) or `failing` (switched off automatically after 20 failures in a row or 24 h of failures). Null while it is on.",
             "example": null,
             "nullable": true,
             "type": "string"
@@ -3013,7 +3073,7 @@
             "type": "string"
           },
           "signing_secret_hint": {
-            "description": "Last 4 chars of the signing secret. Use the full secret returned by create / rotate to verify the X-Pcft-Signature header.",
+            "description": "Last 4 chars of the signing secret. Use the full secret returned by create / rotate to verify the Standard Webhooks `webhook-signature` header (or, until the sunset, the X-Pcft-Signature header).",
             "example": "abcd",
             "type": "string"
           },
@@ -3083,12 +3143,12 @@
             "type": "string"
           },
           "event_type": {
-            "description": "Event type. `ping` for test deliveries.",
+            "description": "Event type that was sent.",
             "example": "post.created",
             "type": "string"
           },
           "id": {
-            "description": "Delivery job UUID.",
+            "description": "Id of the delivery attempt (shows in the deliveries list).",
             "type": "string"
           },
           "last_error": {
@@ -3733,7 +3793,7 @@
       "ErrorResponseDto": {
         "properties": {
           "code": {
-            "description": "Stable error code for programmatic handling. Optional — newer routes set it where the message alone is ambiguous.",
+            "description": "Stable, machine-readable error code; branch on this, not on `message`. Always present. A route-specific code when the route defines one (e.g. `WEBHOOK_ENDPOINT_NOT_FOUND`), otherwise the generic code for the status: `BAD_REQUEST`, `VALIDATION_ERROR` (400 from request validation), `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `CONFLICT`, `PAYLOAD_TOO_LARGE`, `UNPROCESSABLE_ENTITY`, `RATE_LIMITED`, `INTERNAL_SERVER_ERROR`, `SERVICE_UNAVAILABLE`.",
             "example": "NOT_FOUND",
             "type": "string"
           },
@@ -3743,14 +3803,15 @@
             "type": "object"
           },
           "statusCode": {
-            "description": "HTTP status code echoed in the body.",
+            "description": "HTTP status code echoed in the body. Spelled `statusCode` (camelCase) in every ProductCraft API.",
             "example": 404,
             "type": "number"
           }
         },
         "required": [
           "statusCode",
-          "message"
+          "message",
+          "code"
         ],
         "type": "object"
       },
@@ -4356,6 +4417,61 @@
       },
       "LeaveConversationDto": {
         "properties": {},
+        "type": "object"
+      },
+      "ListWebhookEndpointsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEndpointDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaginationDto"
+              }
+            ],
+            "description": "Always one page (an endpoint limit applies)."
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object"
+      },
+      "ListWebhookEventTypesResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventTypeDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "type": "object"
+      },
+      "ListWebhookEventsResponseDto": {
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/WebhookPaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
         "type": "object"
       },
       "MarkAllReadDto": {
@@ -6106,6 +6222,26 @@
         ],
         "type": "object"
       },
+      "ReplayWebhookEventResponseDto": {
+        "properties": {
+          "attempts": {
+            "description": "One attempt per endpoint it was sent to.",
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+            },
+            "type": "array"
+          },
+          "event_id": {
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_id",
+          "attempts"
+        ],
+        "type": "object"
+      },
       "RepostListResponseDto": {
         "properties": {
           "data": {
@@ -6123,6 +6259,18 @@
           "data",
           "pagination"
         ],
+        "type": "object"
+      },
+      "RotateWebhookSecretDto": {
+        "properties": {
+          "grace_hours": {
+            "default": 24,
+            "description": "Hours the previous secret keeps signing too (0 ends it now).",
+            "maximum": 168,
+            "minimum": 0,
+            "type": "number"
+          }
+        },
         "type": "object"
       },
       "SendMessageDto": {
@@ -6170,6 +6318,205 @@
         },
         "required": [
           "actor_id"
+        ],
+        "type": "object"
+      },
+      "SendWebhookTestDto": {
+        "properties": {
+          "event_type": {
+            "description": "Which event to send; its catalogue example is the `data`.",
+            "enum": [
+              "post.created",
+              "post.updated",
+              "post.deleted",
+              "post.reaction.created",
+              "repost.created",
+              "comment.created",
+              "comment.updated",
+              "comment.deleted",
+              "comment.reaction.created",
+              "edge.follow.created",
+              "edge.follow.deleted",
+              "edge.follow.requested",
+              "edge.follow.request_approved",
+              "flag.created",
+              "flag.updated",
+              "moderation.action.applied",
+              "actor.updated",
+              "dm.message.created",
+              "tag.created",
+              "asset.ready",
+              "asset.failed"
+            ],
+            "example": "post.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "event_type"
+        ],
+        "type": "object"
+      },
+      "SocialStatsInWindowDto": {
+        "properties": {
+          "active_members": {
+            "description": "Distinct members (actors) who published a post, published a comment or reacted in the window. A member active on several days counts once; actors belong to one community, so a person active in two communities counts in each.",
+            "example": 57,
+            "type": "number"
+          },
+          "comments": {
+            "description": "Comments published in the window.",
+            "example": 430,
+            "type": "number"
+          },
+          "posts": {
+            "description": "Posts published in the window.",
+            "example": 112,
+            "type": "number"
+          },
+          "reactions": {
+            "description": "Reactions to posts and comments in the window.",
+            "example": 1904,
+            "type": "number"
+          }
+        },
+        "required": [
+          "active_members",
+          "posts",
+          "comments",
+          "reactions"
+        ],
+        "type": "object"
+      },
+      "SocialStatsSeriesDto": {
+        "properties": {
+          "granularity": {
+            "description": "Bucket width.",
+            "enum": [
+              "day"
+            ],
+            "example": "day",
+            "type": "string"
+          },
+          "metric": {
+            "description": "Distinct members who published a post, published a comment or reacted, per UTC day, across every community in the workspace.",
+            "enum": [
+              "active_members"
+            ],
+            "example": "active_members",
+            "type": "string"
+          },
+          "points": {
+            "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
+            "items": {
+              "$ref": "#/components/schemas/SocialStatsSeriesPointDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "metric",
+          "granularity",
+          "points"
+        ],
+        "type": "object"
+      },
+      "SocialStatsSeriesPointDto": {
+        "properties": {
+          "date": {
+            "description": "UTC calendar day.",
+            "example": "2026-10-07",
+            "format": "date",
+            "type": "string"
+          },
+          "value": {
+            "description": "Value for that day.",
+            "example": 4,
+            "type": "number"
+          }
+        },
+        "required": [
+          "date",
+          "value"
+        ],
+        "type": "object"
+      },
+      "SocialStatsTotalsDto": {
+        "properties": {
+          "communities": {
+            "description": "Communities in the workspace, in any status.",
+            "example": 3,
+            "type": "number"
+          },
+          "published_posts": {
+            "description": "Posts currently published across those communities, all time.",
+            "example": 1280,
+            "type": "number"
+          }
+        },
+        "required": [
+          "communities",
+          "published_posts"
+        ],
+        "type": "object"
+      },
+      "SocialWorkspaceStatsDto": {
+        "properties": {
+          "generated_at": {
+            "description": "When these numbers were computed. Responses are cached for up to 60 seconds.",
+            "example": "2026-10-07T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "in_window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsInWindowDto"
+              }
+            ],
+            "description": "Counts for the window."
+          },
+          "last_activity_at": {
+            "description": "Most recent post, comment or reaction in any of the workspace's communities (activity is kept for 400 days). Null when there has been none.",
+            "example": "2026-10-07T08:41:12.000Z",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "series": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsSeriesDto"
+              }
+            ],
+            "description": "Daily active members."
+          },
+          "totals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SocialStatsTotalsDto"
+              }
+            ],
+            "description": "All-time counts."
+          },
+          "window": {
+            "description": "Window the counts cover.",
+            "enum": [
+              "1d",
+              "7d",
+              "30d"
+            ],
+            "example": "30d",
+            "type": "string"
+          }
+        },
+        "required": [
+          "window",
+          "generated_at",
+          "last_activity_at",
+          "totals",
+          "in_window",
+          "series"
         ],
         "type": "object"
       },
@@ -6790,6 +7137,56 @@
         },
         "type": "object"
       },
+      "UpdateWebhookEndpointDto": {
+        "properties": {
+          "description": {
+            "maxLength": 200,
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Switch it on or off. Switching on also clears an automatic disable.",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Replaces the subscription. Event types from `GET …/webhooks/event-types`. Empty or omitted means every event, including types added later.",
+            "items": {
+              "enum": [
+                "post.created",
+                "post.updated",
+                "post.deleted",
+                "post.reaction.created",
+                "repost.created",
+                "comment.created",
+                "comment.updated",
+                "comment.deleted",
+                "comment.reaction.created",
+                "edge.follow.created",
+                "edge.follow.deleted",
+                "edge.follow.requested",
+                "edge.follow.request_approved",
+                "flag.created",
+                "flag.updated",
+                "moderation.action.applied",
+                "actor.updated",
+                "dm.message.created",
+                "tag.created",
+                "asset.ready",
+                "asset.failed"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "maxLength": 2048,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "UploadAssetResponseDto": {
         "properties": {
           "id": {
@@ -6874,6 +7271,585 @@
         ],
         "type": "object"
       },
+      "WebhookDeliveryAttemptDto": {
+        "properties": {
+          "attempt_number": {
+            "description": "1 for the first delivery; retries and replays count up.",
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endpoint_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "error_message": {
+            "example": "request timed out",
+            "nullable": true,
+            "type": "string"
+          },
+          "event_id": {
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "event_type": {
+            "example": "user.created",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "latency_ms": {
+            "nullable": true,
+            "type": "number"
+          },
+          "response_body": {
+            "description": "The first 1 KiB of the response body.",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "description": "HTTP status; null when no response came back.",
+            "nullable": true,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "True for a 2xx response.",
+            "type": "boolean"
+          },
+          "trigger": {
+            "description": "`automatic` (first delivery or a retry), `replay` or `test`.",
+            "enum": [
+              "automatic",
+              "replay",
+              "test"
+            ],
+            "type": "string"
+          },
+          "url": {
+            "description": "Where it was sent.",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "event_id",
+          "endpoint_id",
+          "event_type",
+          "attempt_number",
+          "trigger",
+          "url",
+          "status_code",
+          "succeeded",
+          "error_message",
+          "response_body",
+          "latency_ms",
+          "attempted_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointDto": {
+        "properties": {
+          "consecutive_failures": {
+            "description": "Failed automatic deliveries in a row; a success resets it.",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "example": "Production receiver",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "enum": [
+              "manual",
+              "failing"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "The on/off switch (`PATCH … { enabled }`).",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Subscribed event types. Empty means every event, including types added later.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "first_failure_at": {
+            "description": "Start of the current failure streak.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "legacy_signature": {
+            "description": "True for endpoints carried over from the product's previous webhook system: they also receive the old signature header until its sunset date.",
+            "type": "boolean"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while the previous secret still signs too (after a rotation, for its grace period).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "description": "Until then the previous secret signs too (after a rotation).",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "scope_id": {
+            "description": "Id of the owning workspace, app or community.",
+            "type": "string"
+          },
+          "scope_type": {
+            "description": "What owns the endpoint: `workspace`, `app` or `community`.",
+            "example": "workspace",
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 characters of the signing secret.",
+            "example": "x9Q=",
+            "type": "string"
+          },
+          "status": {
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto_disabled"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_type",
+          "scope_id",
+          "url",
+          "description",
+          "event_types",
+          "enabled",
+          "status",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "first_failure_at",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "legacy_signature",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEndpointWithSecretDto": {
+        "properties": {
+          "consecutive_failures": {
+            "description": "Failed automatic deliveries in a row; a success resets it.",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "description": {
+            "example": "Production receiver",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_at": {
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "disabled_reason": {
+            "enum": [
+              "manual",
+              "failing"
+            ],
+            "nullable": true,
+            "type": "string"
+          },
+          "enabled": {
+            "description": "The on/off switch (`PATCH … { enabled }`).",
+            "type": "boolean"
+          },
+          "event_types": {
+            "description": "Subscribed event types. Empty means every event, including types added later.",
+            "example": [],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "first_failure_at": {
+            "description": "Start of the current failure streak.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "legacy_signature": {
+            "description": "True for endpoints carried over from the product's previous webhook system: they also receive the old signature header until its sunset date.",
+            "type": "boolean"
+          },
+          "prev_signing_secret_active": {
+            "description": "True while the previous secret still signs too (after a rotation, for its grace period).",
+            "type": "boolean"
+          },
+          "prev_signing_secret_expires_at": {
+            "description": "Until then the previous secret signs too (after a rotation).",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "scope_id": {
+            "description": "Id of the owning workspace, app or community.",
+            "type": "string"
+          },
+          "scope_type": {
+            "description": "What owns the endpoint: `workspace`, `app` or `community`.",
+            "example": "workspace",
+            "type": "string"
+          },
+          "signing_secret": {
+            "description": "The signing secret, shown once: pass it unchanged to any Standard Webhooks verifier. Store it now; it cannot be shown again.",
+            "example": "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw",
+            "type": "string"
+          },
+          "signing_secret_hint": {
+            "description": "Last 4 characters of the signing secret.",
+            "example": "x9Q=",
+            "type": "string"
+          },
+          "status": {
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
+            "enum": [
+              "enabled",
+              "disabled",
+              "auto_disabled"
+            ],
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "example": "https://api.acme.com/webhooks",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scope_type",
+          "scope_id",
+          "url",
+          "description",
+          "event_types",
+          "enabled",
+          "status",
+          "disabled_at",
+          "disabled_reason",
+          "consecutive_failures",
+          "first_failure_at",
+          "signing_secret_hint",
+          "prev_signing_secret_active",
+          "prev_signing_secret_expires_at",
+          "legacy_signature",
+          "created_at",
+          "updated_at",
+          "signing_secret"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDeliveryDto": {
+        "properties": {
+          "attempt_number": {
+            "description": "Number of the latest attempt; retries and replays count up.",
+            "type": "number"
+          },
+          "attempted_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "endpoint_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "next_attempt_at": {
+            "description": "When the next automatic attempt is due; null when none is queued.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_code": {
+            "nullable": true,
+            "type": "number"
+          },
+          "succeeded": {
+            "description": "True when the latest attempt got a 2xx.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "endpoint_id",
+          "attempt_number",
+          "status_code",
+          "succeeded",
+          "attempted_at",
+          "next_attempt_at"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDetailDto": {
+        "properties": {
+          "attempts": {
+            "description": "Every attempt, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+            },
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveries": {
+            "description": "Latest attempt per endpoint (an endpoint whose first attempt is still queued is not listed yet).",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDeliveryDto"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "The JSON body exactly as sent.",
+            "type": "object"
+          },
+          "status": {
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed",
+              "not_sent"
+            ],
+            "type": "string"
+          },
+          "test": {
+            "description": "Made by \"Send test\".",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "post.created",
+              "post.updated",
+              "post.deleted",
+              "post.reaction.created",
+              "repost.created",
+              "comment.created",
+              "comment.updated",
+              "comment.deleted",
+              "comment.reaction.created",
+              "edge.follow.created",
+              "edge.follow.deleted",
+              "edge.follow.requested",
+              "edge.follow.request_approved",
+              "flag.created",
+              "flag.updated",
+              "moderation.action.applied",
+              "actor.updated",
+              "dm.message.created",
+              "tag.created",
+              "asset.ready",
+              "asset.failed"
+            ],
+            "example": "post.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "test",
+          "status",
+          "payload",
+          "deliveries",
+          "attempts"
+        ],
+        "type": "object"
+      },
+      "WebhookEventDto": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "deliveries": {
+            "description": "Latest attempt per endpoint (an endpoint whose first attempt is still queued is not listed yet).",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEventDeliveryDto"
+            },
+            "type": "array"
+          },
+          "id": {
+            "description": "Sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "The JSON body exactly as sent.",
+            "type": "object"
+          },
+          "status": {
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed",
+              "not_sent"
+            ],
+            "type": "string"
+          },
+          "test": {
+            "description": "Made by \"Send test\".",
+            "type": "boolean"
+          },
+          "type": {
+            "enum": [
+              "post.created",
+              "post.updated",
+              "post.deleted",
+              "post.reaction.created",
+              "repost.created",
+              "comment.created",
+              "comment.updated",
+              "comment.deleted",
+              "comment.reaction.created",
+              "edge.follow.created",
+              "edge.follow.deleted",
+              "edge.follow.requested",
+              "edge.follow.request_approved",
+              "flag.created",
+              "flag.updated",
+              "moderation.action.applied",
+              "actor.updated",
+              "dm.message.created",
+              "tag.created",
+              "asset.ready",
+              "asset.failed"
+            ],
+            "example": "post.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "test",
+          "status",
+          "payload",
+          "deliveries"
+        ],
+        "type": "object"
+      },
+      "WebhookEventTypeDto": {
+        "properties": {
+          "category": {
+            "description": "Group shown in the event picker.",
+            "example": "Users",
+            "type": "string"
+          },
+          "description": {
+            "example": "A user signed up or was created by an admin.",
+            "type": "string"
+          },
+          "example": {
+            "additionalProperties": true,
+            "description": "An example `data` object; \"Send test\" delivers exactly this.",
+            "type": "object"
+          },
+          "type": {
+            "enum": [
+              "post.created",
+              "post.updated",
+              "post.deleted",
+              "post.reaction.created",
+              "repost.created",
+              "comment.created",
+              "comment.updated",
+              "comment.deleted",
+              "comment.reaction.created",
+              "edge.follow.created",
+              "edge.follow.deleted",
+              "edge.follow.requested",
+              "edge.follow.request_approved",
+              "flag.created",
+              "flag.updated",
+              "moderation.action.applied",
+              "actor.updated",
+              "dm.message.created",
+              "tag.created",
+              "asset.ready",
+              "asset.failed"
+            ],
+            "example": "post.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "description",
+          "category",
+          "example"
+        ],
+        "type": "object"
+      },
       "WebhookEventTypesResponseDto": {
         "properties": {
           "data": {
@@ -6932,6 +7908,24 @@
         ],
         "type": "object"
       },
+      "WebhookPaginationDto": {
+        "properties": {
+          "has_more": {
+            "description": "Whether another page follows.",
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "description": "Pass as `cursor` to get the next page; null on the last page.",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "type": "object"
+      },
       "WebhookResponseDto": {
         "properties": {
           "community_id": {
@@ -6956,7 +7950,7 @@
             "type": "string"
           },
           "disabled_reason": {
-            "description": "Reason the dispatcher auto-disabled the row.",
+            "description": "Why the webhook is off: `manual` (switched off) or `failing` (switched off automatically after 20 failures in a row or 24 h of failures). Null while it is on.",
             "example": null,
             "nullable": true,
             "type": "string"
@@ -7013,7 +8007,7 @@
             "type": "string"
           },
           "signing_secret_hint": {
-            "description": "Last 4 chars of the signing secret. Use the full secret returned by create / rotate to verify the X-Pcft-Signature header.",
+            "description": "Last 4 chars of the signing secret. Use the full secret returned by create / rotate to verify the Standard Webhooks `webhook-signature` header (or, until the sunset, the X-Pcft-Signature header).",
             "example": "abcd",
             "type": "string"
           },
@@ -10774,9 +11768,23 @@
             "description": "Page of tagged posts."
           },
           "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "`actor_id` / `requester_id` is not a UUID."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Community or actor not found."
           }
         },
@@ -19161,12 +20169,33 @@
             "description": "Tag approved."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Acting actor is not the tagged actor."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Post or tag not found."
           },
           "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Tag already removed."
           }
         },
@@ -19236,9 +20265,23 @@
             "description": "Tag removed."
           },
           "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Acting actor is neither the tagged actor nor the post author."
           },
           "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
             "description": "Post or tag not found."
           }
         },
@@ -20316,6 +21359,8 @@
     },
     "/v1/communities/{communityId}/webhooks": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_list",
         "parameters": [
           {
@@ -20362,6 +21407,8 @@
         ]
       },
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_create",
         "parameters": [
           {
@@ -20444,6 +21491,16 @@
               }
             },
             "description": "Webhook cap reached (10 per community), or `IDEMPOTENCY_KEY_REUSE` (same Idempotency-Key, different body)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
           }
         },
         "security": [
@@ -20457,8 +21514,1183 @@
         ]
       }
     },
+    "/v1/communities/{communityId}/webhooks/endpoints": {
+      "get": {
+        "description": "At most 10, so this is always one page. Signing secrets are never returned here, only their last 4 characters.",
+        "operationId": "WebhooksController_social_community_listEndpoints",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEndpointsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The scope id in the path is malformed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook endpoints, oldest first.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "post": {
+        "description": "Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-timestamp` and `webhook-signature` (`v1,<base64 HMAC-SHA256 of \"<id>.<timestamp>.<body>\">`); the returned `whsec_…` secret works unchanged with any Standard Webhooks library. Failed deliveries are retried after 1 min, 5 min, 30 min, 2 h, 6 h and 24 h.",
+        "operationId": "WebhooksController_social_community_createEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure: URL not https with a public host, or an unknown event type (`WEBHOOK_EVENT_TYPE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a webhook endpoint. Returns its signing secret once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/endpoints/{endpointId}": {
+      "delete": {
+        "description": "Queued retries are dropped. Its past attempts stay in the event log until the events expire.",
+        "operationId": "WebhooksController_social_community_deleteEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook endpoint.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "get": {
+        "operationId": "WebhooksController_social_community_getEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook endpoint (without its secret).",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Only the fields sent change. `enabled: true` (or a new URL) also clears an automatic disable. Switching off cancels queued retries. The secret is unchanged; rotate it with `POST …/rotate-secret`.",
+        "operationId": "WebhooksController_social_community_updateEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The new URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a webhook endpoint: URL, description, events, on/off.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/endpoints/{endpointId}/rotate-secret": {
+      "post": {
+        "description": "For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-signature` then lists one `v1,` signature per secret, so receivers can switch over without dropping a delivery.",
+        "operationId": "WebhooksController_social_community_rotateSecret",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateWebhookSecretDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`grace_hours` out of range, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the signing secret. The new one is returned once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/endpoints/{endpointId}/test": {
+      "post": {
+        "description": "Delivers the catalogue example of `event_type`, signed like any delivery, with `\"test\": true` in the body. Works while the endpoint is switched off or not subscribed to that type, is logged in the event log, and is never retried or counted toward an automatic disable. Waits up to 15 s for your receiver.",
+        "operationId": "WebhooksController_social_community_sendTest",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendWebhookTestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+                }
+              }
+            },
+            "description": "The attempt, successful or not."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown `event_type`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test event to this endpoint now and return the result.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/event-types": {
+      "get": {
+        "description": "Each type with a plain description, its group and an example `data` object (what \"Send test\" delivers).",
+        "operationId": "WebhooksController_social_community_listEventTypes",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventTypesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the events an endpoint can subscribe to.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/events": {
+      "get": {
+        "description": "Every event logged while at least one endpoint existed, with the latest state per endpoint and when the next retry is due.",
+        "operationId": "WebhooksController_social_community_listEvents",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only these types. Repeat the parameter or comma-separate.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "items": {
+                "enum": [
+                  "post.created",
+                  "post.updated",
+                  "post.deleted",
+                  "post.reaction.created",
+                  "repost.created",
+                  "comment.created",
+                  "comment.updated",
+                  "comment.deleted",
+                  "comment.reaction.created",
+                  "edge.follow.created",
+                  "edge.follow.deleted",
+                  "edge.follow.requested",
+                  "edge.follow.request_approved",
+                  "flag.created",
+                  "flag.updated",
+                  "moderation.action.applied",
+                  "actor.updated",
+                  "dm.message.created",
+                  "tag.created",
+                  "asset.ready",
+                  "asset.failed"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "Only events sent (or queued) to this endpoint.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pending",
+                "delivered",
+                "failed",
+                "not_sent"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created at or after this instant.",
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created before this instant.",
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "The previous page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid filter value or cursor."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook events, newest first (kept for 30 days).",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/events/{eventId}": {
+      "get": {
+        "operationId": "WebhooksController_social_community_getEvent",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetailDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook event with every delivery attempt.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/communities/{communityId}/webhooks/events/{eventId}/replay": {
+      "post": {
+        "description": "Same body and `webhook-id`, freshly signed, to every switched-on endpoint that receives this event type now, or only to `endpoint_id`. Waits for the receivers (up to 15 s each) and returns the attempts. A success cancels a retry still queued for that endpoint.",
+        "operationId": "WebhooksController_social_community_replay",
+        "parameters": [
+          {
+            "description": "Social community UUID. Must belong to the caller's workspace.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Send to this endpoint only.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayWebhookEventResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a logged event again, to its endpoints or to one endpoint.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
     "/v1/communities/{communityId}/webhooks/{webhookId}": {
       "delete": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_delete",
         "parameters": [
           {
@@ -20507,6 +22739,8 @@
         ]
       },
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_getById",
         "parameters": [
           {
@@ -20562,6 +22796,8 @@
         ]
       },
       "patch": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_update",
         "parameters": [
           {
@@ -20624,6 +22860,16 @@
               }
             },
             "description": "Webhook not found."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
           }
         },
         "security": [
@@ -20639,6 +22885,8 @@
     },
     "/v1/communities/{communityId}/webhooks/{webhookId}/deliveries": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_deliveries",
         "parameters": [
           {
@@ -20715,6 +22963,8 @@
     },
     "/v1/communities/{communityId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_redeliver",
         "parameters": [
           {
@@ -20755,7 +23005,7 @@
                 }
               }
             },
-            "description": "Redelivery enqueued."
+            "description": "Sent again; the outcome is in `status`."
           },
           "404": {
             "content": {
@@ -20765,7 +23015,7 @@
                 }
               }
             },
-            "description": "Webhook or delivery not found."
+            "description": "Webhook or delivery not found, or the event is older than 30 days."
           },
           "409": {
             "content": {
@@ -20775,7 +23025,7 @@
                 }
               }
             },
-            "description": "Webhook is disabled — re-enable it first."
+            "description": "Webhook is disabled (re-enable it first), or it no longer subscribes to that event type."
           }
         },
         "security": [
@@ -20783,7 +23033,7 @@
             "bearer": []
           }
         ],
-        "summary": "Re-publish a past delivery from its stored request body. Async (202). The payload is byte-identical to the original (same event id), so subscriber-side event-id dedupe treats it as a redelivery.",
+        "summary": "Send a past delivery's event again, now, with its original body (same event id, so subscriber-side event-id dedupe treats it as a redelivery). The answer (202, kept for compatibility) carries the outcome in `status`.",
         "tags": [
           "social-webhooks"
         ]
@@ -20791,6 +23041,8 @@
     },
     "/v1/communities/{communityId}/webhooks/{webhookId}/rotate-secret": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_rotateSecret",
         "parameters": [
           {
@@ -20869,7 +23121,7 @@
             "bearer": []
           }
         ],
-        "summary": "Rotate the signing secret. Also clears any auto-disable flag. Returns the new secret ONCE. Pass an `Idempotency-Key` header so a retried rotate replays the SAME new secret instead of rotating twice.",
+        "summary": "Rotate the signing secret; the old one stops at once. Also switches a disabled webhook back on. Returns the new secret ONCE. Pass an `Idempotency-Key` header so a retried rotate replays the SAME new secret instead of rotating twice.",
         "tags": [
           "social-webhooks"
         ]
@@ -20877,6 +23129,8 @@
     },
     "/v1/communities/{communityId}/webhooks/{webhookId}/test": {
       "post": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookController_testPing",
         "parameters": [
           {
@@ -20908,7 +23162,7 @@
                 }
               }
             },
-            "description": "Ping enqueued."
+            "description": "Test sent; the outcome is in `status`."
           },
           "404": {
             "content": {
@@ -20936,7 +23190,7 @@
             "bearer": []
           }
         ],
-        "summary": "Enqueue a `ping` test delivery. Async (202): the dispatch worker signs and POSTs it exactly like a real event — SSRF guard, TLS, HMAC signature and all. Watch the deliveries list for the outcome.",
+        "summary": "Send a test delivery now: the example of the first event type the webhook subscribes to, signed exactly like a real event. The answer (202, kept for compatibility) already carries the outcome: `status` is `succeeded` or `exhausted` (never retried), with `last_error`.",
         "tags": [
           "social-webhooks"
         ]
@@ -20944,6 +23198,8 @@
     },
     "/v1/webhook-event-types": {
       "get": {
+        "deprecated": true,
+        "description": "Deprecated: use `/v1/communities/{communityId}/webhooks/endpoints` (or `/v1/workspaces/{workspaceId}/webhooks/endpoints` for one endpoint that receives every community's events): Standard Webhooks signing, event descriptions, Send test that reports the result, an event log, replay and rotation with a grace period. Responses carry `Deprecation: true` and `Sunset: Fri, 15 Jan 2027 00:00:00 GMT`.",
         "operationId": "WebhookEventTypesController_list",
         "parameters": [],
         "responses": {
@@ -20958,7 +23214,7 @@
             "description": "The full event-type catalog."
           }
         },
-        "summary": "List the webhook event-type catalog. Static metadata, no auth required. Create/update webhooks reject anything not in this list with a 400.",
+        "summary": "List the webhook event-type names. Static metadata, no auth required. `GET /v1/communities/{communityId}/webhooks/event-types` returns the same types with a description, a group and an example each.",
         "tags": [
           "social-webhooks"
         ]
@@ -22717,6 +24973,2536 @@
         "summary": "List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first. Optional `?q=` substring search over display name OR external id, composable with the cursor.",
         "tags": [
           "social-moderation-admin"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/endpoints": {
+      "get": {
+        "description": "At most 10, so this is always one page. Signing secrets are never returned here, only their last 4 characters.",
+        "operationId": "WebhooksController_social_workspace_community_listEndpoints",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEndpointsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The scope id in the path is malformed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook endpoints, oldest first.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "post": {
+        "description": "Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-timestamp` and `webhook-signature` (`v1,<base64 HMAC-SHA256 of \"<id>.<timestamp>.<body>\">`); the returned `whsec_…` secret works unchanged with any Standard Webhooks library. Failed deliveries are retried after 1 min, 5 min, 30 min, 2 h, 6 h and 24 h.",
+        "operationId": "WebhooksController_social_workspace_community_createEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure: URL not https with a public host, or an unknown event type (`WEBHOOK_EVENT_TYPE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a webhook endpoint. Returns its signing secret once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/endpoints/{endpointId}": {
+      "delete": {
+        "description": "Queued retries are dropped. Its past attempts stay in the event log until the events expire.",
+        "operationId": "WebhooksController_social_workspace_community_deleteEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook endpoint.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "get": {
+        "operationId": "WebhooksController_social_workspace_community_getEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook endpoint (without its secret).",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Only the fields sent change. `enabled: true` (or a new URL) also clears an automatic disable. Switching off cancels queued retries. The secret is unchanged; rotate it with `POST …/rotate-secret`.",
+        "operationId": "WebhooksController_social_workspace_community_updateEndpoint",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The new URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a webhook endpoint: URL, description, events, on/off.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/endpoints/{endpointId}/rotate-secret": {
+      "post": {
+        "description": "For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-signature` then lists one `v1,` signature per secret, so receivers can switch over without dropping a delivery.",
+        "operationId": "WebhooksController_social_workspace_community_rotateSecret",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateWebhookSecretDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`grace_hours` out of range, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the signing secret. The new one is returned once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/endpoints/{endpointId}/test": {
+      "post": {
+        "description": "Delivers the catalogue example of `event_type`, signed like any delivery, with `\"test\": true` in the body. Works while the endpoint is switched off or not subscribed to that type, is logged in the event log, and is never retried or counted toward an automatic disable. Waits up to 15 s for your receiver.",
+        "operationId": "WebhooksController_social_workspace_community_sendTest",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendWebhookTestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+                }
+              }
+            },
+            "description": "The attempt, successful or not."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown `event_type`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test event to this endpoint now and return the result.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/event-types": {
+      "get": {
+        "description": "Each type with a plain description, its group and an example `data` object (what \"Send test\" delivers).",
+        "operationId": "WebhooksController_social_workspace_community_listEventTypes",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventTypesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the events an endpoint can subscribe to.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/events": {
+      "get": {
+        "description": "Every event logged while at least one endpoint existed, with the latest state per endpoint and when the next retry is due.",
+        "operationId": "WebhooksController_social_workspace_community_listEvents",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only these types. Repeat the parameter or comma-separate.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "items": {
+                "enum": [
+                  "post.created",
+                  "post.updated",
+                  "post.deleted",
+                  "post.reaction.created",
+                  "repost.created",
+                  "comment.created",
+                  "comment.updated",
+                  "comment.deleted",
+                  "comment.reaction.created",
+                  "edge.follow.created",
+                  "edge.follow.deleted",
+                  "edge.follow.requested",
+                  "edge.follow.request_approved",
+                  "flag.created",
+                  "flag.updated",
+                  "moderation.action.applied",
+                  "actor.updated",
+                  "dm.message.created",
+                  "tag.created",
+                  "asset.ready",
+                  "asset.failed"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "Only events sent (or queued) to this endpoint.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pending",
+                "delivered",
+                "failed",
+                "not_sent"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created at or after this instant.",
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created before this instant.",
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "The previous page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid filter value or cursor."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook events, newest first (kept for 30 days).",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/events/{eventId}": {
+      "get": {
+        "operationId": "WebhooksController_social_workspace_community_getEvent",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetailDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook event with every delivery attempt.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/communities/{communityId}/webhooks/events/{eventId}/replay": {
+      "post": {
+        "description": "Same body and `webhook-id`, freshly signed, to every switched-on endpoint that receives this event type now, or only to `endpoint_id`. Waits for the receivers (up to 15 s each) and returns the attempts. A success cancels a retry still queued for that endpoint.",
+        "operationId": "WebhooksController_social_workspace_community_replay",
+        "parameters": [
+          {
+            "description": "Social community UUID. The same endpoints as `/v1/communities/{communityId}/webhooks`; this path also accepts a console session.",
+            "in": "path",
+            "name": "communityId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Send to this endpoint only.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Workspace UUID the community belongs to.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayWebhookEventResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a logged event again, to its endpoints or to one endpoint.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/stats": {
+      "get": {
+        "description": "Community count, published posts, active members, posts, comments and reactions in the window, the most recent activity and a daily active-members series, across every community in the workspace.\n\n**Active** means the member published a post, published a comment or reacted.\n\nDays are UTC. Counts only: no member ids, handles or author lists. Cached for up to 60 seconds (`generated_at`).",
+        "operationId": "WorkspaceStatsController_get",
+        "parameters": [
+          {
+            "description": "Workspace id.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Window for `in_window` and the length of `series`, in UTC days ending today.",
+            "in": "query",
+            "name": "window",
+            "required": false,
+            "schema": {
+              "default": "30d",
+              "enum": [
+                "1d",
+                "7d",
+                "30d"
+              ],
+              "example": "30d",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SocialWorkspaceStatsDto"
+                }
+              }
+            },
+            "description": "Social stats."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`window` is not one of 1d, 7d, 30d."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.analytics.read` on the workspace, or Social is not enabled on it (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: the id is unknown, is not a UUID, or is not visible to the caller. Same answer as the service's other workspace routes."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Social stats for a workspace",
+        "tags": [
+          "stats"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/endpoints": {
+      "get": {
+        "description": "At most 10, so this is always one page. Signing secrets are never returned here, only their last 4 characters.",
+        "operationId": "WebhooksController_social_workspace_listEndpoints",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEndpointsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The scope id in the path is malformed."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook endpoints, oldest first.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "post": {
+        "description": "Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-timestamp` and `webhook-signature` (`v1,<base64 HMAC-SHA256 of \"<id>.<timestamp>.<body>\">`); the returned `whsec_…` secret works unchanged with any Standard Webhooks library. Failed deliveries are retried after 1 min, 5 min, 30 min, 2 h, 6 h and 24 h.",
+        "operationId": "WebhooksController_social_workspace_createEndpoint",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure: URL not https with a public host, or an unknown event type (`WEBHOOK_EVENT_TYPE_UNKNOWN`)."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, not visible to the caller, or the endpoint / event is not in it."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a webhook endpoint. Returns its signing secret once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/endpoints/{endpointId}": {
+      "delete": {
+        "description": "Queued retries are dropped. Its past attempts stay in the event log until the events expire.",
+        "operationId": "WebhooksController_social_workspace_deleteEndpoint",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a webhook endpoint.",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "get": {
+        "operationId": "WebhooksController_social_workspace_getEndpoint",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook endpoint (without its secret).",
+        "tags": [
+          "social-webhooks"
+        ]
+      },
+      "patch": {
+        "description": "Only the fields sent change. `enabled: true` (or a new URL) also clears an automatic disable. Switching off cancels queued retries. The secret is unchanged; rotate it with `POST …/rotate-secret`.",
+        "operationId": "WebhooksController_social_workspace_updateEndpoint",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWebhookEndpointDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The new URL points at a private, loopback or internal address."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change a webhook endpoint: URL, description, events, on/off.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/endpoints/{endpointId}/rotate-secret": {
+      "post": {
+        "description": "For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-signature` then lists one `v1,` signature per secret, so receivers can switch over without dropping a delivery.",
+        "operationId": "WebhooksController_social_workspace_rotateSecret",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateWebhookSecretDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointWithSecretDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`grace_hours` out of range, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rotate the signing secret. The new one is returned once.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/endpoints/{endpointId}/test": {
+      "post": {
+        "description": "Delivers the catalogue example of `event_type`, signed like any delivery, with `\"test\": true` in the body. Works while the endpoint is switched off or not subscribed to that type, is logged in the event log, and is never retried or counted toward an automatic disable. Waits up to 15 s for your receiver.",
+        "operationId": "WebhooksController_social_workspace_sendTest",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "endpointId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendWebhookTestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookDeliveryAttemptDto"
+                }
+              }
+            },
+            "description": "The attempt, successful or not."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Unknown `event_type`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a test event to this endpoint now and return the result.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/event-types": {
+      "get": {
+        "description": "Each type with a plain description, its group and an example `data` object (what \"Send test\" delivers).",
+        "operationId": "WebhooksController_social_workspace_listEventTypes",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventTypesResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the events an endpoint can subscribe to.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/events": {
+      "get": {
+        "description": "Every event logged while at least one endpoint existed, with the latest state per endpoint and when the next retry is due.",
+        "operationId": "WebhooksController_social_workspace_listEvents",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only these types. Repeat the parameter or comma-separate.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "items": {
+                "enum": [
+                  "post.created",
+                  "post.updated",
+                  "post.deleted",
+                  "post.reaction.created",
+                  "repost.created",
+                  "comment.created",
+                  "comment.updated",
+                  "comment.deleted",
+                  "comment.reaction.created",
+                  "edge.follow.created",
+                  "edge.follow.deleted",
+                  "edge.follow.requested",
+                  "edge.follow.request_approved",
+                  "flag.created",
+                  "flag.updated",
+                  "moderation.action.applied",
+                  "actor.updated",
+                  "dm.message.created",
+                  "tag.created",
+                  "asset.ready",
+                  "asset.failed"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "description": "Only events sent (or queued) to this endpoint.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "enum": [
+                "pending",
+                "delivered",
+                "failed",
+                "not_sent"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created at or after this instant.",
+            "in": "query",
+            "name": "created_after",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only events created before this instant.",
+            "in": "query",
+            "name": "created_before",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "description": "The previous page's `pagination.next_cursor`.",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventsResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid filter value or cursor."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found, not visible to the caller, or the endpoint / event is not in it."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List webhook events, newest first (kept for 30 days).",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/events/{eventId}": {
+      "get": {
+        "operationId": "WebhooksController_social_workspace_getEvent",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEventDetailDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one webhook event with every delivery attempt.",
+        "tags": [
+          "social-webhooks"
+        ]
+      }
+    },
+    "/v1/workspaces/{workspaceId}/webhooks/events/{eventId}/replay": {
+      "post": {
+        "description": "Same body and `webhook-id`, freshly signed, to every switched-on endpoint that receives this event type now, or only to `endpoint_id`. Waits for the receivers (up to 15 s each) and returns the attempts. A success cancels a retry still queued for that endpoint.",
+        "operationId": "WebhooksController_social_workspace_replay",
+        "parameters": [
+          {
+            "description": "Workspace UUID. Endpoints here receive the events of every community in the workspace.",
+            "in": "path",
+            "name": "workspaceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The event id, `evt_<uuid>`.",
+            "in": "path",
+            "name": "eventId",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Send to this endpoint only.",
+            "in": "query",
+            "name": "endpoint_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReplayWebhookEventResponseDto"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`event_id` is not `evt_<uuid>`, or `endpoint_id` is not a UUID."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid bearer token."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `social.read` (reads) or `social.update` (changes, Send test, replay), or Social is not enabled for the workspace (`SERVICE_NOT_ENABLED`)."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`)."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`)."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Send a logged event again, to its endpoints or to one endpoint.",
+        "tags": [
+          "social-webhooks"
         ]
       }
     }
