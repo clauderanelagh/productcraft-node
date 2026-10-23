@@ -36,6 +36,9 @@
     "directory": "packages/core"
   },
   "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/core",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

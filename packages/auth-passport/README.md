@@ -1,6 +1,6 @@
 # @productcraft/auth-passport
 
-Passport-JWT adapter for [`@productcraft/auth`](../auth). Plug an Auth `ConsumerScope` into a `passport-jwt` Strategy so existing Passport setups can authenticate Auth-issued tokens.
+Passport-JWT adapter for [`@productcraft/auth`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth). Plug an Auth `ConsumerScope` into a `passport-jwt` Strategy so existing Passport setups can authenticate Auth-issued tokens.
 
 ```bash
 npm install @productcraft/auth @productcraft/auth-passport passport-jwt
@@ -41,4 +41,4 @@ The helper decodes the JWT header, asks the Auth `ConsumerScope` for the matchin
 
 ## License
 
-[MIT](../../LICENSE).
+[MIT](https://github.com/clauderanelagh/productcraft-node/blob/main/LICENSE).

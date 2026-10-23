@@ -36,7 +36,10 @@
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
     "directory": "packages/social"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/social",
+  "homepage": "https://productcraft.co/docs/social",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

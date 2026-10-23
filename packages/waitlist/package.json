@@ -36,7 +36,10 @@
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
     "directory": "packages/waitlist"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/waitlist",
+  "homepage": "https://productcraft.co/docs/waitlist",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

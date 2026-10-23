@@ -40,7 +40,10 @@
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
     "directory": "packages/auth-passport"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth-passport",
+  "homepage": "https://productcraft.co/docs/auth",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true
