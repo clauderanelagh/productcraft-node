@@ -1,7 +1,7 @@
 {
   "name": "productcraft",
   "version": "0.2.9",
-  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform \u2014 Auth, Mail, Waitlist, Social, Platform-Auth, and Trawl from a single import. Install per-product packages (`@productcraft/auth`, ...) if you only need one.",
+  "description": "All-in-one Node.js / TypeScript SDK for the ProductCraft platform — Auth, Mail, Waitlist, Social, Platform-Auth, and Trawl from a single import. Install per-product packages (`@productcraft/auth`, ...) if you only need one.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -28,14 +28,15 @@
   "keywords": [
     "productcraft",
     "sdk",
+    "typescript",
+    "openapi",
     "auth",
+    "email",
     "mail",
     "waitlist",
     "social",
-    "auth",
-    "email",
-    "waitlist",
-    "openapi"
+    "web-extraction",
+    "workspace"
   ],
   "author": "ProductCraft",
   "license": "MIT",
@@ -44,7 +45,10 @@
     "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
     "directory": "packages/umbrella"
   },
-  "homepage": "https://github.com/clauderanelagh/productcraft-node",
+  "homepage": "https://productcraft.co/docs/sdks",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

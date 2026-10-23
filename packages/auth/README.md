@@ -329,7 +329,7 @@ For the per-app boundary, the JWKS is the cryptographic gate (only the app's key
 
 ### Passport integration
 
-Use the companion package [`@productcraft/auth-passport`](../auth-passport):
+Use the companion package [`@productcraft/auth-passport`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth-passport):
 
 ```bash
 npm install @productcraft/auth-passport passport-jwt
@@ -393,4 +393,4 @@ When the spec changes, the nightly `spec-refresh` workflow re-runs codegen and o
 
 ## License
 
-[MIT](../../LICENSE).
+[MIT](https://github.com/clauderanelagh/productcraft-node/blob/main/LICENSE).
