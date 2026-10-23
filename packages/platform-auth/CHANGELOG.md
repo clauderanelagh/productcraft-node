@@ -1,5 +1,15 @@
 # @productcraft/platform-auth
 
+## 0.0.13
+
+### Patch Changes
+
+- f696df6: Refresh platform-auth OpenAPI types from production.
+- 5adf146: Refresh platform-auth OpenAPI types from production.
+- bee8f96: Package metadata: homepage now points at the product docs on productcraft.co, an issue tracker link is listed, and README links work on npmjs.com.
+- Updated dependencies [bee8f96]
+  - @productcraft/core@0.2.1
+
 ## 0.0.12
 
 ### Patch Changes
