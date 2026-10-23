@@ -1,5 +1,15 @@
 # @productcraft/heimdall-passport
 
+## 0.2.4
+
+### Patch Changes
+
+- bee8f96: Package metadata: homepage now points at the product docs on productcraft.co, an issue tracker link is listed, and README links work on npmjs.com.
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [bee8f96]
+  - @productcraft/auth@0.7.1
+
 ## 0.2.3
 
 ### Patch Changes

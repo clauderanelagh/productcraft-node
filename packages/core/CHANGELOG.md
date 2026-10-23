@@ -1,5 +1,11 @@
 # @productcraft/core
 
+## 0.2.1
+
+### Patch Changes
+
+- bee8f96: Package metadata: homepage now points at the product docs on productcraft.co, an issue tracker link is listed, and README links work on npmjs.com.
+
 ## 0.2.0
 
 ### Minor Changes

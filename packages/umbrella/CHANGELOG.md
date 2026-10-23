@@ -1,5 +1,32 @@
 # productcraft
 
+## 0.2.10
+
+### Patch Changes
+
+- bee8f96: Package metadata: homepage now points at the product docs on productcraft.co, an issue tracker link is listed, and README links work on npmjs.com.
+- 03770cf: Depend on the current `@productcraft/auth` release again instead of the temporary `^0.6.0` pin.
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [f696df6]
+- Updated dependencies [5adf146]
+- Updated dependencies [bee8f96]
+  - @productcraft/auth@0.7.1
+  - @productcraft/mail@0.1.2
+  - @productcraft/platform-auth@0.0.13
+  - @productcraft/social@0.7.1
+  - @productcraft/trawl@0.1.2
+  - @productcraft/waitlist@0.1.2
+  - @productcraft/core@0.2.1
+
 ## 0.2.9
 
 ### Patch Changes
