@@ -67,16 +67,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Tokenless publish via npm trusted publishing (runner OIDC,
-          # `id-token: write`). The NPM_TOKEN secret is DEAD as of
-          # 2026-09-20 (`npm whoami` -> 401), and when it was passed the
-          # action preferred it over OIDC and every publish failed. With no
-          # token, npm >= 11 authenticates through OIDC for packages that
-          # have a trusted publisher configured on npmjs.com for THIS
-          # workflow file. Today that is the pre-rename names (e.g. the
-          # `productcraft` umbrella). The rebranded @productcraft/* names
-          # (auth, auth-passport, mail, waitlist, social, trawl,
-          # platform-auth, core) still need a trusted publisher added in
-          # the npmjs.com web UI (Cloudflare blocks headless Chromium from
-          # the dev box, and the account's 2FA device is not on it) — until
-          # then their publishes 404 here and need that one-time config.
+          # `id-token: write`). No NPM_TOKEN: when one was passed, the action
+          # preferred it over OIDC. All nine packages (productcraft and
+          # @productcraft/{auth,auth-passport,core,mail,waitlist,social,trawl,
+          # platform-auth}) have a GitHub Actions trusted publisher for THIS
+          # workflow file (2026-10-23), and their publishing access is
+          # "require 2FA and disallow tokens". A new package needs the same
+          # one-time setup on npmjs.com before its first publish from here.
           NPM_CONFIG_PROVENANCE: "true"
