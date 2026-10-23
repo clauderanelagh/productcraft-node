@@ -53,7 +53,7 @@
     "@productcraft/social": "workspace:^",
     "@productcraft/core": "workspace:^",
     "@productcraft/mail": "workspace:^",
-    "@productcraft/auth": "^0.6.0",
+    "@productcraft/auth": "workspace:^",
     "@productcraft/platform-auth": "workspace:^",
     "@productcraft/waitlist": "workspace:^",
     "@productcraft/trawl": "workspace:^"
