@@ -1,5 +1,26 @@
 # productcraft
 
+## 0.3.0
+
+### Minor Changes
+
+- ed8300f: Credentials from the environment. Server-side, omit `auth` and every client reads your `pcft_` workspace key from `PRODUCTCRAFT_API_KEY`; an explicit `auth` still wins. `auth.consumer()` now takes an optional slug that defaults to `PRODUCTCRAFT_AUTH_APP`, and consumer routes never read a credential from the environment (pass `auth` explicitly for PAK-only consumer routes). Hosts are never read from the environment: override them in code with `baseUrl`. No fallback happens where there is no `process` global (browsers).
+
+### Patch Changes
+
+- Updated dependencies [d26dd1e]
+- Updated dependencies [d26dd1e]
+- Updated dependencies [d26dd1e]
+- Updated dependencies [ed8300f]
+- Updated dependencies [ed8300f]
+  - @productcraft/auth@0.8.0
+  - @productcraft/platform-auth@0.1.0
+  - @productcraft/waitlist@0.2.0
+  - @productcraft/core@0.3.0
+  - @productcraft/mail@0.2.0
+  - @productcraft/social@0.8.0
+  - @productcraft/trawl@0.2.0
+
 ## 0.2.10
 
 ### Patch Changes
