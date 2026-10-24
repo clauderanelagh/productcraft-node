@@ -9,6 +9,7 @@
             "type": "string"
           },
           "json_schema": {
+            "additionalProperties": true,
             "description": "JSON Schema describing the shape of the extraction result. Must be a non-empty object with `type: \"object\"`.",
             "example": {
               "properties": {
@@ -282,6 +283,8 @@
             "type": "string"
           },
           "json_schema": {
+            "additionalProperties": true,
+            "description": "The JSON Schema the job was created with.",
             "type": "object"
           },
           "max_steps": {
@@ -291,6 +294,8 @@
             "type": "string"
           },
           "result": {
+            "additionalProperties": true,
+            "description": "The extracted data, shaped by `json_schema`. Null until the job succeeds.",
             "nullable": true,
             "type": "object"
           },
