@@ -29,9 +29,8 @@ Requires Node 18+.
 ```ts
 import { Mail } from "@productcraft/mail";
 
-const mail = new Mail({
-  auth: { type: "apiKey", key: process.env.PRODUCTCRAFT_API_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const mail = new Mail();
 
 const { data, error } = await mail.client.POST(
   "/v1/mailboxes/{mailboxId}/messages/send",
@@ -50,12 +49,11 @@ console.log(data.id);
 ```ts
 import { ProductCraft } from "productcraft";
 
-const pc = new ProductCraft({
-  auth: { type: "apiKey", key: process.env.PRODUCTCRAFT_API_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const pc = new ProductCraft();
 
 await pc.mail.client.POST("/v1/mailboxes/{mailboxId}/messages/send", { ... });
-await pc.auth.client.POST("/v1/auth/signin", { ... });
+await pc.auth.consumer("acme").auth.signin({ identifier, password });
 ```
 
 The Stripe-style ergonomic surface (`mail.messages.send({ to, subject, body })`) ships in v0.1+. Until then, the typed underlying client guarantees every endpoint is reachable from day one.
@@ -82,6 +80,21 @@ type PCAuth =
 ```
 
 Auth is added as `Authorization: Bearer …` (or `Cookie: auth_token=…`) on every outbound request via an `openapi-fetch` middleware.
+
+### Credentials from the environment
+
+Server-side, omit `auth` and every client reads the workspace key from the environment, Stripe-style:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...   # workspace API key
+PRODUCTCRAFT_AUTH_APP=acme           # default slug for auth.consumer()
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl` (or `overrides` on the umbrella).
+- `auth.consumer()` defaults only its slug from `PRODUCTCRAFT_AUTH_APP`. It never reads a credential from the environment, so PAK-only consumer routes need an explicit `auth`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
 
 ## How these SDKs are built
 

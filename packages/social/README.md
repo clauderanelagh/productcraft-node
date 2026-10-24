@@ -24,9 +24,8 @@ The customer backend acts on behalf of one of its EndUsers via the `X-Acting-As`
 ```ts
 import { Social } from "@productcraft/social";
 
-const social = new Social({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const social = new Social();
 
 const { data, error } = await social.client.POST(
   "/v1/workspaces/{workspaceId}/communities",
@@ -63,10 +62,24 @@ const { data, error } = await social.client.POST(
 
 Social's wire is snake_case both at the DTO level and in TS types — there's no name translation layer for this surface. Use snake_case keys in `body` to match what the API actually accepts.
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Configuration
 
 ```ts
 new Social({
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },

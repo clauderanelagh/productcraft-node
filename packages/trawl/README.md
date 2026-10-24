@@ -23,7 +23,8 @@ import: `npm install productcraft`.
 ```ts
 import { Trawl } from "@productcraft/trawl";
 
-const trawl = new Trawl({ auth: { type: "apiKey", key: process.env.PCFT_KEY! } });
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const trawl = new Trawl();
 
 // Submit an extraction job (workspace-scoped).
 const { data, error } = await trawl.client.POST(
@@ -51,10 +52,23 @@ register a webhook (`POST /v1/workspaces/{workspaceId}/webhooks`) to have
 the terminal result delivered to you. Job submission is rate-limited per
 workspace (default 10/min); a `429` carries a `Retry-After` header.
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Auth
 
-Pass a workspace API key (`pcft_live_*`) as `{ type: "apiKey", key }`. The
-client sets `Authorization: Bearer <key>` on every request.
+Pass a workspace API key (`pcft_live_*`) as `{ type: "apiKey", key }`, or omit
+`auth` to use `PRODUCTCRAFT_API_KEY` (see above). The client sets `Authorization: Bearer <key>` on every request.
 
 ## License
 

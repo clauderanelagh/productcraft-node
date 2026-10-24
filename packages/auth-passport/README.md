@@ -13,10 +13,8 @@ import passportJwt from "passport-jwt";
 import { Auth } from "@productcraft/auth";
 import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";
 
-const auth = new Auth({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
-const scope = auth.consumer("my-app-slug");
+// Verification needs no credential. The slug can also come from PRODUCTCRAFT_AUTH_APP.
+const scope = new Auth().consumer("my-app-slug");
 
 new passportJwt.Strategy(
   {

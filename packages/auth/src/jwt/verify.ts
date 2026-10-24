@@ -18,6 +18,7 @@ import {
   JwksKeyNotFoundError,
   JwksFetchError,
   JwtVerifyError,
+  JwtRefreshTokenError,
 } from "./errors.js";
 import type { AuthGetKeyFn } from "./jwks-cache.js";
 
@@ -72,7 +73,20 @@ export interface VerifyOptions {
 }
 
 /**
+ * True when the claims mark a refresh token: `token_use: "refresh"`
+ * (current shape) or `type: "refresh"` (older Auth tokens). Refresh
+ * tokens must never authenticate a request.
+ */
+export function isRefreshToken(claims: Record<string, unknown> | null | undefined): boolean {
+  if (!claims) return false;
+  return claims.token_use === "refresh" || claims.type === "refresh";
+}
+
+/**
  * Verify an Auth-issued JWT against a JWKS resolver.
+ *
+ * Refresh tokens are refused with `JwtRefreshTokenError` even when the
+ * signature, issuer and audience are valid.
  *
  * @param token        The compact-form JWT (header.payload.signature)
  * @param getKey       A jose-compatible key resolver — pass
@@ -95,6 +109,7 @@ export async function verifyAuthToken(
       currentDate: opts.currentDate,
       maxTokenAge: opts.maxTokenAge,
     });
+    if (isRefreshToken(payload)) throw new JwtRefreshTokenError();
     return payload as AuthClaims;
   } catch (err) {
     throw translateJoseError(err);

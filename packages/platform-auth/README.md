@@ -22,9 +22,8 @@ The two are easy to confuse because both have "auth" in the name. Platform-Auth 
 ```ts
 import { PlatformAuth } from "@productcraft/platform-auth";
 
-const platformAuth = new PlatformAuth({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const platformAuth = new PlatformAuth();
 
 // Resolve the caller's effective policy + enabled services for a workspace
 const { data } = await platformAuth.client.GET(
@@ -48,10 +47,24 @@ The `client` is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) inst
 
 PAKs are workspace-scoped credentials — they read + introspect freely against the workspace they're bound to but cannot mint another PAK or reshape the human-admin surface. Cross-workspace probes by a PAK return the uniform non-member shape (no slug → UUID oracle).
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Configuration
 
 ```ts
 new PlatformAuth({
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },

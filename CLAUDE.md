@@ -46,9 +46,9 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
    1. If `.changeset/*.md` files exist → opens / updates a "Version Packages" PR.
    2. If there are no pending changesets but `package.json` versions are ahead of npm → runs `pnpm run release` (build + `changeset publish`).
 
-  **Publish auth — read this before touching release.yml.** Despite the OIDC scaffolding (`id-token: write`, npm pinned to `11.x`), publishes currently authenticate with **`NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`** — NOT tokenless OIDC. Trusted Publishing was never configured on npmjs.com for the rebranded package names (it's web-UI-only and Cloudflare blocks headless Chromium from this box). Provenance attestation still works independently via the runner OIDC token. The `TODO` in release.yml to drop `NPM_TOKEN` is real but blocked on that interactive config step. `npm@11` is pinned deliberately — `npm@12` breaks provenance publishes with a missing-`sigstore` error.
+  **Publish auth — read this before touching release.yml.** Publishing is tokenless **npm trusted publishing (OIDC)**, bound to the workflow filename `release.yml` (restored 2026-10-23). Every published name has a trusted publisher for `clauderanelagh/productcraft-node` + `release.yml`; there is no `NPM_TOKEN`. A one-off workflow with a different filename cannot publish. `npm@11` is pinned deliberately — `npm@12` breaks provenance publishes with a missing-`sigstore` error.
 
-  **First publish of a brand-new package name:** the `NPM_TOKEN` secret must have publish rights to the new name. If it's a granular token scoped to existing packages, the first CI publish 403s — mint/scope the token (or do a one-off manual `pnpm publish` from this box) before relying on CI. `@productcraft/trawl` (added 2026-07-11) was the first new name since the token was set; confirm it actually landed on npm after release, don't assume.
+  **First publish of a brand-new package name:** configure its trusted publisher on npmjs.com (owner `clauderanelagh`, repo `productcraft-node`, workflow `release.yml`) BEFORE merging the Version Packages PR, or the publish 404s. Confirm it actually landed on npm after release, don't assume.
 
 ## Versioning
 

@@ -25,9 +25,8 @@ The per-product packages are leaner (no bundled deps for the surfaces you don't 
 ```ts
 import { ProductCraft } from "productcraft";
 
-const pc = new ProductCraft({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const pc = new ProductCraft();
 
 // Auth — sign in an EndUser through the BFF flow
 const consumer = pc.auth.consumer("my-app-slug");
@@ -78,11 +77,25 @@ class ProductCraft {
 
 Each is the same class you'd get from installing its per-product package directly — `pc.auth` is `new Auth(config)`, etc. The classes are re-exported so you can refer to their types: `import type { Auth } from "productcraft"`.
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Configuration
 
 ```ts
 new ProductCraft({
   // Shared auth credential — applied to every surface
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },

@@ -49,7 +49,7 @@ import { KeyObject } from "node:crypto";
 import { createRequire } from "node:module";
 import { decodeProtectedHeader, type JWTHeaderParameters } from "jose";
 
-import type { ConsumerScope } from "@productcraft/auth";
+import { isRefreshToken, type ConsumerScope } from "@productcraft/auth";
 
 /**
  * passport-jwt's `secretOrKeyProvider` callback signature. We don't
@@ -195,7 +195,9 @@ function loadPassportJwt(): {
  *   - `algorithms`         → `['RS256']` (override via opts)
  *
  * The verify callback you pass receives the parsed claims after
- * passport-jwt has finished its checks.
+ * passport-jwt has finished its checks. Refresh tokens
+ * (`token_use: "refresh"` or `type: "refresh"`) are refused before
+ * your callback runs: the request fails authentication.
  */
 export function createAuthJwtStrategy(
   scope: ConsumerScope,
@@ -217,6 +219,27 @@ export function createAuthJwtStrategy(
       algorithms: options.algorithms ?? ["RS256"],
       passReqToCallback: options.passReqToCallback ?? false,
     },
-    verify,
+    refuseRefreshTokens(verify, options.passReqToCallback ?? false),
   );
+}
+
+/**
+ * Wrap a passport verify callback so refresh tokens never reach it.
+ * passport-jwt calls `(payload, done)`, or `(req, payload, done)` with
+ * `passReqToCallback`.
+ */
+function refuseRefreshTokens(
+  verify: AuthVerifyCallback,
+  passReqToCallback: boolean,
+): AuthVerifyCallback {
+  const wrapped = (...args: unknown[]) => {
+    const payload = args[passReqToCallback ? 1 : 0] as Record<string, unknown>;
+    const done = args[args.length - 1] as (err: unknown, user?: unknown, info?: unknown) => void;
+    if (isRefreshToken(payload)) {
+      done(null, false, { message: "Refresh tokens cannot be used as access tokens" });
+      return;
+    }
+    (verify as (...a: unknown[]) => void)(...args);
+  };
+  return wrapped as unknown as AuthVerifyCallback;
 }

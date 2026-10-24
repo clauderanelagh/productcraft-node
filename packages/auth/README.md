@@ -13,9 +13,8 @@ Server-side only. For React / Next.js apps, call this from your backend (BFF pat
 ```ts
 import { Auth } from "@productcraft/auth";
 
-const auth = new Auth({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY (and PRODUCTCRAFT_AUTH_APP) from the environment
+const auth = new Auth();
 ```
 
 The SDK splits into three caller contexts.
@@ -310,6 +309,8 @@ try {
 
 Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), singleflighted so 100 concurrent verifies do 1 fetch, auto-refetched if a token's `kid` isn't in the cached JWKS (rotation handling). Issuer + audience are checked against `scope.acceptedIssuers` + `scope.expectedAudience` automatically.
 
+**Refresh tokens are refused.** A token carrying `token_use: "refresh"` (or the older `type: "refresh"`) throws `JwtRefreshTokenError` (code `ERR_JWT_REFRESH_TOKEN`) even when its signature, issuer and audience are valid: a refresh token is only good at the refresh endpoint, never as an access token. `createAuthJwtStrategy` from `@productcraft/auth-passport` refuses them too. If you call `jwtVerify` yourself (below), check `isRefreshToken(payload)` and reject.
+
 ### Building blocks for `jose`, NestJS guards, Hono, etc.
 
 `scope.jwks.getKey` is a [jose-compatible](https://github.com/panva/jose) key resolver — pass it anywhere a `GetKeyFunction` is expected.
@@ -368,11 +369,28 @@ import {
 } from "@productcraft/auth";
 ```
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+PRODUCTCRAFT_AUTH_APP=acme           # default slug for auth.consumer()
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+- `auth.app(appId)` and the workspace methods (`apps`, `stats`) use the explicit `auth`, else `PRODUCTCRAFT_API_KEY`.
+- `auth.consumer()` takes its slug from `PRODUCTCRAFT_AUTH_APP` when you omit it, and **never** reads a credential from the environment: consumer routes act for an end user, so only an explicit `auth` is sent. PAK-only consumer routes (`signup_requires_pak` sign-ups, tenants, code mint, factors) therefore need `new Auth({ auth: { type: "apiKey", key: process.env.MY_APP_PAK! } })`.
+
 ## Configuration
 
 ```ts
 new Auth({
   // Auth credential the SDK presents to Auth
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },
