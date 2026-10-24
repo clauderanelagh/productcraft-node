@@ -2868,7 +2868,7 @@
                 }
               }
             },
-            "description": "Waitlist not found or not active"
+            "description": "Code `WAITLIST_NOT_FOUND`: no such waitlist, not active, or its workspace was deleted. The answer is the same in every case."
           }
         },
         "summary": "Public waitlist info (display name, description, custom-field schema, branding hints, active variant)",
@@ -2947,7 +2947,7 @@
                 }
               }
             },
-            "description": "Waitlist not found"
+            "description": "Code `WAITLIST_NOT_FOUND`: no such waitlist, or its workspace was deleted. The answer is the same in both cases."
           },
           "409": {
             "content": {
@@ -3038,7 +3038,7 @@
                 }
               }
             },
-            "description": "Waitlist not found or not active"
+            "description": "Code `WAITLIST_NOT_FOUND`: no such waitlist, not active, or its workspace was deleted. The answer is the same in every case."
           }
         },
         "summary": "Public top-50 referral leaderboard. Emails are masked. Anonymous read; same access policy as the public waitlist info endpoint.",
