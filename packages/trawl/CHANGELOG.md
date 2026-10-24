@@ -1,5 +1,11 @@
 # @productcraft/trawl
 
+## 0.1.3
+
+### Patch Changes
+
+- 67239e6: `json_schema` on job creation and `json_schema` / `result` on job responses are now typed `Record<string, unknown>` instead of `Record<string, never>`, so a real JSON Schema type-checks without an `as never` cast.
+
 ## 0.1.2
 
 ### Patch Changes
