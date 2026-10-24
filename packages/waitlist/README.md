@@ -40,9 +40,8 @@ If the waitlist has `settings.recaptcha_site_key` set, also pass a `recaptcha_to
 ```ts
 import { Waitlist } from "@productcraft/waitlist";
 
-const waitlist = new Waitlist({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const waitlist = new Waitlist();
 
 // Create a waitlist — body uses `display_name`, not `name`.
 const { data } = await waitlist.client.POST(
@@ -56,11 +55,25 @@ const { data } = await waitlist.client.POST(
 
 `{workspace_id}` is the workspace UUID returned by `@productcraft/platform-auth`'s introspect endpoint.
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Configuration
 
 ```ts
 new Waitlist({
   // Optional: required for workspace-admin calls. Public submit works without auth.
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },

@@ -13,9 +13,8 @@ Server-side only. The SDK ships a Platform API Key in the `Authorization` header
 ```ts
 import { Mail } from "@productcraft/mail";
 
-const mail = new Mail({
-  auth: { type: "apiKey", key: process.env.PCFT_KEY! },
-});
+// Reads PRODUCTCRAFT_API_KEY from the environment
+const mail = new Mail();
 
 // Send a template-rendered message
 const { data, error } = await mail.client.POST(
@@ -39,11 +38,25 @@ const { data, error } = await mail.client.POST(
 
 The `client` property is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) instance bound to `https://api.mail.productcraft.co` and your auth credential. Every endpoint in the published OpenAPI spec is reachable through it — your editor's autocomplete lists paths + method shapes + body fields.
 
+## Credentials from the environment
+
+Server-side, omit `auth` and the client reads your workspace key from the environment:
+
+```bash
+# .env
+PRODUCTCRAFT_API_KEY=pcft_live_...
+```
+
+- An explicit `auth` always wins over the environment.
+- Hosts are never read from the environment. Override them in code with `baseUrl`.
+- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+
 ## Configuration
 
 ```ts
 new Mail({
   // The auth credential the SDK presents to Mail
+  // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
       | { type: "bearer", token: "eyJ..." }
       | { type: "cookie", value: "auth_token=..." },

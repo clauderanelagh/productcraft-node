@@ -31,6 +31,11 @@ export type PCAuth =
   | { type: "cookie"; value: string };
 
 export interface PCClientConfig {
+  /**
+   * Credential for every request. Server-side, omit it to fall back to
+   * the `PRODUCTCRAFT_API_KEY` environment variable (your `pcft_`
+   * workspace key). An explicit value always wins over the environment.
+   */
   auth?: PCAuth;
   /** Override the prod base URL — useful for dev / staging. */
   baseUrl?: string;
@@ -57,6 +62,39 @@ export const PC_BASE_URL = {
   social: "https://social.productcraft.co",
   trawl: "https://api.trawl.productcraft.co",
 } as const;
+
+/** Environment variable holding the `pcft_` workspace API key. */
+export const PC_API_KEY_ENV = "PRODUCTCRAFT_API_KEY";
+/** Environment variable holding the default Auth app slug for `auth.consumer()`. */
+export const PC_AUTH_APP_ENV = "PRODUCTCRAFT_AUTH_APP";
+
+/**
+ * Read an environment variable when running somewhere with a `process`
+ * global (Node, Bun, Deno's Node compat). Returns `undefined` in the
+ * browser or edge runtimes without `process`, and for empty values.
+ * Never throws.
+ */
+export function readEnv(name: string): string | undefined {
+  const proc = (globalThis as { process?: { env?: Record<string, string | undefined> } })
+    .process;
+  if (typeof proc === "undefined" || !proc || !proc.env) return undefined;
+  const value = proc.env[name];
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed === "" ? undefined : trimmed;
+}
+
+/**
+ * Resolve the credential a server-side client should present: the
+ * explicit `auth` when given, otherwise `PRODUCTCRAFT_API_KEY` from the
+ * environment, otherwise none. Hosts are never read from the
+ * environment; override them in code with `baseUrl`.
+ */
+export function resolveAuth(auth: PCAuth | undefined): PCAuth | undefined {
+  if (auth) return auth;
+  const key = readEnv(PC_API_KEY_ENV);
+  return key ? { type: "apiKey", key } : undefined;
+}
 
 /**
  * Build an `openapi-fetch` middleware that adds the configured auth
@@ -87,6 +125,9 @@ export function authMiddleware(auth: PCAuth | undefined): Middleware {
  * package calls this with its own generated `paths` type and default
  * base URL. The returned client is the v0 surface — every endpoint is
  * reachable through `client.GET(...)`, `client.POST(...)`, etc.
+ *
+ * When `config.auth` is omitted the client falls back to
+ * `PRODUCTCRAFT_API_KEY` (see `resolveAuth`).
  */
 export function makeClient<TPaths extends object>(
   defaultBaseUrl: string,
@@ -96,6 +137,6 @@ export function makeClient<TPaths extends object>(
     baseUrl: config.baseUrl ?? defaultBaseUrl,
     fetch: config.fetch,
   });
-  client.use(authMiddleware(config.auth));
+  client.use(authMiddleware(resolveAuth(config.auth)));
   return client;
 }

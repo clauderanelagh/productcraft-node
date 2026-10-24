@@ -12,7 +12,8 @@ You **don't install this directly**. It's a runtime dependency of every product 
   | { type: "bearer"; token: string }  // pre-resolved JWT
   | { type: "cookie"; value: string }  // captured auth_token
   ```
-- `PCClientConfig` — `{ auth?, baseUrl?, fetch? }`, the input shape every surface constructor takes.
+- `PCClientConfig` — `{ auth?, baseUrl?, fetch? }`, the input shape every surface constructor takes. When `auth` is omitted, `resolveAuth` falls back to `PRODUCTCRAFT_API_KEY` from the environment (server-side only; never read without a `process` global).
+- `PC_API_KEY_ENV` / `PC_AUTH_APP_ENV` / `readEnv` / `resolveAuth` — the env-fallback helpers. Hosts are never read from the environment.
 - `PC_BASE_URL` — the per-surface prod base URLs, used as defaults.
 - `makeClient<paths>(baseUrl, config)` — internal helper that wires an `openapi-fetch` client with the auth-header middleware.
 

@@ -11,7 +11,14 @@
  */
 
 import type { Client } from "@kubb/plugin-client/clients/fetch";
-import { PC_BASE_URL, type PCAuth, type PCClientConfig } from "@productcraft/core";
+import {
+  PC_AUTH_APP_ENV,
+  PC_BASE_URL,
+  readEnv,
+  resolveAuth,
+  type PCAuth,
+  type PCClientConfig,
+} from "@productcraft/core";
 
 import { makeAuthHttpClient, AuthHttpError } from "./_http.js";
 import { AppScope } from "./scopes/app.js";
@@ -34,7 +41,15 @@ export interface AuthConfig extends PCClientConfig {
 }
 
 export class Auth {
+  /** Admin client: explicit `auth`, else `PRODUCTCRAFT_API_KEY`. */
   private readonly client: Client;
+  /**
+   * Consumer client: explicit `auth` only. Consumer routes act for an
+   * end user, so a workspace key from the environment must never leak
+   * onto them. Pass `auth` explicitly for PAK-only consumer routes
+   * (`signup_requires_pak`, tenants, code mint, factors).
+   */
+  private readonly consumerClient: Client;
   private readonly baseUrl: string;
   private readonly fetch: typeof fetch | undefined;
   private readonly jwtConfig: { jwksTtlMs?: number };
@@ -43,6 +58,11 @@ export class Auth {
     this.baseUrl = config.baseUrl ?? PC_BASE_URL.auth;
     this.fetch = config.fetch;
     this.client = makeAuthHttpClient({
+      baseUrl: this.baseUrl,
+      auth: resolveAuth(config.auth),
+      fetch: this.fetch,
+    });
+    this.consumerClient = makeAuthHttpClient({
       baseUrl: this.baseUrl,
       auth: config.auth,
       fetch: this.fetch,
@@ -55,7 +75,8 @@ export class Auth {
   /**
    * Returns an `AppScope` bound to the given appId. All operations under
    * `/v1/apps/{appId}/...` are exposed as resource namespaces on the
-   * returned object.
+   * returned object. Uses the explicit `auth`, else
+   * `PRODUCTCRAFT_API_KEY` from the environment.
    */
   app(appId: string): AppScope {
     return new AppScope(appId, this.client);
@@ -65,11 +86,21 @@ export class Auth {
    * Returns a `ConsumerScope` bound to the given appSlug. Exposes the
    * `/{appSlug}/v1/...` surface (sign-in, sign-up, me, verify, oauth)
    * and the JWT-verify helper for tokens issued by this app.
+   *
+   * `appSlug` defaults to `PRODUCTCRAFT_AUTH_APP` from the environment.
+   * No credential is ever read from the environment for consumer
+   * routes; only an explicit `auth` is sent.
    */
-  consumer(appSlug: string): ConsumerScope {
+  consumer(appSlug?: string): ConsumerScope {
+    const slug = appSlug ?? readEnv(PC_AUTH_APP_ENV);
+    if (!slug) {
+      throw new Error(
+        `@productcraft/auth: consumer() needs an app slug. Pass one, or set ${PC_AUTH_APP_ENV}.`,
+      );
+    }
     return new ConsumerScope(
-      appSlug,
-      { client: this.client, baseUrl: this.baseUrl, fetch: this.fetch },
+      slug,
+      { client: this.consumerClient, baseUrl: this.baseUrl, fetch: this.fetch },
       this.jwtConfig,
     );
   }
@@ -132,6 +163,8 @@ export {
   JwtAudienceMismatchError,
   JwksKeyNotFoundError,
   JwksFetchError,
+  JwtRefreshTokenError,
+  isRefreshToken,
 } from "./jwt/index.js";
 
 // Re-export the most commonly-used request/response DTOs so callers

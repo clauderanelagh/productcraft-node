@@ -16,6 +16,9 @@ import {
   JwtInvalidError,
   JwtIssuerMismatchError,
   JwtAudienceMismatchError,
+  JwtRefreshTokenError,
+  JwtVerifyError,
+  isRefreshToken,
 } from "../src/index.js";
 
 const BASE = "https://api.auth.example";
@@ -180,5 +183,71 @@ describe("verifyToken", () => {
     await expect(
       rig.auth.consumer(APP).verifyToken(tampered),
     ).rejects.toBeInstanceOf(JwtInvalidError);
+  });
+});
+
+describe("verifyToken refuses refresh tokens", () => {
+  let rig: TestRig;
+
+  beforeEach(async () => {
+    rig = await setup();
+  });
+
+  it("refuses a token with token_use: 'refresh'", async () => {
+    const token = await signToken(
+      rig.privateKey,
+      { sub: "u", iss: ISSUER, aud: AUDIENCE, token_use: "refresh" },
+      { exp: "1h" },
+    );
+    const p = rig.auth.consumer(APP).verifyToken(token);
+    await expect(p).rejects.toBeInstanceOf(JwtRefreshTokenError);
+    await expect(p).rejects.toBeInstanceOf(JwtVerifyError);
+    await expect(p).rejects.toMatchObject({ code: "ERR_JWT_REFRESH_TOKEN" });
+  });
+
+  it("refuses a token with type: 'refresh' (older claim shape)", async () => {
+    const token = await signToken(
+      rig.privateKey,
+      { sub: "u", iss: ISSUER, aud: AUDIENCE, type: "refresh", jti: "j1" },
+      { exp: "1h" },
+    );
+    await expect(rig.auth.consumer(APP).verifyToken(token)).rejects.toBeInstanceOf(
+      JwtRefreshTokenError,
+    );
+  });
+
+  it("refuses refresh tokens even when issuer/audience checks are relaxed", async () => {
+    const token = await signToken(
+      rig.privateKey,
+      { sub: "u", iss: "anything", type: "refresh" },
+      { exp: "1h" },
+    );
+    await expect(
+      rig.auth.consumer(APP).verifyToken(token, { issuer: undefined, audience: undefined }),
+    ).rejects.toBeInstanceOf(JwtRefreshTokenError);
+  });
+
+  it("still accepts an access token (token_use: 'access' or none)", async () => {
+    const scope = rig.auth.consumer(APP);
+    const withUse = await signToken(
+      rig.privateKey,
+      { sub: "u1", iss: ISSUER, aud: AUDIENCE, token_use: "access" },
+      { exp: "1h" },
+    );
+    const plain = await signToken(
+      rig.privateKey,
+      { sub: "u2", iss: ISSUER, aud: AUDIENCE },
+      { exp: "1h" },
+    );
+    expect((await scope.verifyToken(withUse)).sub).toBe("u1");
+    expect((await scope.verifyToken(plain)).sub).toBe("u2");
+  });
+
+  it("isRefreshToken recognises both claim shapes", () => {
+    expect(isRefreshToken({ token_use: "refresh" })).toBe(true);
+    expect(isRefreshToken({ type: "refresh" })).toBe(true);
+    expect(isRefreshToken({ token_use: "access" })).toBe(false);
+    expect(isRefreshToken({})).toBe(false);
+    expect(isRefreshToken(undefined)).toBe(false);
   });
 });

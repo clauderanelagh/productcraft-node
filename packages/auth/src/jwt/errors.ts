@@ -40,6 +40,18 @@ export class JwtNotYetValidError extends JwtVerifyError {
   }
 }
 
+/**
+ * The token is a refresh token (`token_use: "refresh"` or
+ * `type: "refresh"`). Refresh tokens are only valid at the refresh
+ * endpoint and must never authenticate an API request.
+ */
+export class JwtRefreshTokenError extends JwtVerifyError {
+  constructor(message = "Refresh tokens cannot be used as access tokens", options?: { cause?: unknown }) {
+    super("ERR_JWT_REFRESH_TOKEN", message, options);
+    this.name = "JwtRefreshTokenError";
+  }
+}
+
 /** `iss` claim doesn't match the expected issuer. */
 export class JwtIssuerMismatchError extends JwtVerifyError {
   constructor(message: string, options?: { cause?: unknown }) {
