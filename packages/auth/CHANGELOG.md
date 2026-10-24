@@ -1,5 +1,18 @@
 # @productcraft/heimdall
 
+## 0.8.0
+
+### Minor Changes
+
+- ed8300f: Credentials from the environment. Server-side, omit `auth` and every client reads your `pcft_` workspace key from `PRODUCTCRAFT_API_KEY`; an explicit `auth` still wins. `auth.consumer()` now takes an optional slug that defaults to `PRODUCTCRAFT_AUTH_APP`, and consumer routes never read a credential from the environment (pass `auth` explicitly for PAK-only consumer routes). Hosts are never read from the environment: override them in code with `baseUrl`. No fallback happens where there is no `process` global (browsers).
+- ed8300f: **Security fix: offline verification now refuses refresh tokens.** `scope.verifyToken()` / `verifyAuthToken()` used to accept a validly signed refresh JWT as if it were an access token, so a backend verifying offline could be authenticated with a leaked refresh token. Tokens with `token_use: "refresh"` or `type: "refresh"` now throw the new `JwtRefreshTokenError` (code `ERR_JWT_REFRESH_TOKEN`, a `JwtVerifyError`), and `createAuthJwtStrategy` fails authentication for them before your verify callback runs. A new `isRefreshToken(claims)` helper is exported for hand-rolled `jose` verification. This matches the server-side checks in the Auth and Platform APIs. Upgrade if you verify Auth tokens offline.
+
+### Patch Changes
+
+- d26dd1e: Refresh auth OpenAPI types from production.
+- Updated dependencies [ed8300f]
+  - @productcraft/core@0.3.0
+
 ## 0.7.1
 
 ### Patch Changes
