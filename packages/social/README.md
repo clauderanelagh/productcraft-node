@@ -14,8 +14,8 @@ Social's surface splits two ways — both reach the same data but differ in auth
 
 | Caller | URL prefix | Auth | What you do |
 |---|---|---|---|
-| **PlatformUser admin** | `/v1/workspaces/{workspaceId}/...` | cookie or PAK | Create communities, run moderation, read analytics. |
-| **Customer backend** | `/v1/communities/{communityId}/...` | PAK + `X-Acting-As: <actor_id>` header | Day-to-day reads/writes on behalf of an EndUser. |
+| **PlatformUser admin** | `/v1/workspaces/{workspace_id}/...` | cookie or PAK | Create communities, run moderation, read analytics. |
+| **Customer backend** | `/v1/communities/{community_id}/...` | PAK + `X-Acting-As: <actor_id>` header | Day-to-day reads/writes on behalf of an EndUser. |
 
 The customer backend acts on behalf of one of its EndUsers via the `X-Acting-As` header — the SDK passes whatever you put in headers straight through, so a per-request wrapper that injects the acting actor id is idiomatic.
 
@@ -28,9 +28,9 @@ import { Social } from "@productcraft/social";
 const social = new Social();
 
 const { data, error } = await social.client.POST(
-  "/v1/workspaces/{workspaceId}/communities",
+  "/v1/workspaces/{workspace_id}/communities",
   {
-    params: { path: { workspaceId: "<workspace-uuid>" } },
+    params: { path: { workspace_id: "<workspace-uuid>" } },
     body: { display_name: "Founders Club", slug: "founders" },
   },
 );
@@ -42,10 +42,10 @@ const { data, error } = await social.client.POST(
 const actor_id = "<actor-uuid>"; // the EndUser's Social actor id
 
 const { data, error } = await social.client.POST(
-  "/v1/communities/{communityId}/posts",
+  "/v1/communities/{community_id}/posts",
   {
     params: {
-      path: { communityId: "<community-uuid>" },
+      path: { community_id: "<community-uuid>" },
       header: { "X-Acting-As": actor_id },
     },
     body: {
@@ -61,6 +61,24 @@ const { data, error } = await social.client.POST(
 ```
 
 Social's wire is snake_case both at the DTO level and in TS types — there's no name translation layer for this surface. Use snake_case keys in `body` to match what the API actually accepts.
+
+## Migrating from 0.x to 1.0
+
+1.0 renames every **path parameter** to snake_case, to match the rest of the ProductCraft APIs: `{communityId}` is now `{community_id}`, `{actorId}` is `{actor_id}`, `{srcActorId}` is `{src_actor_id}`, and so on. Request URLs are unchanged, so nothing breaks at runtime; the change is in the TypeScript path keys and in `params.path`:
+
+```ts
+// 0.x
+await social.client.GET("/v1/communities/{communityId}/posts/{postId}", {
+  params: { path: { communityId, postId } },
+});
+
+// 1.0
+await social.client.GET("/v1/communities/{community_id}/posts/{post_id}", {
+  params: { path: { community_id: communityId, post_id: postId } },
+});
+```
+
+A search-and-replace of the placeholders plus the `path` keys is the whole migration. Post `attributes` now read back with the keys exactly as you stored them (`imageUrl` stays `imageUrl`); before, the API returned them snake_cased.
 
 ## Credentials from the environment
 
@@ -95,20 +113,20 @@ new Social({
 ```ts
 // Create a post
 await social.client.POST(
-  "/v1/communities/{communityId}/posts",
-  { params: { path: { communityId } }, body: { text: "..." } },
+  "/v1/communities/{community_id}/posts",
+  { params: { path: { community_id: communityId } }, body: { text: "..." } },
 );
 
 // Get the actor's ranked home feed
 await social.client.GET(
-  "/v1/communities/{communityId}/actors/{actorId}/feed",
-  { params: { path: { communityId, actorId } } },
+  "/v1/communities/{community_id}/actors/{actor_id}/feed",
+  { params: { path: { community_id: communityId, actor_id: actorId } } },
 );
 
 // Discover (community-wide ranked feed, not personalised to follows)
 await social.client.GET(
-  "/v1/communities/{communityId}/discover-feed",
-  { params: { path: { communityId } } },
+  "/v1/communities/{community_id}/discover-feed",
+  { params: { path: { community_id: communityId } } },
 );
 
 // React / unreact / bookmark / quote / repost — same shape, different paths
@@ -119,13 +137,13 @@ await social.client.GET(
 ```ts
 // Post a story (24h TTL)
 await social.client.POST(
-  "/v1/communities/{communityId}/stories",
+  "/v1/communities/{community_id}/stories",
   { params: { ... }, body: { media_url: "...", visibility: "close_friends" } },
 );
 
 // Story tray (the bubble row at the top of the home screen)
 await social.client.GET(
-  "/v1/communities/{communityId}/actors/{actorId}/story-tray",
+  "/v1/communities/{community_id}/actors/{actor_id}/story-tray",
   { ... },
 );
 ```
@@ -135,12 +153,12 @@ await social.client.GET(
 ```ts
 // Follow / unfollow
 await social.client.PUT(
-  "/v1/communities/{communityId}/follows/{srcActorId}/{dstActorId}",
+  "/v1/communities/{community_id}/follows/{src_actor_id}/{dst_actor_id}",
   { ... },
 );
 
 // Block / mute / restrict — same shape, different paths
-// Close friends, hashtag follows, muted terms — all under /actors/{actorId}/...
+// Close friends, hashtag follows, muted terms — all under /actors/{actor_id}/...
 ```
 
 ### Notifications
@@ -148,19 +166,19 @@ await social.client.PUT(
 ```ts
 // List
 await social.client.GET(
-  "/v1/communities/{communityId}/actors/{actorId}/notifications",
+  "/v1/communities/{community_id}/actors/{actor_id}/notifications",
   { ... },
 );
 
 // Unread count for the bell badge
 await social.client.GET(
-  "/v1/communities/{communityId}/actors/{actorId}/notifications/unread-count",
+  "/v1/communities/{community_id}/actors/{actor_id}/notifications/unread-count",
   { ... },
 );
 
 // Mark all read
 await social.client.POST(
-  "/v1/communities/{communityId}/actors/{actorId}/notifications/read-all",
+  "/v1/communities/{community_id}/actors/{actor_id}/notifications/read-all",
   { ... },
 );
 ```
@@ -170,13 +188,13 @@ await social.client.POST(
 ```ts
 // Start / open a conversation
 await social.client.POST(
-  "/v1/communities/{communityId}/conversations",
+  "/v1/communities/{community_id}/conversations",
   { params: { ... }, body: { members: ["act_a", "act_b"] } },
 );
 
 // Send a message
 await social.client.POST(
-  "/v1/communities/{communityId}/conversations/{conversationId}/messages",
+  "/v1/communities/{community_id}/conversations/{conversation_id}/messages",
   { ... },
 );
 ```
@@ -186,19 +204,19 @@ await social.client.POST(
 ```ts
 // List flags
 await social.client.GET(
-  "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/flags",
+  "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/flags",
   { ... },
 );
 
 // Act on a flag (resolve / dismiss / take action on the target)
 await social.client.POST(
-  "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/flags/{flagId}/actions",
+  "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/flags/{flag_id}/actions",
   { params: { ... }, body: { action: "remove_content", note: "..." } },
 );
 
 // Shadow-ban an actor
 await social.client.PUT(
-  "/v1/workspaces/{workspaceId}/communities/{communityId}/moderation/actors/{actorId}/shadow-ban",
+  "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/actors/{actor_id}/shadow-ban",
   { ... },
 );
 ```
