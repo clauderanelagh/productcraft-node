@@ -10081,105 +10081,6 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/actors/{actor_id}/highlights": {
-      "get": {
-        "description": "Pinned posts appear here regardless of their `expires_at`. Visibility still applies — pass `actor_id` to surface non-public pinned posts the requester is allowed to see. Without that param, only `public` pinned rows are returned (legacy-safe default). Cursor-paginated on `(created_at DESC, id DESC)`.",
-        "operationId": "StoryController_getHighlights",
-        "parameters": [
-          {
-            "description": "Community UUID.",
-            "in": "path",
-            "name": "community_id",
-            "required": true,
-            "schema": {
-              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Requester social actor UUID. Without it, only public pinned posts surface.",
-            "in": "query",
-            "name": "actor_id",
-            "required": false,
-            "schema": {
-              "format": "uuid",
-              "type": "string"
-            }
-          },
-          {
-            "description": "Items per page.",
-            "in": "query",
-            "name": "limit",
-            "required": false,
-            "schema": {
-              "default": 50,
-              "maximum": 200,
-              "minimum": 1,
-              "type": "integer"
-            }
-          },
-          {
-            "description": "Cursor from the prior page.",
-            "in": "query",
-            "name": "cursor",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "description": "Social actor UUID whose highlights to list.",
-            "in": "path",
-            "name": "actor_id",
-            "required": true,
-            "schema": {
-              "example": "aaaaaaaa-0000-0000-0000-000000000001"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HighlightsResponse"
-                }
-              }
-            },
-            "description": "Page of highlights."
-          },
-          "403": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "PAK lacks `social.list`."
-          },
-          "404": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponseDto"
-                }
-              }
-            },
-            "description": "Community or actor not found."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "List the actor's pinned posts (highlights).",
-        "tags": [
-          "social-stories"
-        ]
-      }
-    },
     "/v1/communities/{community_id}/actors/{actor_id}/insights": {
       "get": {
         "operationId": "InsightsController_actorInsights",
@@ -11697,10 +11598,10 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/actors/{actor_id}/tagged": {
+    "/v1/communities/{community_id}/actors/{owner_actor_id}/highlights": {
       "get": {
-        "description": "Approved tags only, on published + unexpired posts, newest-tag-first. Visibility- and block-aware: pass the viewer via `actor_id` to surface followers / close-friends posts they may read; without it only public posts appear. Pages may be short (post-visibility filtering) but never skip or duplicate.",
-        "operationId": "PostTagController_listTagged",
+        "description": "Pinned posts appear here regardless of their `expires_at`. Visibility still applies — pass `actor_id` to surface non-public pinned posts the requester is allowed to see. Without that param, only `public` pinned rows are returned (legacy-safe default). Cursor-paginated on `(created_at DESC, id DESC)`.",
+        "operationId": "StoryController_getHighlights",
         "parameters": [
           {
             "description": "Community UUID.",
@@ -11708,20 +11609,22 @@
             "name": "community_id",
             "required": true,
             "schema": {
+              "example": "cccccccc-cccc-cccc-cccc-cccccccccccc",
               "type": "string"
             }
           },
           {
-            "description": "Viewer actor UUID for visibility resolution.",
-            "in": "query",
-            "name": "actor_id",
-            "required": false,
+            "description": "Social actor UUID whose highlights to list.",
+            "in": "path",
+            "name": "owner_actor_id",
+            "required": true,
             "schema": {
-              "format": "uuid",
+              "example": "aaaaaaaa-0000-0000-0000-000000000001",
               "type": "string"
             }
           },
           {
+            "description": "Items per page.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -11733,6 +11636,7 @@
             }
           },
           {
+            "description": "Cursor from the prior page.",
             "in": "query",
             "name": "cursor",
             "required": false,
@@ -11741,22 +11645,14 @@
             }
           },
           {
-            "deprecated": true,
-            "description": "Deprecated alias for `actor_id`, kept working because this route never offered any other spelling. `actor_id` wins when both are sent. Will be removed in a future major.",
+            "description": "Requester social actor UUID. Without it, only public pinned posts surface.",
             "in": "query",
-            "name": "requester_id",
+            "name": "actor_id",
             "required": false,
             "schema": {
               "format": "uuid",
               "type": "string"
             }
-          },
-          {
-            "description": "The tagged actor UUID.",
-            "in": "path",
-            "name": "actor_id",
-            "required": true,
-            "schema": {}
           }
         ],
         "responses": {
@@ -11764,13 +11660,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TaggedPostsResponse"
+                  "$ref": "#/components/schemas/HighlightsResponse"
                 }
               }
             },
-            "description": "Page of tagged posts."
+            "description": "Page of highlights."
           },
-          "400": {
+          "403": {
             "content": {
               "application/json": {
                 "schema": {
@@ -11778,7 +11674,7 @@
                 }
               }
             },
-            "description": "`actor_id` / `requester_id` is not a UUID."
+            "description": "PAK lacks `social.list`."
           },
           "404": {
             "content": {
@@ -11796,9 +11692,9 @@
             "bearer": []
           }
         ],
-        "summary": "List posts an actor is tagged in.",
+        "summary": "List the actor's pinned posts (highlights).",
         "tags": [
-          "social-tags"
+          "social-stories"
         ]
       }
     },
@@ -11887,6 +11783,113 @@
         "summary": "Batched pairwise relationship lookup: does this actor follow / mute / block / restrict each of up to 100 others (and is it followed / blocked back)?",
         "tags": [
           "social-edges"
+        ]
+      }
+    },
+    "/v1/communities/{community_id}/actors/{tagged_actor_id}/tagged": {
+      "get": {
+        "description": "Approved tags only, on published + unexpired posts, newest-tag-first. Visibility- and block-aware: pass the viewer via `actor_id` to surface followers / close-friends posts they may read; without it only public posts appear. Pages may be short (post-visibility filtering) but never skip or duplicate.",
+        "operationId": "PostTagController_listTagged",
+        "parameters": [
+          {
+            "description": "Community UUID.",
+            "in": "path",
+            "name": "community_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The tagged actor UUID.",
+            "in": "path",
+            "name": "tagged_actor_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Viewer actor UUID for visibility resolution.",
+            "in": "query",
+            "name": "actor_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Deprecated alias for `actor_id`, kept working because this route never offered any other spelling. `actor_id` wins when both are sent. Will be removed in a future major.",
+            "in": "query",
+            "name": "requester_id",
+            "required": false,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaggedPostsResponse"
+                }
+              }
+            },
+            "description": "Page of tagged posts."
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`actor_id` / `requester_id` is not a UUID."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Community or actor not found."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List posts an actor is tagged in.",
+        "tags": [
+          "social-tags"
         ]
       }
     },
@@ -14087,7 +14090,7 @@
             "bearer": []
           }
         ],
-        "summary": "Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. Participant state (muted / muted_until / pinned) lives on PATCH /:id/members/:actor_id.",
+        "summary": "Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. Participant state (muted / muted_until / pinned) lives on PATCH /:id/members/:member_actor_id.",
         "tags": [
           "social-conversations"
         ]
@@ -14190,7 +14193,7 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/conversations/{conversation_id}/members/{actor_id}": {
+    "/v1/communities/{community_id}/conversations/{conversation_id}/members/{member_actor_id}": {
       "delete": {
         "operationId": "ConversationController_removeMember",
         "parameters": [
@@ -14214,6 +14217,15 @@
             }
           },
           {
+            "description": "Target participant — social actor UUID.",
+            "in": "path",
+            "name": "member_actor_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Acting actor UUID (equal to the target for self-leave).",
             "in": "query",
             "name": "actor_id",
@@ -14222,13 +14234,6 @@
               "example": "aaaaaaaa-0000-0000-0000-000000000001",
               "type": "string"
             }
-          },
-          {
-            "description": "Target participant — social actor UUID.",
-            "in": "path",
-            "name": "actor_id",
-            "required": true,
-            "schema": {}
           }
         ],
         "requestBody": {
@@ -14321,7 +14326,7 @@
           {
             "description": "Target participant — social actor UUID.",
             "in": "path",
-            "name": "actor_id",
+            "name": "member_actor_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -17267,7 +17272,7 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/lists/{list_id}/members/{actor_id}": {
+    "/v1/communities/{community_id}/lists/{list_id}/members/{member_actor_id}": {
       "delete": {
         "operationId": "ActorListController_removeMember",
         "parameters": [
@@ -17291,6 +17296,15 @@
             }
           },
           {
+            "description": "Member — social actor UUID.",
+            "in": "path",
+            "name": "member_actor_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "description": "Caller social actor UUID (must equal the list owner).",
             "in": "query",
             "name": "actor_id",
@@ -17299,13 +17313,6 @@
               "example": "aaaaaaaa-0000-0000-0000-000000000001",
               "type": "string"
             }
-          },
-          {
-            "description": "Member — social actor UUID.",
-            "in": "path",
-            "name": "actor_id",
-            "required": true,
-            "schema": {}
           }
         ],
         "requestBody": {
@@ -20168,7 +20175,7 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/posts/{post_id}/tags/{actor_id}/approve": {
+    "/v1/communities/{community_id}/posts/{post_id}/tags/{tagged_actor_id}/approve": {
       "post": {
         "description": "The tagged actor accepts being tagged; the tag flips `pending → approved` and the post starts surfacing on their `/tagged` listing. 403 if the acting actor is not the tagged actor. 409 if the tag was already removed.",
         "operationId": "PostTagController_approve",
@@ -20194,7 +20201,7 @@
           {
             "description": "Tagged actor UUID.",
             "in": "path",
-            "name": "actor_id",
+            "name": "tagged_actor_id",
             "required": true,
             "schema": {
               "type": "string"
@@ -20264,7 +20271,7 @@
         ]
       }
     },
-    "/v1/communities/{community_id}/posts/{post_id}/tags/{actor_id}/remove": {
+    "/v1/communities/{community_id}/posts/{post_id}/tags/{tagged_actor_id}/remove": {
       "post": {
         "description": "Flips the tag to `removed`. Removable by either the tagged actor or the post author (403 otherwise). Idempotent on an already-removed tag.",
         "operationId": "PostTagController_remove",
@@ -20290,7 +20297,7 @@
           {
             "description": "Tagged actor UUID.",
             "in": "path",
-            "name": "actor_id",
+            "name": "tagged_actor_id",
             "required": true,
             "schema": {
               "type": "string"
