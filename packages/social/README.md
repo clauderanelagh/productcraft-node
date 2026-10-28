@@ -78,7 +78,7 @@ await social.client.GET("/v1/communities/{community_id}/posts/{post_id}", {
 });
 ```
 
-A search-and-replace of the placeholders plus the `path` keys is the whole migration. Post `attributes` now read back with the keys exactly as you stored them (`imageUrl` stays `imageUrl`); before, the API returned them snake_cased.
+Where a route names a target actor next to the acting `actor_id`, the target got its own name: `posts/{post_id}/tags/{tagged_actor_id}/approve`, `actors/{tagged_actor_id}/tagged`, `actors/{owner_actor_id}/highlights`, `lists/{list_id}/members/{member_actor_id}`, `conversations/{conversation_id}/members/{member_actor_id}`. A search-and-replace of the placeholders plus the `path` keys is the whole migration. Post `attributes` now read back with the keys exactly as you stored them (`imageUrl` stays `imageUrl`); before, the API returned them snake_cased.
 
 ## Credentials from the environment
 
