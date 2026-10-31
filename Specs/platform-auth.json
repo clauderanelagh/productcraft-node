@@ -1283,13 +1283,19 @@
             ]
           },
           "statusCode": {
-            "description": "HTTP status code echoed in the body. Spelled `statusCode` (camelCase) in every ProductCraft API.",
+            "deprecated": true,
+            "description": "Deprecated alias of `status_code`, same value. Kept so existing clients keep working; read `status_code`. Error responses carry `Deprecation: true` while it is sent.",
+            "example": 403,
+            "type": "number"
+          },
+          "status_code": {
+            "description": "HTTP status code echoed in the body (`status_code`). `statusCode` carries the same value as a deprecated alias.",
             "example": 403,
             "type": "number"
           }
         },
         "required": [
-          "statusCode",
+          "status_code",
           "message",
           "code"
         ],
