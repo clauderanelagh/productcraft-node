@@ -1,5 +1,11 @@
 # @productcraft/trawl
 
+## 0.2.1
+
+### Patch Changes
+
+- fc081fa: Refresh trawl OpenAPI types from production.
+
 ## 0.2.0
 
 ### Minor Changes
