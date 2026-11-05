@@ -12,6 +12,15 @@ name: Release
 # One-time setup per package on npmjs.com:
 #   Package settings → Trusted publishers →
 #   GitHub Actions, clauderanelagh/productcraft-node, release.yml.
+#
+# Version Packages PRs get CI (task 001, 2026-11-06): with the SDK bot App
+# configured (repo variable SDK_BOT_APP_ID + secret SDK_BOT_PRIVATE_KEY) the
+# changesets action pushes with its installation token and CI starts through
+# the normal `pull_request` trigger. Until then it pushes with GITHUB_TOKEN,
+# whose pushes don't start CI that runs, so the last step dispatches ci.yml on
+# changeset-release/main. Publishing is unaffected either way: it stays npm
+# trusted publishing (OIDC, bound to this file name). Edit this file in place;
+# never rename or copy it.
 
 on:
   push:
@@ -28,10 +37,20 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
+      actions: write # dispatch ci.yml on the Version Packages branch (fallback)
     steps:
+      - name: Mint SDK bot App token
+        id: app-token
+        if: vars.SDK_BOT_APP_ID != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.SDK_BOT_APP_ID }}
+          private-key: ${{ secrets.SDK_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -55,6 +74,7 @@ jobs:
       - run: pnpm run test
 
       - name: Create release PR or publish
+        id: changesets
         uses: changesets/action@v1
         with:
           # `release` script builds packages then runs `changeset
@@ -65,7 +85,7 @@ jobs:
           commit: "chore(release): version packages"
           title: "chore(release): version packages"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           # Tokenless publish via npm trusted publishing (runner OIDC,
           # `id-token: write`). No NPM_TOKEN: when one was passed, the action
           # preferred it over OIDC. All nine packages (productcraft and
@@ -75,3 +95,11 @@ jobs:
           # "require 2FA and disallow tokens". A new package needs the same
           # one-time setup on npmjs.com before its first publish from here.
           NPM_CONFIG_PROVENANCE: "true"
+
+      - name: Run CI on the Version Packages branch (no App token)
+        if: steps.changesets.outputs.pullRequestNumber != '' && steps.app-token.outputs.token == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref changeset-release/main
+          echo "Dispatched CI on changeset-release/main for PR #${{ steps.changesets.outputs.pullRequestNumber }}"

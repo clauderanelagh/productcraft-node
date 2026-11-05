@@ -5,6 +5,13 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Bot branches (chore/refresh-specs from spec-refresh.yml, changeset-release/main
+  # from release.yml) are pushed with GITHUB_TOKEN unless the SDK bot App is
+  # configured. Those pushes don't trigger `pull_request` runs that execute
+  # (they sit in action_required), so the bot workflows dispatch this workflow
+  # on their branch explicitly. The run's checks land on the branch head commit,
+  # which is the PR head, so `gh pr checks` shows them.
+  workflow_dispatch:
 
 jobs:
   build-and-test:
