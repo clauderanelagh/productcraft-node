@@ -1,5 +1,11 @@
 # @productcraft/platform-auth
 
+## 0.1.1
+
+### Patch Changes
+
+- fc081fa: Refresh platform-auth OpenAPI types from production.
+
 ## 0.1.0
 
 ### Minor Changes

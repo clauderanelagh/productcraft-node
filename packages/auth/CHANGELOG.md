@@ -1,5 +1,11 @@
 # @productcraft/heimdall
 
+## 0.8.1
+
+### Patch Changes
+
+- fc081fa: Refresh auth OpenAPI types from production.
+
 ## 0.8.0
 
 ### Minor Changes
