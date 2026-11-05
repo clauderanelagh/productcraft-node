@@ -5,20 +5,52 @@ on:
     - cron: "30 4 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: spec-refresh
+  cancel-in-progress: false
+
+# How the refresh PR gets CI (task 001, 2026-11-06):
+#
+# Pushes and PRs made with GITHUB_TOKEN don't start workflows that run (the
+# PR's `pull_request` CI run sits in action_required), so the PR used to sit
+# with no checks (#95, 2026-10-25 .. 2026-11-06).
+#
+#   - Preferred: the SDK bot GitHub App. Set repo variable SDK_BOT_APP_ID and
+#     repo secret SDK_BOT_PRIVATE_KEY; the PR is then pushed with a
+#     short-lived installation token (1 h, minted per run, nothing to expire
+#     or rotate) and CI starts through the normal `pull_request` trigger.
+#     Not configured yet: creating the App needs a GitHub web sign-in as the
+#     repo owner.
+#   - Fallback (used until the App exists): push with GITHUB_TOKEN, then
+#     dispatch ci.yml on the PR branch (`workflow_dispatch` is an event that
+#     GITHUB_TOKEN is allowed to trigger). Its checks land on the PR head.
 jobs:
   refresh:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
+      actions: write # dispatch ci.yml on the PR branch (fallback path)
     steps:
+      - name: Mint SDK bot App token
+        id: app-token
+        if: vars.SDK_BOT_APP_ID != ''
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.SDK_BOT_APP_ID }}
+          private-key: ${{ secrets.SDK_BOT_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
+      # Fails the run (and opens no PR) when any API's /docs-json is
+      # unreachable or not an OpenAPI document; see the script header.
       - name: Fetch latest specs
         run: bash scripts/refresh-specs.sh
 
@@ -54,9 +86,11 @@ jobs:
           fi
 
       - name: Open PR
+        id: cpr
         if: steps.gen.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v6
         with:
+          token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           commit-message: "chore(specs): refresh from production"
           title: "chore(specs): nightly refresh — ${{ steps.gen.outputs.surfaces }}"
           body: |
@@ -70,11 +104,22 @@ jobs:
             The `productcraft` umbrella picks up a patch via
             `updateInternalDependencies` in `.changeset/config.json`.
 
+            Merge only on green CI.
+
             Specs refreshed from:
             - `https://api.platform-auth.productcraft.co/docs-json`
             - `https://api.auth.productcraft.co/docs-json`
             - `https://api.mail.productcraft.co/docs-json`
             - `https://social.productcraft.co/docs-json`
             - `https://api.waitlist.productcraft.co/docs-json`
+            - `https://api.trawl.productcraft.co/docs-json`
           branch: chore/refresh-specs
           delete-branch: true
+
+      - name: Run CI on the PR branch (no App token)
+        if: steps.cpr.outputs.pull-request-number != '' && steps.cpr.outputs.pull-request-operation != 'none' && steps.app-token.outputs.token == ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref chore/refresh-specs
+          echo "Dispatched CI on chore/refresh-specs for PR #${{ steps.cpr.outputs.pull-request-number }}"
