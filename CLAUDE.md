@@ -29,6 +29,10 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
    - `packages/<surface>/src/index.ts` — per-surface class (`Auth`, `Mail`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`auth.signin({ email, password })` instead of `auth.client.POST("/v1/...")`).
    - `packages/umbrella/src/index.ts` — `ProductCraft` umbrella class + re-exports.
 
+## The SDK standard (2026-11)
+
+Every package is being moved onto one generator and one shared runtime: see [`docs/sdk-standard.md`](docs/sdk-standard.md) for the target DX, naming rules (`x-pc-sdk`), runtime contract, versioning and the ordered tasks in `tasks/`. Where this file and the standard disagree, the standard wins. Task 003 rewrites the sections below once the generator lands.
+
 ## Where to make changes
 
 | If you want to … | Edit |
