@@ -1,6 +1,6 @@
 # The ProductCraft Node SDK standard
 
-Status: adopted 2026-11-05. Owner: the SDK maintainer (`clauderanelagh`). This document is the contract every `@productcraft/*` package is built to. The ordered work that gets us there lives in `tasks/` (this repo) and in `tasks/<app>/` in the monorepo; section 11 lists it.
+Status: adopted 2026-11-05, revised 2026-11-06 after two design reviews (section 13 records what changed and what was rejected). Owner: the SDK maintainer (`clauderanelagh`). This document is the contract every `@productcraft/*` package is built to. The ordered work that gets us there lives in `tasks/` (this repo) and in `tasks/<app>/` in the monorepo; section 11 lists it.
 
 ## 1. Why this exists
 
@@ -11,12 +11,14 @@ What we found (four read-only audits, 2026-11-05):
 - **Mail, Waitlist, Social, Trawl and Platform-auth never got past v0.** Each is `openapi-typescript` types plus a class that exposes `.client` (raw `openapi-fetch`). Callers write URL strings and unpack `{ data, error }`. The "ergonomic wrappers in v0.1+" promised in `CLAUDE.md` never shipped.
 - **Auth's good DX is mostly hand-written.** About 1,000 lines in `packages/auth/src/scopes/` sit over kubb functions named after controllers (`appControllerCloneApp`). They cover 62 to 73 of 224 operations. `client` is private, so the remaining two thirds of Auth are unreachable from the SDK.
 - **No package has** retries, timeouts, auto-pagination, automatic `Idempotency-Key`, typed error classes, request IDs, raw-response access or webhook verification.
-- **Spec and generator defects leak into types.** 67 free-form objects generate as `Record<string, never>`, which makes Mail's flagship `templates/{name}/send` untypeable. Fields with defaults become required (`--default-non-nullable`). Several README quick-starts do not compile.
+- **Spec and generator defects leak into types.** 67 free-form objects generate as `Record<string, never>`, which makes Mail's flagship `templates/{name}/send` untypeable. Several README quick-starts do not compile.
 - **The vendored specs are stale.** The nightly refresh PR (#95) has been open since 10-25 because bot pushes with `GITHUB_TOKEN` never trigger CI.
 
 ## 2. The target, by example
 
-The bar is the Stripe Node SDK: resources and verbs you can guess, everything typed, failures you can catch by class, and plumbing (retries, idempotency, pagination) you never write.
+The bar is the Stripe Node SDK (and Resend, Clerk and OpenAI where they do better): resources and verbs you can guess, everything typed, failures you can catch by class, and plumbing (retries, idempotency, pagination, polling, webhook verification) you never write.
+
+IDs in our APIs are UUIDs (only Auth's `tak_`/`tnt_` keys are prefixed); the examples use them as they are.
 
 ### 2.1 Constructing clients
 
@@ -24,59 +26,74 @@ The bar is the Stripe Node SDK: resources and verbs you can guess, everything ty
 import { ProductCraft } from "productcraft";
 
 // Umbrella: one key, every product. The key falls back to PRODUCTCRAFT_API_KEY.
-const pc = new ProductCraft({ apiKey: process.env.PRODUCTCRAFT_API_KEY, workspaceId: "ws_..." });
+const pc = new ProductCraft({ apiKey: process.env.PRODUCTCRAFT_API_KEY, workspaceId: "9b2f6c1e-…" });
 
 // Or one product at a time (smaller install, same API).
 import { Mail } from "@productcraft/mail";
-const mail = new Mail({ apiKey, workspaceId: "ws_...", maxRetries: 3, timeout: 20_000 });
+const mail = new Mail({ apiKey, workspaceId: "9b2f6c1e-…", maxRetries: 3, timeout: 20_000 });
 ```
 
 `apiKey` is the new shorthand. `auth: { type: "apiKey" | "bearer" | "cookie", ... }` (today's `PCAuth`) keeps working for bearer and cookie credentials.
 
-`workspaceId` is optional. When it is missing, the client resolves it once from `GET /v1/api-keys/self` on first use and caches it. Workspace keys are single-workspace, so this is unambiguous. It can also come from `PRODUCTCRAFT_WORKSPACE_ID`.
+`workspaceId` is optional for workspace API keys, and passing it is recommended. Without it the client resolves it once per process from platform-auth `GET /v1/api-keys/self` (its own 5 s timeout, cached as a shared promise, also read from `PRODUCTCRAFT_WORKSPACE_ID`). That costs one extra request to another host on a cold start; the README says so. Bearer and cookie credentials can span workspaces, so they never auto-resolve: a missing `workspaceId` throws `ConfigurationError("pass workspaceId")`, as does a failed lookup.
+
+A workspace key used in a browser throws unless `dangerouslyAllowBrowser: true` is set (the OpenAI pattern). Keyless routes (Waitlist public submit, Auth consumer routes) are browser-legitimate and need no key and no flag.
 
 ### 2.2 Per product
 
 ```ts
 // Mail
+await mail.emails.send({ from: "Acme <hi@mail.acme.com>", to: "success@simulator.amazonses.com", subject: "Hi", html: "<p>Hi</p>" });
 await mail.templates.send("welcome", { to: "ada@example.com", data: { first_name: "Ada" } });
-for await (const message of mail.messages.list({ status: ["bounced"] })) { … }
+for await (const message of mail.messages.list({ status: ["bounced"] })) { … }   // plain string literals
 const domain = await mail.domains.create({ name: "mail.example.com" });
 await mail.domains.verify(domain.id);
-// mail.emails.send({...}) arrives with the raw-send route (monorepo tasks/mail-api/002); the name is already reserved.
+const ready = await mail.domains.poll(domain.id, { timeoutMs: 600_000 });   // waits for a terminal status
+await mail.messages.erase({ recipient: "ada@example.com" });                  // bulk GDPR erase, not "delete one"
 
 // Waitlist
-const list = await waitlist.waitlists.create({ name: "Beta", slug: "beta" });
-for await (const entry of waitlist.waitlists.entries.list(list.id)) { … }
-await waitlist.public.entries.submit("acme", "beta", { email: "ada@example.com" });   // no key needed
+const list = await waitlist.lists.create({ name: "Beta", slug: "beta" });
+for await (const entry of waitlist.lists.entries.list(list.id)) { … }
+const pub = new Waitlist().public({ workspace: "acme", waitlist: "beta" });     // no key, browser-safe
+await pub.entries.create({ email: "ada@example.com" });
 
 // Trawl
-const job = await trawl.jobs.create({ description: "Pricing tiers", json_schema: schema, urls: ["https://…"] });
-const done = await trawl.jobs.retrieve(job.id);
+type Tiers = { tiers: { name: string; price: string }[] };
+const job = await trawl.jobs.createAndPoll<Tiers>({ description: "Pricing tiers", json_schema: schema, urls: ["https://…"] });
+job.result?.tiers[0].name;                                                     // typed by the generic
 await trawl.jobs.cancel(job.id);
 
-// Social: community-scoped resources hang off a bound scope, like auth.app(id)
-const community = social.community("com_...");
-const post = await community.posts.create({ actor_id, body: "Hello" });
-await community.posts.comments.create(post.id, { actor_id, body: "First!" });
-const page = await community.posts.list({ limit: 50 });     // one page, typed
-const all = await community.posts.list().toArray({ limit: 500 });
+// Social: community-scoped resources hang off a bound scope; .as(actorId) fills actor_id
+const community = social.community("3f0c…").as(actorId);
+const post = await community.posts.create({ body: "Hello" });
+await community.posts.comments.create(post.id, { body: "First!" });
+const page = await community.posts.list({ limit: 50 });                        // one page, typed
+const recent = await community.posts.list().toArray({ maxItems: 500 });
 
 // Platform
 const me = await platform.apiKeys.self();
 const ws = await platform.workspaces.retrieve("acme");
 
-// Auth: the names customers already use are kept (see section 7)
-const session = await auth.consumer("my-app").auth.signin({ email, password });
-const users = auth.app("app_...").endUsers.list({ limit: 100 });
+// Auth
+const session = await auth.consumer("my-app").signin({ email, password });     // 0.x `.auth.signin` kept as an alias
+const users = auth.admin.app("5d1e…").endUsers.list({ limit: 100 });           // admin scope named by audience
 for await (const u of users) { … }
-const claims = await auth.consumer("my-app").verifyToken(jwt);   // hand-written, stays
+const claims = await auth.verifyToken(jwt, { app: "my-app" });                  // top level; hand-written
+```
+
+Types are public and named like Stripe's, exported as a namespace per product:
+
+```ts
+import type { Mail, Trawl } from "productcraft";
+const params: Mail.DomainCreateParams = { name: "mail.example.com" };
+function show(d: Mail.Domain) { … }
+let j: Trawl.Job;
 ```
 
 ### 2.3 Cross-cutting behaviour
 
 ```ts
-// Per-request options: always the last argument.
+// Per-request options: always the last argument. A list with no params takes {} first.
 await mail.templates.send("welcome", body, {
   idempotencyKey: "order-1234-welcome",   // overrides the automatic key
   timeout: 5_000,
@@ -84,22 +101,31 @@ await mail.templates.send("welcome", body, {
   headers: { "X-Trace": "abc" },
   signal: controller.signal,
 });
+await mail.domains.list({}, { timeout: 5_000 });
 
-// Raw response when you need headers (rate limits, Idempotent-Replay).
-const { data, response, requestId } = await mail.domains.list().withResponse();
+// Request id on every returned object, no extra call needed.
+const d = await mail.domains.retrieve(id);
+d.lastResponse.requestId;                    // non-enumerable, never serialised
 
-// Errors are classes you can catch.
+// Raw response when you need headers.
+const { data, response, requestId, rateLimit } = await mail.domains.list().withResponse();
+
+// Errors are classes you can catch, across ESM/CJS and duplicate installs.
 try {
-  await trawl.jobs.retrieve("job_missing");
+  await trawl.jobs.retrieve("00000000-0000-0000-0000-000000000000");
 } catch (err) {
-  if (err instanceof NotFoundError) console.log(err.code, err.requestId);
+  if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
+  else if (err instanceof BadRequestError) err.errors.forEach(e => console.log(e.param, e.message));
   else if (err instanceof RateLimitError) console.log(err.retryAfter);
   else throw err;
 }
 
-// Webhooks: one verifier, typed events per product.
-const event = mail.webhooks.unwrap(rawBody, req.headers, process.env.MAIL_WEBHOOK_SECRET);
-if (event.type === "email.bounced") event.data.recipient;   // narrowed
+// Webhooks: one object-shaped verifier; secret from config or env; Node or Fetch headers.
+const event = await mail.webhooks.unwrap({ payload: rawBody, headers: req.headers });
+switch (event.type) {
+  case "email.bounced": event.data.recipient; break;   // narrowed
+  default: /* UnknownWebhookEvent: new types never break the switch */
+}
 
 // Escape hatch: unchanged, still typed, always available.
 const { data: raw } = await mail.client.GET("/v1/workspaces/{workspace_id}/messages", { params: { path: { workspace_id } } });
@@ -107,7 +133,7 @@ const { data: raw } = await mail.client.GET("/v1/workspaces/{workspace_id}/messa
 
 ## 3. Naming rules
 
-Names are decided **in the spec, by the API**, and both the SDK generator and the MCP server read them. The SDK never keeps its own rename table.
+Names are decided **in the spec, by the API**, and both the SDK generator and the MCP server read them. The SDK never keeps its own rename table (the one exception is the generated Auth compat file, section 6, deleted in 2.0).
 
 ### 3.1 The `x-pc-sdk` extension
 
@@ -117,11 +143,14 @@ Every operation in every public `/docs-json` carries:
 "x-pc-sdk": { "resource": "posts.comments", "method": "create", "bind": ["community_id"], "paginated": true }
 ```
 
-or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes.
+or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes. Optional keys: `poll` (on a retrieve op: `{ "field": "status", "terminal": ["completed", "failed", "cancelled"] }`, which generates `poll(id)` and, where a create exists, `createAndPoll`) and `public: true` (no auth header, browser-safe).
 
-- **It is computed, not hand-typed.** A shared monorepo helper (`libs/openapi-sdk-nestjs`, task monorepo/021) walks the Nest document after `SwaggerModule.createDocument` and derives the default name from the path with the rules below. A `@SdkMethod("contacts.properties", "list")` decorator overrides it where the default reads badly, and `@SdkExclude()` sets `false`.
+Component schemas carry `x-pc-sdk-model: "Domain"` (derived by stripping `ResponseDto`/`Dto`, overridable with `@SdkModel`). It is the public type name; Nest class names never reach users.
+
+- **It is computed, not hand-typed.** A shared monorepo helper (`libs/openapi-sdk-nestjs`, task monorepo/021) walks the Nest document after `SwaggerModule.createDocument` and derives defaults with the rules below. `@SdkMethod("contacts.properties", "list")` overrides where the default reads badly, `@SdkExclude()` sets `false`.
 - **operationIds are not renamed.** The MCP server's curation and send-guard key on them (`apps/mcp-server/src/tools/send-guard.service.ts`, `generator/curation.ts`). They stay as stable internal IDs.
-- **`libs/openapi-audit` enforces it.** Missing `x-pc-sdk`, a duplicate `resource.method` within one API, or a reserved word as a name fails the API's test suite.
+- **`libs/openapi-audit` enforces it.** Missing `x-pc-sdk`, a duplicate `resource.method` within one API, a reserved word, or a clash with a hand-written name (3.5) fails the API's test suite.
+- **Names are snapshotted on the API side.** openapi-audit writes `apps/<api>/sdk-names.snapshot.json` (`operationId` to `resource.method`, plus the model names). A route refactor that changes a public name fails the API's test until the snapshot is updated in the same PR, so renames are deliberate, not discovered by the nightly refresh after a hand deploy.
 
 ### 3.2 Default derivation (Stripe's rules, applied to our paths)
 
@@ -139,9 +168,14 @@ or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTM
 | `PUT /things` (singleton settings) | `update`; `GET` on a singleton is `retrieve` |
 | `POST /things/{id}/<verb>` | `<verb>` in camelCase (`cancel`, `verify`, `rotateSecret`) |
 | `POST /things/<verb>` (collection action) | `<verb>` (`bulkDelete`, `import`) |
+| `GET /things/<segment>` or `GET /things/{id}/<segment>` where `<segment>` is not a collection | a method named after the segment (`entries.count()`, `messages.timeline()`, `templates.variables(name)`, `domains.lookup()`, `messages.body(id)`, `messages.raw(id)`) |
+| `GET /things/export.csv`, `GET …/export` | `export` (returns a `Response`, section 4) |
+| `PATCH /things/{id}/<field>` | `update<Field>` on the parent (`waitlists/{id}/status` becomes `lists.updateStatus(id)`) |
+| `DELETE /things` (no id; bulk or filtered) | **no default.** The audit fails until `@SdkMethod` names it (`messages.erase({ recipient })`). |
 
-4. Verb vocabulary is closed: `list, create, retrieve, update, delete, search, send, cancel, verify` plus action verbs taken from the path. `remove`, `get`, `show`, `fire`, `getById`, `upsert` and `put` never appear as SDK methods.
+4. Verb vocabulary is closed: `list, create, retrieve, update, delete, search, send, cancel, verify, export, erase` plus action verbs taken from the path and segment methods from the rule above. `remove`, `get`, `show`, `fire`, `getById`, `upsert`, `put` and `submit` never appear as SDK methods.
 5. Collisions fail the build (generator and audit). The 2026-11-05 dry run found 4 collisions across 756 operations, each fixed with `@SdkMethod`.
+6. A resource may be renamed at the product root where the default stutters: Waitlist's `waitlists.*` becomes `lists.*` (`@SdkMethod`), Mail's call-level send is `emails.*` (section 9.8).
 
 ### 3.3 Scopes (`bind`)
 
@@ -149,41 +183,52 @@ or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTM
 
 | Parameter | How it is bound |
 |---|---|
-| `workspace_id` (Mail, Waitlist, Trawl, Platform stats) | client default (`workspaceId` option, environment, or `/v1/api-keys/self`); overridable per request via `options.workspaceId` |
-| `community_id` (Social) | `social.community(id)` returns a scope object |
-| `app_id` (Auth admin) | `auth.app(id)` |
+| `workspace_id` (Mail, Waitlist, Trawl, Platform stats) | client default (`workspaceId` option, environment, or `/v1/api-keys/self` for workspace keys, section 2.1); overridable per request via `options.workspaceId` (needed for bearer tokens that span workspaces) |
+| `community_id` (Social) | `social.community(id)` returns a scope object; `.as(actorId)` on it fills `actor_id` in any body or query that declares it, unless the call passes one |
+| `app_id` (Auth admin) | `auth.admin.app(id)` (`auth.app(id)` kept as an alias) |
 | `app_slug` (Auth consumer) | `auth.consumer(slug)`, falling back to `PRODUCTCRAFT_AUTH_APP` |
+| `workspace_slug` + `waitlist_slug` (Waitlist public) | `waitlist.public({ workspace, waitlist })`, named fields so the two slugs cannot be swapped |
 
 Platform-auth uses `{workspace_slug}` where products use `{workspace_id}`. That is not bound: platform calls take the slug positionally (`platform.workspaces.retrieve("acme")`). Platform-auth/021 documents it.
 
-### 3.4 TypeScript casing (decided)
+### 3.4 TypeScript casing and types (decided)
 
 - **Request and response fields stay snake_case, exactly as on the wire**, matching the docs, the curl tabs and the webhook payloads. No runtime re-casing. Stripe does the same.
-- **Positional path arguments and client options are camelCase** (`retrieve(jobId)`, `{ workspaceId, maxRetries }`).
+- **Positional path arguments, client options and type names are camelCase/PascalCase** (`retrieve(jobId)`, `{ workspaceId, maxRetries }`, `Mail.DomainCreateParams`).
+- **Enums are string-literal unions, never TS `enum`s.** Request enums are closed (`"bounced" | "delivered"`); response enums are open (`"bounced" | "delivered" | (string & {})`) so a new server value is not a type lie. Value arrays are exported as consts (`Mail.MessageStatus.values`). Webhook event unions end in `UnknownWebhookEvent`.
+- **Defaults:** a field with a `default` is optional in the request type and required in the response type. Response DTOs must declare `required` (openapi-audit rule, monorepo/021).
+- **Type names:** `<Model>` for response objects (from `x-pc-sdk-model`), `<Resource><Method>Params` for request params (`Mail.EmailListParams`), `<Resource><Method>Response` only where the response is not a model. A renamed or removed public type is a breaking change and shows in the API report diff (section 10).
 - Auth 0.x camelCased path and query parameters (`paramsCasing` in `kubb.config.ts`). Auth 1.0 drops that, so there is one casing rule across all packages. The migration guide lists the affected query fields.
+
+### 3.5 Names reserved by hand-written code
+
+Generated names must not use: `client`, `withResponse`, `asResponse`, `lastResponse`, `as`, `public`, `community`, `app`, `admin`, `consumer`, `verifyToken`, `poll`, `createAndPoll`, and `unwrap` inside a `webhooks` namespace. The generator and the audit fail on a clash.
 
 ## 4. The shared runtime contract (`@productcraft/core`)
 
-Written by hand once (about 400 lines). Every generated method calls `this._client.request(spec)`. Nothing per-endpoint lives here.
+Written by hand once. Every generated method calls `this._client.request(spec)`. Nothing per-endpoint lives here.
 
 | Concern | Behaviour |
 |---|---|
-| Transport | Global `fetch` (Node 18+, Bun, Deno, edge). `fetch` option for custom transports. No runtime dependencies besides `openapi-fetch`, which `.client` needs. |
-| Auth | `Authorization: Bearer <apiKey or token>`, or `Cookie: auth_token=`; environment fallback as today (`resolveAuth`). |
-| Return values | A method resolves to the parsed body (`data` directly; 204 resolves to `void`). Non-2xx throws. |
-| `APIPromise` | `.withResponse()` resolves to `{ data, response, requestId }`; `.asResponse()` resolves to the raw `Response`. |
-| Pagination | Ops marked `paginated` return `PagePromise<Item>`. `await` gives a `Page` (`data`, `has_more`, `next_cursor`, `hasNextPage()`, `getNextPage()`). `for await` iterates items across pages. `.toArray({ limit })` collects up to a hard cap (required, so nobody accidentally drains a 1M-row list). |
+| Runtimes | **Node 20.3+** (`engines: ">=20.3"` in every package; Node 18 is end-of-life and lacks `AbortSignal.any` and an unflagged global `crypto`), Bun, Deno, edge. CI smoke-tests the built `dist` on Node 20, 22 and 24. |
+| Transport | Global `fetch`; `fetch` option for custom transports (also the hook point for tracing). No runtime dependencies besides `openapi-fetch`, which `.client` needs. |
+| Auth | `Authorization: Bearer <apiKey or token>`, or `Cookie: auth_token=`; environment fallback as today (`resolveAuth`). Browser guard per section 2.1. |
+| Return values | A JSON method resolves to the parsed body; 204 resolves to `void`. Ops whose success content type is not JSON (CSV and zone exports, raw MIME, attachments, message bodies) resolve to the raw `Response` (`.text()`, `.arrayBuffer()`, `.body` stream); the generator reads the content type and never JSON-parses them. Non-2xx throws. Every returned object carries a non-enumerable `lastResponse: { requestId, status, headers }`. |
+| `APIPromise` | `.withResponse()` resolves to `{ data, response, requestId, rateLimit }` (`rateLimit` parsed from `X-RateLimit-*`); `.asResponse()` resolves to the raw `Response`. |
+| Pagination | Ops marked `paginated` return `PagePromise<Item>`. `await` gives a `Page` (`data`, `has_more`, `next_cursor`, `hasNextPage()`, `getNextPage()`). `for await` iterates items across pages; `.pages()` iterates pages. `.toArray({ maxItems })` collects up to a required cap (`limit` keeps meaning page size). |
+| Polling | Ops with `x-pc-sdk.poll` get `poll(id, { intervalMs = 2_000, timeoutMs = 300_000, signal })`, resolving when the field reaches a terminal value, plus `createAndPoll(params, pollOptions)` where a create exists. Polls respect `Retry-After`. |
 | Idempotency | When the spec declares an `Idempotency-Key` header on the op, the runtime generates `pc_<uuidv4>` once per call and reuses it on every retry. `options.idempotencyKey` overrides it. Ops without the declared header never get one (no needless CORS preflights on browser consumer routes). |
-| Retries | Default `maxRetries: 2`. Retried: network errors, 408, 409 with `code: "LOCK_TIMEOUT"`, 429, 500, 502, 503, 504. Not retried: POST or PATCH without an idempotency key (except connection errors raised before any byte was sent). Backoff: `min(8s, 0.5s * 2^n)` with full jitter. A `Retry-After` header (seconds or HTTP date) or `retry-after-ms` overrides the backoff when it is 60 s or less; above that we fail fast with `RateLimitError`. |
-| Timeouts | Default 60 s per attempt, `timeout` option on client and per request. Each attempt gets an `AbortSignal.any([userSignal, timeoutSignal])`. A timeout throws `APITimeoutError`; a caller abort throws `APIUserAbortError`. |
-| Errors | `ProductCraftError` is the base class. `APIError` adds `status`, `code` (the envelope's `code`), `message` (string; arrays are joined), `requestId` (`X-Request-Id` header, else the envelope's `request_id`), `headers` and `body`. Subclasses by status: `BadRequestError` 400, `AuthenticationError` 401, `PermissionDeniedError` 403, `NotFoundError` 404, `ConflictError` 409 (`IdempotencyKeyReuseError` when `code === "IDEMPOTENCY_KEY_REUSE"`), `UnprocessableEntityError` 422, `RateLimitError` 429 (`retryAfter`), `InternalServerError` 5xx. Plus `APIConnectionError`, `APITimeoutError`, `APIUserAbortError`. Each product re-exports them. `code` is typed as the API's open enum (`MailErrorCode \| (string & {})`). |
+| Retries | Default `maxRetries: 2`. Retried: network errors, 408, 409 with `code: "IDEMPOTENCY_IN_PROGRESS"`, 429, 500, 502, 503, 504. **A POST or PATCH without an idempotency key is never retried**, not even on connection errors (`fetch` cannot tell whether bytes were sent). GET, PUT and DELETE are. Backoff: `min(8s, 0.5s * 2^n)` with full jitter. A `Retry-After` header (seconds or HTTP date) or `retry-after-ms` overrides the backoff when it is 60 s or less; above that we fail fast with `RateLimitError`. |
+| Idempotency on the server | The SDK relies on monorepo/021's change: a request that finds the key locked returns `409 IDEMPOTENCY_IN_PROGRESS` with `Retry-After` instead of executing again. When Redis is unavailable the server still runs the request without idempotency (fail-open, a deliberate availability choice, documented in the README's idempotency section); a retry during a Redis outage can therefore execute twice. |
+| Timeouts | Default 60 s per attempt, `timeout` option on client and per request. Each attempt gets `AbortSignal.any([userSignal, timeoutSignal])`. Worst case with defaults is about 3 attempts x 60 s plus backoff (about 3 minutes); the README states it and shows `signal: AbortSignal.timeout(ms)` for an overall deadline. A timeout throws `APITimeoutError`; a caller abort throws `APIUserAbortError`. |
+| Errors | `ProductCraftError` is the base class. `APIError` adds `status`, `code` (the envelope's `code`), `message` (string; an array `message` is joined), `errors` (`{ param, message, code }[]` from the envelope's `details`, empty when absent), `docUrl` (`https://productcraft.co/docs/errors#<code>`), `requestId` (`X-Request-Id` header, else the envelope's `request_id`), `headers` and `body`. Subclasses by status: `BadRequestError` 400, `AuthenticationError` 401, `PermissionDeniedError` 403, `NotFoundError` 404, `ConflictError` 409 (`IdempotencyKeyReuseError` when `code === "IDEMPOTENCY_KEY_REUSE"`), `UnprocessableEntityError` 422, `RateLimitError` 429 (`retryAfter`), `InternalServerError` 5xx. Plus `APIConnectionError`, `APITimeoutError`, `APIUserAbortError`, `ConfigurationError`, `WebhookVerificationError`. `code` is typed as the API's open enum (`MailErrorCode \| (string & {})`). Every class is branded with `Symbol.for("productcraft.error.<Name>")` and a `static [Symbol.hasInstance]`, so `instanceof` works across the ESM and CJS builds and across duplicate copies of core. |
 | Per-request options | `{ idempotencyKey, timeout, maxRetries, headers, signal, workspaceId, fetch }`, always the last argument. |
 | Headers we send | `User-Agent: productcraft-node/<pkg>@<version> node/<ver>`, `X-PC-SDK-Retry-Count` on retries. |
-| Logging | `logLevel: "off" \| "warn" \| "debug"` (env `PRODUCTCRAFT_LOG`). Debug logs method, path, status, request id and attempt; never headers or bodies. |
-| Webhooks | `verifyWebhook({ payload, headers, secret, toleranceSeconds = 300 })`. It verifies Standard Webhooks (`webhook-id`, `webhook-timestamp`, `webhook-signature`, `whsec_` secrets, several `v1,` signatures for rotation) and the legacy `X-<Product>-Signature: t=…,v1=<hex>` scheme (still used by the Auth audit sink). It uses `crypto.subtle` (works on edge runtimes), compares in constant time, and throws `WebhookVerificationError`. |
+| Logging | `logLevel: "off" \| "warn" \| "debug"` (env `PRODUCTCRAFT_LOG`) and a `logger` option (`{ debug, info, warn, error }`, pino- and console-compatible). Debug logs method, path, status, request id and attempt; never headers or bodies. |
+| Webhooks | `verifyWebhook({ payload, headers, secret, toleranceSeconds = 300 })` and `<product>.webhooks.unwrap({ payload, headers, secret? })` share one object shape. `secret` is a string or an array (Mail has default, per-domain and endpoint secrets); when omitted it comes from the client's `webhookSecret` or `PRODUCTCRAFT_<PRODUCT>_WEBHOOK_SECRET`. `headers` accepts Node `IncomingHttpHeaders` or Fetch `Headers`. Verifies Standard Webhooks (`webhook-id`, `webhook-timestamp`, `webhook-signature`, `whsec_` secrets, several `v1,` signatures for rotation) and the legacy `X-<Product>-Signature: t=…,v1=<hex>` scheme (Auth audit sink). Uses `crypto.subtle`, compares in constant time, throws `WebhookVerificationError`. |
 | Escape hatch | `.client` stays on every product: `openapi-fetch` over the same `paths`, sharing auth and base URL but not retries. |
 
-**Bundle and module rules:** dual ESM + CJS via tsup, `sideEffects: false`, no class-field namespace instantiation at import time (resource classes are created lazily on first property access), no bare `require` (memory `feedback_tsup_esm_bare_require`). CI smoke-tests the built `dist` from a real ESM and a real CJS consumer. Size budget: core 6 KB gzip; Mail generated surface 12 KB gzip.
+**Bundle and module rules:** dual ESM + CJS via tsup, `sideEffects: false`, resource classes created lazily on first property access, no bare `require` (memory `feedback_tsup_esm_bare_require`). CI smoke-tests the built `dist` from a real ESM and a real CJS consumer, including one process that loads both builds and checks `instanceof`. Lazy getters keep startup cheap but do not make unused resources tree-shake (bundlers keep class members), so we do not claim per-method tree-shaking. **Size budget** is measured, not asserted: an esbuild bundle of a one-call consumer per package (for example `new Mail().templates.send(…)`), minified and gzipped, with the limit set from the first measurement plus 10% and enforced in CI.
 
 ## 5. Generator decision
 
@@ -193,119 +238,159 @@ Prototyped on the live Mail spec (scratch: `work/sdk-dx-2026-11/proto/`):
 
 | | Namespaces and verbs | Shared runtime | gzip, whole Mail | Deterministic | Verdict |
 |---|---|---|---|---|---|
-| **In-house** (about 200 lines of generator + about 400 lines of runtime) | nested from `x-pc-sdk` | ours, written once | 4.4 KB | yes | **chosen** |
+| **In-house** | nested from `x-pc-sdk` | ours, written once | 4.4 KB | yes | **chosen** |
 | hey-api 0.99 | nests by operationId | none; module-singleton client | 8.3 KB | yes | 0.x config churn; body wrapped as `sendTemplateDto`; class names `Segments2` shift as the spec grows |
 | kubb 4.37 | one level only | none | 3.3 KB | yes | deeper nesting needs a custom kubb plugin, which is more work than the in-house option |
 | Fern (OSS, Docker) | flattened, mis-cased (`dnsrecordsApply`) | yes | 18.3 KB | n/a | needs `x-fern-*` in our specs (lock-in); vendors about 1.7k lines of core per package; 4.8 GB Docker image |
 | OpenAPI Generator | one class per tag, `xxxRaw` | none | n/a | n/a | needs a JVM; not idiomatic TS |
 
+Realistic size: the prototype was about 200 lines of generator and 400 of runtime, without JSDoc, `api.md`, README regions, examples, the manifest, webhooks, polling, testing mocks and the snippet checker. Plan for 1,500 to 2,000 lines of generator plus templates, covered by golden tests.
+
 Reasons:
 
 1. **Our specs are uniform.** One pagination shape, one error envelope, one webhook scheme, one idempotency header. A generic generator spends its complexity on variety we do not have.
 2. **Naming comes from `x-pc-sdk`.** No off-the-shelf generator reads it without plugins, and the plugins cost more than the generator.
-3. **Runtime features (retries, idempotency, pagination, errors) belong in one hand-written core**, not in N copies of vendored code.
+3. **Runtime features belong in one hand-written core**, not in N copies of vendored code.
 4. **Types stay `openapi-typescript`**, which `.client` already uses. One type source means `.client` and the resource methods can never disagree.
 
 Generator rules:
 
-- Input: `Specs/<surface>.json` only. Output: `packages/<surface>/src/_generated/` (gitignored, like today), containing `paths.d.ts` (openapi-typescript run with `--default-non-nullable false --empty-objects-unknown --enum --export-type`), `resources.ts`, `types.ts` (named `Params`, `Response` and `Item` aliases plus named schemas), `webhooks.ts` (event union from `x-webhooks`), `errors.ts` (error code enum from `x-pc-error-codes`) and `manifest.json`.
-- **Deterministic:** sorted keys, no timestamps, no absolute paths. CI runs codegen twice and diffs, and runs it once more against the committed `Specs/` and fails on any diff in the committed `api.md` (section 8).
-- **Fails loudly:** a missing `x-pc-sdk`, a name collision, an unresolvable `$ref` or a `Record<string, never>` in a request body exits non-zero with the operation named.
-- JSDoc per method: summary, description, `@param` per path argument from parameter descriptions, `@throws` per documented error status, `@see` with the HTTP route and the docs URL, `@deprecated` from the spec.
+- Input: `Specs/<surface>.json` only. Output: `packages/<surface>/src/_generated/` (gitignored), containing `paths.d.ts` (openapi-typescript, literal unions, no `--enum`, `--enum-values`, `--empty-objects-unknown`, `--export-type`; request/response default handling per 3.4, post-processed where a flag cannot express it), `resources.ts`, `types.ts` (the product type namespace, 3.4), `webhooks.ts` (event union from `x-webhooks` plus `UnknownWebhookEvent`), `errors.ts` (error codes from `x-pc-error-codes`), `testing.ts` (section 8) and `manifest.json`.
+- **Toolchain pinned exactly** (`openapi-typescript`, `openapi-fetch`, tsup, typescript): a Renovate bump is its own PR whose API report diff shows any type change. This overrides the old CLAUDE.md "don't pin" rule.
+- **Deterministic:** sorted keys, no timestamps, no absolute paths. CI runs codegen twice and diffs, and fails on any diff in the committed `api.md`, README region or examples.
+- **Fails loudly:** a missing `x-pc-sdk`, a name collision, a reserved-name clash, an unresolvable `$ref` or a `Record<string, never>` in a request body exits non-zero with the operation named. The generator runs only on packages already switched to it; unswitched packages keep the old `openapi-typescript` path, so there is no soft mode.
+- JSDoc per method: summary, description, `@param` per path argument, `@throws` per documented error status, `@see` with the HTTP route and the docs URL, `@deprecated` from the spec, and an `@example` with the call shape (including `list({}, { timeout })` for options-only calls).
 
 ## 6. What stays hand-written, and why
 
+Hand-written code is limited to an allowlist (`scripts/handwritten-allowlist.json`). CI fails when a file under `packages/*/src` is neither generated nor on the list, and when a per-package `index.ts` exceeds 60 lines.
+
 | Hand-written | Why the generator cannot do it |
 |---|---|
-| `packages/core/src/**` (runtime, errors, pagination, webhooks verify) | Shared behaviour, not per endpoint. |
+| `packages/core/src/**` (runtime, errors, pagination, polling, webhooks verify) | Shared behaviour, not per endpoint. |
 | `scripts/gen-sdk.mjs` and its templates | The generator itself. |
-| Per-package `src/index.ts`: about 30 lines that import the generated root resource, set the default base URL and bind scopes | Product identity (class name, base URL, scope accessors). |
+| Per-package `src/index.ts` (max 60 lines): imports the generated root resource, sets the default base URL, binds scopes | Product identity (class name, base URL, scope accessors). |
 | Auth `verifyToken` (JWKS cache, issuer and audience pinning, refresh-token refusal, the JWT error hierarchy), passkey ceremony helpers (`passkeys.enroll/signIn/stepUp/completeMfaChallenge`), `oauth.clientCredentials` convenience, `auth-passport` | Client-side cryptography and browser ceremonies that are not HTTP calls. |
-| Auth compat aliases (`auth.sendVerificationEmail`, `me.getProfile`, …) | A short generated-from-table alias file kept for one major so existing callers do not break (section 7). |
+| Auth compat data: `packages/auth/compat.json` (frozen map of 0.6.x and 0.8.0 names to operationIds) | Data, not code: `compat.ts` is generated from it. Kept for the life of Auth 1.x, deleted in 2.0. |
 | `umbrella/src/index.ts` | Composes the products. |
 
-Everything else (every method, param type, JSDoc, README reference section and example) is generated. Adding an endpoint is a monorepo change plus a spec refresh, with zero SDK edits.
+Everything else (every method, param type, JSDoc, README reference section, example and test mock) is generated. Adding an endpoint is a monorepo change plus a spec refresh, with zero SDK edits.
 
-## 7. Versioning and migration
+## 7. Versioning and releases
 
-- **Majors where behaviour changes:** methods now throw instead of returning `{ data, error }`, and Auth's casing changes.
+There is **no program-wide changesets pre mode**: pre mode applies to the whole repo, and it would hold every spec-refresh patch and 0.x fix back on `next` for weeks. Each package ships stable when its task's live smoke passes.
 
-| Package | Now | Target | Breaking for |
-|---|---|---|---|
-| `@productcraft/core` | 0.3.0 | 1.0.0 | Direct importers of `makeClient` (kept, deprecated) |
-| `@productcraft/mail`, `waitlist`, `trawl`, `platform-auth` | 0.2.0 / 0.2.0 / 0.2.0 / 0.1.0 | 1.0.0 | Nobody using `.client` (kept); new surface is additive |
-| `@productcraft/social` | 1.0.0 | 2.0.0 | Same; major because 1.x was already declared stable |
-| `@productcraft/auth` | 0.8.0 | 1.0.0 | Query and path casing; `getProfile`/`signup` now typed; `AuthHttpError` becomes an alias of `APIError` |
-| `@productcraft/auth-passport` | 0.3.0 | 1.0.0 | Peer range moves to auth ^1 |
-| `productcraft` | 0.3.0 | 1.0.0 | `apiKey` shorthand added; `overrides` kept |
+| Package | Now | Target | When | Breaking for |
+|---|---|---|---|---|
+| `@productcraft/core` | 0.3.0 | 0.4.0, then 1.0.0 | 002; 012 | Nobody (`makeClient` kept, deprecated); engines move to Node 20.3 |
+| `@productcraft/trawl`, `mail`, `waitlist`, `platform-auth` | 0.2.0 / 0.2.0 / 0.2.0 / 0.1.0 | 1.0.0 | 004 to 007, each on its own | Nobody using `.client` (kept); the new surface is additive. 1.0 declares the surface stable. |
+| `@productcraft/social` | 1.0.0 | 1.1.0 | 008 | Nobody: resource methods are additive and `.client` is unchanged |
+| `@productcraft/auth` | 0.8.0 | 1.0.0 (previews as `next` snapshots) | 009 previews; 012 stable | Query and path casing; `consumer.auth.*` flattened (aliased); `AuthHttpError` becomes an alias of `APIError` |
+| `@productcraft/auth-passport` | 0.3.0 | 1.0.0 | 012 | Peer range moves to auth ^1 |
+| `productcraft` | 0.3.0 | 0.4.0, then 1.0.0 | 010; 012 | `apiKey` shorthand added; `overrides` kept |
 
-- **Pre-release channel:** while the program runs, `main` is in changesets pre mode (`pnpm changeset pre enter next`). Each package task publishes `x.0.0-next.N` under the `next` dist-tag through `release.yml` (trusted publishing, as always). Consumers migrate and verify against `next`. The release task exits pre mode and publishes stable.
+The engines change to Node 20.3 ships inside these releases (Node 18 and 20 are end-of-life; the changeset text says so).
+
+- **Auth previews** use changesets snapshot releases (`changeset version --snapshot next`, `changeset publish --tag next`) through a `workflow_dispatch` input on `release.yml` itself, because the npm trusted publisher is bound to that filename. Added in 009.
 - **Compatibility guarantees for 1.x:**
   - `.client` stays on every product, typed by the same `paths`.
-  - Auth keeps every scope method name and error class name that exists in 0.8.0. Where the generated name differs (`me.getProfile` versus `me.retrieve`), the old name is an alias tagged `@deprecated`, kept for the life of 1.x and removed in 2.0.
+  - Auth keeps every scope method and error class name that exists in 0.8.0 and the 0.6.x names conquer-api and WriteWave call. Where the generated name differs (`me.getProfile` versus `me.retrieve`, `consumer(slug).auth.signin` versus `consumer(slug).signin`), the old name is a generated alias tagged `@deprecated`, removed in 2.0.
   - Package names never change (the console's install line hard-codes them).
-- **After 1.0:** a spec refresh that only adds operations or optional fields is a minor; removing or renaming anything in the spec is a major, and the spec-refresh job labels it as such (it diffs `manifest.json`).
-- **Migration guides:** `docs/migrations/<package>-<from>-to-<to>.md`, written per major in the package's task, with a before/after table of every call shape in our own docs and consumers. Linked from the changeset text and the generated README.
+- **After 1.0:** a spec refresh that only adds operations or optional fields is a minor. Spec-refresh labels a PR `breaking` when `oasdiff breaking` on `Specs/` or the API report diff (section 10) finds a break; `manifest.json` diffs alone miss type-level breaks.
+- **/v1 is additive-only:** response shapes under `/v1` only gain fields and enum values (the open enums in 3.4 absorb that). Written into the monorepo API conventions by monorepo/021. There is no `apiVersion` pin because there is nothing to pin to.
+- **Migration guides:** `docs/migrations/<package>-<from>-to-<to>.md`, written per major in the package's task, with a before/after table of every call shape in our own docs and consumers. Old-version blocks use a ` ```ts before ` fence, which the snippet check skips. Linked from the changeset text and the generated README.
 
 ## 8. Docs generation
 
-Generated per package on every codegen, checked in, and CI-verified:
+Generated per package on every codegen (task 003 builds all of it), checked in, and CI-verified:
 
-- `packages/<p>/api.md`: the full reference. One section per resource, with every method, its signature, route, description and the param and response type names (Stripe's `api.md` pattern).
-- `packages/<p>/README.md`: a hand-written intro block (install, construct, three headline calls), then the generated sections: resource index, pagination, errors, retries, idempotency, webhooks, raw response and the `.client` escape hatch. The generator only owns the region between the `<!-- generated:start -->` and `<!-- generated:end -->` markers.
-- `examples/<p>/*.ts`: one runnable example per resource, built from spec `example` values. CI typechecks every code block in every README, `api.md` and example against the built packages (`scripts/check-snippets.mjs`), so a README that does not compile fails CI.
-- `manifest.json` (shipped in the npm package): `operationId` mapped to `{ resource, method, signature, snippet }`. The productcraft.co API-reference renderer reads it to show a "Node" tab per operation next to curl, so the website reference stays generated too (monorepo productcraft-co/227).
+- `packages/<p>/api.md`: the full reference. One section per resource, every method with signature, route, description and the param and response type names, plus the error-code catalogue from `x-pc-error-codes`.
+- `packages/<p>/README.md`: a hand-written intro block (install, construct, three headline calls), then generated sections: resource index, pagination, errors, retries and the worst-case timeout, idempotency (including the Redis fail-open note), polling, webhooks with raw-body recipes for Next route handlers, Express (`express.raw`) and Hono, raw responses, testing, and the `.client` escape hatch. The generator owns only the region between `<!-- generated:start -->` and `<!-- generated:end -->`.
+- `examples/<p>/*.ts`: one runnable example per resource, built from spec `example` values. `scripts/check-snippets.mjs` typechecks every code block in every README, `api.md`, example and `docs/` file against the built packages (` ```ts before ` blocks and this standard's illustrative examples excluded).
+- `@productcraft/<p>/testing`: a generated `createMockFetch()` that answers every operation with its spec `example` (overridable per op), so "how do I unit-test code that sends mail" has a one-line answer. No MSW dependency.
+- `manifest.json` (shipped in the npm package from the first generated release): `operationId` mapped to `{ resource, method, signature, snippet }`. The productcraft.co API reference reads it to show a "Node" tab per operation next to curl, starting with Trawl (monorepo productcraft-co/227) and growing per product.
 
-## 9. API-side requirements (the spec work that comes first)
+## 9. API-side requirements (the spec work)
 
-The SDK can only be as good as the spec. These land in the monorepo before the generator depends on them (section 11, steps 1 to 7):
+The SDK can only be as good as the spec. These land in the monorepo, each before the SDK task that depends on it (section 11):
 
-1. `x-pc-sdk` on every operation (naming, scope binding, pagination, exclusions).
-2. `X-Request-Id` echoed on every response (taken from the request if present, otherwise generated) and `request_id` in every error envelope; one shared `ErrorResponseDto` with `message: string`; error codes as an open enum plus per-response `x-pc-error-codes`.
-3. `Idempotency-Key` declared exactly where `IdempotencyInterceptor` honours it, and honoured on every create-type POST.
+1. `x-pc-sdk` on every operation and `x-pc-sdk-model` on every response schema, with the names snapshot (3.1).
+2. `X-Request-Id` echoed on every response (taken from the request if it is a sane token, otherwise generated). The error envelope gains `request_id` and `details: { param, message, code }[]`; **`message` keeps its current wire shape** (`string | string[]`, declared as such in one shared `ErrorResponseDto`) so non-SDK clients do not break. Error codes as an open enum plus per-response `x-pc-error-codes`.
+3. `Idempotency-Key` declared exactly where `IdempotencyInterceptor` honours it, and honoured on every create-type POST. That needs per-API scope extractors (the default extractor 400s on routes without `workspaceId`: Auth `app_id`, Social `community_id`, anonymous and consumer routes), a contract test that sends a key to every op declaring the header and asserts no 400, and a lock-wait timeout that returns `409 IDEMPOTENCY_IN_PROGRESS` with `Retry-After` instead of executing the handler again (today `libs/idempotency-nestjs` re-executes uncached after 5 s).
 4. 429 with `Retry-After` and `X-RateLimit-*` documented on every operation (Mail's `documentRateLimits` moved into a lib).
-5. Free-form objects declared `additionalProperties: true` (or typed properly); `type: integer` on `limit`; discriminators on `oneOf` results; `format: uuid` and `format: date-time` where applicable.
+5. Free-form objects declared `additionalProperties: true` (or typed properly); `type: integer` on `limit`; discriminators on `oneOf` results; `format: uuid` and `format: date-time` where applicable; `required` on response DTOs; non-JSON responses declared with their real content type.
 6. Webhook event payloads as named schemas, an `x-webhooks` map and a `WebhookEventType` enum, generated from `defineCatalogue`.
-7. `.addServer()` and tag descriptions on every API; the Social mis-attached decorators (`post.controller.ts:415-421`) fixed; Platform's `oneOf [envelope, array]` API-key list reduced to the envelope on a versioned path.
+7. `.addServer()` and tag descriptions on every API; the Social mis-attached decorators (`post.controller.ts:415-421`) fixed; Platform's `oneOf [envelope, array]` API-key list reduced to the envelope.
+8. Mail: the Resend-shaped raw send (`POST /emails`, monorepo mail-api/002) ships before the Mail SDK, so `mail.emails.send` is in 1.0. Nouns: `emails` is the call-level resource (send, batch, list, retrieve, metrics); `messages` is the per-recipient delivery log (list, retrieve, timeline, body, erase).
+9. `x-pc-sdk.poll` on Trawl job retrieve and Mail domain retrieve; `public: true` on Waitlist public routes.
 
 ## 10. CI
 
-- `ci.yml`: install, refresh-free codegen, determinism check (codegen twice, diff), lint, build, unit tests, a runtime contract test suite against a local mock server (retries, Retry-After, idempotency key reuse, pagination, timeouts, error mapping, webhooks vectors), ESM and CJS smoke against `dist`, snippet typecheck, and a size budget.
-- `spec-refresh.yml`: pushes with a GitHub App token (or a fine-grained PAT) so CI actually runs on its PRs; opens one PR with a changeset per changed surface, labelled `breaking` when `manifest.json` lost or renamed anything.
-- `release.yml`: unchanged trust model (OIDC trusted publishing, `npm@11`), plus pre-mode support for `next`.
+- `ci.yml`: install, refresh-free codegen, determinism check (codegen twice, diff), lint, build, unit tests, a generated test that calls every operation with its spec `example` against a mock fetch and asserts method, path, query, bound params and Idempotency-Key presence, the runtime contract suite against a local mock server, ESM and CJS smoke of `dist` on Node 20, 22 and 24 (one process loading both builds), snippet typecheck, the hand-written allowlist check, the size budget, and a committed public API report per package (`api-extractor`, `packages/<p>/api-report.md`) diffed on every PR.
+- `spec-refresh.yml`: pushes with a GitHub App token (or a fine-grained PAT) so CI runs on its PRs; one changeset per changed surface; labelled `breaking` when `oasdiff breaking` or the API report diff finds a break.
+- `release.yml`: unchanged trust model (OIDC trusted publishing, `npm@11`). The changesets action uses the same App token so Version Packages PRs get CI too. A `workflow_dispatch` snapshot input publishes Auth previews under `next`.
+- Live smokes (`scripts/live/<p>.mjs`) prefix every resource `sdk-smoke-<ts>`, start by deleting stale prefixed resources (a killed session never runs `finally`), stay at 5 req/s or less, send mail only to the SES simulator, and never change workspace settings, services, keys or policies.
 
 ## 11. Build order
 
-Spec fixes first, each deployed and the spec refreshed; then the runtime; then the generator; then one task per product; then the umbrella, docs, consumers and releases.
-
 | # | Repo | Task |
 |---|---|---|
-| 1 | monorepo | `tasks/monorepo/020-request-id-and-shared-error-envelope.md` |
-| 2 | monorepo | `tasks/monorepo/021-openapi-sdk-conventions-lib.md` (`x-pc-sdk`, rate-limit and uuid helpers, audit rules) |
-| 3 | monorepo | `tasks/monorepo/022-typed-webhook-event-schemas.md` |
-| 4 | monorepo | `tasks/trawl-api/005-sdk-grade-openapi.md` (smallest API, proves the libs) |
-| 5 | monorepo | `tasks/mail-api/063-sdk-grade-openapi.md` |
-| 6 | monorepo | `tasks/waitlist-api/008-sdk-grade-openapi.md` |
-| 7 | monorepo | `tasks/platform-auth-api/021-sdk-grade-openapi.md` |
-| 8 | monorepo | `tasks/social-api/045-sdk-grade-openapi.md` |
-| 9 | monorepo | `tasks/users-api/096-sdk-grade-openapi.md` |
-| 10 | sdk-node | `tasks/001-spec-refresh-runs-ci.md` (can start in parallel with 1) |
-| 11 | sdk-node | `tasks/002-core-runtime.md` |
-| 12 | sdk-node | `tasks/003-generator-pipeline.md` |
-| 13 | sdk-node | `tasks/004-trawl-generated.md` |
-| 14 | sdk-node | `tasks/005-mail-generated.md` |
-| 15 | sdk-node | `tasks/006-waitlist-generated.md` |
-| 16 | sdk-node | `tasks/007-platform-auth-generated.md` |
-| 17 | sdk-node | `tasks/008-social-generated.md` |
-| 18 | sdk-node | `tasks/009-auth-on-the-pipeline.md` |
-| 19 | sdk-node | `tasks/010-umbrella.md` |
-| 20 | sdk-node | `tasks/011-generated-docs-and-reference.md` |
-| 21 | monorepo | `tasks/console/086-sdk-quickstarts-on-generated-sdks.md` |
-| 22 | monorepo | `tasks/productcraft-co/227-docs-on-generated-sdks.md` |
-| 23 | sdk-node | `tasks/012-stable-release.md` |
+| 1 | monorepo | `tasks/console/085-social-quickstart-community-id.md` (fix now, independent) |
+| 2 | sdk-node | `tasks/001-spec-refresh-runs-ci.md` (start now) |
+| 3 | monorepo | `tasks/monorepo/020-request-id-and-shared-error-envelope.md` |
+| 4 | monorepo | `tasks/monorepo/021-openapi-sdk-conventions-lib.md` (`x-pc-sdk`, names snapshot, idempotency in-progress, audit rules) |
+| 5 | sdk-node | `tasks/002-core-runtime.md` (needs only 001; may run alongside 3 and 4) |
+| 6 | sdk-node | `tasks/003-generator-pipeline.md` (fixture spec; does not wait for any deployed spec) |
+| 7 | monorepo | `tasks/monorepo/022-typed-webhook-event-schemas.md` |
+| 8 | monorepo | `tasks/trawl-api/005-sdk-grade-openapi.md` |
+| 9 | sdk-node | `tasks/004-trawl-generated.md` (trawl 1.0.0 stable) |
+| 10 | monorepo | `tasks/productcraft-co/227-docs-on-generated-sdks.md` (Node tab from the manifest, Trawl docs, errors catalogue, testing page) |
+| 11 | monorepo | `tasks/mail-api/002-raw-send-api.md` |
+| 12 | monorepo | `tasks/mail-api/063-sdk-grade-openapi.md` |
+| 13 | sdk-node | `tasks/005-mail-generated.md` (mail 1.0.0) |
+| 14 | monorepo | `tasks/waitlist-api/008-sdk-grade-openapi.md` |
+| 15 | sdk-node | `tasks/006-waitlist-generated.md` (waitlist 1.0.0) |
+| 16 | monorepo | `tasks/platform-auth-api/021-sdk-grade-openapi.md` |
+| 17 | sdk-node | `tasks/007-platform-auth-generated.md` (platform-auth 1.0.0) |
+| 18 | monorepo | `tasks/social-api/045-sdk-grade-openapi.md` |
+| 19 | sdk-node | `tasks/008-social-generated.md` (social 1.1.0) |
+| 20 | monorepo | `tasks/users-api/096-sdk-grade-openapi.md` |
+| 21 | sdk-node | `tasks/009-auth-on-the-pipeline.md` (auth 1.0 previews under `next`) |
+| 22 | sdk-node | `tasks/010-umbrella.md` |
+| 23 | monorepo | `tasks/console/086-sdk-quickstarts-on-generated-sdks.md` |
+| 24 | monorepo | `tasks/productcraft-co/228-docs-remaining-products.md` (Mail, Waitlist, Platform, Social, Auth pages; Workbench; changelog) |
+| 25 | sdk-node | `tasks/012-stable-release.md` (auth, auth-passport, core, umbrella 1.0.0; root README) |
 
-Fix now, outside the order: `tasks/console/085-social-quickstart-community-id.md`. The console's Social quickstart does not compile against social 1.0.0.
+The former task 011 (generated docs) is folded into 003 (the generator emits every doc artefact), 004 (`files`/`npm pack` checks on the first generated package) and 012 (root README). Docs on productcraft.co follow each product instead of waiting for the end: 227 lands right after Trawl, and 228 is split into one checklist item per product that can be done as soon as that product's SDK release is on npm (its row in the table marks the last one, Auth).
 
-Not filed: conquer-services, WriteWave and dispute.markets do not have to change. `.client`, the Auth scope names and the error class names all survive, and their pins (`^0.6.0`, `^1.0.0`) will not pull a major. Moving them to the new surface is optional follow-up work, listed in each migration guide.
+**Consumers (corrected facts, 2026-11-06):** conquer-services pins `@productcraft/auth ^0.6.0`, `auth-passport ^0.2.2`, `platform-auth ^0.0.12`, `social ^0.7.0` (pnpm catalog); WriteWave `apps/api` pins auth `^0.6.0`, auth-passport `^0.2.2`, mail `^0.1.1`, social `^0.7.0`; dispute.markets has no `@productcraft` dependency; productcraft-co pins `@productcraft/trawl 0.2.0` and `productcraft 0.3.1` exactly. conquer and WriteWave are already several breaking lines behind and **stay on their current versions** until someone upgrades them; this program files no tasks in those repos. The Auth compat file covers the 0.6.x names they call, so an upgrade is a version bump plus the migration guide's casing table.
 
 `monorepo/tasks/mail-api/020-sdk-and-cli-parity.md` is superseded for its Node part by this program. Its Python, Go and CLI parts stay open and should reuse `x-pc-sdk` and `manifest.json`.
+
+## 12. Deferred (not in this program)
+
+- Auth framework helpers (`@productcraft/auth/next` middleware, Express and Hono middleware next to auth-passport) and a separate `/browser` entry: post-1.0 minors once the generated surface is stable.
+- Zod input for Trawl typed results (`jobs.create({ schema: zodSchema })`): the generic `createAndPoll<T>` ships now; zod support would add a peer dependency.
+
+## 13. Decision log
+
+2026-11-06, two design reviews of e39c9ec. Accepted unless listed below; the accepted points are folded into the sections above.
+
+Accepted (summary): Node 20.3 engines + CI matrix; literal unions and open response enums, unknown webhook event; request/response default split; public type names from `x-pc-sdk-model`; naming rules for GET sub-paths, exports, `PATCH …/<field>` and id-less DELETE; reserved hand-written names; non-JSON responses return `Response`; no retry of POST/PATCH without a key; Mail raw send in the build order and the `emails`/`messages` split; `ConfigurationError` and per-process cache for workspace resolution; UUID examples; `errors[]` and `docUrl`; flattened Auth consumer scope, `auth.admin.app`, top-level `verifyToken`; `social.community(id).as(actorId)`; poll helpers and typed Trawl results; one object-shaped webhook verifier with config/env and array secrets and raw-body recipes; `waitlist.public({ workspace, waitlist })`, keyless constructor, `dangerouslyAllowBrowser`; `waitlist.lists`; docs per product instead of at the end, plus a testing page; `lastResponse` and `rateLimit`; `logger` option; generated `/testing` mocks; `maxItems` and `.pages()`; options-only call shape; documented worst-case timeout; additive-only /v1; no program-wide pre mode (stable per product, social 1.1.0, Auth snapshots); `IDEMPOTENCY_IN_PROGRESS` instead of re-execution, Redis fail-open documented; per-API idempotency scope extractors and contract test; no wire change to `message`; `Symbol.for` error branding; exact toolchain pins, API reports, `oasdiff`; API-side names snapshot; hand-written allowlist and generated compat; measured size budget and realistic generator size; ` ```ts before ` fences; corrected consumer facts and 0.6.x compat coverage; per-op generated test; `sdk-smoke-` sweep and no settings mutations; App token for Version Packages PRs; 002/003 decoupled from the spec tasks.
+
+Rejected or changed:
+
+- **Key-scoped routes without `{workspace_id}`, or a workspace id embedded in the key format:** rejected for this program. Both change every product's routing or the key format (security-sensitive, invalidates issued keys); the resolved-once lookup with a clear `ConfigurationError` and the "pass workspaceId" advice covers the cost.
+- **Dropping the per-request `workspaceId` option:** rejected. Bearer tokens (platform users) span workspaces and need it.
+- **Prefixed IDs (`ws_`, `com_`):** rejected. About 400 `format: uuid` fields across six databases; the examples now show UUIDs instead of promising prefixes.
+- **One noun for all outbound mail:** changed. `emails` (calls) and `messages` (per-recipient deliveries) are different granularities in mail-api/002's storage model; metrics move under `emails`.
+- **`mail.domains.waitForVerification`:** changed to the generic `domains.poll(id)` so every product polls the same way.
+- **`waitlist.public("acme", "beta")` positional:** changed to named `{ workspace, waitlist }` so the slugs cannot be swapped.
+- **`on('request' | 'response')` hooks:** rejected. The `fetch` option already intercepts every request (tracing libraries wrap it); `logger` covers logging.
+- **MSW handlers:** changed to a dependency-free generated `createMockFetch()`.
+- **`{ id, deleted: true }` from deletes:** rejected. Our APIs return 204 by convention; the SDK would have to invent a body.
+- **An overall `deadline` option:** rejected. `signal: AbortSignal.timeout(ms)` already gives one; the worst case is documented.
+- **`apiVersion` pin:** rejected. There is one version per API; the additive-only /v1 rule and open enums are the compatibility mechanism.
+- **Generator soft mode for missing `x-pc-sdk`:** rejected. The generator only runs on switched packages, so unblocking 002 and 003 needs no soft mode.
+- **Upgrade tasks in conquer-services and WriteWave:** not filed. They stay on their pins (stated in section 11); compat covers their names when they upgrade.
+- **Framework helpers and zod input:** deferred (section 12).
