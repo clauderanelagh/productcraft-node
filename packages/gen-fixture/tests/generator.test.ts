@@ -43,6 +43,15 @@ describe("example variable names", () => {
     expect(exampleVar("default", "Result")).toBe("defaultResult");
     expect(exampleVar("domain")).toBe("domain");
   });
+
+  it("never shadows the client variable in an example (Waitlist's Waitlist model)", async () => {
+    // @ts-expect-error plain ESM script without type declarations
+    const { resultVar } = await import("../../../scripts/gen-sdk/emit-code.mjs");
+    expect(resultVar("waitlist", "waitlist", "lists")).toBe("list");
+    expect(resultVar("waitlist", "waitlist", "waitlists")).toBe("waitlistResult");
+    expect(resultVar("domain", "mail", "domains")).toBe("domain");
+    expect(resultVar("import", "mail", "contacts.imports", "Item")).toBe("importItem");
+  });
 });
 
 describe("golden output", () => {

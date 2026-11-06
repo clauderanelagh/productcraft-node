@@ -30,6 +30,12 @@ export const run = () => pc.request({ method: "POST", path: "/v1/workspaces/{wor
 const mail = new Mail({ apiKey: "pcft_live_x", workspaceId: "ws" });
 export const run = () => mail.emails.send({ from: "a@b.c", to: "d@e.f", subject: "s", html: "<p>x</p>" });`,
   },
+  "@productcraft/waitlist": {
+    dir: "packages/waitlist",
+    code: `import { Waitlist } from "@productcraft/waitlist";
+const form = new Waitlist().public({ workspace: "acme", waitlist: "beta" });
+export const run = () => form.entries.create({ email: "a@b.c", name: "Ada" });`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

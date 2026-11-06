@@ -52,10 +52,10 @@ const ready = await mail.domains.poll(domain.id, { timeoutMs: 600_000 });   // w
 await mail.messages.erase({ recipient: "ada@example.com" });                  // bulk GDPR erase, not "delete one"
 
 // Waitlist
-const list = await waitlist.lists.create({ name: "Beta", slug: "beta" });
+const list = await waitlist.lists.create({ display_name: "Beta", slug: "beta" });
 for await (const entry of waitlist.lists.entries.list(list.id)) { … }
 const pub = new Waitlist().public({ workspace: "acme", waitlist: "beta" });     // no key, browser-safe
-await pub.entries.create({ email: "ada@example.com" });
+await pub.entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
 
 // Trawl
 type Tiers = { tiers: { name: string; price: string }[] };
@@ -373,6 +373,13 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 - Zod input for Trawl typed results (`jobs.create({ schema: zodSchema })`): the generic `createAndPoll<T>` ships now; zod support would add a peer dependency.
 
 ## 13. Decision log
+
+2026-11-06, task 006 (Waitlist 1.0) as built:
+
+- **Field names follow the spec, not the task sketch.** The task's call sites used `lists.create({ name })` and a public submit with only `email`; the API's wire fields are `display_name` (create) and a required `name` (public submit), so the acceptance and section 2.2 use those. No API change: renaming a stable wire field is not worth a 1.0.
+- **The public submit carries an `Idempotency-Key`**, because the spec declares the header on it (a retried signup must not sign the person up twice). The API's CORS preflight allows `content-type,idempotency-key` from any origin, checked live, so browser forms work; the public reads send none.
+- **Simulator signups are test entries.** waitlist-api stores `…@simulator.amazonses.com` signups with `is_test: true` and a negative position, left out of counts and exports unless `include_test: true`. The live smoke asserts both sides.
+- **Example variables never shadow the client variable:** the `Waitlist` model would read `const waitlist = await waitlist.lists.create(…)`; the generator falls back to the resource's singular (`list`), then a `Result` suffix (`resultVar` in `emit-code.mjs`, unit-tested).
 
 2026-11-06, task 005 (Mail 1.0) as built:
 
