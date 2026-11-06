@@ -1,5 +1,15 @@
 # productcraft
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies [ca7418e]
+- Updated dependencies [ca7418e]
+- Updated dependencies [2514c25]
+  - @productcraft/trawl@1.0.3
+  - @productcraft/waitlist@1.0.0
+
 ## 0.3.5
 
 ### Patch Changes
