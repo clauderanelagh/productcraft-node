@@ -8,6 +8,60 @@
           "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
           "type": "string"
         }
+      },
+      "Retry-After": {
+        "description": "Seconds to wait before retrying. Sent on every 429.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "Retry-After-long": {
+        "description": "Seconds to wait, when the per-minute IP limit tripped.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "Retry-After-short": {
+        "description": "Seconds to wait, when the per-second IP limit tripped.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Limit-long": {
+        "description": "Requests allowed per minute from this client IP (600).",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Limit-short": {
+        "description": "Requests allowed per second from this client IP (20).",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining-long": {
+        "description": "Requests left in the current one-minute window.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Remaining-short": {
+        "description": "Requests left in the current one-second window.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset-long": {
+        "description": "Seconds until the one-minute window resets.",
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "X-RateLimit-Reset-short": {
+        "description": "Seconds until the one-second window resets.",
+        "schema": {
+          "type": "integer"
+        }
       }
     },
     "schemas": {
@@ -90,6 +144,7 @@
       "CreateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A label for people.",
             "example": "Production receiver",
             "maxLength": 200,
             "nullable": true,
@@ -132,6 +187,7 @@
       "CreditLedgerEntryDto": {
         "properties": {
           "created_at": {
+            "description": "When the entry was recorded.",
             "format": "date-time",
             "type": "string"
           },
@@ -141,6 +197,7 @@
             "type": "number"
           },
           "id": {
+            "description": "The entry's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -163,7 +220,8 @@
           "job_id",
           "created_at"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "CreditLedgerEntry"
       },
       "CreditsResponseDto": {
         "properties": {
@@ -196,7 +254,8 @@
           "low_balance_threshold_steps",
           "entries"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "Credits"
       },
       "ErrorParamDto": {
         "properties": {
@@ -295,9 +354,11 @@
       "JobListPaginationDto": {
         "properties": {
           "has_more": {
+            "description": "Whether another page follows.",
             "type": "boolean"
           },
           "next_cursor": {
+            "description": "Pass as `cursor` to get the next page; null on the last page.",
             "nullable": true,
             "type": "string"
           }
@@ -306,49 +367,68 @@
           "next_cursor",
           "has_more"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "JobListPagination"
       },
       "JobListResponseDto": {
         "properties": {
           "data": {
+            "description": "The jobs, newest first.",
             "items": {
               "$ref": "#/components/schemas/JobResponseDto"
             },
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/JobListPaginationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JobListPaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
           }
         },
         "required": [
           "data",
           "pagination"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "JobList"
       },
       "JobResponseDto": {
         "properties": {
           "attempts": {
-            "type": "number"
+            "description": "How many times a worker has picked the job up.",
+            "type": "integer"
           },
           "completed_at": {
+            "description": "When it ended; null until then.",
+            "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "created_at": {
+            "description": "When the job was created.",
+            "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "Natural-language description of what to extract.",
             "type": "string"
           },
           "enqueued_at": {
+            "description": "When the job was queued.",
+            "format": "date-time",
             "type": "string"
           },
           "error": {
+            "description": "Why the job failed; null unless `status` is `failed`.",
             "nullable": true,
             "type": "string"
           },
           "id": {
+            "description": "The job's id.",
+            "format": "uuid",
             "type": "string"
           },
           "json_schema": {
@@ -357,9 +437,11 @@
             "type": "object"
           },
           "max_steps": {
-            "type": "number"
+            "description": "Maximum number of agent steps (one LLM call each) before the job stops.",
+            "type": "integer"
           },
           "model_tier": {
+            "description": "Model tier the worker uses (e.g. `standard`, `pro`).",
             "type": "string"
           },
           "result": {
@@ -369,20 +451,21 @@
             "type": "object"
           },
           "started_at": {
+            "description": "When a worker started it; null while queued.",
+            "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "status": {
-            "enum": [
-              "queued",
-              "running",
-              "succeeded",
-              "failed",
-              "cancelled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JobStatus"
+              }
             ],
-            "type": "string"
+            "description": "`queued` until a worker picks it up, then `running`; it ends `succeeded` (the result is in `result`), `failed` (see `error`) or `cancelled`."
           },
           "suggested_urls": {
+            "description": "Seed URLs the worker starts from; null when none were given.",
             "items": {
               "type": "string"
             },
@@ -390,13 +473,18 @@
             "type": "array"
           },
           "timeout_s": {
-            "type": "number"
+            "description": "Wall-clock timeout for the job, in seconds.",
+            "type": "integer"
           },
           "webhook_id": {
+            "description": "The webhook endpoint named at creation to notify when the job ends; null when none.",
+            "format": "uuid",
             "nullable": true,
             "type": "string"
           },
           "workspace_id": {
+            "description": "The workspace that owns the job.",
+            "format": "uuid",
             "type": "string"
           }
         },
@@ -419,11 +507,23 @@
           "completed_at",
           "created_at"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "Job"
+      },
+      "JobStatus": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "type": "string"
       },
       "ListWebhookEndpointsResponseDto": {
         "properties": {
           "data": {
+            "description": "The endpoints, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEndpointDto"
             },
@@ -442,11 +542,13 @@
           "data",
           "pagination"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "ListWebhookEndpoints"
       },
       "ListWebhookEventTypesResponseDto": {
         "properties": {
           "data": {
+            "description": "Every event type this product sends.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventTypeDto"
             },
@@ -456,25 +558,33 @@
         "required": [
           "data"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "ListWebhookEventTypes"
       },
       "ListWebhookEventsResponseDto": {
         "properties": {
           "data": {
+            "description": "The events, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventDto"
             },
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/WebhookPaginationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
           }
         },
         "required": [
           "data",
           "pagination"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "ListWebhookEvents"
       },
       "ReplayWebhookEventResponseDto": {
         "properties": {
@@ -486,6 +596,7 @@
             "type": "array"
           },
           "event_id": {
+            "description": "The replayed event (the same id as the original).",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           }
@@ -494,7 +605,8 @@
           "event_id",
           "attempts"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "ReplayWebhookEvent"
       },
       "RotateWebhookSecretDto": {
         "properties": {
@@ -525,6 +637,20 @@
           "event_type"
         ],
         "type": "object"
+      },
+      "StatsGranularity": {
+        "enum": [
+          "day"
+        ],
+        "type": "string"
+      },
+      "StatsWindow": {
+        "enum": [
+          "1d",
+          "7d",
+          "30d"
+        ],
+        "type": "string"
       },
       "TrawlErrorCode": {
         "anyOf": [
@@ -561,6 +687,7 @@
               "ACTIONS_NOT_GRANTABLE",
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
+              "IDEMPOTENCY_IN_PROGRESS",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
@@ -585,6 +712,7 @@
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
           "GONE": "The resource existed but has been removed for good.",
+          "IDEMPOTENCY_IN_PROGRESS": "A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response.",
           "IDEMPOTENCY_KEY_REQUIRED": "This operation requires an `Idempotency-Key` header.",
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
           "INTERNAL_SERVER_ERROR": "An unexpected server error. Retrying is safe for idempotent requests; quote `request_id` to support.",
@@ -649,25 +777,34 @@
           "failed",
           "steps_used"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "TrawlStatsInWindow"
+      },
+      "TrawlStatsMetric": {
+        "enum": [
+          "jobs"
+        ],
+        "type": "string"
       },
       "TrawlStatsSeriesDto": {
         "properties": {
           "granularity": {
-            "description": "Bucket width.",
-            "enum": [
-              "day"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatsGranularity"
+              }
             ],
-            "example": "day",
-            "type": "string"
+            "description": "Bucket width.",
+            "example": "day"
           },
           "metric": {
-            "description": "Jobs created per UTC day in the workspace, in any status.",
-            "enum": [
-              "jobs"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TrawlStatsMetric"
+              }
             ],
-            "example": "jobs",
-            "type": "string"
+            "description": "Jobs created per UTC day in the workspace, in any status.",
+            "example": "jobs"
           },
           "points": {
             "description": "Dense and zero-filled: one point per UTC day in the window, oldest first, ending today.",
@@ -682,7 +819,8 @@
           "granularity",
           "points"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "TrawlStatsSeries"
       },
       "TrawlStatsSeriesPointDto": {
         "properties": {
@@ -702,7 +840,8 @@
           "date",
           "value"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "TrawlStatsSeriesPoint"
       },
       "TrawlStatsTotalsDto": {
         "properties": {
@@ -721,7 +860,8 @@
           "jobs",
           "balance_steps"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "TrawlStatsTotals"
       },
       "TrawlWorkspaceStatsDto": {
         "properties": {
@@ -763,14 +903,13 @@
             "description": "All-time counts and the credit balance."
           },
           "window": {
-            "description": "Window the counts cover.",
-            "enum": [
-              "1d",
-              "7d",
-              "30d"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/StatsWindow"
+              }
             ],
-            "example": "30d",
-            "type": "string"
+            "description": "Window the counts cover.",
+            "example": "30d"
           }
         },
         "required": [
@@ -781,7 +920,8 @@
           "in_window",
           "series"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "TrawlWorkspaceStats"
       },
       "UpdateWebhookDto": {
         "properties": {
@@ -799,6 +939,7 @@
       "UpdateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A new label; null clears it.",
             "maxLength": 200,
             "nullable": true,
             "type": "string"
@@ -820,6 +961,7 @@
             "type": "array"
           },
           "url": {
+            "description": "A new absolute https:// URL on a public host.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "maxLength": 2048,
@@ -827,6 +969,14 @@
           }
         },
         "type": "object"
+      },
+      "WebhookAttemptTrigger": {
+        "enum": [
+          "automatic",
+          "replay",
+          "test"
+        ],
+        "type": "string"
       },
       "WebhookCreateResponseDto": {
         "properties": {
@@ -906,32 +1056,39 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the attempt was made.",
             "format": "date-time",
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint it was delivered to.",
             "format": "uuid",
             "type": "string"
           },
           "error_message": {
+            "description": "Why the attempt failed when no 2xx came back; null on success.",
             "example": "request timed out",
             "nullable": true,
             "type": "string"
           },
           "event_id": {
+            "description": "The event that was delivered.",
             "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           },
           "event_type": {
+            "description": "The event's type.",
             "example": "user.created",
             "type": "string"
           },
           "id": {
+            "description": "The attempt's id.",
             "format": "uuid",
             "type": "string"
           },
           "latency_ms": {
+            "description": "Milliseconds until the response; null when none came back.",
             "nullable": true,
             "type": "number"
           },
@@ -950,13 +1107,12 @@
             "type": "boolean"
           },
           "trigger": {
-            "description": "`automatic` (first delivery or a retry), `replay` or `test`.",
-            "enum": [
-              "automatic",
-              "replay",
-              "test"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookAttemptTrigger"
+              }
             ],
-            "type": "string"
+            "description": "`automatic` (first delivery or a retry), `replay` or `test`."
           },
           "url": {
             "description": "Where it was sent.",
@@ -979,7 +1135,8 @@
           "latency_ms",
           "attempted_at"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookDeliveryAttempt"
       },
       "WebhookDeliveryListResponseDto": {
         "properties": {
@@ -1064,6 +1221,13 @@
         ],
         "type": "object"
       },
+      "WebhookEndpointDisabledReason": {
+        "enum": [
+          "manual",
+          "failing"
+        ],
+        "type": "string"
+      },
       "WebhookEndpointDto": {
         "properties": {
           "consecutive_failures": {
@@ -1071,26 +1235,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "enabled": {
             "description": "The on/off switch (`PATCH … { enabled }`).",
@@ -1111,6 +1279,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -1143,19 +1312,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -1181,7 +1351,16 @@
           "created_at",
           "updated_at"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEndpoint"
+      },
+      "WebhookEndpointStatus": {
+        "enum": [
+          "enabled",
+          "disabled",
+          "auto_disabled"
+        ],
+        "type": "string"
       },
       "WebhookEndpointWithSecretDto": {
         "properties": {
@@ -1190,26 +1369,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "enabled": {
             "description": "The on/off switch (`PATCH … { enabled }`).",
@@ -1230,6 +1413,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -1267,19 +1451,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -1306,7 +1491,8 @@
           "updated_at",
           "signing_secret"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEndpointWithSecret"
       },
       "WebhookEventDeliveryDto": {
         "properties": {
@@ -1315,10 +1501,12 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the latest attempt was made.",
             "format": "date-time",
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint.",
             "format": "uuid",
             "type": "string"
           },
@@ -1329,6 +1517,7 @@
             "type": "string"
           },
           "status_code": {
+            "description": "HTTP status of the latest attempt; null when no response came back.",
             "nullable": true,
             "type": "number"
           },
@@ -1345,7 +1534,8 @@
           "attempted_at",
           "next_attempt_at"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEventDelivery"
       },
       "WebhookEventDetailDto": {
         "properties": {
@@ -1357,6 +1547,7 @@
             "type": "array"
           },
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -1379,27 +1570,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "job.succeeded",
-              "job.failed",
-              "credits.low"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "job.succeeded",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "job.succeeded"
           }
         },
         "required": [
@@ -1412,11 +1601,13 @@
           "deliveries",
           "attempts"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEventDetail"
       },
       "WebhookEventDto": {
         "properties": {
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -1439,27 +1630,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "job.succeeded",
-              "job.failed",
-              "credits.low"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "job.succeeded",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "job.succeeded"
           }
         },
         "required": [
@@ -1471,7 +1660,25 @@
           "payload",
           "deliveries"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEvent"
+      },
+      "WebhookEventStatus": {
+        "enum": [
+          "pending",
+          "delivered",
+          "failed",
+          "not_sent"
+        ],
+        "type": "string"
+      },
+      "WebhookEventType": {
+        "enum": [
+          "job.succeeded",
+          "job.failed",
+          "credits.low"
+        ],
+        "type": "string"
       },
       "WebhookEventTypeDto": {
         "properties": {
@@ -1481,6 +1688,7 @@
             "type": "string"
           },
           "description": {
+            "description": "When this event is sent.",
             "example": "A user signed up or was created by an admin.",
             "type": "string"
           },
@@ -1490,13 +1698,13 @@
             "type": "object"
           },
           "type": {
-            "enum": [
-              "job.succeeded",
-              "job.failed",
-              "credits.low"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "job.succeeded",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "job.succeeded"
           }
         },
         "required": [
@@ -1505,7 +1713,8 @@
           "category",
           "example"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEventTypeInfo"
       },
       "WebhookListPaginationDto": {
         "properties": {
@@ -1557,7 +1766,8 @@
           "next_cursor",
           "has_more"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookPagination"
       },
       "WebhookResponseDto": {
         "properties": {
@@ -1665,7 +1875,7 @@
   },
   "info": {
     "contact": {},
-    "description": "Trawl service for the ProductCraft platform",
+    "description": "AI web extraction for the ProductCraft platform: submit a URL and a JSON Schema, get back structured JSON. Jobs run asynchronously; poll the job or subscribe a webhook endpoint for its result.\n\n## Rate limits\n\nEvery `/v1` route is limited per client IP to 20 requests per second and 600 per minute. Each response carries `X-RateLimit-Limit-short`, `X-RateLimit-Remaining-short`, `X-RateLimit-Reset-short` (the one-second window) and the same three with `-long` (the one-minute window). Over either limit the response is `429` with code `RATE_LIMITED` and a `Retry-After` header in seconds.",
     "title": "Trawl API",
     "version": "0.1.0"
   },
@@ -1676,10 +1886,12 @@
         "operationId": "CreditsController_get",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -1707,6 +1919,24 @@
             },
             "description": "Balance, low-balance state and recent entries.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -1747,6 +1977,33 @@
             "x-pc-error-codes": [
               "FORBIDDEN"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -1757,7 +2014,15 @@
         "summary": "Remaining Trawl steps for this workspace, whether the balance is low, and recent ledger entries",
         "tags": [
           "credits"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "credits"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/jobs": {
@@ -1765,10 +2030,12 @@
         "operationId": "JobController_list",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -1778,14 +2045,7 @@
             "name": "status",
             "required": false,
             "schema": {
-              "enum": [
-                "queued",
-                "running",
-                "succeeded",
-                "failed",
-                "cancelled"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/JobStatus"
             }
           },
           {
@@ -1798,6 +2058,7 @@
             }
           },
           {
+            "description": "Page size.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -1805,7 +2066,7 @@
               "default": 20,
               "maximum": 100,
               "minimum": 1,
-              "type": "number"
+              "type": "integer"
             }
           }
         ],
@@ -1820,6 +2081,24 @@
             },
             "description": "Page of jobs with pagination cursor.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -1842,6 +2121,33 @@
             "x-pc-error-codes": [
               "FORBIDDEN"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -1852,16 +2158,26 @@
         "summary": "List trawl jobs (paginated, newest first)",
         "tags": [
           "jobs"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "jobs"
+        }
       },
       "post": {
         "operationId": "JobController_create",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -1896,6 +2212,33 @@
             },
             "description": "Job created and queued.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -1938,6 +2281,32 @@
               "FORBIDDEN"
             ]
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
           "429": {
             "content": {
               "application/json": {
@@ -1946,8 +2315,17 @@
                 }
               }
             },
-            "description": "Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish.",
+            "description": "Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
             "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -1966,7 +2344,15 @@
         "summary": "Create (enqueue) a trawl job",
         "tags": [
           "jobs"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "create",
+          "paginated": false,
+          "resource": "jobs"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/jobs/{id}": {
@@ -1974,18 +2360,22 @@
         "operationId": "JobController_get",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the job.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -2001,6 +2391,24 @@
             },
             "description": "Job row.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2023,6 +2431,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2033,7 +2468,23 @@
         "summary": "Get a single trawl job",
         "tags": [
           "jobs"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "poll": {
+            "field": "status",
+            "terminal": [
+              "succeeded",
+              "failed",
+              "cancelled"
+            ]
+          },
+          "resource": "jobs"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/jobs/{id}/cancel": {
@@ -2041,18 +2492,22 @@
         "operationId": "JobController_cancel",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the job.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -2068,6 +2523,24 @@
             },
             "description": "Job cancelled.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2108,6 +2581,33 @@
             "x-pc-error-codes": [
               "UNPROCESSABLE_ENTITY"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2118,7 +2618,15 @@
         "summary": "Cancel a queued or running trawl job",
         "tags": [
           "jobs"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "cancel",
+          "paginated": false,
+          "resource": "jobs"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/stats": {
@@ -2142,14 +2650,7 @@
             "name": "window",
             "required": false,
             "schema": {
-              "default": "30d",
-              "enum": [
-                "1d",
-                "7d",
-                "30d"
-              ],
-              "example": "30d",
-              "type": "string"
+              "$ref": "#/components/schemas/StatsWindow"
             }
           }
         ],
@@ -2164,6 +2665,24 @@
             },
             "description": "Trawl stats.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2224,6 +2743,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2234,7 +2780,15 @@
         "summary": "Trawl stats for a workspace",
         "tags": [
           "stats"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "stats"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks": {
@@ -2244,10 +2798,12 @@
         "operationId": "WebhookController_list",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -2284,6 +2840,24 @@
             },
             "description": "Page of webhooks with a pagination cursor.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2307,6 +2881,33 @@
               "BAD_REQUEST",
               "VALIDATION_ERROR"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2317,7 +2918,8 @@
         "summary": "List webhooks for the workspace (paginated, newest first, secrets masked)",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       },
       "post": {
         "deprecated": true,
@@ -2325,10 +2927,12 @@
         "operationId": "WebhookController_create",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -2363,6 +2967,33 @@
             },
             "description": "Webhook created. Includes plaintext `signing_secret` exactly once.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2395,14 +3026,49 @@
                 }
               }
             },
-            "description": "The workspace already has 10 webhooks.",
+            "description": "The workspace already has 10 webhooks. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "CONFLICT"
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
             ]
           }
         },
@@ -2414,7 +3080,8 @@
         "summary": "Create a workspace webhook. The response includes the signing secret in clear EXACTLY ONCE — copy it now.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
@@ -2423,10 +3090,12 @@
         "operationId": "WebhooksController_trawl_workspace_listEndpoints",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -2442,6 +3111,24 @@
             },
             "description": "",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2502,6 +3189,33 @@
               "FORBIDDEN",
               "SERVICE_NOT_ENABLED"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2512,17 +3226,27 @@
         "summary": "List webhook endpoints, oldest first.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "webhooks.endpoints"
+        }
       },
       "post": {
         "description": "Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-timestamp` and `webhook-signature` (`v1,<base64 HMAC-SHA256 of \"<id>.<timestamp>.<body>\">`); the returned `whsec_…` secret works unchanged with any Standard Webhooks library. Failed deliveries are retried after 1 min, 5 min, 30 min, 2 h, 6 h and 24 h.",
         "operationId": "WebhooksController_trawl_workspace_createEndpoint",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -2557,6 +3281,33 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2627,8 +3378,14 @@
                 }
               }
             },
-            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2636,7 +3393,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -2656,6 +3414,33 @@
             "x-pc-error-codes": [
               "UNPROCESSABLE_ENTITY"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2666,7 +3451,15 @@
         "summary": "Add a webhook endpoint. Returns its signing secret once.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "create",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
@@ -2675,14 +3468,17 @@
         "operationId": "WebhooksController_trawl_workspace_deleteEndpoint",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the endpoint.",
             "in": "path",
             "name": "endpoint_id",
             "required": true,
@@ -2696,6 +3492,24 @@
           "204": {
             "description": "Deleted.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2775,6 +3589,33 @@
               "NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2785,20 +3626,31 @@
         "summary": "Delete a webhook endpoint.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "delete",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       },
       "get": {
         "operationId": "WebhooksController_trawl_workspace_getEndpoint",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the endpoint.",
             "in": "path",
             "name": "endpoint_id",
             "required": true,
@@ -2819,6 +3671,24 @@
             },
             "description": "",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -2898,6 +3768,33 @@
               "NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -2908,21 +3805,32 @@
         "summary": "Get one webhook endpoint (without its secret).",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       },
       "patch": {
         "description": "Only the fields sent change. `enabled: true` (or a new URL) also clears an automatic disable. Switching off cancels queued retries. The secret is unchanged; rotate it with `POST …/rotate-secret`.",
         "operationId": "WebhooksController_trawl_workspace_updateEndpoint",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the endpoint.",
             "in": "path",
             "name": "endpoint_id",
             "required": true,
@@ -2962,6 +3870,33 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3050,15 +3985,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -3078,6 +4020,33 @@
             "x-pc-error-codes": [
               "UNPROCESSABLE_ENTITY"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -3088,7 +4057,15 @@
         "summary": "Change a webhook endpoint: URL, description, events, on/off.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "update",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
@@ -3097,14 +4074,17 @@
         "operationId": "WebhooksController_trawl_workspace_rotateSecret",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the endpoint.",
             "in": "path",
             "name": "endpoint_id",
             "required": true,
@@ -3144,6 +4124,33 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3232,15 +4239,49 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
             ]
           }
         },
@@ -3252,7 +4293,15 @@
         "summary": "Rotate the signing secret. The new one is returned once.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "rotateSecret",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
@@ -3261,14 +4310,17 @@
         "operationId": "WebhooksController_trawl_workspace_sendTest",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the endpoint.",
             "in": "path",
             "name": "endpoint_id",
             "required": true,
@@ -3308,6 +4360,33 @@
             },
             "description": "The attempt, successful or not.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3396,15 +4475,49 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
             ]
           }
         },
@@ -3416,7 +4529,15 @@
         "summary": "Send a test event to this endpoint now and return the result.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "test",
+          "paginated": false,
+          "resource": "webhooks.endpoints"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/event-types": {
@@ -3425,10 +4546,12 @@
         "operationId": "WebhooksController_trawl_workspace_listEventTypes",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -3444,6 +4567,24 @@
             },
             "description": "",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3485,6 +4626,33 @@
               "FORBIDDEN",
               "SERVICE_NOT_ENABLED"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -3495,7 +4663,15 @@
         "summary": "List the events an endpoint can subscribe to.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": false,
+          "resource": "webhooks.eventTypes"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/events": {
@@ -3504,10 +4680,12 @@
         "operationId": "WebhooksController_trawl_workspace_listEvents",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -3539,17 +4717,12 @@
             }
           },
           {
+            "description": "Only events in this delivery status.",
             "in": "query",
             "name": "status",
             "required": false,
             "schema": {
-              "enum": [
-                "pending",
-                "delivered",
-                "failed",
-                "not_sent"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/WebhookEventStatus"
             }
           },
           {
@@ -3573,6 +4746,7 @@
             }
           },
           {
+            "description": "Page size.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -3580,7 +4754,7 @@
               "default": 20,
               "maximum": 100,
               "minimum": 1,
-              "type": "number"
+              "type": "integer"
             }
           },
           {
@@ -3604,6 +4778,24 @@
             },
             "description": "",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3664,6 +4856,33 @@
               "FORBIDDEN",
               "SERVICE_NOT_ENABLED"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -3674,7 +4893,15 @@
         "summary": "List webhook events, newest first (kept for 30 days).",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "webhooks.events"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
@@ -3682,10 +4909,12 @@
         "operationId": "WebhooksController_trawl_workspace_getEvent",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -3711,6 +4940,24 @@
             },
             "description": "",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3790,6 +5037,33 @@
               "NOT_FOUND",
               "WEBHOOK_EVENT_NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -3800,7 +5074,15 @@
         "summary": "Get one webhook event with every delivery attempt.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "webhooks.events"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
@@ -3809,10 +5091,12 @@
         "operationId": "WebhooksController_trawl_workspace_replay",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -3857,6 +5141,33 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3946,8 +5257,14 @@
                 }
               }
             },
-            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3955,7 +5272,35 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
             ]
           }
         },
@@ -3967,7 +5312,15 @@
         "summary": "Send a logged event again, to its endpoints or to one endpoint.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "replay",
+          "paginated": false,
+          "resource": "webhooks.events"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}": {
@@ -3977,18 +5330,22 @@
         "operationId": "WebhookController_remove",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -3997,6 +5354,24 @@
           "204": {
             "description": "Deleted.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4019,6 +5394,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4029,7 +5431,8 @@
         "summary": "Delete a webhook",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       },
       "get": {
         "deprecated": true,
@@ -4037,18 +5440,22 @@
         "operationId": "WebhookController_get",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -4064,6 +5471,24 @@
             },
             "description": "Webhook.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4105,6 +5530,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4115,7 +5567,8 @@
         "summary": "Get a webhook (secret masked)",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       },
       "patch": {
         "deprecated": true,
@@ -4123,18 +5576,22 @@
         "operationId": "WebhookController_update",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -4160,6 +5617,24 @@
             },
             "description": "Updated webhook (secret masked).",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4201,6 +5676,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4211,7 +5713,8 @@
         "summary": "Update url / active flag (active=true clears auto-disable)",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
@@ -4221,18 +5724,22 @@
         "operationId": "WebhookController_recentDeliveries",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
@@ -4282,6 +5789,24 @@
             },
             "description": "Page of delivery attempts with a pagination cursor.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4323,6 +5848,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4333,7 +5885,8 @@
         "summary": "Delivery attempts for a webhook (paginated, default 50, max 200, newest first)",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
@@ -4343,18 +5896,22 @@
         "operationId": "WebhookController_rotateSecret",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -4370,6 +5927,24 @@
             },
             "description": "Secret rotated. Includes the new plaintext secret exactly once.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4392,6 +5967,33 @@
             "x-pc-error-codes": [
               "NOT_FOUND"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4402,7 +6004,8 @@
         "summary": "Rotate the signing secret. Returns the new secret in clear EXACTLY ONCE; the old one stops at once.",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
@@ -4412,18 +6015,22 @@
         "operationId": "WebhookController_fireTest",
         "parameters": [
           {
+            "description": "Id of the workspace.",
             "in": "path",
             "name": "workspace_id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           },
           {
+            "description": "Id of the webhook.",
             "in": "path",
             "name": "id",
             "required": true,
             "schema": {
+              "format": "uuid",
               "type": "string"
             }
           }
@@ -4439,6 +6046,24 @@
             },
             "description": "Sent. Read the outcome from `/deliveries`.",
             "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4479,6 +6104,33 @@
             "x-pc-error-codes": [
               "UNPROCESSABLE_ENTITY"
             ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
           }
         },
         "security": [
@@ -4489,10 +6141,33 @@
         "summary": "Send the `job.succeeded` example to this webhook; the attempt shows in `/deliveries`",
         "tags": [
           "webhooks"
-        ]
+        ],
+        "x-pc-sdk": false
       }
     }
   },
-  "servers": [],
-  "tags": []
+  "servers": [
+    {
+      "description": "Trawl API",
+      "url": "https://api.trawl.productcraft.co"
+    }
+  ],
+  "tags": [
+    {
+      "description": "The workspace's Trawl credit balance and recent ledger entries.",
+      "name": "credits"
+    },
+    {
+      "description": "Extraction jobs: submit a URL and a JSON Schema, then read the structured result when the job completes.",
+      "name": "jobs"
+    },
+    {
+      "description": "Usage totals and a time series for the workspace dashboard.",
+      "name": "stats"
+    },
+    {
+      "description": "Webhook endpoints that receive `job.succeeded`, `job.failed` and `credits.low` events, their delivery log and replays. The legacy single-webhook routes are deprecated.",
+      "name": "webhooks"
+    }
+  ]
 }
