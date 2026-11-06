@@ -8,7 +8,7 @@ npm install @productcraft/auth @productcraft/auth-passport passport-jwt
 
 ## Usage
 
-```ts
+```ts before
 import passportJwt from "passport-jwt";
 import { Auth } from "@productcraft/auth";
 import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";

@@ -62,7 +62,7 @@ PRODUCTCRAFT_API_KEY=pcft_live_...
 
 ## Configuration
 
-```ts
+```ts before
 new PlatformAuth({
   // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
@@ -77,7 +77,7 @@ new PlatformAuth({
 
 ### Authentication (PlatformUser sign-in)
 
-```ts
+```ts before
 // Sign in
 await platformAuth.client.POST(
   "/v1/auth/signin",
@@ -104,7 +104,7 @@ await platformAuth.client.POST(
 
 ### Introspect — used by every other ProductCraft backend
 
-```ts
+```ts before
 // Resolve the bearer of a token: returns account + email_verified_at + workspaces.
 // Accepts a `pcft_live_*` PAK too — the response carries a synthetic verified
 // account block so downstream `RequireEmailVerifiedGuard`-style gates pass.
@@ -126,7 +126,7 @@ The latter two are cached by every consuming service for ~60 seconds. Reach for 
 
 ### Workspaces
 
-```ts
+```ts before
 // List — for a PAK caller, this returns exactly the workspace the PAK is
 // bound to (member_role / member_role_id are null on that lane).
 await platformAuth.client.GET("/v1/workspaces");
@@ -146,7 +146,7 @@ await platformAuth.client.DELETE("/v1/workspaces/{workspace_slug}", { ... });
 
 ### Members, invites, roles
 
-```ts
+```ts before
 // Members
 await platformAuth.client.GET("/v1/workspaces/{workspace_slug}/members", { ... });
 await platformAuth.client.PATCH(
@@ -170,7 +170,7 @@ await platformAuth.client.POST(
 
 ### IAM policies
 
-```ts
+```ts before
 // List the canonical permission catalogue (what verbs exist for each service)
 await platformAuth.client.GET(
   "/v1/workspaces/{workspace_slug}/policies/actions/catalog",
@@ -199,7 +199,7 @@ PATs bind to one or more managed `workspace_policy` rows. Author the policy firs
 
 Mint / rotate / revoke require a cookie or JWT — a PAK cannot mint another PAK.
 
-```ts
+```ts before
 // 1. Author (or reuse) a managed policy
 const { data: policy } = await platformAuth.client.POST(
   "/v1/workspaces/{workspace_slug}/policies",
@@ -244,7 +244,7 @@ await platformAuth.client.PATCH(
 
 ### Service activation
 
-```ts
+```ts before
 // Enable / disable a service for the workspace (mail, waitlist, social, auth, …)
 await platformAuth.client.PUT(
   "/v1/workspaces/{workspace_slug}/services/{service}",
@@ -260,7 +260,7 @@ await platformAuth.client.PUT(
 
 ### Audit
 
-```ts
+```ts before
 // Read the workspace audit log
 await platformAuth.client.GET(
   "/v1/workspaces/{workspace_slug}/audit-logs",

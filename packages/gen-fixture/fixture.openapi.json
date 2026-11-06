@@ -1,0 +1,2549 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Fixture API",
+    "version": "1.0.0",
+    "description": "Test fixture for scripts/gen-sdk.mjs. Not a real API."
+  },
+  "servers": [
+    {
+      "url": "https://api.fixture.example.com"
+    }
+  ],
+  "tags": [
+    {
+      "name": "widgets",
+      "description": "Widgets."
+    }
+  ],
+  "paths": {
+    "/v1/workspaces/{workspace_id}/widgets": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_list",
+        "summary": "List widgets",
+        "description": "Newest first.",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "description": "Only these statuses.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/WidgetStatus"
+              }
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of widgets.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "list",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": true
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_create",
+        "summary": "Create a widget",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateWidgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "create",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_erase",
+        "summary": "Erase widgets created before a date",
+        "description": "Bulk, irreversible.",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "before",
+            "in": "query",
+            "required": true,
+            "description": "Erase widgets created before this instant.",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Erased."
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "erase",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/bulk-delete": {
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_bulkDelete",
+        "summary": "Delete several widgets",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "ids"
+                ],
+                "properties": {
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "description": "Widget ids."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "How many were deleted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "deleted"
+                  ],
+                  "properties": {
+                    "deleted": {
+                      "type": "integer",
+                      "example": 2
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "bulkDelete",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/count": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_count",
+        "summary": "Count widgets",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/WidgetStatus"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "count"
+                  ],
+                  "properties": {
+                    "count": {
+                      "type": "integer",
+                      "example": 3
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "count",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/export.csv": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_export",
+        "summary": "Export widgets as CSV",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "CSV file.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "example": "id,name\n"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "export",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{id}": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_get",
+        "summary": "Retrieve a widget",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The widget.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "retrieve",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false,
+          "poll": {
+            "field": "status",
+            "terminal": [
+              "active",
+              "archived"
+            ]
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_update",
+        "summary": "Update a widget",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWidgetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "update",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_remove",
+        "summary": "Delete a widget",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "delete",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{id}/archive": {
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_archive",
+        "summary": "Archive a widget",
+        "description": "Use `updateStatus` instead.",
+        "deprecated": true,
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "archive",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{id}/history": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_history",
+        "summary": "Status history of a widget",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transitions, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "at",
+                      "status"
+                    ],
+                    "properties": {
+                      "at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "status": {
+                        "$ref": "#/components/schemas/WidgetStatus"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "history",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{id}/status": {
+      "patch": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_setStatus",
+        "summary": "Change a widget's status",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "$ref": "#/components/schemas/WidgetStatus"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "updateStatus",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "PartController_list",
+        "summary": "List a widget's parts",
+        "tags": [
+          "parts"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "widget_id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of parts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartListResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets.parts",
+          "method": "list",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": true
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "PartController_create",
+        "summary": "Add a part to a widget",
+        "tags": [
+          "parts"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "widget_id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePartDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets.parts",
+          "method": "create",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}": {
+      "delete": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "PartController_remove",
+        "summary": "Remove a part",
+        "tags": [
+          "parts"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "widget_id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "part_id",
+            "in": "path",
+            "required": true,
+            "description": "Part id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "2c4e6a8b-1d3f-4a5c-9e7b-0f2d4c6a8e1b"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed."
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets.parts",
+          "method": "delete",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/settings": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "SettingsController_get",
+        "summary": "Retrieve workspace settings",
+        "tags": [
+          "settings"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "settings",
+          "method": "retrieve",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "SettingsController_put",
+        "summary": "Replace workspace settings",
+        "tags": [
+          "settings"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Settings.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "settings",
+          "method": "update",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WebhooksController_listEndpoints",
+        "summary": "List webhook endpoints",
+        "tags": [
+          "webhooks"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of endpoints.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebhookEndpointListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "webhooks.endpoints",
+          "method": "list",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": true
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/legacy/ping": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "LegacyController_ping",
+        "summary": "Legacy ping",
+        "tags": [
+          "legacy"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "pong"
+          }
+        },
+        "x-pc-sdk": false
+      }
+    },
+    "/v1/regions": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "RegionController_list",
+        "summary": "List regions",
+        "description": "Every region the API runs in.",
+        "tags": [
+          "regions"
+        ],
+        "responses": {
+          "200": {
+            "description": "Regions.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegionResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "regions",
+          "method": "list",
+          "bind": [],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/communities/{community_id}/posts": {
+      "get": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "PostController_list",
+        "summary": "List posts",
+        "tags": [
+          "posts"
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "description": "Community id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b"
+            }
+          },
+          {
+            "name": "actor_id",
+            "in": "query",
+            "required": false,
+            "description": "Viewer, for per-viewer fields.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of posts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "posts",
+          "method": "list",
+          "bind": [
+            "community_id"
+          ],
+          "paginated": true
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "PostController_create",
+        "summary": "Create a post",
+        "tags": [
+          "posts"
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "description": "Community id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePostDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "posts",
+          "method": "create",
+          "bind": [
+            "community_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/communities/{community_id}/posts/{post_id}/comments": {
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "CommentController_create",
+        "summary": "Comment on a post",
+        "tags": [
+          "posts"
+        ],
+        "parameters": [
+          {
+            "name": "community_id",
+            "in": "path",
+            "required": true,
+            "description": "Community id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b"
+            }
+          },
+          {
+            "name": "post_id",
+            "in": "path",
+            "required": true,
+            "description": "Post id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "8e7d6c5b-4a39-4281-9f0e-1d2c3b4a5968"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "description": "Makes retries safe for 24h.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCommentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommentResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "description": "Idempotency conflict.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "posts.comments",
+          "method": "create",
+          "bind": [
+            "community_id"
+          ],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/public/{workspace_slug}/{waitlist_slug}/entries": {
+      "post": {
+        "operationId": "PublicEntryController_create",
+        "summary": "Join a waitlist",
+        "description": "Keyless and browser-safe.",
+        "tags": [
+          "public"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "acme"
+            }
+          },
+          {
+            "name": "waitlist_slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "beta"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateEntryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Joined.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "429": {
+            "description": "Rate limited; see Retry-After.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "entries",
+          "method": "create",
+          "bind": [
+            "workspace_slug",
+            "waitlist_slug"
+          ],
+          "paginated": false,
+          "public": true
+        }
+      }
+    }
+  },
+  "x-webhooks": {
+    "widget.created": {
+      "post": {
+        "summary": "A widget was created.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetCreatedEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledge with any 2xx."
+          }
+        }
+      }
+    },
+    "widget.archived": {
+      "post": {
+        "summary": "A widget was archived.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetArchivedEventDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Acknowledge with any 2xx."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "WidgetStatus": {
+        "type": "string",
+        "enum": [
+          "draft",
+          "active",
+          "archived"
+        ],
+        "description": "Lifecycle of a widget."
+      },
+      "FixtureErrorCode": {
+        "anyOf": [
+          {
+            "type": "string",
+            "enum": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR",
+              "NOT_FOUND",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS",
+              "RATE_LIMITED",
+              "WIDGET_LOCKED"
+            ]
+          },
+          {
+            "type": "string",
+            "description": "A code added after this document was published."
+          }
+        ],
+        "x-pc-open-enum": true,
+        "description": "Error codes this API returns (open set).",
+        "x-enum-descriptions": {
+          "BAD_REQUEST": "The request was malformed.",
+          "VALIDATION_ERROR": "A field failed validation; see errors[].",
+          "NOT_FOUND": "No such object.",
+          "IDEMPOTENCY_KEY_REUSE": "The key was used with a different body.",
+          "IDEMPOTENCY_IN_PROGRESS": "A request with this key is still running.",
+          "RATE_LIMITED": "Too many requests.",
+          "WIDGET_LOCKED": "The widget is locked by another change."
+        }
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "required": [
+          "statusCode",
+          "code",
+          "message"
+        ],
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "example": 400
+          },
+          "code": {
+            "$ref": "#/components/schemas/FixtureErrorCode"
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "request_id": {
+            "type": "string",
+            "example": "req_6f1c2a9d4b7e4f0a"
+          }
+        }
+      },
+      "PaginationDto": {
+        "type": "object",
+        "required": [
+          "next_cursor",
+          "has_more"
+        ],
+        "properties": {
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "has_more": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "x-pc-sdk-model": "Pagination"
+      },
+      "CreateWidgetDto": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Display name.",
+            "example": "Gadget"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "red",
+              "blue"
+            ],
+            "default": "red",
+            "description": "Paint colour."
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "Free-form key/value data.",
+            "example": {
+              "sku": "G-1"
+            }
+          }
+        }
+      },
+      "UpdateWidgetDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name.",
+            "example": "Gadget 2"
+          }
+        }
+      },
+      "WidgetResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "color",
+          "status",
+          "nickname",
+          "created_at"
+        ],
+        "x-pc-sdk-model": "Widget",
+        "description": "A widget.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "name": {
+            "type": "string",
+            "example": "Gadget"
+          },
+          "color": {
+            "type": "string",
+            "enum": [
+              "red",
+              "blue"
+            ],
+            "example": "red"
+          },
+          "status": {
+            "$ref": "#/components/schemas/WidgetStatus"
+          },
+          "nickname": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-06T09:30:00.000Z"
+          }
+        }
+      },
+      "WidgetListResponseDto": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WidgetResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "x-pc-sdk-model": "WidgetList"
+      },
+      "CreatePartDto": {
+        "type": "object",
+        "required": [
+          "label"
+        ],
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Bolt"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        }
+      },
+      "PartResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "widget_id",
+          "label",
+          "quantity"
+        ],
+        "x-pc-sdk-model": "Part",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "widget_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "label": {
+            "type": "string",
+            "example": "Bolt"
+          },
+          "quantity": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "PartListResponseDto": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PartResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "x-pc-sdk-model": "PartList"
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "retention_days": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 30,
+            "description": "Days to keep data."
+          }
+        }
+      },
+      "SettingsResponseDto": {
+        "type": "object",
+        "required": [
+          "workspace_id"
+        ],
+        "x-pc-sdk-model": "Settings",
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "retention_days": {
+            "type": "integer",
+            "default": 30,
+            "description": "Days to keep data."
+          }
+        }
+      },
+      "WebhookEndpointResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "url"
+        ],
+        "x-pc-sdk-model": "WebhookEndpoint",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "example": "https://example.com/hooks"
+          }
+        }
+      },
+      "WebhookEndpointListResponseDto": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEndpointResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "x-pc-sdk-model": "WebhookEndpointList"
+      },
+      "RegionResponseDto": {
+        "type": "object",
+        "required": [
+          "code",
+          "name"
+        ],
+        "x-pc-sdk-model": "Region",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "fra1"
+          },
+          "name": {
+            "type": "string",
+            "example": "Frankfurt"
+          }
+        }
+      },
+      "CreatePostDto": {
+        "type": "object",
+        "required": [
+          "actor_id",
+          "body"
+        ],
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Author."
+          },
+          "body": {
+            "type": "string",
+            "example": "Hello"
+          }
+        }
+      },
+      "PostResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "actor_id",
+          "body"
+        ],
+        "x-pc-sdk-model": "Post",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "actor_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "body": {
+            "type": "string",
+            "example": "Hello"
+          }
+        }
+      },
+      "PostListResponseDto": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "x-pc-sdk-model": "PostList"
+      },
+      "CreateCommentDto": {
+        "type": "object",
+        "required": [
+          "actor_id",
+          "body"
+        ],
+        "properties": {
+          "actor_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string",
+            "example": "First!"
+          }
+        }
+      },
+      "CommentResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "post_id",
+          "body"
+        ],
+        "x-pc-sdk-model": "Comment",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "post_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "body": {
+            "type": "string",
+            "example": "First!"
+          }
+        }
+      },
+      "CreateEntryDto": {
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "ada@example.com"
+          }
+        }
+      },
+      "EntryResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "position"
+        ],
+        "x-pc-sdk-model": "Entry",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "ada@example.com"
+          },
+          "position": {
+            "type": "integer",
+            "example": 42
+          }
+        }
+      },
+      "WidgetCreatedEventDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "x-pc-sdk-model": "WidgetCreatedEvent",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "widget.created"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-06T09:30:00.000Z"
+          },
+          "data": {
+            "$ref": "#/components/schemas/WidgetResponseDto"
+          }
+        }
+      },
+      "WidgetArchivedEventDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "x-pc-sdk-model": "WidgetArchivedEvent",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "widget.archived"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-11-06T09:30:00.000Z"
+          },
+          "data": {
+            "type": "object",
+            "required": [
+              "id",
+              "archived_by"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+              },
+              "archived_by": {
+                "type": "string",
+                "example": "user_1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

@@ -45,8 +45,12 @@ try {
 ```ts
 import { verifyWebhook } from "@productcraft/core";
 
-// Express: app.post("/webhooks", express.raw({ type: "application/json" }), handler)
-const event = await verifyWebhook({ payload: req.body, headers: req.headers, secret: process.env.WEBHOOK_SECRET! });
+// A Fetch-style route handler (Next.js, Hono, Bun, Deno). With Express, use express.raw() and req.body.
+export async function POST(req: Request): Promise<Response> {
+  const event = await verifyWebhook({ payload: await req.text(), headers: req.headers, secret: process.env.WEBHOOK_SECRET! });
+  console.log(event);
+  return new Response(null, { status: 204 });
+}
 ```
 
 `payload` must be the raw body (string, `Buffer`, `Uint8Array` or `ArrayBuffer`). `headers` can be Node `IncomingHttpHeaders` or Fetch `Headers`. `secret` can be a list (rotation, or several endpoint secrets). Verifies Standard Webhooks (`webhook-id`, `webhook-timestamp`, `webhook-signature`, `whsec_` secrets) and the older `X-<Product>-Signature: t=…,v1=…` scheme, with a 300 s tolerance (`toleranceSeconds`). Returns the parsed JSON payload.

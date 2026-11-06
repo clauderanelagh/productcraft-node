@@ -10,7 +10,7 @@ Server-side only. The SDK ships a Platform API Key in the `Authorization` header
 
 ## Quick start
 
-```ts
+```ts before
 import { Mail } from "@productcraft/mail";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
@@ -53,7 +53,7 @@ PRODUCTCRAFT_API_KEY=pcft_live_...
 
 ## Configuration
 
-```ts
+```ts before
 new Mail({
   // The auth credential the SDK presents to Mail
   // Omit to use PRODUCTCRAFT_API_KEY from the environment
@@ -73,7 +73,7 @@ Every path is workspace-scoped — `{workspace_id}` is the UUID of the workspace
 
 ### Templates
 
-```ts
+```ts before
 // List templates
 await mail.client.GET(
   "/v1/workspaces/{workspace_id}/templates",
@@ -115,7 +115,7 @@ await mail.client.POST(
 
 ### Domains + DKIM
 
-```ts
+```ts before
 // List domains
 await mail.client.GET("/v1/workspaces/{workspace_id}/domains", { ... });
 
@@ -134,7 +134,7 @@ await mail.client.POST(
 
 ### Messages
 
-```ts
+```ts before
 // Workspace-wide message listing + filters
 await mail.client.GET(
   "/v1/workspaces/{workspace_id}/messages",
@@ -151,7 +151,7 @@ await mail.client.GET(
 
 ### Suppression list
 
-```ts
+```ts before
 // Add an email to the workspace suppression list
 await mail.client.POST(
   "/v1/workspaces/{workspace_id}/suppression",
@@ -161,7 +161,7 @@ await mail.client.POST(
 
 ### Outbound webhooks
 
-```ts
+```ts before
 // Configure the workspace's default webhook (delivery / open / bounce events)
 await mail.client.PUT(
   "/v1/workspaces/{workspace_id}/webhooks/default",

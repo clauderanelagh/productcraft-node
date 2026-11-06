@@ -18,7 +18,10 @@
     "format": "prettier --write \"packages/**/src/**/*.ts\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm run build && changeset publish"
+    "release": "pnpm run build && changeset publish",
+    "check": "node scripts/gen-sdk.mjs --check && node scripts/check-handwritten.mjs",
+    "check:built": "node scripts/check-snippets.mjs && node scripts/api-report.mjs",
+    "api-report": "node scripts/api-report.mjs --update"
   },
   "keywords": [
     "productcraft",
@@ -39,15 +42,17 @@
     "@kubb/plugin-client": "^4.37.8",
     "@kubb/plugin-oas": "^4.37.8",
     "@kubb/plugin-ts": "^4.37.8",
+    "@microsoft/api-extractor": "7.59.4",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "esbuild": "0.27.7",
     "eslint": "^9.0.0",
-    "openapi-typescript": "^7.4.0",
+    "openapi-fetch": "0.13.8",
+    "openapi-typescript": "7.13.0",
     "prettier": "^3.3.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.6.0",
+    "tsup": "8.5.1",
+    "typescript": "5.9.3",
     "vitest": "^2.1.0"
   },
   "pnpm": {
