@@ -1,283 +1,189 @@
 # @productcraft/platform-auth
 
-Typed Node.js SDK for [ProductCraft Platform-Auth](https://productcraft.co) — PlatformUser sign-in / sign-up / password reset, workspaces, members + invites, workspace roles + IAM policies, workspace API keys, service activation, and the `/v1/introspect` endpoint every other ProductCraft backend uses to resolve permissions.
+Node.js / TypeScript client for the **ProductCraft Platform API**: workspaces, members and invites, roles and IAM policies, workspace API keys, service activation, audit logs, and the introspection endpoints every ProductCraft backend uses to resolve permissions.
 
-```bash
+Every method, type, error class and mock is generated from the production OpenAPI spec. Upgrading from 0.x? See the [1.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/platform-auth-1.0.0.md).
+
+## Install
+
+```sh
 npm install @productcraft/platform-auth
 ```
 
-Server-side only. The SDK ships a Platform API Key in the `Authorization` header — never embed it in a browser bundle.
+Node 20.3 or later, Bun, Deno and edge runtimes. Server-side: it sends a workspace key or a platform session. Or install the umbrella package for every product: `npm install productcraft`.
 
 ## Which SDK do I want?
 
 | If your goal is to … | Reach for |
 |---|---|
-| Authenticate **your own end-users** in a product you're building (Auth apps) | [`@productcraft/auth`](https://www.npmjs.com/package/@productcraft/auth) |
-| Authenticate **your team** into the ProductCraft console + manage workspaces | **this package** |
+| Sign in **your own end-users** in a product you build on ProductCraft | [`@productcraft/auth`](https://www.npmjs.com/package/@productcraft/auth) |
+| Manage **your ProductCraft account and workspaces**: keys, members, roles, policies, services | **this package** |
 
-The two are easy to confuse because both have "auth" in the name. Platform-Auth owns *the ProductCraft account you use to log into productcraft.co*. Auth owns *the end-users of products you build on the platform*. Distinct databases, distinct signing keys.
+Both have "auth" in the name. Platform owns the ProductCraft account you use to sign in to the console; Auth owns the end-users of the products you build. They are separate databases with separate signing keys.
 
 ## Quick start
 
 ```ts
 import { PlatformAuth } from "@productcraft/platform-auth";
 
-// Reads PRODUCTCRAFT_API_KEY from the environment
-const platformAuth = new PlatformAuth();
+// Reads PRODUCTCRAFT_API_KEY from the environment.
+const platform = new PlatformAuth();
 
-// Resolve the caller's effective policy + enabled services for a workspace
-const { data } = await platformAuth.client.GET(
-  "/v1/introspect/workspaces/{workspace_id}",
-  { params: { path: { workspace_id: "<workspace-uuid>" } } },
-);
+// Which workspace and permissions does this key carry?
+const me = await platform.apiKeys.self();
+console.log(me.workspace_id, me.name, me.allowed);
 
-// data.policy   — flat array of IAM-style { effect, actions, resources } statements
-// data.services — string[] of enabled services (mail / waitlist / social / auth / …)
+// Workspace routes take the workspace slug as the first argument.
+const ws = await platform.workspaces.retrieve("acme");
+
+// Pages are fetched as you iterate.
+for await (const key of platform.workspaces.apiKeys.list(ws.slug, { include_revoked: "false" })) {
+  console.log(key.id, key.name, key.status);
+}
 ```
 
-The `client` is an [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/) instance bound to `https://api.auth.productcraft.co` and your auth credential.
+Platform routes name the workspace by **slug**, positionally (`platform.workspaces.members.list("acme")`). The one exception is `platform.stats.retrieve()`, which uses the workspace id: pass `workspaceId`, or let a workspace key resolve it once per process.
 
-### Auth modes
+## Credentials
 
-| Mode | When to use | Mint/rotate/delete surfaces |
+| Credential | Pass | Use it for |
 |---|---|---|
-| `apiKey` (`pcft_live_*`) | Backend-to-backend reads + introspect calls | ❌ — mint requires a human session |
-| `bearer` (PlatformUser JWT) | Anything administrative: workspace create/delete, role/policy authoring, PAK minting, invite mutations | ✅ |
-| `cookie` (`auth_token`) | Server-side route handlers running behind the console session | ✅ |
+| Workspace API key (`pcft_live_…`) | `apiKey`, or `PRODUCTCRAFT_API_KEY` in the environment | Backend reads and introspection for the workspace the key belongs to |
+| Platform session (a signed-in person) | `auth: { type: "bearer", token }` | Administration: creating workspaces, minting and revoking keys, roles, policies, invites |
 
-PAKs are workspace-scoped credentials — they read + introspect freely against the workspace they're bound to but cannot mint another PAK or reshape the human-admin surface. Cross-workspace probes by a PAK return the uniform non-member shape (no slug → UUID oracle).
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
 
-## Credentials from the environment
+const anon = new PlatformAuth();
+const { access_token } = await anon.auth.signin({ identifier: "ada@example.com", password: process.env.PASSWORD!, session_duration: 3600 });
+const admin = new PlatformAuth({ auth: { type: "bearer", token: access_token } });
 
-Server-side, omit `auth` and the client reads your workspace key from the environment:
-
-```bash
-# .env
-PRODUCTCRAFT_API_KEY=pcft_live_...
+const minted = await admin.workspaces.apiKeys.create("acme", { name: "Production mail", preset: "mail-send", expires_in_days: 90 });
+console.log(minted.token); // shown once: store it in your secret manager
+await admin.auth.logoutCurrent();
 ```
 
-- An explicit `auth` always wins over the environment.
-- Hosts are never read from the environment. Override them in code with `baseUrl`.
-- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
+A workspace key cannot mint another key or reshape roles and policies; those calls need a person's session. An explicit `auth` always wins over the environment. The environment fallback is server-only: never put a key in `NEXT_PUBLIC_*` or any variable a bundler inlines into browser code. A keyed client constructed in a browser throws unless you set `dangerouslyAllowBrowser: true`.
 
-## Configuration
+## Introspection (for backends that accept workspace keys)
 
-```ts before
-new PlatformAuth({
-  // Omit to use PRODUCTCRAFT_API_KEY from the environment
-  auth: { type: "apiKey", key: "pcft_live_..." }
-      | { type: "bearer", token: "eyJ..." }
-      | { type: "cookie", value: "auth_token=..." },
-  baseUrl: "https://api.auth.example.test",  // optional override
-  fetch: customFetch,                          // optional
-});
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+
+// Resolve the key a request carried to its workspace and policy.
+declare const incomingKey: string;
+const caller = new PlatformAuth({ apiKey: incomingKey });
+const { is_valid, workspace_id, policy } = await caller.introspect.apiKey();
 ```
 
-## Common operations
+<!-- generated:start (scripts/gen-sdk.mjs; edits between the markers are overwritten) -->
 
-### Authentication (PlatformUser sign-in)
+## Resources
 
-```ts before
-// Sign in
-await platformAuth.client.POST(
-  "/v1/auth/signin",
-  { body: { identifier: "you@example.com", password: "..." } },
-);
+Full reference: [api.md](./api.md).
 
-// Refresh tokens
-await platformAuth.client.POST("/v1/auth/refresh", { body: { refresh_token } });
+- `platform.account`: `erase`
+- `platform.apiKeys`: `self`
+- `platform.auth`: `logout`, `logoutCurrent`, `password.requestReset`, `password.reset`, `refresh`, `signin`, `signup`
+- `platform.introspect`: `apiKey`, `retrieve`, `workspaces.retrieve`
+- `platform.me`: `avatar.clear`, `avatar.upload`, `hiddenGuides.hide`, `hiddenGuides.list`, `hiddenGuides.reset`, `hiddenGuides.unhide`, `profile.update`, `retrieve`
+- `platform.oauth`: `connections.delete`, `connections.list`, `workspaces.connections.delete`, `workspaces.connections.list`, `workspaces.connections.restore`
+- `platform.sessions`: `delete`, `list`, `revokeOthers`
+- `platform.stats`: `retrieve`
+- `platform.verification`: `resend`, `verify`
+- `platform.wellKnown`: `jwks`, `oauthAuthorizationServer`
+- `platform.workspaces`: `apiKeys.create`, `apiKeys.delete`, `apiKeys.list`, `apiKeys.presets.list`, `apiKeys.preview`, `apiKeys.retrieve`, `apiKeys.rotate`, `apiKeys.update`, `apiKeys.updateBindings`, `auditFeed.list`, `auditLogs.export`, `auditLogs.list`, `avatar.clear`, `avatar.upload`, `create`, `delete`, `invites.accept`, `invites.create`, `invites.delete`, `invites.list`, `list`, `members.delete`, `members.list`, `members.updateRole`, `policies.actions.catalog`, `policies.create`, `policies.delete`, `policies.list`, `policies.retrieve`, `policies.update`, `retrieve`, `roles.create`, `roles.delete`, `roles.list`, `roles.retrieve`, `roles.update`, `services.disable`, `services.enable`, `services.list`, `services.updateSettings`, `update`
 
-// Logout (single session) — or /v1/auth/logout to revoke every refresh token
-await platformAuth.client.POST("/v1/auth/logout-current", { body: { refresh_token } });
+## Pagination
 
-// Password reset
-await platformAuth.client.POST(
-  "/v1/auth/password/request-reset",
-  { body: { email: "you@example.com" } },
-);
+List methods return a `PagePromise`: `for await` walks every item across pages, `await` gives one page.
 
-await platformAuth.client.POST(
-  "/v1/auth/password/reset",
-  { body: { token, new_password: "..." } },
-);
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+for await (const item of platform.oauth.connections.list({ limit: 50 })) console.log(item);
+const page = await platform.oauth.connections.list();
+if (page.hasNextPage()) await page.getNextPage();
+const all = await platform.oauth.connections.list().toArray({ maxItems: 500 });
 ```
 
-### Introspect — used by every other ProductCraft backend
+## Errors
 
-```ts before
-// Resolve the bearer of a token: returns account + email_verified_at + workspaces.
-// Accepts a `pcft_live_*` PAK too — the response carries a synthetic verified
-// account block so downstream `RequireEmailVerifiedGuard`-style gates pass.
-await platformAuth.client.GET("/v1/introspect");
+Every failure is a class you can catch. `APIError` carries `status`, `code`, `message`, `errors[]`, `requestId` and `docUrl`.
 
-// Resolve effective policy + enabled services for one workspace
-await platformAuth.client.GET(
-  "/v1/introspect/workspaces/{workspace_id}",
-  { params: { path: { workspace_id: "<workspace-uuid>" } } },
-);
-
-// Resolve a PAK — POST, not GET. Used internally by services that accept
-// `pcft_live_*` on routes. Caller's bearer is the PAK being introspected;
-// the body is unused (sent as `{}`).
-await platformAuth.client.POST("/v1/introspect/api-key");
+```ts
+import { PlatformAuth, NotFoundError, RateLimitError, APIError } from "@productcraft/platform-auth";
+const platform = new PlatformAuth();
+try {
+  await platform.introspect.workspaces.retrieve("00000000-0000-0000-0000-000000000000");
+} catch (err) {
+  if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
+  else if (err instanceof RateLimitError) console.log(err.retryAfter);
+  else if (err instanceof APIError) console.log(err.status, err.errors);
+  else throw err;
+}
 ```
 
-The latter two are cached by every consuming service for ~60 seconds. Reach for them from a backend gate; never from a hot request path.
+## Retries and timeouts
 
-### Workspaces
+Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` are retried twice by default with exponential backoff and jitter, honouring `Retry-After` up to 60 s. A POST or PATCH without an idempotency key is never retried. Each attempt times out after 60 s, so the worst case with defaults is about 3 minutes; pass `signal: AbortSignal.timeout(ms)` for an overall deadline.
 
-```ts before
-// List — for a PAK caller, this returns exactly the workspace the PAK is
-// bound to (member_role / member_role_id are null on that lane).
-await platformAuth.client.GET("/v1/workspaces");
-
-// Create — cookie/JWT only. PAKs cannot create workspaces.
-await platformAuth.client.POST(
-  "/v1/workspaces",
-  { body: { display_name: "Acme", slug: "acme" } },
-);
-
-// Get / update by slug
-await platformAuth.client.GET("/v1/workspaces/{workspace_slug}", { ... });
-
-// Delete — cookie/JWT only. PAKs cannot delete workspaces.
-await platformAuth.client.DELETE("/v1/workspaces/{workspace_slug}", { ... });
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ maxRetries: 3, timeout: 20_000 });
+await platform.oauth.connections.list({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
 ```
 
-### Members, invites, roles
+## Idempotency
 
-```ts before
-// Members
-await platformAuth.client.GET("/v1/workspaces/{workspace_slug}/members", { ... });
-await platformAuth.client.PATCH(
-  "/v1/workspaces/{workspace_slug}/members/{account_id}/role",
-  { params: { ... }, body: { role_id: "role_..." } },
-);
+Writes that support it send an `Idempotency-Key` automatically and reuse it on every retry. Pass your own to make a retry across processes safe. If the API's idempotency store is unavailable it runs the request without it (fail-open), so a retry during that window can execute twice.
 
-// Invites
-await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/invites",
-  { params: { ... }, body: { email: "...", role_id: "..." } },
-);
-await platformAuth.client.POST("/v1/workspaces/invites/accept", { body: { code } });
-
-// Roles
-await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/roles",
-  { params: { ... }, body: { name: "billing-admin", policy_ids: ["pol_..."] } },
-);
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const workspace = await platform.workspaces.create({ display_name: "Acme Corp", slug: "acme-corp" }, { idempotencyKey: "order-1234" });
 ```
 
-### IAM policies
+## Raw responses
 
-```ts before
-// List the canonical permission catalogue (what verbs exist for each service)
-await platformAuth.client.GET(
-  "/v1/workspaces/{workspace_slug}/policies/actions/catalog",
-  { ... },
-);
+Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`). `.withResponse()` adds the `Response` and parsed rate-limit headers.
 
-// Create a managed policy. Cookie/JWT only.
-await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/policies",
-  {
-    params: { ... },
-    body: {
-      name: "mail-read-only",
-      description: "Read-only access to all Mail resources",
-      policy: [
-        { effect: "allow", actions: ["mail.read", "mail.list"], resources: ["*"] },
-      ],
-    },
-  },
-);
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
+const obj = await platform.introspect.workspaces.retrieve(id);
+console.log(obj.lastResponse.requestId);
+const { data, response, requestId, rateLimit } = await platform.introspect.workspaces.retrieve(id).withResponse();
+console.log(data, response.status, requestId, rateLimit?.remaining);
 ```
 
-### Workspace API keys (PATs)
+## Testing
 
-PATs bind to one or more managed `workspace_policy` rows. Author the policy first, then mint the key with its id. The inline `policy: [...]` shape is **not** accepted — `policy_ids: [<uuid>]` is required.
+`@productcraft/platform-auth/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name.
 
-Mint / rotate / revoke require a cookie or JWT — a PAK cannot mint another PAK.
-
-```ts before
-// 1. Author (or reuse) a managed policy
-const { data: policy } = await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/policies",
-  {
-    params: { path: { workspace_slug: "acme" } },
-    body: {
-      name: "ci-staging-deploy",
-      description: "Auth + Mail for the staging pipeline",
-      policy: [
-        // Permission action prefixes rebranded (heimdall.* → auth.*, envoi.* → mail.*),
-        // but resource-URN namespaces intentionally stay pcft:heimdall: / pcft:envoi: —
-        // the services still emit the old resource prefixes.
-        { effect: "allow", actions: ["auth.create", "auth.read", "auth.update"], resources: ["pcft:heimdall:app/*"] },
-        { effect: "allow", actions: ["mail.read", "mail.send"], resources: ["*"] },
-      ],
-    },
-  },
-);
-
-// 2. Mint a PAT that binds to that policy
-const { data: pak } = await platformAuth.client.POST(
-  "/v1/workspaces/{workspace_slug}/api-keys",
-  {
-    params: { path: { workspace_slug: "acme" } },
-    body: {
-      name: "github-actions-staging-deploy",
-      description: "Deploys acme-staging app from CI",
-      policy_ids: [policy!.id],
-    },
-  },
-);
-// pak.token  — the plaintext `pcft_live_*` value, returned exactly once
-// pak.record — public metadata (id, prefix, policies, last_used_at, …)
-
-// Replace the bound policies on an existing PAK (re-runs caller-narrowing
-// against the merged statement set)
-await platformAuth.client.PATCH(
-  "/v1/workspaces/{workspace_slug}/api-keys/{id}/bindings",
-  { params: { ... }, body: { policy_ids: ["<new-policy-uuid>"] } },
-);
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+import { createMockFetch } from "@productcraft/platform-auth/testing";
+const fetch = createMockFetch();
+const platform = new PlatformAuth({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });
+await platform.oauth.connections.list();
+console.log(fetch.calls.length);
 ```
 
-### Service activation
+## Escape hatch
 
-```ts before
-// Enable / disable a service for the workspace (mail, waitlist, social, auth, …)
-await platformAuth.client.PUT(
-  "/v1/workspaces/{workspace_slug}/services/{service}",
-  { params: { ... }, body: { enabled: true } },
-);
+`.client` is the typed `openapi-fetch` client over the same credential and base URL (no retries). Use it for anything the resource methods do not cover.
 
-// Per-service workspace settings
-await platformAuth.client.PUT(
-  "/v1/workspaces/{workspace_slug}/services/{service}/settings",
-  { ... },
-);
+```ts
+import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const { data, error } = await platform.client.GET("/.well-known/jwks.json");
+console.log(data, error);
 ```
 
-### Audit
-
-```ts before
-// Read the workspace audit log
-await platformAuth.client.GET(
-  "/v1/workspaces/{workspace_slug}/audit-logs",
-  { params: { ... }, query: { limit: 100 } },
-);
-
-// Streaming-friendly "recent activity" feed (for the console UI)
-await platformAuth.client.GET(
-  "/v1/workspaces/{workspace_slug}/audit-feed",
-  { ... },
-);
-```
-
-## How this SDK is built
-
-Generated from the live OpenAPI spec at `https://api.auth.productcraft.co/docs-json` via [`openapi-typescript`](https://openapi-ts.dev/) + [`openapi-fetch`](https://openapi-ts.dev/openapi-fetch/). The nightly `spec-refresh` workflow opens a PR whenever the spec changes.
+<!-- generated:end -->
 
 ## License
 
-[MIT](https://github.com/clauderanelagh/productcraft-node/blob/main/LICENSE).
+MIT

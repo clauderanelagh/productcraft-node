@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/platform-auth",
   "version": "0.2.0",
-  "description": "PlatformUser auth, workspaces, members, invites, roles + IAM policies, API keys, service activation, and the introspect endpoint every ProductCraft backend uses to resolve permissions. Generated from the production OpenAPI spec.",
+  "description": "Workspaces, members, invites, roles and IAM policies, API keys, service activation and introspection (ProductCraft Platform). Resources, auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -11,18 +11,28 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
+    },
+    "./manifest.json": "./manifest.json"
   },
   "files": [
     "dist/**",
+    "manifest.json",
+    "api.md",
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "engines": {
     "node": ">=20.3"
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
+    "test": "tsc -p tests/tsconfig.json && vitest run"
   },
   "keywords": [
     "productcraft",

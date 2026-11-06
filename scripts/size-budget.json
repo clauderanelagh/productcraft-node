@@ -14,5 +14,9 @@
   "@productcraft/waitlist": {
     "measuredGzipBytes": 10551,
     "limitGzipBytes": 11607
+  },
+  "@productcraft/platform-auth": {
+    "measuredGzipBytes": 10939,
+    "limitGzipBytes": 12033
   }
 }
