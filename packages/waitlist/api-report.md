@@ -61,6 +61,23 @@ export interface paths {
         trace?: never;
     };
     // (undocumented)
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/leaderboard/top": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicWaitlistController_leaderboardTop"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    // (undocumented)
     "/v1/workspaces/{workspace_id}/stats": {
         parameters: {
             query?: never;
