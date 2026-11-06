@@ -112,6 +112,8 @@ export function emitTypes(model, cfg) {
     "export type WithLastResponse<T> = T & { readonly lastResponse: LastResponse };",
     "/** Params inside a scope bound with `.as(actorId)`: `actor_id` may be left out. */",
     'export type WithOptionalActor<P> = P extends { actor_id: unknown } ? Omit<P, "actor_id"> & { actor_id?: P["actor_id"] } : P;',
+    "/** A polled model whose free-form `K` the caller types as `R` (`createAndPoll<R>`); optional and nullable stay as declared. */",
+    "export type WithResult<M, K extends keyof M, R> = Omit<M, K> & { [P in keyof M as P extends K ? P : never]: R | Extract<M[P], null> };",
     "",
   );
   for (const e of model.enums) {
@@ -380,11 +382,17 @@ export function emitResources(model, cfg) {
 
 function emitPoll(L, o, node, cfg, deref) {
   const config = `{ field: ${lit(o.poll.field)}, terminal: ${lit(o.poll.terminal).replace(/,/g, ", ")} }`;
-  const rt = `Promise<T.WithLastResponse<T.${o.responseType}>>`;
+  // With x-pc-sdk.poll.result the poll helpers are generic over that field.
+  const res = o.poll.result;
+  const model = `T.${o.responseType}`;
+  const gen = res ? `<TResult = NonNullable<${model}[${lit(res)}]>>` : "";
+  const shape = res ? `T.WithResult<${model}, ${lit(res)}, TResult>` : model;
+  const rt = `Promise<T.WithLastResponse<${shape}>>`;
+  const resultDoc = res ? ["", `@typeParam TResult - The shape you expect in \`${res}\`. It is a type assertion: the SDK does not validate it at runtime.`] : [];
   const args = [...o.positional.map((p) => `${p.arg}: string`), "options?: PollOptions"];
   L.push(
-    jsdoc([`Retrieve until \`${o.poll.field}\` is ${o.poll.terminal.map((t) => `\`${t}\``).join(", ")}.`, "", "@param options - `intervalMs` (default 2 000), `timeoutMs` (default 300 000, then `APITimeoutError`), `signal`, and request options.", "@example", "```ts", `const done = await ${cfg.clientVar}.${o.resource}.poll(${o.positional.map(() => '"…"').join(", ")});`, "```"], "  ").trimEnd(),
-    `  poll(${args.join(", ")}): ${rt} {`,
+    jsdoc([`Retrieve until \`${o.poll.field}\` is ${o.poll.terminal.map((t) => `\`${t}\``).join(", ")}.`, ...resultDoc, "", "@param options - `intervalMs` (default 2 000), `timeoutMs` (default 300 000, then `APITimeoutError`), `signal`, and request options.", "@example", "```ts", `const done = await ${cfg.clientVar}.${o.resource}.poll(${o.positional.map(() => '"…"').join(", ")});`, "```"], "  ").trimEnd(),
+    `  poll${gen}(${args.join(", ")}): ${rt} {`,
     `    return this._client.poll(${specLiteral(o)}, ${config}, options);`,
     "  }",
   );
@@ -400,9 +408,9 @@ function emitPoll(L, o, node, cfg, deref) {
   cargs.push("options?: PollOptions");
   const retrieve = specLiteral(o, { [unmatched[0].name]: "created.id" });
   L.push(
-    jsdoc([`Create, then poll until \`${o.poll.field}\` is terminal. The Idempotency-Key goes on the create only.`, "", "@param options - Poll options (`intervalMs`, `timeoutMs`, `signal`) and request options for the create."], "  ").trimEnd(),
-    `  createAndPoll(${cargs.join(", ")}): ${rt} {`,
-    `    return this._client.createAndPoll<T.WithLastResponse<T.${o.responseType}>>(`,
+    jsdoc([`Create, then poll until \`${o.poll.field}\` is terminal. The Idempotency-Key goes on the create only.`, ...resultDoc, "", "@param options - Poll options (`intervalMs`, `timeoutMs`, `signal`) and request options for the create."], "  ").trimEnd(),
+    `  createAndPoll${gen}(${cargs.join(", ")}): ${rt} {`,
+    `    return this._client.createAndPoll<T.WithLastResponse<${shape}>>(`,
     `      ${specLiteral(create)},`,
     `      (created) => (${retrieve.replace("{ method", "{ method")}),`,
     `      ${config},`,

@@ -84,6 +84,16 @@ const done = await fixture.widgets.poll("9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", 
 console.log(done.status);
 ```
 
+`widgets.createAndPoll<T>(params)` creates, then polls; `metadata` is typed as `T` (a type assertion: the SDK does not validate it at runtime).
+
+```ts
+import { Fixture } from "@productcraft/gen-fixture";
+const fixture = new Fixture({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+type Extracted = { title: string };
+const done = await fixture.widgets.createAndPoll<Extracted>({ name: "Gadget" }, { timeoutMs: 600_000 });
+console.log(done.metadata?.title);
+```
+
 ## Webhooks
 
 `fixture.webhooks.unwrap()` verifies the signature against the **raw** body and returns a typed `Fixture.UnwrapWebhookEvent`. The secret comes from `{ secret }`, the client's `webhookSecret`, or `PRODUCTCRAFT_FIXTURE_WEBHOOK_SECRET`.

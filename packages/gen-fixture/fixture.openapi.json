@@ -587,7 +587,8 @@
             "terminal": [
               "active",
               "archived"
-            ]
+            ],
+            "result": "metadata"
           }
         }
       },

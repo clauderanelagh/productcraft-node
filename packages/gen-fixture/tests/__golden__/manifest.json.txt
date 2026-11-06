@@ -265,6 +265,7 @@
       "params": null,
       "poll": {
         "field": "status",
+        "result": "metadata",
         "terminal": [
           "active",
           "archived"

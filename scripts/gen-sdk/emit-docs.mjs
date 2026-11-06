@@ -85,6 +85,13 @@ export function emitApiMd(model, cfg) {
   return L.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
 }
 
+/** A single-statement call example with request options added as the last argument. */
+function withOptions(example, options) {
+  const end = example.lastIndexOf(");");
+  if (end === -1) throw new Error(`gen-sdk: cannot add options to ${example}`);
+  return `${example.slice(0, end)}, ${options});${example.slice(end + 2)}`;
+}
+
 /** The README region between the generated markers. */
 export function emitReadmeRegion(model, cfg) {
   const { className: C, clientVar: v, packageName: pkg } = cfg;
@@ -121,11 +128,17 @@ export function emitReadmeRegion(model, cfg) {
     firstList ? `await ${v}.${firstList.resource}.${firstList.method}({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });` : "", "```", "");
   if (firstCreate) {
     L.push("## Idempotency", "", "Writes that support it send an `Idempotency-Key` automatically and reuse it on every retry. Pass your own to make a retry across processes safe. If the API's idempotency store is unavailable it runs the request without it (fail-open), so a retry during that window can execute twice.", "", "```ts", ...ctor,
-      callExample(firstCreate, cfg, model.deref).split("\n")[0].replace(/\);$/, `, { idempotencyKey: "order-1234" });`), "```", "");
+      withOptions(callExample(firstCreate, cfg, model.deref), `{ idempotencyKey: "order-1234" }`), "```", "");
   }
   if (pollOp) {
     L.push("## Polling", "", `\`${pollOp.resource}.poll(id)\` retrieves until \`${pollOp.poll.field}\` is terminal (${pollOp.poll.terminal.map((t) => `\`${t}\``).join(", ")}), honouring \`Retry-After\`; \`timeoutMs\` (default 5 min) throws \`APITimeoutError\`.`, "", "```ts", ...ctor,
       `const done = await ${v}.${pollOp.resource}.poll("${"9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"}", { intervalMs: 2_000, timeoutMs: 600_000 });`, `console.log(done.${pollOp.poll.field});`, "```", "");
+    const create = model.ops.find((o) => o.resource === pollOp.resource && o.method === "create" && !o.scope && o.positional.length === 0);
+    if (pollOp.poll.result && create) {
+      const call = withOptions(callExample(create, cfg, model.deref), "{ timeoutMs: 600_000 }").replace(/^const \w+ = /, "const done = ").replace(`.create(`, ".createAndPoll<Extracted>(");
+      L.push(`\`${pollOp.resource}.createAndPoll<T>(params)\` creates, then polls; \`${pollOp.poll.result}\` is typed as \`T\` (a type assertion: the SDK does not validate it at runtime).`, "", "```ts", ...ctor,
+        "type Extracted = { title: string };", call, `console.log(done.${pollOp.poll.result}?.title);`, "```", "");
+    }
   }
   if (model.webhooks.length) {
     const t = model.webhooks[0];

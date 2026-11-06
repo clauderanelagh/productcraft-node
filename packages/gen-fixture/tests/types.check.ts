@@ -74,6 +74,17 @@ export async function rules(): Promise<void> {
   const created: Fixture.Widget = await fixture.widgets.createAndPoll({ name: "Gadget" }, { intervalMs: 10 });
   void done;
   void created;
+  // x-pc-sdk.poll.result: the free-form field is typed by the caller's generic; optionality stays.
+  type Shape = { tier: string };
+  const typed = await fixture.widgets.createAndPoll<Shape>({ name: "Gadget" });
+  assert<Equal<typeof typed.metadata, Shape | undefined>>(true);
+  const polled = await fixture.widgets.poll<Shape>("id");
+  const tier: string | undefined = polled.metadata?.tier;
+  void tier;
+  // Without a type argument it keeps the spec's free-form type.
+  assert<Equal<typeof done.metadata, Fixture.Widget["metadata"]>>(true);
+  // @ts-expect-error the generic types `metadata`, so a wrong field is caught
+  void typed.metadata?.price;
 
   // Scopes: bound community, .as() fills actor_id (so it becomes optional).
   const community = fixture.community("c").as("actor");

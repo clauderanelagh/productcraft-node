@@ -368,22 +368,26 @@ export class WidgetsResource extends APIResource {
   /**
    * Retrieve until `status` is `active`, `archived`.
    *
+   * @typeParam TResult - The shape you expect in `metadata`. It is a type assertion: the SDK does not validate it at runtime.
+   *
    * @param options - `intervalMs` (default 2 000), `timeoutMs` (default 300 000, then `APITimeoutError`), `signal`, and request options.
    * @example
    * ```ts
    * const done = await fixture.widgets.poll("…");
    * ```
    */
-  poll(id: string, options?: PollOptions): Promise<T.WithLastResponse<T.Widget>> {
+  poll<TResult = NonNullable<T.Widget["metadata"]>>(id: string, options?: PollOptions): Promise<T.WithLastResponse<T.WithResult<T.Widget, "metadata", TResult>>> {
     return this._client.poll({ method: "GET", path: "/v1/workspaces/{workspace_id}/widgets/{id}", pathParams: { id } }, { field: "status", terminal: ["active", "archived"] }, options);
   }
   /**
    * Create, then poll until `status` is terminal. The Idempotency-Key goes on the create only.
    *
+   * @typeParam TResult - The shape you expect in `metadata`. It is a type assertion: the SDK does not validate it at runtime.
+   *
    * @param options - Poll options (`intervalMs`, `timeoutMs`, `signal`) and request options for the create.
    */
-  createAndPoll(params: T.WidgetCreateParams, options?: PollOptions): Promise<T.WithLastResponse<T.Widget>> {
-    return this._client.createAndPoll<T.WithLastResponse<T.Widget>>(
+  createAndPoll<TResult = NonNullable<T.Widget["metadata"]>>(params: T.WidgetCreateParams, options?: PollOptions): Promise<T.WithLastResponse<T.WithResult<T.Widget, "metadata", TResult>>> {
+    return this._client.createAndPoll<T.WithLastResponse<T.WithResult<T.Widget, "metadata", TResult>>>(
       { method: "POST", path: "/v1/workspaces/{workspace_id}/widgets", body: params, idempotent: true },
       (created) => ({ method: "GET", path: "/v1/workspaces/{workspace_id}/widgets/{id}", pathParams: { id: created.id } }),
       { field: "status", terminal: ["active", "archived"] },

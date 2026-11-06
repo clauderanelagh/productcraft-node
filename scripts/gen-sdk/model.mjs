@@ -190,7 +190,16 @@ export function buildModel(spec, config) {
         if (method !== "retrieve" || m !== "get") problems.push(`${w}: x-pc-sdk.poll is only valid on a retrieve`);
         else if (!s?.properties?.[x.poll.field]) problems.push(`${w}: x-pc-sdk.poll.field "${x.poll.field}" is not in the response`);
         else if (!Array.isArray(x.poll.terminal) || !x.poll.terminal.length) problems.push(`${w}: x-pc-sdk.poll.terminal is empty`);
-        else poll = { field: x.poll.field, terminal: [...x.poll.terminal] };
+        else {
+          poll = { field: x.poll.field, terminal: [...x.poll.terminal] };
+          // `result`: a free-form object the caller types (`createAndPoll<T>`).
+          if (x.poll.result !== undefined) {
+            const r = deref(s.properties[x.poll.result]);
+            if (typeof x.poll.result !== "string" || !r) problems.push(`${w}: x-pc-sdk.poll.result "${x.poll.result}" is not in the response`);
+            else if (r.type !== "object" || r.properties || r.additionalProperties === false) problems.push(`${w}: x-pc-sdk.poll.result "${x.poll.result}" is not a free-form object`);
+            else poll.result = x.poll.result;
+          }
+        }
       }
 
       const queryHasActor = query.some((q) => q.name === "actor_id");
@@ -255,7 +264,7 @@ export function buildModel(spec, config) {
     else typeNames.set(n, what);
   };
   // Names the generator itself emits into every product namespace.
-  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "RequestOptions", "PollOptions", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams"]) claim(n, "a generator helper type");
+  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "WithResult", "RequestOptions", "PollOptions", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams"]) claim(n, "a generator helper type");
   for (const mdl of models) claim(mdl.name, `model ${mdl.schema}`);
   for (const e of enums) claim(e.name, `enum ${e.schema}`);
   for (const o of ops) {

@@ -2,5 +2,9 @@
   "@productcraft/core": {
     "measuredGzipBytes": 6768,
     "limitGzipBytes": 7445
+  },
+  "@productcraft/trawl": {
+    "measuredGzipBytes": 9841,
+    "limitGzipBytes": 10826
   }
 }
