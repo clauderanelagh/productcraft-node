@@ -43,6 +43,10 @@ jobs:
       - run: pnpm run lint
       - run: pnpm run build
       - run: pnpm run test
+      - name: Dist smoke (ESM + CJS, cross-build instanceof)
+        run: node scripts/smoke-dist.mjs
+      - name: Size budget (esbuild one-call bundle, gzip)
+        run: node scripts/size-budget.mjs
       - name: Report final status on the head commit
         if: always() && github.event_name == 'workflow_dispatch'
         env:
@@ -57,3 +61,27 @@ jobs:
           gh api -X POST "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
             -f state="$state" -f context="$STATUS_CONTEXT" \
             -f target_url="$RUN_URL" -f description="CI $JOB_STATUS" >/dev/null
+
+  # The built dist on every supported Node line (engines: >=20.3).
+  dist-smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    name: dist-smoke (node ${{ matrix.node }})
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run codegen
+      - run: pnpm run build
+      - run: node scripts/smoke-dist.mjs
+      - name: Core contract suite
+        run: pnpm --filter @productcraft/core run test

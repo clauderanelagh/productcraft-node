@@ -22,6 +22,7 @@ Retire kubb and the ~1,000 hand-written lines in `packages/auth/src/scopes/`. Ge
 - `AuthHttpError` exported as an alias of `APIError`; `instanceof AuthHttpError` true for every API error, across ESM/CJS builds.
 - Path and query params snake_case (one casing rule); the migration guide `docs/migrations/auth-1.0.0.md` lists every changed field and every flattened or renamed method.
 - `me.getProfile()` and `signup()` typed (no `unknown`).
+- The CJS build loads on the whole engines range (Node 20.3+). Found in 002: `jose` 6 is ESM-only, so `require("@productcraft/auth")` (and auth-passport, and the umbrella's CJS build) throws `ERR_REQUIRE_ESM` below Node 20.19, where `require(esm)` is not on by default. Bundle `jose` into the CJS output (tsup `noExternal` for the cjs format) or load it with a dynamic `import()`; add Node 20.3.0 itself to the dist-smoke matrix to keep it true.
 - auth-passport: peer range `^1.0.0-0 || ^1`, ESM and CJS dist smoke, `createAuthJwtStrategy`/`createPassportSecretOrKeyProvider` unchanged.
 - kubb, `kubb.config.ts` and its devDeps removed; `scripts/codegen.sh` has one path.
 - `release.yml` gains a `workflow_dispatch` input that runs `changeset version --snapshot next` + `changeset publish --tag next` in the same file (trusted publisher is bound to the filename). Snapshots published from it; `latest` stays on 0.8.x.

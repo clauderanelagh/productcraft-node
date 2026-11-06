@@ -25,7 +25,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Thre
 1. **Never hand-edit `packages/<surface>/src/_generated.d.ts`.** That file is rewritten by `pnpm run codegen` from `Specs/<surface>.json`. It's gitignored. If a generated type is wrong, fix the OpenAPI spec at the source (the monorepo's `@nestjs/swagger` annotations), redeploy, then run `pnpm run refresh-specs && pnpm run codegen`.
 2. **Specs are the contract.** Vendored under `Specs/<surface>.json` at the repo root. `scripts/refresh-specs.sh` is the only thing that writes them.
 3. **Hand-written code lives only in:**
-   - `packages/core/src/index.ts` — auth helpers (`PCAuth`, `authMiddleware`), `makeClient`, `PC_BASE_URL` constants.
+   - `packages/core/src/**` — the shared runtime (`APIClient`, `APIPromise`, pagination, polling, retries, the branded error classes, `verifyWebhook`) plus the 0.x helpers in `legacy.ts` (`PCAuth`, `authMiddleware`, `makeClient`, `PC_BASE_URL`). Its contract suite runs against a local `node:http` mock server (`packages/core/tests/`); `scripts/smoke-dist.mjs` checks the built ESM + CJS dist (CI runs it on Node 20, 22 and 24) and `scripts/size-budget.mjs` enforces the bundle budget.
    - `packages/<surface>/src/index.ts` — per-surface class (`Auth`, `Mail`, …). Today these are thin wrappers around `openapi-fetch`; future versions add ergonomic resource wrappers (`auth.signin({ email, password })` instead of `auth.client.POST("/v1/...")`).
    - `packages/umbrella/src/index.ts` — `ProductCraft` umbrella class + re-exports.
 
@@ -39,7 +39,7 @@ Every package is being moved onto one generator and one shared runtime: see [`do
 |---|---|
 | Add a new endpoint to a surface | Don't. Update `@nestjs/swagger` annotations in the monorepo, redeploy, then `pnpm run refresh-specs && pnpm run codegen`. |
 | Add an ergonomic wrapper for an existing endpoint | `packages/<surface>/src/index.ts` |
-| Change auth header logic | `packages/core/src/index.ts` |
+| Change auth header, retry or error logic | `packages/core/src/client.ts` / `errors.ts` (0.x helpers: `legacy.ts`) |
 | Add a new API surface (rare) | New package under `packages/<name>/` — **mirror `packages/mail/`, not `packages/auth/`** (auth is the one special case: it uses kubb; every other surface uses plain `openapi-typescript`). Then: add the surface to `PC_BASE_URL` in `packages/core/src/index.ts`, `scripts/refresh-specs.sh`, the `openapi-typescript` loop in `scripts/codegen.sh`, and wire it into `packages/umbrella/` (import/export, `ProductCraftOverrides`, constructor field, `package.json` dep). New package starts at `version: 0.0.0` so a `minor` changeset lands it at `0.1.0`. See PR #41 (`@productcraft/trawl`) for the reference diff. |
 
 ## CI workflows
