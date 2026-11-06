@@ -730,151 +730,151 @@ class Trawl extends TrawlResources {
 // @public
 namespace Trawl {
     // (undocumented)
-    type CreditLedgerEntry = CreditLedgerEntry;
+    type CreditLedgerEntry = __CreditLedgerEntry;
     // (undocumented)
-    type Credits = Credits;
+    type Credits = __Credits;
     // (undocumented)
-    type CreditsLowEvent = CreditsLowEvent;
+    type CreditsLowEvent = __CreditsLowEvent;
     const // (undocumented)
     JobOutcomeStatus: {
         values: readonly ["succeeded", "failed"];
     };
     // (undocumented)
-    type CreditsLowEventData = CreditsLowEventData;
+    type CreditsLowEventData = __CreditsLowEventData;
     const // (undocumented)
     JobStatus: {
         values: readonly ["queued", "running", "succeeded", "failed", "cancelled"];
     };
     // (undocumented)
-    type ErrorCode = TrawlErrorCode;
+    type ErrorCode = __ErrorCode;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type Job = Job;
+    type Job = __Job;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type JobCreateParams = JobCreateParams;
+    type JobCreateParams = __JobCreateParams;
     const // (undocumented)
     TrawlStatsMetric: {
         values: readonly ["jobs"];
     };
     // (undocumented)
-    type JobEventData = JobEventData;
+    type JobEventData = __JobEventData;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type JobFailedEvent = JobFailedEvent;
+    type JobFailedEvent = __JobFailedEvent;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type JobList = JobList;
+    type JobList = __JobList;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type JobListPagination = JobListPagination;
+    type JobListPagination = __JobListPagination;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type JobListParams = JobListParams;
+    type JobListParams = __JobListParams;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["job.succeeded", "job.failed", "credits.low"];
     };
     // (undocumented)
-    type JobOutcome = JobOutcome;
+    type JobOutcome = __JobOutcome;
     // (undocumented)
-    type JobOutcomeStatus = JobOutcomeStatus;
+    type JobOutcomeStatus = __JobOutcomeStatus;
     // (undocumented)
-    type JobStatus = JobStatus;
+    type JobStatus = __JobStatus;
     // (undocumented)
-    type JobSucceededEvent = JobSucceededEvent;
+    type JobSucceededEvent = __JobSucceededEvent;
     // (undocumented)
-    type ListWebhookEndpoints = ListWebhookEndpoints;
+    type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
-    type ListWebhookEvents = ListWebhookEvents;
+    type ListWebhookEvents = __ListWebhookEvents;
     // (undocumented)
-    type ListWebhookEventTypes = ListWebhookEventTypes;
+    type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
-    type PollOptions = PollOptions;
+    type PollOptions = __PollOptions;
     // (undocumented)
-    type ReplayWebhookEvent = ReplayWebhookEvent;
+    type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
-    type RequestOptions = RequestOptions;
+    type RequestOptions = __RequestOptions;
     // (undocumented)
-    type StatsGranularity = StatsGranularity;
+    type StatsGranularity = __StatsGranularity;
     // (undocumented)
-    type StatsRetrieveParams = StatsRetrieveParams;
+    type StatsRetrieveParams = __StatsRetrieveParams;
     // (undocumented)
-    type StatsWindow = StatsWindow;
+    type StatsWindow = __StatsWindow;
     // (undocumented)
-    type TrawlStatsInWindow = TrawlStatsInWindow;
+    type TrawlStatsInWindow = __TrawlStatsInWindow;
     // (undocumented)
-    type TrawlStatsMetric = TrawlStatsMetric;
+    type TrawlStatsMetric = __TrawlStatsMetric;
     // (undocumented)
-    type TrawlStatsSeries = TrawlStatsSeries;
+    type TrawlStatsSeries = __TrawlStatsSeries;
     // (undocumented)
-    type TrawlStatsSeriesPoint = TrawlStatsSeriesPoint;
+    type TrawlStatsSeriesPoint = __TrawlStatsSeriesPoint;
     // (undocumented)
-    type TrawlStatsTotals = TrawlStatsTotals;
+    type TrawlStatsTotals = __TrawlStatsTotals;
     // (undocumented)
-    type TrawlWorkspaceStats = TrawlWorkspaceStats;
+    type TrawlWorkspaceStats = __TrawlWorkspaceStats;
     // (undocumented)
-    type UnknownWebhookEvent = UnknownWebhookEvent;
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
     // (undocumented)
-    type UnwrapWebhookEvent = UnwrapWebhookEvent;
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
     // (undocumented)
-    type WebhookAttemptTrigger = WebhookAttemptTrigger;
+    type WebhookAttemptTrigger = __WebhookAttemptTrigger;
     // (undocumented)
-    type WebhookDeliveryAttempt = WebhookDeliveryAttempt;
+    type WebhookDeliveryAttempt = __WebhookDeliveryAttempt;
     // (undocumented)
-    type WebhookEndpoint = WebhookEndpoint;
+    type WebhookEndpoint = __WebhookEndpoint;
     // (undocumented)
-    type WebhookEndpointCreateParams = WebhookEndpointCreateParams;
+    type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
     // (undocumented)
-    type WebhookEndpointDisabledReason = WebhookEndpointDisabledReason;
+    type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
     // (undocumented)
-    type WebhookEndpointRotateSecretParams = WebhookEndpointRotateSecretParams;
+    type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
     // (undocumented)
-    type WebhookEndpointStatus = WebhookEndpointStatus;
+    type WebhookEndpointStatus = __WebhookEndpointStatus;
     // (undocumented)
-    type WebhookEndpointTestParams = WebhookEndpointTestParams;
+    type WebhookEndpointTestParams = __WebhookEndpointTestParams;
     // (undocumented)
-    type WebhookEndpointUpdateParams = WebhookEndpointUpdateParams;
+    type WebhookEndpointUpdateParams = __WebhookEndpointUpdateParams;
     // (undocumented)
-    type WebhookEndpointWithSecret = WebhookEndpointWithSecret;
+    type WebhookEndpointWithSecret = __WebhookEndpointWithSecret;
     // (undocumented)
-    type WebhookEvent = WebhookEvent;
+    type WebhookEvent = __WebhookEvent;
     // (undocumented)
-    type WebhookEventDelivery = WebhookEventDelivery;
+    type WebhookEventDelivery = __WebhookEventDelivery;
     // (undocumented)
-    type WebhookEventDetail = WebhookEventDetail;
+    type WebhookEventDetail = __WebhookEventDetail;
     // (undocumented)
-    type WebhookEventListParams = WebhookEventListParams;
+    type WebhookEventListParams = __WebhookEventListParams;
     // (undocumented)
-    type WebhookEventReplayParams = WebhookEventReplayParams;
+    type WebhookEventReplayParams = __WebhookEventReplayParams;
     // (undocumented)
-    type WebhookEventStatus = WebhookEventStatus;
+    type WebhookEventStatus = __WebhookEventStatus;
     // (undocumented)
-    type WebhookEventType = WebhookEventType;
+    type WebhookEventType = __WebhookEventType;
     // (undocumented)
-    type WebhookEventTypeInfo = WebhookEventTypeInfo;
+    type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
-    type WebhookPagination = WebhookPagination;
+    type WebhookPagination = __WebhookPagination;
     // (undocumented)
-    type WebhookUnwrapParams = WebhookUnwrapParams;
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
 }
 export { Trawl }
 export default Trawl;

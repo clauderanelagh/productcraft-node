@@ -187,93 +187,93 @@ class Fixture extends FixtureResources {
 // @public
 namespace Fixture {
     // (undocumented)
-    type Comment = Comment;
+    type Comment = __Comment;
     // (undocumented)
-    type Entry = Entry;
+    type Entry = __Entry;
     // (undocumented)
-    type EntryCreateParams = EntryCreateParams;
+    type EntryCreateParams = __EntryCreateParams;
     const // (undocumented)
     WidgetStatus: {
         values: readonly ["draft", "active", "archived"];
     };
     // (undocumented)
-    type ErrorCode = FixtureErrorCode;
+    type ErrorCode = __ErrorCode;
     // (undocumented)
-    type Pagination = Pagination;
+    type Pagination = __Pagination;
     // (undocumented)
-    type Part = Part;
+    type Part = __Part;
     // (undocumented)
-    type PartList = PartList;
+    type PartList = __PartList;
     // (undocumented)
-    type PollOptions = PollOptions;
+    type PollOptions = __PollOptions;
     // (undocumented)
-    type Post = Post;
+    type Post = __Post;
     // (undocumented)
-    type PostCommentCreateParams = PostCommentCreateParams;
+    type PostCommentCreateParams = __PostCommentCreateParams;
     // (undocumented)
-    type PostCreateParams = PostCreateParams;
+    type PostCreateParams = __PostCreateParams;
     // (undocumented)
-    type PostList = PostList;
+    type PostList = __PostList;
     // (undocumented)
-    type PostListParams = PostListParams;
+    type PostListParams = __PostListParams;
     // (undocumented)
-    type Region = Region;
+    type Region = __Region;
     // (undocumented)
-    type RegionListResponse = RegionListResponse;
+    type RegionListResponse = __RegionListResponse;
     // (undocumented)
-    type RequestOptions = RequestOptions;
+    type RequestOptions = __RequestOptions;
     // (undocumented)
-    type Settings = Settings;
+    type Settings = __Settings;
     // (undocumented)
-    type SettingsUpdateParams = SettingsUpdateParams;
+    type SettingsUpdateParams = __SettingsUpdateParams;
     // (undocumented)
-    type UnknownWebhookEvent = UnknownWebhookEvent;
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
     // (undocumented)
-    type UnwrapWebhookEvent = UnwrapWebhookEvent;
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
     // (undocumented)
-    type WebhookEndpoint = WebhookEndpoint;
+    type WebhookEndpoint = __WebhookEndpoint;
     // (undocumented)
-    type WebhookEndpointList = WebhookEndpointList;
+    type WebhookEndpointList = __WebhookEndpointList;
     // (undocumented)
-    type WebhookEndpointListParams = WebhookEndpointListParams;
+    type WebhookEndpointListParams = __WebhookEndpointListParams;
     // (undocumented)
-    type WebhookEventType = WebhookEventType;
+    type WebhookEventType = __WebhookEventType;
     // (undocumented)
-    type WebhookUnwrapParams = WebhookUnwrapParams;
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
     // (undocumented)
-    type Widget = Widget;
+    type Widget = __Widget;
     // (undocumented)
-    type WidgetArchivedEvent = WidgetArchivedEvent;
+    type WidgetArchivedEvent = __WidgetArchivedEvent;
     // (undocumented)
-    type WidgetBulkDeleteParams = WidgetBulkDeleteParams;
+    type WidgetBulkDeleteParams = __WidgetBulkDeleteParams;
     // (undocumented)
-    type WidgetBulkDeleteResponse = WidgetBulkDeleteResponse;
+    type WidgetBulkDeleteResponse = __WidgetBulkDeleteResponse;
     // (undocumented)
-    type WidgetCountParams = WidgetCountParams;
+    type WidgetCountParams = __WidgetCountParams;
     // (undocumented)
-    type WidgetCountResponse = WidgetCountResponse;
+    type WidgetCountResponse = __WidgetCountResponse;
     // (undocumented)
-    type WidgetCreatedEvent = WidgetCreatedEvent;
+    type WidgetCreatedEvent = __WidgetCreatedEvent;
     // (undocumented)
-    type WidgetCreateParams = WidgetCreateParams;
+    type WidgetCreateParams = __WidgetCreateParams;
     // (undocumented)
-    type WidgetEraseParams = WidgetEraseParams;
+    type WidgetEraseParams = __WidgetEraseParams;
     // (undocumented)
-    type WidgetHistoryResponse = WidgetHistoryResponse;
+    type WidgetHistoryResponse = __WidgetHistoryResponse;
     // (undocumented)
-    type WidgetList = WidgetList;
+    type WidgetList = __WidgetList;
     // (undocumented)
-    type WidgetListParams = WidgetListParams;
+    type WidgetListParams = __WidgetListParams;
     // (undocumented)
-    type WidgetPartCreateParams = WidgetPartCreateParams;
+    type WidgetPartCreateParams = __WidgetPartCreateParams;
     // (undocumented)
-    type WidgetPartListParams = WidgetPartListParams;
+    type WidgetPartListParams = __WidgetPartListParams;
     // (undocumented)
-    type WidgetStatus = WidgetStatus;
+    type WidgetStatus = __WidgetStatus;
     // (undocumented)
-    type WidgetUpdateParams = WidgetUpdateParams;
+    type WidgetUpdateParams = __WidgetUpdateParams;
     // (undocumented)
-    type WidgetUpdateStatusParams = WidgetUpdateStatusParams;
+    type WidgetUpdateStatusParams = __WidgetUpdateStatusParams;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["widget.archived", "widget.created"];
