@@ -16,13 +16,15 @@
         }
       },
       "Retry-After-long": {
-        "description": "Seconds to wait, when the per-minute IP limit tripped.",
+        "deprecated": true,
+        "description": "Deprecated: read `Retry-After`. Seconds to wait, when the per-minute IP limit tripped.",
         "schema": {
           "type": "integer"
         }
       },
       "Retry-After-short": {
-        "description": "Seconds to wait, when the per-second IP limit tripped.",
+        "deprecated": true,
+        "description": "Deprecated: read `Retry-After`. Seconds to wait, when the per-second IP limit tripped.",
         "schema": {
           "type": "integer"
         }
