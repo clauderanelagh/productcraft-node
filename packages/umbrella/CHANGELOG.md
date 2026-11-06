@@ -1,5 +1,12 @@
 # productcraft
 
+## 0.3.3
+
+### Patch Changes
+
+- Updated dependencies [66d5b1d]
+  - @productcraft/trawl@1.0.0
+
 ## 0.3.2
 
 ### Patch Changes
