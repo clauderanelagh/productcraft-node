@@ -546,6 +546,79 @@
         ],
         "type": "object"
       },
+      "EntryApprovedEvent": {
+        "description": "An entry was approved: by you, or automatically when the waitlist does not need approval. Every real delivery also carries the keys of the previous webhook body (`event`, `occurred_at`, `entry`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "entry": {
+              "created_at": "2026-10-17T10:00:00.000Z",
+              "email": "ada@example.com",
+              "id": "1d0b7828-0e1a-407b-8706-aeb7ff619088",
+              "is_test": false,
+              "name": "Ada Lovelace",
+              "position": 4,
+              "referral_code": "464QTHE0",
+              "referral_count": 0,
+              "referred_by_entry_id": null,
+              "status": "approved",
+              "updated_at": "2026-10-17T10:00:00.000Z"
+            },
+            "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392"
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "entry.approved",
+          "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "entry.approved"
+            ],
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "EntryApprovedEvent",
+        "type": "object",
+        "x-pc-sdk-model": "EntryApprovedEvent"
+      },
       "EntryCountResponseDto": {
         "properties": {
           "count": {
@@ -557,6 +630,103 @@
           "count"
         ],
         "type": "object"
+      },
+      "EntryCreatedEvent": {
+        "description": "Someone joined a waitlist. On a waitlist that does not need approval, entry.approved follows straight away. Every real delivery also carries the keys of the previous webhook body (`event`, `occurred_at`, `entry`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "entry": {
+              "created_at": "2026-10-17T10:00:00.000Z",
+              "email": "ada@example.com",
+              "id": "1d0b7828-0e1a-407b-8706-aeb7ff619088",
+              "is_test": false,
+              "name": "Ada Lovelace",
+              "position": 4,
+              "referral_code": "464QTHE0",
+              "referral_count": 0,
+              "referred_by_entry_id": null,
+              "status": "pending",
+              "updated_at": "2026-10-17T10:00:00.000Z"
+            },
+            "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392"
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "entry.created",
+          "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "entry.created"
+            ],
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "EntryCreatedEvent",
+        "type": "object",
+        "x-pc-sdk-model": "EntryCreatedEvent"
+      },
+      "EntryEventDataDto": {
+        "properties": {
+          "entry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEntryDto"
+              }
+            ],
+            "description": "The entry, as it is after the event."
+          },
+          "waitlist_id": {
+            "description": "The waitlist the entry belongs to.",
+            "example": "33a8b309-8753-4f08-90d7-9dc484eff392",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "waitlist_id",
+          "entry"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EntryEventData"
       },
       "EntryListPaginationDto": {
         "properties": {
@@ -591,6 +761,79 @@
           "pagination"
         ],
         "type": "object"
+      },
+      "EntryRejectedEvent": {
+        "description": "An entry was rejected. Every real delivery also carries the keys of the previous webhook body (`event`, `occurred_at`, `entry`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "entry": {
+              "created_at": "2026-10-17T10:00:00.000Z",
+              "email": "ada@example.com",
+              "id": "1d0b7828-0e1a-407b-8706-aeb7ff619088",
+              "is_test": false,
+              "name": "Ada Lovelace",
+              "position": 4,
+              "referral_code": "464QTHE0",
+              "referral_count": 0,
+              "referred_by_entry_id": null,
+              "status": "rejected",
+              "updated_at": "2026-10-17T10:00:00.000Z"
+            },
+            "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392"
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "entry.rejected",
+          "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "entry.rejected"
+            ],
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "EntryRejectedEvent",
+        "type": "object",
+        "x-pc-sdk-model": "EntryRejectedEvent"
       },
       "EntryResponseDto": {
         "properties": {
@@ -683,6 +926,14 @@
           "updated_at"
         ],
         "type": "object"
+      },
+      "EntryStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected"
+        ],
+        "type": "string"
       },
       "ErrorParamDto": {
         "properties": {
@@ -2709,6 +2960,90 @@
         ],
         "type": "object"
       },
+      "WebhookEntryDto": {
+        "properties": {
+          "created_at": {
+            "description": "When the entry was created.",
+            "example": "2026-10-17T10:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "description": "The email address that signed up.",
+            "example": "ada@example.com",
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "description": "The entry id.",
+            "example": "1d0b7828-0e1a-407b-8706-aeb7ff619088",
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_test": {
+            "description": "True for an entry made with \"Add test signup\" (those send no webhooks unless asked).",
+            "example": false,
+            "type": "boolean"
+          },
+          "name": {
+            "description": "The name given at signup.",
+            "example": "Ada Lovelace",
+            "type": "string"
+          },
+          "position": {
+            "description": "Place in the queue, 1 first.",
+            "example": 4,
+            "type": "integer"
+          },
+          "referral_code": {
+            "description": "The code this entry shares to refer others.",
+            "example": "464QTHE0",
+            "type": "string"
+          },
+          "referral_count": {
+            "description": "How many signups used this entry's referral code.",
+            "example": 0,
+            "type": "integer"
+          },
+          "referred_by_entry_id": {
+            "description": "The entry whose referral code this one signed up with; null when none.",
+            "example": null,
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EntryStatus"
+              }
+            ],
+            "description": "Review status after this event: `pending`, `approved` or `rejected`.",
+            "example": "pending"
+          },
+          "updated_at": {
+            "description": "When the entry last changed.",
+            "example": "2026-10-17T10:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "position",
+          "status",
+          "referral_code",
+          "referral_count",
+          "referred_by_entry_id",
+          "is_test",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEntry"
+      },
       "WebhookEventDeliveryDto": {
         "properties": {
           "attempt_number": {
@@ -2885,6 +3220,7 @@
         "type": "string"
       },
       "WebhookEventType": {
+        "description": "Every event type this product sends; `x-webhooks` maps each to its payload schema. New types can be added, so treat it as open.",
         "enum": [
           "entry.created",
           "entry.approved",
@@ -8399,5 +8735,243 @@
     }
   },
   "servers": [],
-  "tags": []
+  "tags": [],
+  "x-pc-webhook-signing": {
+    "algorithm": "HMAC-SHA256",
+    "headers": {
+      "id": "webhook-id",
+      "signature": "webhook-signature",
+      "timestamp": "webhook-timestamp"
+    },
+    "legacy": {
+      "deprecated": true,
+      "format": "t=<unix>,v1=<hex>",
+      "header": "X-Waitlist-Signature",
+      "secret_key": "UTF-8 bytes of the whole secret string",
+      "signed_content": "{t}.{body}"
+    },
+    "rotation": "space-separated `v1,` entries, one per active secret, current first",
+    "scheme": "standard-webhooks",
+    "secret_key": "base64 decode of the part after `whsec_`; a secret without the prefix (minted before it) is used as its UTF-8 bytes",
+    "secret_prefix": "whsec_",
+    "signature_format": "v1,<base64>",
+    "signed_content": "{webhook-id}.{webhook-timestamp}.{body}",
+    "spec_url": "https://www.standardwebhooks.com",
+    "tolerance_seconds": 300
+  },
+  "x-webhooks": {
+    "entry.approved": {
+      "post": {
+        "description": "A `entry.approved` event (Signups), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Waitlist-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryApprovedEvent"
+              }
+            }
+          },
+          "description": "The `entry.approved` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "An entry was approved: by you, or automatically when the waitlist does not need approval.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Signups"
+      }
+    },
+    "entry.created": {
+      "post": {
+        "description": "A `entry.created` event (Signups), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Waitlist-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryCreatedEvent"
+              }
+            }
+          },
+          "description": "The `entry.created` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "Someone joined a waitlist. On a waitlist that does not need approval, entry.approved follows straight away.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Signups"
+      }
+    },
+    "entry.rejected": {
+      "post": {
+        "description": "A `entry.rejected` event (Signups), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Waitlist-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryRejectedEvent"
+              }
+            }
+          },
+          "description": "The `entry.rejected` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "An entry was rejected.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Signups"
+      }
+    }
+  }
 }

@@ -223,6 +223,88 @@
         "type": "object",
         "x-pc-sdk-model": "CreditLedgerEntry"
       },
+      "CreditsLowEvent": {
+        "description": "Your Trawl balance dropped below 10% of your last top-up (at least 100 steps). Sent once; it comes again after your next top-up. New jobs are refused when the balance reaches zero. Job events also carry the keys of the previous webhook body (`event`, `occurred_at`, `job`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "balance_steps": 840,
+            "last_top_up_steps": 10000,
+            "threshold_steps": 1000
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "credits.low",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/CreditsLowEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "credits.low"
+            ],
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "CreditsLowEvent",
+        "type": "object",
+        "x-pc-sdk-model": "CreditsLowEvent"
+      },
+      "CreditsLowEventDataDto": {
+        "properties": {
+          "balance_steps": {
+            "description": "The balance, in steps, when the event was sent.",
+            "example": 840,
+            "type": "integer"
+          },
+          "last_top_up_steps": {
+            "description": "Steps added by the last top-up.",
+            "example": 10000,
+            "type": "integer"
+          },
+          "threshold_steps": {
+            "description": "The threshold it dropped below: 10% of the last top-up, at least 100 steps.",
+            "example": 1000,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "balance_steps",
+          "threshold_steps",
+          "last_top_up_steps"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "CreditsLowEventData"
+      },
       "CreditsResponseDto": {
         "properties": {
           "balance_steps": {
@@ -351,6 +433,82 @@
         ],
         "type": "object"
       },
+      "JobEventDataDto": {
+        "properties": {
+          "job": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JobOutcomeDto"
+              }
+            ],
+            "description": "The job that finished."
+          }
+        },
+        "required": [
+          "job"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "JobEventData"
+      },
+      "JobFailedEvent": {
+        "description": "An extraction job stopped without a result: the page did not load, the agent ran out of steps or time, or the result did not match your schema. The reason is in data.job.error. Job events also carry the keys of the previous webhook body (`event`, `occurred_at`, `job`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "job": {
+              "error": "The job ran out of steps before it found the data.",
+              "id": "7c1e2a4b-5d3f-4e8a-9b6c-0d1e2f3a4b5c",
+              "result": null,
+              "status": "failed"
+            }
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "job.failed",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/JobEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "job.failed"
+            ],
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "JobFailedEvent",
+        "type": "object",
+        "x-pc-sdk-model": "JobFailedEvent"
+      },
       "JobListPaginationDto": {
         "properties": {
           "has_more": {
@@ -394,6 +552,56 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "JobList"
+      },
+      "JobOutcomeDto": {
+        "properties": {
+          "error": {
+            "description": "Why the job stopped without a result; null when it succeeded.",
+            "example": null,
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "The job id.",
+            "example": "7c1e2a4b-5d3f-4e8a-9b6c-0d1e2f3a4b5c",
+            "format": "uuid",
+            "type": "string"
+          },
+          "result": {
+            "additionalProperties": true,
+            "description": "The extracted JSON, matching the JSON Schema the job was created with; null when the job failed.",
+            "example": {
+              "price": null,
+              "title": "Example Domain"
+            },
+            "nullable": true,
+            "type": "object"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JobOutcomeStatus"
+              }
+            ],
+            "description": "`succeeded` on `job.succeeded`, `failed` on `job.failed`.",
+            "example": "succeeded"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "result",
+          "error"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "JobOutcome"
+      },
+      "JobOutcomeStatus": {
+        "enum": [
+          "succeeded",
+          "failed"
+        ],
+        "type": "string"
       },
       "JobResponseDto": {
         "properties": {
@@ -519,6 +727,68 @@
           "cancelled"
         ],
         "type": "string"
+      },
+      "JobSucceededEvent": {
+        "description": "An extraction job finished and its result matches your JSON Schema. The result is in data.job.result. Job events also carry the keys of the previous webhook body (`event`, `occurred_at`, `job`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "job": {
+              "error": null,
+              "id": "7c1e2a4b-5d3f-4e8a-9b6c-0d1e2f3a4b5c",
+              "result": {
+                "price": null,
+                "title": "Example Domain"
+              },
+              "status": "succeeded"
+            }
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "job.succeeded",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/JobEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "job.succeeded"
+            ],
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "JobSucceededEvent",
+        "type": "object",
+        "x-pc-sdk-model": "JobSucceededEvent"
       },
       "ListWebhookEndpointsResponseDto": {
         "properties": {
@@ -1673,6 +1943,7 @@
         "type": "string"
       },
       "WebhookEventType": {
+        "description": "Every event type this product sends; `x-webhooks` maps each to its payload schema. New types can be added, so treat it as open.",
         "enum": [
           "job.succeeded",
           "job.failed",
@@ -6169,5 +6440,243 @@
       "description": "Webhook endpoints that receive `job.succeeded`, `job.failed` and `credits.low` events, their delivery log and replays. The legacy single-webhook routes are deprecated.",
       "name": "webhooks"
     }
-  ]
+  ],
+  "x-pc-webhook-signing": {
+    "algorithm": "HMAC-SHA256",
+    "headers": {
+      "id": "webhook-id",
+      "signature": "webhook-signature",
+      "timestamp": "webhook-timestamp"
+    },
+    "legacy": {
+      "deprecated": true,
+      "format": "t=<unix>,v1=<hex>",
+      "header": "X-Trawl-Signature",
+      "secret_key": "UTF-8 bytes of the whole secret string",
+      "signed_content": "{t}.{body}"
+    },
+    "rotation": "space-separated `v1,` entries, one per active secret, current first",
+    "scheme": "standard-webhooks",
+    "secret_key": "base64 decode of the part after `whsec_`; a secret without the prefix (minted before it) is used as its UTF-8 bytes",
+    "secret_prefix": "whsec_",
+    "signature_format": "v1,<base64>",
+    "signed_content": "{webhook-id}.{webhook-timestamp}.{body}",
+    "spec_url": "https://www.standardwebhooks.com",
+    "tolerance_seconds": 300
+  },
+  "x-webhooks": {
+    "credits.low": {
+      "post": {
+        "description": "A `credits.low` event (Credits), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Trawl-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreditsLowEvent"
+              }
+            }
+          },
+          "description": "The `credits.low` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "Your Trawl balance dropped below 10% of your last top-up (at least 100 steps). Sent once; it comes again after your next top-up. New jobs are refused when the balance reaches zero.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Credits"
+      }
+    },
+    "job.failed": {
+      "post": {
+        "description": "A `job.failed` event (Jobs), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Trawl-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobFailedEvent"
+              }
+            }
+          },
+          "description": "The `job.failed` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "An extraction job stopped without a result: the page did not load, the agent ran out of steps or time, or the result did not match your schema. The reason is in data.job.error.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Jobs"
+      }
+    },
+    "job.succeeded": {
+      "post": {
+        "description": "A `job.succeeded` event (Jobs), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Trawl-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JobSucceededEvent"
+              }
+            }
+          },
+          "description": "The `job.succeeded` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "An extraction job finished and its result matches your JSON Schema. The result is in data.job.result.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Jobs"
+      }
+    }
+  }
 }
