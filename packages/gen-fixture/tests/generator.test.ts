@@ -92,6 +92,45 @@ describe("form uploads", () => {
   });
 });
 
+describe("names are unique per scope (Social's workspace and community webhooks)", () => {
+  const withRootPosts = (s: Spec) => {
+    const op = structuredClone(s.paths["/v1/communities/{community_id}/posts"]!.post!);
+    op.operationId = "WorkspacePostController_create";
+    op["x-pc-sdk"] = { resource: "posts", method: "create", bind: ["workspace_id"], paginated: false };
+    op.parameters = [{ name: "workspace_id", in: "path", required: true, schema: { type: "string" } }, ...((op.parameters as { in: string }[]) ?? []).filter((p) => p.in !== "path")];
+    s.paths[`${W}/posts`] = { post: op };
+  };
+
+  it("the same resource.method on the root and in a scope is not a collision; the scoped copy's types carry the scope", async () => {
+    const spec = fresh();
+    withRootPosts(spec);
+    const { files } = (await generate("gen-fixture", spec)) as { files: Record<string, string> };
+    const types = files["packages/gen-fixture/src/_generated/types.ts"]!;
+    expect(types).toMatch(/export type PostCreateParams = /);
+    expect(types).toMatch(/export type CommunityScopedPostCreateParams = /);
+    const resources = files["packages/gen-fixture/src/_generated/resources.ts"]!;
+    expect(resources).toMatch(/T\.WithOptionalActor<T\.CommunityScopedPostCreateParams>/);
+  });
+
+  it("still fails on a duplicate inside one scope", async () => {
+    const p = await problems((s) => ((s.paths["/v1/communities/{community_id}/posts/{post_id}/comments"]!.post!["x-pc-sdk"] as Record<string, unknown>).resource = "posts"));
+    expect(p.join()).toMatch(/CommentController_create\): name collision, community\(…\)\.posts\.create is also PostController_create/);
+  });
+});
+
+describe("delete on a POST action (Social's POST …/tags/{tagged_actor_id}/remove)", () => {
+  it("is accepted when it names one object", async () => {
+    const p = await problems((s) => ((s.paths[`${W}/widgets/{id}/archive`]!.post!["x-pc-sdk"] as Record<string, unknown>).method = "delete"));
+    expect(p.join()).toMatch(/WidgetController_archive\): name collision, widgets\.delete/);
+    expect(p.join()).not.toMatch(/cannot be a POST/);
+  });
+
+  it("still needs an id", async () => {
+    const p = await problems((s) => ((s.paths[`${W}/widgets/bulk-delete`]!.post!["x-pc-sdk"] as Record<string, unknown>).method = "delete"));
+    expect(p.join()).toMatch(/WidgetController_bulkDelete\): DELETE without an id cannot be "delete"/);
+  });
+});
+
 describe("golden output", () => {
   it("matches the checked-in goldens for every generated file", async () => {
     const { files } = await generate("gen-fixture");

@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/social",
   "version": "1.0.4",
-  "description": "Social-as-a-service backend — communities, posts, ranked feeds, stories, direct conversations, notifications, moderation, flags via ProductCraft Social. Generated from the production OpenAPI spec.",
+  "description": "Communities, actors, posts, ranked feeds, stories, conversations, notifications and moderation (ProductCraft Social). Resources, community scopes with .as(actorId), auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -11,18 +11,28 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
+    },
+    "./manifest.json": "./manifest.json"
   },
   "files": [
     "dist/**",
+    "manifest.json",
+    "api.md",
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "engines": {
     "node": ">=20.3"
   },
   "scripts": {
-    "build": "tsup"
+    "build": "tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
+    "test": "tsc -p tests/tsconfig.json && vitest run"
   },
   "keywords": [
     "productcraft",

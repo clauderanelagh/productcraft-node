@@ -22,7 +22,10 @@ export const RESERVED = new Set([
 /** Section 3.2 rule 4: verbs that never appear as SDK methods. */
 export const BANNED_VERBS = new Set(["remove", "get", "show", "fire", "getById", "upsert", "put", "submit"]);
 /** Which HTTP methods each standard verb may sit on. */
-const VERB_HTTP = { list: ["get"], create: ["post"], retrieve: ["get"], update: ["patch", "put"], delete: ["delete"], export: ["get"], erase: ["delete"] };
+// `delete` may also name a POST action that removes one object without an HTTP DELETE
+// (Social's `POST …/tags/{tagged_actor_id}/remove`): the action verb would be the banned
+// "remove", and openapi-audit accepts `delete` there. It still needs an id (below).
+const VERB_HTTP = { list: ["get"], create: ["post"], retrieve: ["get"], update: ["patch", "put"], delete: ["delete", "post"], export: ["get"], erase: ["delete"] };
 /** Bound by the client itself (option, env, or key lookup): never a scope. */
 const CLIENT_BOUND = new Set(["workspace_id"]);
 
@@ -95,8 +98,6 @@ export function buildModel(spec, config) {
       if (VERB_HTTP[method] && !VERB_HTTP[method].includes(m)) problems.push(`${w}: "${method}" cannot be a ${m.toUpperCase()} (section 3.2)`);
 
       const name = `${resource}.${method}`;
-      if (seenNames.has(name)) problems.push(`${w}: name collision, ${name} is also ${seenNames.get(name)}`);
-      seenNames.set(name, op.operationId);
 
       const params = (op.parameters ?? []).map((p) => (p.$ref ? deref(p) ?? (problems.push(`${w}: unresolved parameter $ref ${p.$ref}`), {}) : p));
       const pathParams = params.filter((p) => p.in === "path");
@@ -110,6 +111,11 @@ export function buildModel(spec, config) {
         scope = scopeByKey.get([...scopeBind].sort().join(",")) ?? null;
         if (!scope) problems.push(`${w}: bind ${JSON.stringify(scopeBind)} has no scope in this surface's gen-sdk config`);
       }
+      // Unique per scope (as openapi-audit checks): `social.webhooks.endpoints.list` and
+      // `social.community(id).webhooks.endpoints.list` are different methods.
+      const scopedName = `${scope?.name ?? ""}:${name}`;
+      if (seenNames.has(scopedName)) problems.push(`${w}: name collision, ${scope ? `${scope.name}(…).` : ""}${name} is also ${seenNames.get(scopedName)}`);
+      seenNames.set(scopedName, op.operationId);
       // Positional arguments: every unbound path parameter, outermost first.
       const positional = templateNames
         .filter((n) => !bind.includes(n))
@@ -230,6 +236,16 @@ export function buildModel(spec, config) {
         stem,
       });
     }
+  }
+
+  // A resource.method that exists in more than one scope: the scoped copies' type names
+  // carry the scope (`Social.CommunityScopedWebhookEndpointCreateParams`; "Scoped" keeps them apart from a root `communities.*` stem), the root keeps the plain name.
+  const scopesByName = new Map();
+  for (const o of ops) scopesByName.set(o.name, (scopesByName.get(o.name) ?? 0) + 1);
+  for (const o of ops) {
+    if (!o.scope || scopesByName.get(o.name) < 2) continue;
+    o.stem = `${pascal(o.scope.name)}Scoped${o.stem}`;
+    if (o.paramsType) o.paramsType = `${o.stem}${pascal(o.method)}Params`;
   }
 
   // Resource names must not collide with method names on the same node.

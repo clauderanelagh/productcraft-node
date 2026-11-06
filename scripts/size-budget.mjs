@@ -42,6 +42,12 @@ export const run = () => form.entries.create({ email: "a@b.c", name: "Ada" });`,
 const platform = new PlatformAuth({ apiKey: "pcft_live_x" });
 export const run = () => platform.apiKeys.self();`,
   },
+  "@productcraft/social": {
+    dir: "packages/social",
+    code: `import { Social } from "@productcraft/social";
+const social = new Social({ apiKey: "pcft_live_x" });
+export const run = () => social.community("c").as("a").posts.create({ body: "Hello" });`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

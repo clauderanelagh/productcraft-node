@@ -513,7 +513,7 @@ export class CommunityPostsResource extends APIResource {
    * const page = await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({}, { timeout: 5_000 });
    * ```
    */
-  list(params?: T.PostListParams, options?: RequestOptions): PagePromise<T.Post> {
+  list(params?: T.WithOptionalActor<T.PostListParams>, options?: RequestOptions): PagePromise<T.Post> {
     return this._client.list({ method: "GET", path: "/v1/communities/{community_id}/posts", pathParams: { community_id: this._b.community_id }, query: fillActor(params, this._b) }, options);
   }
 }

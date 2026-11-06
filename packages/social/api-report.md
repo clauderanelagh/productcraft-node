@@ -4,12 +4,1964 @@
 
 ```ts
 
-import { makeClient } from '@productcraft/core';
-import { PCClientConfig } from '@productcraft/core';
+import { APIClient } from '@productcraft/core';
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
+import { AuthenticationError } from '@productcraft/core';
+import { BadRequestError } from '@productcraft/core';
+import { Client } from 'openapi-fetch';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
+import { LastResponse } from '@productcraft/core';
+import { NotFoundError } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
+import { PermissionDeniedError } from '@productcraft/core';
+import { PollOptions } from '@productcraft/core';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { WebhookHeaders } from '@productcraft/core';
+import { WebhookPayload } from '@productcraft/core';
+import { WebhookVerificationError } from '@productcraft/core';
 
-// @public
-export interface paths {
-    // (undocumented)
+export { APIConnectionError }
+
+export { APIError }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
+
+export { AuthenticationError }
+
+export { BadRequestError }
+
+// @public (undocumented)
+export type components = {
+    schemas: {
+        ActOnFlagResponseDto: {
+            flag: components["schemas"]["FlagResponseDto"];
+            moderation_action: components["schemas"]["ModerationActionResponseDto"];
+        };
+        ActingActorDto: {
+            actor_id: string;
+        };
+        ActorCommentsResponseDto: {
+            data: components["schemas"]["CommentResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ActorCountersResponseDto: {
+            actor_id: string;
+            blocks_count: number;
+            comment_count: number;
+            community_id: string;
+            follower_count: number;
+            following_count: number;
+            post_count: number;
+            updated_at: string;
+        };
+        ActorEdgeDto: {
+            actor_id: string;
+            dst_actor_id: string;
+            payload?: {
+                [key: string]: unknown;
+            };
+        };
+        ActorFollowerPointDto: {
+            day: string;
+            follower_count: number;
+        };
+        ActorInsightsResponseDto: {
+            actor_id: string;
+            community_id: string;
+            daily: components["schemas"]["ActorFollowerPointDto"][];
+            follower_count: number;
+        };
+        ActorListListResponseDto: {
+            data: components["schemas"]["ActorListResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ActorListMemberListResponseDto: {
+            data: components["schemas"]["ActorListMemberResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ActorListMemberResponseDto: {
+            actor_id: string;
+            added_at: string;
+            community_id: string;
+            list_id: string;
+        };
+        ActorListResponseDto: {
+            community_id: string;
+            created_at: string;
+            description: string | null;
+            id: string;
+            member_count: number;
+            name: string;
+            owner_id: string;
+            updated_at: string;
+            visibility: components["schemas"]["ActorListVisibility"];
+        };
+        ActorListVisibility: "public" | "private";
+        ActorPageResponseDto: {
+            data: components["schemas"]["ActorResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ActorReactionEntryDto: {
+            created_at: string;
+            target_id: string;
+            target_type: components["schemas"]["ReactionTargetType"];
+            type: string;
+        };
+        ActorReactionsResponseDto: {
+            data: components["schemas"]["ActorReactionEntryDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ActorResponseDto: {
+            avatar_url: string | null;
+            community_id: string;
+            created_at: string;
+            display_name: string | null;
+            external_id: string;
+            id: string;
+            is_private: boolean;
+            metadata: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["ActorStatus"];
+            updated_at: string;
+        };
+        ActorSearchHitDto: {
+            actor: components["schemas"]["ActorResponseDto"];
+            rank: number;
+        };
+        ActorSearchResponseDto: {
+            data: components["schemas"]["ActorSearchHitDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"] | null;
+        };
+        ActorStatus: "active" | "suspended" | "deleted";
+        ActorSummaryDto: {
+            avatar_url: string | null;
+            display_name: string | null;
+            id: string;
+            status: string;
+        };
+        ActorUpdatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["ActorUpdatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "actor.updated";
+            workspace_id?: string;
+        };
+        ActorUpdatedEventDataDto: {
+            actor_id: string;
+            community_id: string;
+            external_id: string;
+        };
+        ActorsByExternalBatchResponseDto: {
+            data: components["schemas"]["ActorResponseDto"][];
+            missing: string[];
+        };
+        AddCommentReactionResponseDto: {
+            created: boolean;
+            reaction: components["schemas"]["CommentReactionEntryDto"];
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        AddItemDto: {
+            actor_id?: string;
+            caller_actor_id?: string;
+            position?: number;
+            post_id: string;
+        };
+        AddListMemberDto: {
+            actor_id: string;
+            caller_actor_id?: string;
+            member_actor_id?: string;
+        };
+        AddMemberDto: {
+            actor_id: string;
+            caller_actor_id?: string;
+            member_actor_id?: string;
+            role?: "member" | "admin";
+        };
+        ApplyShadowBanDto: {
+            duration_hours?: number | null;
+            reason?: string | null;
+        };
+        ApproveCommentDto: {
+            actor_id?: string;
+            approver_actor_id?: string;
+        };
+        AssetAttachmentDto: {
+            alt_text: string | null;
+            asset_id: string;
+        };
+        AssetAttachmentInputDto: {
+            alt_text?: string;
+            asset_id: string;
+        };
+        AssetFailedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["AssetFailedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "asset.failed";
+            workspace_id?: string;
+        };
+        AssetFailedEventDataDto: {
+            asset_id: string;
+            community_id: string;
+            failure_reason: string | null;
+            kind: components["schemas"]["AssetKind"];
+            owner_actor_id: string;
+            status: components["schemas"]["AssetStatus"];
+        };
+        AssetKind: "image" | "video";
+        AssetListResponseDto: {
+            data: components["schemas"]["AssetResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        AssetReadyEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["AssetReadyEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "asset.ready";
+            workspace_id?: string;
+        };
+        AssetReadyEventDataDto: {
+            asset_id: string;
+            community_id: string;
+            kind: components["schemas"]["AssetKind"];
+            owner_actor_id: string;
+            status: components["schemas"]["AssetStatus"];
+        };
+        AssetRenditionDto: {
+            byte_size: number;
+            content_type: string;
+            height: number | null;
+            name: components["schemas"]["AssetRenditionName"];
+            url: string;
+            width: number | null;
+        };
+        AssetRenditionName: "original" | "medium" | "thumb" | "video" | "poster";
+        AssetResponseDto: {
+            byte_size: number;
+            community_id: string;
+            content_type: string;
+            created_at: string;
+            duration_s: number | null;
+            failure_reason: string | null;
+            height: number | null;
+            id: string;
+            kind: components["schemas"]["AssetKind"];
+            owner_actor_id: string;
+            renditions: components["schemas"]["AssetRenditionDto"][];
+            status: components["schemas"]["AssetStatus"];
+            updated_at: string;
+            width: number | null;
+        };
+        AssetStatus: "uploading" | "processing" | "ready" | "failed";
+        AssetUploadDto: {
+            expires_at: string;
+            headers: {
+                [key: string]: string;
+            };
+            method: components["schemas"]["AssetUploadMethod"];
+            url: string;
+        };
+        AssetUploadMethod: "PUT";
+        AuditListResponseDto: {
+            data: components["schemas"]["ModerationActionResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        BatchActorResultDto: {
+            actor?: components["schemas"]["ActorResponseDto"];
+            created?: boolean;
+            error?: components["schemas"]["BatchItemErrorDto"];
+            index: number;
+            success: boolean;
+        };
+        BatchActorsResponseDto: {
+            data: components["schemas"]["BatchActorResultDto"][];
+            failed: number;
+            succeeded: number;
+        };
+        BatchCountersResponseDto: {
+            data: components["schemas"]["ActorCountersResponseDto"][];
+            missing: string[];
+        };
+        BatchExternalIdsDto: {
+            external_ids: string[];
+        };
+        BatchFollowResultDto: {
+            created?: boolean;
+            edge?: components["schemas"]["EdgeResponseDto"];
+            error?: components["schemas"]["BatchItemErrorDto"];
+            index: number;
+            success: boolean;
+        };
+        BatchFollowsDto: {
+            follows: components["schemas"]["ActorEdgeDto"][];
+            suppress_notifications?: boolean;
+        };
+        BatchFollowsResponseDto: {
+            data: components["schemas"]["BatchFollowResultDto"][];
+            failed: number;
+            succeeded: number;
+        };
+        BatchItemErrorDto: {
+            code?: string;
+            message: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        BatchUpsertActorsDto: {
+            actors: components["schemas"]["UpsertActorDto"][];
+        };
+        BlockedTermAction: "hide" | "pending_approval";
+        BlockedTermListResponseDto: {
+            data: components["schemas"]["BlockedTermResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        BlockedTermResponseDto: {
+            action: components["schemas"]["BlockedTermAction"];
+            community_id: string;
+            created_at: string;
+            id: string;
+            term: string;
+        };
+        BookmarkListResponseDto: {
+            data: components["schemas"]["BookmarkResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        BookmarkResponseDto: {
+            actor_id: string;
+            community_id: string;
+            created_at: string;
+            post_id: string;
+        };
+        BookmarkToggleResponseDto: {
+            bookmark: components["schemas"]["BookmarkResponseDto"];
+            created: boolean;
+        };
+        CastVoteDto: {
+            actor_id: string;
+            option_index: number;
+        };
+        CloseFriendResponse: {
+            created_at: string;
+            member_actor_id: string;
+            member_avatar_url: string | null;
+            member_display_name: string | null;
+            member_external_id: string;
+            owner_actor_id: string;
+        };
+        CloseFriendsListResponse: {
+            data: components["schemas"]["CloseFriendResponse"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CollectionItemListResponseDto: {
+            data: components["schemas"]["CollectionItemResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CollectionItemResponseDto: {
+            added_at: string;
+            collection_id: string;
+            community_id: string;
+            position: number;
+            post_id: string;
+        };
+        CollectionKind: "bookmark" | "highlight";
+        CollectionListResponseDto: {
+            data: components["schemas"]["CollectionResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CollectionResponseDto: {
+            community_id: string;
+            cover_asset_id: string | null;
+            cover_url: string | null;
+            created_at: string;
+            id: string;
+            item_count: number;
+            kind: components["schemas"]["CollectionKind"];
+            name: string;
+            owner_actor_id: string;
+            position: number;
+            updated_at: string;
+            visibility: components["schemas"]["CollectionVisibility"];
+        };
+        CollectionVisibility: "public" | "private";
+        CommentCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["CommentCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "comment.created";
+            workspace_id?: string;
+        };
+        CommentCreatedEventDataDto: {
+            actor_id: string;
+            body: string;
+            comment_id: string;
+            community_id: string;
+            parent_actor_id: string | null;
+            parent_id: string | null;
+            post_actor_id: string;
+            post_id: string;
+            status: components["schemas"]["CommentStatus"];
+        };
+        CommentDeletedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["CommentDeletedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "comment.deleted";
+            workspace_id?: string;
+        };
+        CommentDeletedEventDataDto: {
+            actor_id: string;
+            comment_id: string;
+            community_id: string;
+            post_id: string;
+        };
+        CommentListResponseDto: {
+            data: components["schemas"]["CommentResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CommentPolicy: "everyone" | "followers" | "mentioned" | "off";
+        CommentReactionCountsResponseDto: {
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        CommentReactionCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["CommentReactionCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "comment.reaction.created";
+            workspace_id?: string;
+        };
+        CommentReactionCreatedEventDataDto: {
+            actor_id: string;
+            comment_actor_id: string;
+            comment_id: string;
+            community_id: string;
+            post_id: string;
+            type: string;
+        };
+        CommentReactionEntryDto: {
+            actor_id: string;
+            comment_id: string;
+            community_id: string;
+            created_at: string;
+            type: string;
+        };
+        CommentReactionListResponseDto: {
+            data: components["schemas"]["CommentReactionEntryDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CommentResponseDto: {
+            actor_id: string;
+            assets: components["schemas"]["AssetAttachmentDto"][];
+            body: string;
+            community_id: string;
+            created_at: string;
+            depth: number;
+            id: string;
+            parent_id: string | null;
+            pinned: boolean;
+            pinned_at: string | null;
+            post_id: string;
+            reaction_counts: {
+                [key: string]: number;
+            };
+            status: components["schemas"]["CommentStatus"];
+            updated_at: string;
+            visibility: components["schemas"]["CommentVisibility"];
+        };
+        CommentStatus: "published" | "hidden" | "removed" | "pending_approval";
+        CommentUpdatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["CommentUpdatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "comment.updated";
+            workspace_id?: string;
+        };
+        CommentUpdatedEventDataDto: {
+            actor_id: string;
+            body: string;
+            comment_id: string;
+            community_id: string;
+            post_id: string;
+        };
+        CommentVisibility: "public" | "author_only";
+        CommunityAnalyticsResponseDto: {
+            actors_last_7d: number;
+            comments_last_7d: number;
+            community_id: string;
+            computed_at: string;
+            posts_last_7d: number;
+            total_actors: number;
+            total_comments: number;
+            total_open_flags: number;
+            total_posts: number;
+        };
+        CommunityListResponseDto: {
+            data: components["schemas"]["CommunityResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        CommunityRankingSettingsDto: {
+            candidate_window_days: number;
+            half_life_hours: number;
+            weights: components["schemas"]["CommunityRankingWeightsDto"];
+        };
+        CommunityRankingSettingsInputDto: {
+            candidate_window_days?: number;
+            half_life_hours?: number;
+            weights?: components["schemas"]["CommunityRankingWeightsInputDto"];
+        };
+        CommunityRankingWeightsDto: {
+            engagement: number;
+            follow_bias: number;
+            recency: number;
+            self_boost: number;
+        };
+        CommunityRankingWeightsInputDto: {
+            engagement?: number;
+            follow_bias?: number;
+            recency?: number;
+            self_boost?: number;
+        };
+        CommunityResponseDto: {
+            app_id: string | null;
+            created_at: string;
+            created_by: string;
+            description: string | null;
+            display_name: string;
+            id: string;
+            settings: components["schemas"]["CommunitySettingsDto"];
+            slug: string;
+            status: components["schemas"]["CommunityStatus"];
+            updated_at: string;
+            workspace_id: string;
+        };
+        CommunitySettingsDto: {
+            auto_hide_flag_threshold: number;
+            edit_window_minutes: number;
+            max_comment_depth: number;
+            max_group_conversation_size: number;
+            max_pinned_comments: number;
+            ranking: components["schemas"]["CommunityRankingSettingsDto"];
+        };
+        CommunitySettingsInputDto: {
+            auto_hide_flag_threshold?: number;
+            edit_window_minutes?: number;
+            max_comment_depth?: number;
+            max_group_conversation_size?: number;
+            max_pinned_comments?: number;
+            ranking?: components["schemas"]["CommunityRankingSettingsInputDto"];
+        };
+        CommunityStatus: "active" | "suspended" | "archived";
+        ConnectionRequestDto: {
+            dst_actor_id: string;
+            src_actor_id: string;
+        };
+        ConnectionResultDto: {
+            created: boolean;
+            status: components["schemas"]["ConnectionStatus"];
+        };
+        ConnectionStatus: "pending" | "connected";
+        ConversationAdminListResponseDto: {
+            data: components["schemas"]["ConversationAdminResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ConversationAdminResponseDto: {
+            community_id: string;
+            created_at: string;
+            id: string;
+            kind: components["schemas"]["ConversationKind"];
+            last_message_at: string;
+            name: string | null;
+            participants: components["schemas"]["ParticipantSummaryDto"][];
+            updated_at: string;
+        };
+        ConversationKind: "direct" | "group";
+        ConversationListResponseDto: {
+            data: components["schemas"]["ConversationResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ConversationParticipantDto: {
+            actor_id: string;
+            joined_at: string;
+            last_read_at: string | null;
+            muted: boolean;
+            muted_until: string | null;
+            pinned: boolean;
+            role: components["schemas"]["ConversationRole"];
+        };
+        ConversationResponseDto: {
+            community_id: string;
+            created_at: string;
+            created_by: string | null;
+            id: string;
+            kind: components["schemas"]["ConversationKind"];
+            last_message_at: string;
+            name: string | null;
+            participants: components["schemas"]["ConversationParticipantDto"][];
+            unread_count: number;
+            updated_at: string;
+        };
+        ConversationRole: "member" | "admin";
+        CreateActorListDto: {
+            actor_id?: string;
+            description?: string | null;
+            name: string;
+            owner_id?: string;
+            visibility?: "public" | "private";
+        };
+        CreateBlockedTermDto: {
+            action?: "hide" | "pending_approval";
+            term: string;
+        };
+        CreateBookmarkDto: {
+            actor_id: string;
+            collection_ids?: string[];
+        };
+        CreateCloseFriendDto: {
+            actor_id?: string;
+            member_actor_id: string;
+            owner_actor_id?: string;
+        };
+        CreateCollectionDto: {
+            actor_id?: string;
+            cover_asset_id?: string;
+            cover_url?: string;
+            kind?: "bookmark" | "highlight";
+            name: string;
+            owner_actor_id?: string;
+            position?: number;
+            visibility?: "public" | "private";
+        };
+        CreateCommentDto: {
+            actor_id: string;
+            assets?: components["schemas"]["AssetAttachmentInputDto"][];
+            body: string;
+            parent_id?: string | null;
+            visibility?: "public" | "author_only";
+        };
+        CreateCommentReactionDto: {
+            actor_id: string;
+            type: string;
+        };
+        CreateCommunityDto: {
+            app_id?: string;
+            description?: string;
+            display_name: string;
+            settings?: components["schemas"]["CommunitySettingsInputDto"];
+            slug: string;
+        };
+        CreateConversationDto: {
+            actor_id: string;
+            actor_ids?: string[];
+            kind?: "direct" | "group";
+            name?: string;
+            recipient_actor_id?: string;
+        };
+        CreateDirectMessageReactionDto: {
+            actor_id: string;
+            type: string;
+        };
+        CreateEdgeResponseDto: {
+            created: boolean;
+            edge: components["schemas"]["EdgeResponseDto"];
+        };
+        CreateFlagDto: {
+            actor_id?: string;
+            reason?: string;
+            reporter_actor_id?: string;
+            target_id: string;
+            target_kind: "post" | "comment" | "actor" | "direct_message";
+        };
+        CreateFlagResponseDto: {
+            auto_hidden: boolean;
+            created: boolean;
+            flag: components["schemas"]["FlagResponseDto"];
+        };
+        CreateHashtagFollowDto: {
+            tag: string;
+        };
+        CreateMutedTermDto: {
+            action?: "mute" | "pending_approval";
+            expires_at?: string | null;
+            scope?: "feed" | "dm" | "mention" | "all";
+            term: string;
+        };
+        CreatePostDto: {
+            actor_id: string;
+            assets?: components["schemas"]["AssetAttachmentInputDto"][];
+            attributes?: {
+                [key: string]: unknown;
+            };
+            body?: string | null;
+            expires_at?: string | null;
+            kind?: string;
+            scheduled_for?: string | null;
+            settings?: components["schemas"]["PostSettingsInputDto"];
+            source_post_id?: string;
+            status?: "published" | "draft" | "scheduled";
+            tags?: string[];
+            title?: string | null;
+            url?: string | null;
+            visibility?: "public" | "followers" | "close_friends" | "private";
+        };
+        CreateReactionDto: {
+            actor_id: string;
+            type: string;
+        };
+        CreateRepostDto: {
+            actor_id: string;
+        };
+        CreateRepostResponseDto: {
+            created: boolean;
+            repost: components["schemas"]["PostResponseDto"];
+            source: components["schemas"]["PostResponseDto"];
+        };
+        CreateWebhookDto: {
+            event_types: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            url: string;
+        };
+        CreateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            url: string;
+        };
+        CreatedWebhookResponseDto: {
+            community_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            event_types: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            id: string;
+            last_failure_at: string | null;
+            last_success_at: string | null;
+            signing_secret: string;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+        };
+        DeleteWithCallerDto: {
+            caller_actor_id?: string;
+        };
+        DeliveryJobResponseDto: {
+            attempt_count: number;
+            created_at: string;
+            event_id: string;
+            event_type: string;
+            id: string;
+            last_error: string | null;
+            next_attempt_at: string;
+            status: "pending" | "delivering" | "succeeded" | "exhausted" | "canceled";
+            updated_at: string;
+            webhook_id: string;
+        };
+        DeliveryListResponseDto: {
+            data: components["schemas"]["DeliveryResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        DeliveryResponseDto: {
+            attempt_number: number;
+            created_at: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            request_body: {
+                [key: string]: unknown;
+            };
+            response_body: string | null;
+            response_status: number | null;
+            succeeded: boolean;
+            webhook_id: string;
+        };
+        DirectMessageAdminListResponseDto: {
+            data: components["schemas"]["DirectMessageAdminResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        DirectMessageAdminResponseDto: {
+            assets: {
+                [key: string]: unknown;
+            };
+            attachments: {
+                [key: string]: unknown;
+            };
+            body: string;
+            community_id: string;
+            conversation_id: string;
+            created_at: string;
+            deleted_at: string | null;
+            edited_at: string | null;
+            id: string;
+            kind: components["schemas"]["DirectMessageKind"];
+            reaction_counts: {
+                [key: string]: number;
+            };
+            reply_to_id: string | null;
+            sender: components["schemas"]["ActorSummaryDto"] | null;
+            sender_id: string;
+        };
+        DirectMessageAttachmentDto: {
+            kind: string;
+            url: string;
+        };
+        DirectMessageKind: "text" | "image" | "video" | "audio" | "system";
+        DirectMessageListResponseDto: {
+            data: components["schemas"]["DirectMessageResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        DirectMessageReactionCreatedResponseDto: {
+            created: boolean;
+            reaction: components["schemas"]["DirectMessageReactionResponseDto"];
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        DirectMessageReactionListResponseDto: {
+            data: components["schemas"]["DirectMessageReactionResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        DirectMessageReactionRemovedResponseDto: {
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        DirectMessageReactionResponseDto: {
+            actor_id: string;
+            community_id: string;
+            created_at: string;
+            message_id: string;
+            type: string;
+        };
+        DirectMessageResponseDto: {
+            assets: components["schemas"]["AssetAttachmentDto"][];
+            attachments: components["schemas"]["DirectMessageAttachmentDto"][];
+            body: string;
+            community_id: string;
+            conversation_id: string;
+            created_at: string;
+            deleted_at: string | null;
+            edited_at: string | null;
+            id: string;
+            kind: components["schemas"]["DirectMessageKind"];
+            reaction_counts: {
+                [key: string]: number;
+            };
+            reply_to_id: string | null;
+            sender_id: string;
+        };
+        DirectModerationActionDto: {
+            action: "hide" | "remove" | "warn" | "ban" | "dismiss" | "unhide" | "restore";
+            notes?: string;
+            target_id: string;
+            target_kind: "post" | "comment" | "actor" | "direct_message";
+        };
+        DmMessageCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["DmMessageCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "dm.message.created";
+            workspace_id?: string;
+        };
+        DmMessageCreatedEventDataDto: {
+            body: string | null;
+            community_id: string;
+            conversation_id: string;
+            kind: components["schemas"]["DirectMessageKind"];
+            message_id: string;
+            recipient_actor_ids: string[];
+            reply_to_id: string | null;
+            sender_id: string;
+        };
+        DraftListResponseDto: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        EdgeFollowCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["EdgeFollowCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "edge.follow.created";
+            workspace_id?: string;
+        };
+        EdgeFollowCreatedEventDataDto: {
+            community_id: string;
+            dst_actor_id: string;
+            src_actor_id: string;
+        };
+        EdgeFollowDeletedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["EdgeFollowDeletedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "edge.follow.deleted";
+            workspace_id?: string;
+        };
+        EdgeFollowDeletedEventDataDto: {
+            community_id: string;
+            dst_actor_id: string;
+            src_actor_id: string;
+        };
+        EdgeFollowRequestApprovedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["EdgeFollowRequestApprovedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "edge.follow.request_approved";
+            workspace_id?: string;
+        };
+        EdgeFollowRequestApprovedEventDataDto: {
+            community_id: string;
+            dst_actor_id: string;
+            src_actor_id: string;
+        };
+        EdgeFollowRequestedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["EdgeFollowRequestedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "edge.follow.requested";
+            workspace_id?: string;
+        };
+        EdgeFollowRequestedEventDataDto: {
+            community_id: string;
+            dst_actor_id: string;
+            src_actor_id: string;
+        };
+        EdgeKind: "follow" | "mute" | "block" | "restrict";
+        EdgeResponseDto: {
+            community_id: string;
+            created_at: string;
+            dst_actor_id: string | null;
+            dst_post_id: string | null;
+            id: string;
+            kind: components["schemas"]["EdgeKind"];
+            payload: {
+                [key: string]: unknown;
+            };
+            src_actor_id: string;
+        };
+        ErrorParamDto: {
+            code: string;
+            message: string;
+            param: string;
+        };
+        ErrorResponseDto: {
+            code: components["schemas"]["SocialErrorCode"];
+            details?: {
+                [key: string]: unknown;
+            };
+            errors: components["schemas"]["ErrorParamDto"][];
+            message: string | string[];
+            request_id: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        FeedResponseDto: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        FlagCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["FlagCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "flag.created";
+            workspace_id?: string;
+        };
+        FlagCreatedEventDataDto: {
+            auto_hidden: boolean;
+            community_id: string;
+            flag_id: string;
+            reason: string;
+            reporter_actor_id: string;
+            target_id: string;
+            target_kind: components["schemas"]["ModerationTargetKind"];
+        };
+        FlagListResponseDto: {
+            data: components["schemas"]["FlagResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        FlagResponseDto: {
+            community_id: string;
+            created_at: string;
+            id: string;
+            reason: string;
+            reporter_actor: components["schemas"]["ActorSummaryDto"] | null;
+            reporter_actor_id: string;
+            status: components["schemas"]["FlagStatus"];
+            target_id: string;
+            target_kind: components["schemas"]["ModerationTargetKind"];
+            updated_at: string;
+        };
+        FlagStatus: "open" | "dismissed" | "actioned";
+        FlagUpdatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["FlagUpdatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "flag.updated";
+            workspace_id?: string;
+        };
+        FlagUpdatedEventDataDto: {
+            action: string | null;
+            community_id: string;
+            flag_id: string;
+            status: components["schemas"]["FlagStatus"];
+        };
+        FollowRequestEntryDto: {
+            created_at: string;
+            request_id: string;
+            src_actor_id: string;
+            src_avatar_url: string | null;
+            src_display_name: string | null;
+            src_external_id: string;
+        };
+        FollowRequestListResponseDto: {
+            data: components["schemas"]["FollowRequestEntryDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        FollowResultDto: {
+            created: boolean;
+            edge: components["schemas"]["EdgeResponseDto"] | null;
+            status: components["schemas"]["FollowStatus"];
+        };
+        FollowStatus: "followed" | "pending";
+        FollowerEdgeListResponseDto: {
+            data: components["schemas"]["FollowerEdgeResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        FollowerEdgeResponseDto: {
+            community_id: string;
+            created_at: string;
+            dst_actor_id: string | null;
+            dst_post_id: string | null;
+            id: string;
+            kind: components["schemas"]["EdgeKind"];
+            payload: {
+                [key: string]: unknown;
+            };
+            src_actor?: components["schemas"]["ActorResponseDto"];
+            src_actor_id: string;
+        };
+        HashtagAutocompleteResponseDto: {
+            data: components["schemas"]["HashtagResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"] | null;
+        };
+        HashtagDetailResponseDto: {
+            community_id: string;
+            first_used_at: string;
+            post_count: number;
+            tag: string;
+            window_post_count: number | null;
+        };
+        HashtagFollowListResponseDto: {
+            data: components["schemas"]["HashtagFollowResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        HashtagFollowResponseDto: {
+            actor_id: string;
+            community_id: string;
+            followed_at: string;
+            tag: string;
+        };
+        HashtagListResponseDto: {
+            data: components["schemas"]["HashtagResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        HashtagPostListResponseDto: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        HashtagResponseDto: {
+            community_id: string;
+            first_used_at: string;
+            tag: string;
+            window_post_count: number | null;
+        };
+        HideEntryDto: {
+            created_at: string;
+            post_id: string;
+        };
+        HideListResponseDto: {
+            data: components["schemas"]["HideEntryDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        HidePostDto: {
+            actor_id: string;
+            post_id: string;
+        };
+        HideResultDto: {
+            created: boolean;
+        };
+        HighlightsResponse: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        InsightsDailyBucketDto: {
+            day: string;
+            reach: number;
+            views: number;
+        };
+        ListWebhookEndpointsResponseDto: {
+            data: components["schemas"]["WebhookEndpointDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ListWebhookEventTypesResponseDto: {
+            data: components["schemas"]["WebhookEventTypeDto"][];
+        };
+        ListWebhookEventsResponseDto: {
+            data: components["schemas"]["WebhookEventDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        MarkAllReadDto: {
+            before?: string;
+        };
+        MarkAllReadResponse: {
+            updated: number;
+        };
+        MarkConversationReadDto: {
+            actor_id: string;
+            read_through?: string;
+        };
+        MentionEntryResponseDto: {
+            created_at: string;
+            mentioned_id: string;
+            post_id: string;
+            source: components["schemas"]["MentionSource"];
+            source_id: string;
+        };
+        MentionListResponseDto: {
+            data: components["schemas"]["MentionEntryResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        MentionSource: "post" | "comment";
+        ModerationActionAppliedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["ModerationActionAppliedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "moderation.action.applied";
+            workspace_id?: string;
+        };
+        ModerationActionAppliedEventDataDto: {
+            action: components["schemas"]["ModerationActionType"];
+            action_id: string;
+            community_id: string;
+            flag_id: string | null;
+            moderator_account_id: string;
+            target_id: string;
+            target_kind: components["schemas"]["ModerationTargetKind"];
+        };
+        ModerationActionDto: {
+            action: "hide" | "remove" | "warn" | "ban" | "dismiss" | "unhide" | "restore";
+            notes?: string;
+        };
+        ModerationActionResponseDto: {
+            action: components["schemas"]["ModerationActionType"];
+            community_id: string;
+            created_at: string;
+            flag_id: string | null;
+            id: string;
+            moderator_account_id: string;
+            notes: string | null;
+            target_id: string | null;
+            target_kind: components["schemas"]["ModerationTargetKind"];
+        };
+        ModerationActionType: "hide" | "remove" | "warn" | "ban" | "dismiss" | "unhide" | "restore";
+        ModerationActorListResponseDto: {
+            data: components["schemas"]["ModerationActorResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        ModerationActorResponseDto: {
+            avatar_url: string | null;
+            community_id: string;
+            created_at: string;
+            display_name: string | null;
+            external_id: string;
+            id: string;
+            is_private: boolean;
+            metadata: {
+                [key: string]: unknown;
+            };
+            shadow_banned_at: string | null;
+            shadow_banned_reason: string | null;
+            shadow_banned_until: string | null;
+            status: components["schemas"]["ActorStatus"];
+            updated_at: string;
+        };
+        ModerationTargetKind: "post" | "comment" | "actor" | "direct_message";
+        MutedTermAction: "mute" | "pending_approval";
+        MutedTermListResponseDto: {
+            data: components["schemas"]["MutedTermResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        MutedTermResponseDto: {
+            action: components["schemas"]["MutedTermAction"];
+            actor_id: string;
+            community_id: string;
+            created_at: string;
+            expires_at: string | null;
+            scope: components["schemas"]["MutedTermScope"];
+            term: string;
+        };
+        MutedTermScope: "feed" | "dm" | "mention" | "all";
+        NotificationKind: "follow" | "reaction" | "comment_on_post" | "reply_to_comment" | "mention" | "vote" | "repost" | "quote_post" | "dm_new_message" | "dm_added_to_group" | "dm_role_changed" | "dm_reaction" | "tag" | "follow_request" | "follow_request_approved";
+        NotificationListResponse: {
+            data: components["schemas"]["NotificationResponse"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        NotificationPrefListResponseDto: {
+            data: components["schemas"]["NotificationPrefResponseDto"][];
+        };
+        NotificationPrefResponseDto: {
+            actor_id: string;
+            enabled: boolean;
+            kind: components["schemas"]["NotificationKind"];
+            updated_at: string;
+        };
+        NotificationResponse: {
+            actor_id: string;
+            community_id: string;
+            created_at: string;
+            id: string;
+            kind: components["schemas"]["NotificationKind"];
+            payload: {
+                [key: string]: unknown;
+            };
+            read_at: string | null;
+            recipient_actor_id: string;
+            suppressed: boolean;
+            target_id: string;
+            target_kind: components["schemas"]["NotificationTargetKind"];
+        };
+        NotificationTargetKind: "actor" | "post" | "comment" | "direct_message";
+        OutboundEdgeListResponseDto: {
+            data: components["schemas"]["OutboundEdgeResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        OutboundEdgeResponseDto: {
+            community_id: string;
+            created_at: string;
+            dst_actor?: components["schemas"]["ActorResponseDto"];
+            dst_actor_id: string | null;
+            dst_post_id: string | null;
+            id: string;
+            kind: components["schemas"]["EdgeKind"];
+            payload: {
+                [key: string]: unknown;
+            };
+            src_actor_id: string;
+        };
+        PaginationResponseDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        ParticipantSummaryDto: {
+            actor_id: string;
+            avatar_url: string | null;
+            display_name: string | null;
+            joined_at: string;
+            last_read_at: string | null;
+            muted: boolean;
+        };
+        PinCommentDto: {
+            actor_id: string;
+        };
+        PollResultOptionResponse: {
+            count: number;
+            index: number;
+            label: string;
+        };
+        PollResultsResponse: {
+            options: components["schemas"]["PollResultOptionResponse"][];
+            post_id: string;
+            question: string;
+            total_votes: number;
+        };
+        PollVoteResponse: {
+            created_at: string;
+            option_index: number;
+        };
+        PollVoterResponse: {
+            option_index: number;
+            voted_at: string;
+            voter_actor_id: string;
+            voter_avatar_url: string | null;
+            voter_display_name: string | null;
+            voter_external_id: string;
+        };
+        PollVotersResponse: {
+            data: components["schemas"]["PollVoterResponse"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        PostCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["PostCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "post.created";
+            workspace_id?: string;
+        };
+        PostCreatedEventDataDto: {
+            actor_id: string;
+            attributes: {
+                [key: string]: unknown;
+            };
+            body: string | null;
+            community_id: string;
+            post_id: string;
+            source_post_actor_id: string | null;
+            source_post_id: string | null;
+            status: components["schemas"]["PostStatus"];
+        };
+        PostDeletedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["PostDeletedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "post.deleted";
+            workspace_id?: string;
+        };
+        PostDeletedEventDataDto: {
+            actor_id: string;
+            community_id: string;
+            kind: string;
+            post_id: string;
+            source_post_id: string | null;
+        };
+        PostInsightsResponseDto: {
+            comment_count: number;
+            community_id: string;
+            daily: components["schemas"]["InsightsDailyBucketDto"][];
+            post_id: string;
+            quote_count: number;
+            reaction_count: number;
+            repost_count: number;
+            unique_reach: number;
+            views: number;
+        };
+        PostListResponseDto: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        PostReactionCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["PostReactionCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "post.reaction.created";
+            workspace_id?: string;
+        };
+        PostReactionCreatedEventDataDto: {
+            actor_id: string;
+            community_id: string;
+            post_actor_id: string;
+            post_id: string;
+            type: string;
+        };
+        PostReactionEntryDto: {
+            actor_id: string;
+            community_id: string;
+            created_at: string;
+            post_id: string;
+            type: string;
+        };
+        PostReactionListResponseDto: {
+            data: components["schemas"]["PostReactionEntryDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        PostResponseDto: {
+            actor_id: string;
+            assets: components["schemas"]["AssetAttachmentDto"][];
+            attributes: {
+                [key: string]: unknown;
+            };
+            body: string | null;
+            comment_count: number;
+            community_id: string;
+            created_at: string;
+            edit_count: number;
+            edited_at: string | null;
+            expires_at: string | null;
+            id: string;
+            kind: string;
+            pinned: boolean;
+            quote_count: number;
+            reaction_counts: {
+                [key: string]: number;
+            };
+            repost_count: number;
+            scheduled_for: string | null;
+            settings: components["schemas"]["PostSettingsDto"];
+            source_post_id: string | null;
+            status: components["schemas"]["PostStatus"];
+            title: string | null;
+            updated_at: string;
+            url: string | null;
+            view_count: number;
+            visibility: components["schemas"]["PostVisibility"];
+        };
+        PostRevisionListResponseDto: {
+            data: components["schemas"]["PostRevisionResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        PostRevisionResponseDto: {
+            attributes: {
+                [key: string]: unknown;
+            };
+            body: string | null;
+            edited_at: string;
+            post_id: string;
+            revision_n: number;
+            title: string | null;
+        };
+        PostSearchHitDto: {
+            post: components["schemas"]["PostResponseDto"];
+            rank: number;
+        };
+        PostSearchResponseDto: {
+            data: components["schemas"]["PostSearchHitDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"] | null;
+        };
+        PostSettingsDto: {
+            allow_quote: boolean;
+            allow_repost: boolean;
+            comments: components["schemas"]["CommentPolicy"];
+            hide_reaction_counts: boolean;
+        };
+        PostSettingsInputDto: {
+            allow_quote?: boolean;
+            allow_repost?: boolean;
+            comments?: "everyone" | "followers" | "mentioned" | "off";
+            hide_reaction_counts?: boolean;
+        };
+        PostStateRequestDto: {
+            post_ids: string[];
+        };
+        PostStateResponseDto: {
+            data: components["schemas"]["PostViewerStateEntryDto"][];
+        };
+        PostStatus: "published" | "hidden" | "removed" | "draft" | "scheduled" | "archived";
+        PostTagResponseDto: {
+            community_id: string;
+            created_at: string;
+            id: string;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            post_id: string;
+            state: components["schemas"]["PostTagState"];
+            tagged_actor_id: string;
+            updated_at: string;
+        };
+        PostTagState: "pending" | "approved" | "removed";
+        PostUpdatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["PostUpdatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "post.updated";
+            workspace_id?: string;
+        };
+        PostUpdatedEventDataDto: {
+            actor_id: string;
+            attributes: {
+                [key: string]: unknown;
+            };
+            body: string | null;
+            community_id: string;
+            post_id: string;
+        };
+        PostViewerStateEntryDto: {
+            bookmarked: boolean;
+            post_id: string;
+            reacted_types: string[];
+            reposted: boolean;
+            voted_option: number | null;
+        };
+        PostVisibility: "public" | "followers" | "close_friends" | "private";
+        ReactionCountsResponseDto: {
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        ReactionEdgeResponseDto: {
+            community_id: string;
+            created_at: string;
+            dst_actor_id: string | null;
+            dst_post_id: string;
+            id: string;
+            kind: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            src_actor_id: string;
+        };
+        ReactionResponseDto: {
+            created: boolean;
+            edge: components["schemas"]["ReactionEdgeResponseDto"];
+            reaction_counts: {
+                [key: string]: number;
+            };
+        };
+        ReactionTargetType: "post" | "comment";
+        RecordViewDto: {
+            actor_id: string;
+        };
+        RecordViewsDto: {
+            actor_id?: string;
+            post_ids: string[];
+            viewer_actor_id?: string;
+        };
+        RelationshipEntryDto: {
+            blocked_by: boolean;
+            blocking: boolean;
+            close_friend: boolean;
+            dst_actor_id: string;
+            follow_pending: boolean;
+            followed_by: boolean;
+            following: boolean;
+            muting: boolean;
+            restricting: boolean;
+        };
+        RelationshipListResponseDto: {
+            data: components["schemas"]["RelationshipEntryDto"][];
+        };
+        ReorderItemDto: {
+            actor_id?: string;
+            caller_actor_id?: string;
+            position: number;
+        };
+        ReplayWebhookEventResponseDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            event_id: string;
+        };
+        RepostCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["RepostCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "repost.created";
+            workspace_id?: string;
+        };
+        RepostCreatedEventDataDto: {
+            actor_id: string;
+            community_id: string;
+            post_id: string;
+            source_post_actor_id: string;
+            source_post_id: string;
+        };
+        RepostListResponseDto: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        RotateWebhookSecretDto: {
+            grace_hours?: number;
+        };
+        SendMessageDto: {
+            actor_id: string;
+            assets?: components["schemas"]["AssetAttachmentInputDto"][];
+            attachments?: components["schemas"]["DirectMessageAttachmentDto"][];
+            body?: string;
+            kind?: "text" | "image" | "video" | "audio" | "system";
+            reply_to_id?: string | null;
+        };
+        SendWebhookTestDto: {
+            event_type: "post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed";
+        };
+        SocialErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ASSET_INVALID_CONTAINER" | "ASSET_INVALID_SIZE" | "ASSET_INVALID_TYPE" | "ASSET_MAGIC_MISMATCH" | "ASSET_NOT_OWNED" | "ASSET_NOT_READY" | "ASSET_NOT_VIDEO" | "ASSET_PROCESSING_FAILED" | "ASSET_TOO_LARGE" | "ASSET_TRANSCODE_FAILED" | "ASSET_UPLOAD_INCOMPLETE" | "CANNOT_QUOTE_PRIVATE" | "CANNOT_QUOTE_SELF" | "CANNOT_REPOST_PRIVATE" | "CANNOT_REPOST_SELF" | "COMMENTS_DISABLED" | "COMMENTS_FOLLOWERS_ONLY" | "COMMENTS_MENTIONED_ONLY" | "EDIT_WINDOW_EXPIRED" | "INVALID_CURSOR" | "INVALID_DATE_FILTER" | "INVALID_EXPAND" | "INVALID_IDENTIFIER" | "INVALID_ID_LIST" | "INVALID_NOTIFICATION_KIND" | "INVALID_ORDER" | "INVALID_SEARCH_QUERY" | "PIN_CAP_REACHED" | "POLL_CLOSED" | "QUOTE_NOT_ALLOWED" | "QUOTE_REQUIRES_BODY" | "QUOTE_REQUIRES_SOURCE" | "REPOST_NOT_ALLOWED" | "SOURCE_POST_ID_REQUIRES_QUOTE" | "TOO_MANY_ACTIVE_UPLOADS" | "TOO_MANY_ATTACHMENTS" | "TOO_MANY_IDS") | string;
+        SocialStatsInWindowDto: {
+            active_members: number;
+            comments: number;
+            posts: number;
+            reactions: number;
+        };
+        SocialStatsMetric: "active_members";
+        SocialStatsSeriesDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["SocialStatsMetric"];
+            points: components["schemas"]["SocialStatsSeriesPointDto"][];
+        };
+        SocialStatsSeriesPointDto: {
+            date: string;
+            value: number;
+        };
+        SocialStatsTotalsDto: {
+            communities: number;
+            published_posts: number;
+        };
+        SocialWorkspaceStatsDto: {
+            generated_at: string;
+            in_window: components["schemas"]["SocialStatsInWindowDto"];
+            last_activity_at: string | null;
+            series: components["schemas"]["SocialStatsSeriesDto"];
+            totals: components["schemas"]["SocialStatsTotalsDto"];
+            window: components["schemas"]["StatsWindow"];
+        };
+        StatsGranularity: "day";
+        StatsWindow: "1d" | "7d" | "30d";
+        StoryTrayEntryResponse: {
+            actor_avatar_url: string | null;
+            actor_display_name: string | null;
+            actor_external_id: string;
+            actor_id: string;
+            has_unviewed: boolean;
+            latest_story_created_at: string;
+            story_count: number;
+        };
+        StoryTrayResponse: {
+            data: components["schemas"]["StoryTrayEntryResponse"][];
+            pagination: components["schemas"]["PaginationResponseDto"] | null;
+        };
+        StoryViewerResponse: {
+            viewed_at: string;
+            viewer_actor_id: string;
+            viewer_avatar_url: string | null;
+            viewer_display_name: string | null;
+            viewer_external_id: string;
+        };
+        StoryViewersResponse: {
+            data: components["schemas"]["StoryViewerResponse"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        SuggestedFollowResponseDto: {
+            actor: components["schemas"]["ActorResponseDto"];
+            reason: components["schemas"]["SuggestionReason"];
+            score: number;
+        };
+        SuggestedFollowsListResponseDto: {
+            data: components["schemas"]["SuggestedFollowResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"] | null;
+        };
+        SuggestionReason: "followed_by_friends" | "top_in_community";
+        TagCreatedEvent: {
+            community_id?: string;
+            created_at: string;
+            data: components["schemas"]["TagCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tag.created";
+            workspace_id?: string;
+        };
+        TagCreatedEventDataDto: {
+            actor_id: string;
+            community_id: string;
+            post_id: string;
+            tagged_actor_id: string;
+        };
+        TaggedPostsResponse: {
+            data: components["schemas"]["PostResponseDto"][];
+            pagination: components["schemas"]["PaginationResponseDto"];
+        };
+        UnreadCountResponse: {
+            count: number;
+        };
+        UnreadCountResponseDto: {
+            count: number;
+        };
+        UpdateActorDto: {
+            avatar_url?: string | null;
+            display_name?: string | null;
+            is_private?: boolean;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            status?: "active" | "suspended" | "deleted";
+        };
+        UpdateActorListDto: {
+            actor_id?: string;
+            caller_actor_id?: string;
+            description?: string | null;
+            name?: string;
+            visibility?: "public" | "private";
+        };
+        UpdateCollectionDto: {
+            actor_id?: string;
+            caller_actor_id?: string;
+            cover_asset_id?: string | null;
+            cover_url?: string | null;
+            name?: string;
+            position?: number;
+            visibility?: "public" | "private";
+        };
+        UpdateCommentDto: {
+            body?: string;
+            status?: "published" | "hidden" | "removed";
+            visibility?: "public" | "author_only";
+        };
+        UpdateCommunityDto: {
+            description?: string | null;
+            display_name?: string;
+            settings?: components["schemas"]["CommunitySettingsInputDto"];
+            status?: "active" | "suspended" | "archived";
+        };
+        UpdateConversationDto: {
+            actor_id: string;
+            name?: string | null;
+        };
+        UpdateMemberDto: {
+            actor_id?: string;
+            caller_actor_id?: string;
+            muted?: boolean;
+            muted_until?: string | null;
+            pinned?: boolean;
+            role?: "member" | "admin";
+        };
+        UpdateMessageDto: {
+            actor_id: string;
+            body: string;
+        };
+        UpdateNotificationDto: {
+            read: boolean;
+        };
+        UpdateNotificationPrefDto: {
+            enabled: boolean;
+        };
+        UpdatePostDto: {
+            attributes?: {
+                [key: string]: unknown;
+            };
+            body?: string | null;
+            expires_at?: string | null;
+            pinned?: boolean;
+            scheduled_for?: string | null;
+            settings?: components["schemas"]["PostSettingsInputDto"];
+            status?: "published" | "hidden" | "removed" | "draft" | "scheduled" | "archived";
+            tags?: string[];
+            title?: string | null;
+            url?: string | null;
+            visibility?: "public" | "followers" | "close_friends" | "private";
+        };
+        UpdateWebhookDto: {
+            disabled?: boolean;
+            event_types?: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            url?: string;
+        };
+        UpdateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            url?: string;
+        };
+        UploadAssetResponseDto: {
+            id: string;
+            status: components["schemas"]["AssetStatus"];
+            upload?: components["schemas"]["AssetUploadDto"];
+        };
+        UpsertActorDto: {
+            avatar_url?: string | null;
+            display_name?: string | null;
+            external_id: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        UpsertActorResponseDto: {
+            actor: components["schemas"]["ActorResponseDto"];
+            created: boolean;
+        };
+        WebhookAttemptTrigger: "automatic" | "replay" | "test";
+        WebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+            trigger: components["schemas"]["WebhookAttemptTrigger"];
+            url: string;
+        };
+        WebhookEndpointDisabledReason: "manual" | "failing";
+        WebhookEndpointDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEndpointStatus: "enabled" | "disabled" | "auto_disabled";
+        WebhookEndpointWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEventDeliveryDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            next_attempt_at: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+        };
+        WebhookEventDetailDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventDto: {
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
+        WebhookEventType: "post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed";
+        WebhookEventTypeDto: {
+            category: string;
+            description: string;
+            example: {
+                [key: string]: unknown;
+            };
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventTypesResponseDto: {
+            data: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+        };
+        WebhookListResponseDto: {
+            data: components["schemas"]["WebhookResponseDto"][];
+        };
+        WebhookPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        WebhookResponseDto: {
+            community_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            event_types: ("post.created" | "post.updated" | "post.deleted" | "post.reaction.created" | "repost.created" | "comment.created" | "comment.updated" | "comment.deleted" | "comment.reaction.created" | "edge.follow.created" | "edge.follow.deleted" | "edge.follow.requested" | "edge.follow.request_approved" | "flag.created" | "flag.updated" | "moderation.action.applied" | "actor.updated" | "dm.message.created" | "tag.created" | "asset.ready" | "asset.failed")[];
+            id: string;
+            last_failure_at: string | null;
+            last_success_at: string | null;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: {
+        RequestId: string;
+        "Retry-After": number;
+        "Retry-After-long": number;
+        "Retry-After-short": number;
+        "X-RateLimit-Limit-long": number;
+        "X-RateLimit-Limit-short": number;
+        "X-RateLimit-Remaining-long": number;
+        "X-RateLimit-Remaining-short": number;
+        "X-RateLimit-Reset-long": number;
+        "X-RateLimit-Reset-short": number;
+    };
+    pathItems: never;
+};
+
+export { ConfigurationError }
+
+export { ConflictError }
+
+export { IdempotencyKeyReuseError }
+
+export { InternalServerError }
+
+export { NotFoundError }
+
+// @public (undocumented)
+export type paths = {
     "/v1/communities/{community_id}/actors": {
         parameters: {
             query?: never;
@@ -26,7 +1978,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/batch": {
         parameters: {
             query?: never;
@@ -43,7 +1994,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/by-external/batch": {
         parameters: {
             query?: never;
@@ -60,7 +2010,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/by-external/{external_id}": {
         parameters: {
             query?: never;
@@ -77,7 +2026,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}": {
         parameters: {
             query?: never;
@@ -94,7 +2042,6 @@ export interface paths {
         patch: operations["ActorController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/archived": {
         parameters: {
             query?: never;
@@ -111,7 +2058,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/assets": {
         parameters: {
             query?: never;
@@ -128,7 +2074,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/blocks": {
         parameters: {
             query?: never;
@@ -145,7 +2090,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/bookmarks": {
         parameters: {
             query?: never;
@@ -162,7 +2106,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/close-friends": {
         parameters: {
             query?: never;
@@ -179,7 +2122,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/counters": {
         parameters: {
             query?: never;
@@ -196,7 +2138,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/dismissed-suggestions": {
         parameters: {
             query?: never;
@@ -213,7 +2154,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/drafts": {
         parameters: {
             query?: never;
@@ -230,7 +2170,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/feed": {
         parameters: {
             query?: never;
@@ -247,7 +2186,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/follow-requests": {
         parameters: {
             query?: never;
@@ -264,7 +2202,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/followers": {
         parameters: {
             query?: never;
@@ -281,7 +2218,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/following": {
         parameters: {
             query?: never;
@@ -298,7 +2234,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/hashtag-follows": {
         parameters: {
             query?: never;
@@ -315,7 +2250,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/hashtag-follows/{tag}": {
         parameters: {
             query?: never;
@@ -332,7 +2266,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/hides": {
         parameters: {
             query?: never;
@@ -349,7 +2282,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/insights": {
         parameters: {
             query?: never;
@@ -366,7 +2298,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/mentions": {
         parameters: {
             query?: never;
@@ -383,7 +2314,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/muted-terms": {
         parameters: {
             query?: never;
@@ -400,7 +2330,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/muted-terms/{term}": {
         parameters: {
             query?: never;
@@ -417,7 +2346,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/mutes": {
         parameters: {
             query?: never;
@@ -434,7 +2362,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notification-prefs": {
         parameters: {
             query?: never;
@@ -451,7 +2378,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notification-prefs/{kind}": {
         parameters: {
             query?: never;
@@ -468,7 +2394,6 @@ export interface paths {
         patch: operations["NotificationPrefController_set"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notifications": {
         parameters: {
             query?: never;
@@ -485,7 +2410,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notifications/read-all": {
         parameters: {
             query?: never;
@@ -502,7 +2426,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notifications/unread-count": {
         parameters: {
             query?: never;
@@ -519,7 +2442,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/notifications/{notification_id}": {
         parameters: {
             query?: never;
@@ -536,7 +2458,6 @@ export interface paths {
         patch: operations["NotificationController_markRead"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/post-state": {
         parameters: {
             query?: never;
@@ -553,7 +2474,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/restricts": {
         parameters: {
             query?: never;
@@ -570,7 +2490,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/scheduled-posts": {
         parameters: {
             query?: never;
@@ -587,7 +2506,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/story-tray": {
         parameters: {
             query?: never;
@@ -604,7 +2522,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{actor_id}/suggested-follows": {
         parameters: {
             query?: never;
@@ -621,7 +2538,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{owner_actor_id}/highlights": {
         parameters: {
             query?: never;
@@ -638,7 +2554,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{src_actor_id}/relationships": {
         parameters: {
             query?: never;
@@ -655,7 +2570,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/actors/{tagged_actor_id}/tagged": {
         parameters: {
             query?: never;
@@ -672,7 +2586,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/assets": {
         parameters: {
             query?: never;
@@ -689,7 +2602,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/assets/{asset_id}": {
         parameters: {
             query?: never;
@@ -706,7 +2618,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/assets/{asset_id}/complete": {
         parameters: {
             query?: never;
@@ -723,7 +2634,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/blocks": {
         parameters: {
             query?: never;
@@ -740,7 +2650,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/blocks/{src_actor_id}/{dst_actor_id}": {
         parameters: {
             query?: never;
@@ -757,7 +2666,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/close-friends": {
         parameters: {
             query?: never;
@@ -774,7 +2682,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/close-friends/{owner_actor_id}/{member_actor_id}": {
         parameters: {
             query?: never;
@@ -791,7 +2698,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/collections": {
         parameters: {
             query?: never;
@@ -808,7 +2714,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/collections/{collection_id}": {
         parameters: {
             query?: never;
@@ -825,7 +2730,6 @@ export interface paths {
         patch: operations["CollectionController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/collections/{collection_id}/items": {
         parameters: {
             query?: never;
@@ -842,7 +2746,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/collections/{collection_id}/items/{post_id}": {
         parameters: {
             query?: never;
@@ -859,7 +2762,6 @@ export interface paths {
         patch: operations["CollectionController_reorderItem"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/connections": {
         parameters: {
             query?: never;
@@ -876,7 +2778,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/connections/{actor_id}/{other_actor_id}": {
         parameters: {
             query?: never;
@@ -893,7 +2794,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/connections/{dst_actor_id}/{src_actor_id}/accept": {
         parameters: {
             query?: never;
@@ -910,7 +2810,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations": {
         parameters: {
             query?: never;
@@ -927,7 +2826,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/unread-count": {
         parameters: {
             query?: never;
@@ -944,7 +2842,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}": {
         parameters: {
             query?: never;
@@ -961,7 +2858,6 @@ export interface paths {
         patch: operations["ConversationController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/members": {
         parameters: {
             query?: never;
@@ -978,7 +2874,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/members/{member_actor_id}": {
         parameters: {
             query?: never;
@@ -995,7 +2890,6 @@ export interface paths {
         patch: operations["ConversationController_updateMember"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -1012,7 +2906,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/messages/{message_id}": {
         parameters: {
             query?: never;
@@ -1029,7 +2922,6 @@ export interface paths {
         patch: operations["ConversationController_editMessage"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/messages/{message_id}/reactions": {
         parameters: {
             query?: never;
@@ -1046,7 +2938,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/messages/{message_id}/reactions/{actor_id}/{type}": {
         parameters: {
             query?: never;
@@ -1063,7 +2954,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/conversations/{conversation_id}/read": {
         parameters: {
             query?: never;
@@ -1080,7 +2970,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/counters": {
         parameters: {
             query?: never;
@@ -1097,7 +2986,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/discover-feed": {
         parameters: {
             query?: never;
@@ -1114,7 +3002,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/dismissed-suggestions": {
         parameters: {
             query?: never;
@@ -1131,7 +3018,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/dismissed-suggestions/{src_actor_id}/{dst_actor_id}": {
         parameters: {
             query?: never;
@@ -1148,7 +3034,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/flags": {
         parameters: {
             query?: never;
@@ -1165,7 +3050,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/follow-requests/{dst_actor_id}/{src_actor_id}": {
         parameters: {
             query?: never;
@@ -1182,7 +3066,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/follow-requests/{dst_actor_id}/{src_actor_id}/approve": {
         parameters: {
             query?: never;
@@ -1199,7 +3082,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/follows": {
         parameters: {
             query?: never;
@@ -1216,7 +3098,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/follows/batch": {
         parameters: {
             query?: never;
@@ -1233,7 +3114,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/follows/{src_actor_id}/{dst_actor_id}": {
         parameters: {
             query?: never;
@@ -1250,7 +3130,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/hashtags": {
         parameters: {
             query?: never;
@@ -1267,7 +3146,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/hashtags/{tag}": {
         parameters: {
             query?: never;
@@ -1284,7 +3162,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/hashtags/{tag}/posts": {
         parameters: {
             query?: never;
@@ -1301,7 +3178,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/hides": {
         parameters: {
             query?: never;
@@ -1318,7 +3194,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/hides/{src_actor_id}/{post_id}": {
         parameters: {
             query?: never;
@@ -1335,7 +3210,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/lists": {
         parameters: {
             query?: never;
@@ -1352,7 +3226,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/lists/{list_id}": {
         parameters: {
             query?: never;
@@ -1369,7 +3242,6 @@ export interface paths {
         patch: operations["ActorListController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/lists/{list_id}/feed": {
         parameters: {
             query?: never;
@@ -1386,7 +3258,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/lists/{list_id}/members": {
         parameters: {
             query?: never;
@@ -1403,7 +3274,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/lists/{list_id}/members/{member_actor_id}": {
         parameters: {
             query?: never;
@@ -1420,7 +3290,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/mutes": {
         parameters: {
             query?: never;
@@ -1437,7 +3306,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/mutes/{src_actor_id}/{dst_actor_id}": {
         parameters: {
             query?: never;
@@ -1454,7 +3322,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts": {
         parameters: {
             query?: never;
@@ -1471,7 +3338,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/impressions": {
         parameters: {
             query?: never;
@@ -1488,7 +3354,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}": {
         parameters: {
             query?: never;
@@ -1505,7 +3370,6 @@ export interface paths {
         patch: operations["PostController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/bookmark": {
         parameters: {
             query?: never;
@@ -1522,7 +3386,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments": {
         parameters: {
             query?: never;
@@ -1539,7 +3402,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments/{comment_id}": {
         parameters: {
             query?: never;
@@ -1556,7 +3418,6 @@ export interface paths {
         patch: operations["CommentController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments/{comment_id}/approve": {
         parameters: {
             query?: never;
@@ -1573,7 +3434,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments/{comment_id}/pin": {
         parameters: {
             query?: never;
@@ -1590,7 +3450,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments/{comment_id}/reactions": {
         parameters: {
             query?: never;
@@ -1607,7 +3466,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/comments/{comment_id}/reactions/{src_actor_id}/{type}": {
         parameters: {
             query?: never;
@@ -1624,7 +3482,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/insights": {
         parameters: {
             query?: never;
@@ -1641,7 +3498,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/poll-results": {
         parameters: {
             query?: never;
@@ -1658,7 +3514,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/quotes": {
         parameters: {
             query?: never;
@@ -1675,7 +3530,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/reactions": {
         parameters: {
             query?: never;
@@ -1692,7 +3546,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/reactions/{src_actor_id}/{type}": {
         parameters: {
             query?: never;
@@ -1709,7 +3562,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/repost": {
         parameters: {
             query?: never;
@@ -1726,7 +3578,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/reposts": {
         parameters: {
             query?: never;
@@ -1743,7 +3594,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/revisions": {
         parameters: {
             query?: never;
@@ -1760,7 +3610,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/tags/{tagged_actor_id}/approve": {
         parameters: {
             query?: never;
@@ -1777,7 +3626,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/tags/{tagged_actor_id}/remove": {
         parameters: {
             query?: never;
@@ -1794,7 +3642,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/viewers": {
         parameters: {
             query?: never;
@@ -1811,7 +3658,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/views": {
         parameters: {
             query?: never;
@@ -1828,7 +3674,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/voters": {
         parameters: {
             query?: never;
@@ -1845,7 +3690,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/votes": {
         parameters: {
             query?: never;
@@ -1862,7 +3706,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/posts/{post_id}/votes/{actor_id}": {
         parameters: {
             query?: never;
@@ -1879,7 +3722,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/restricts": {
         parameters: {
             query?: never;
@@ -1896,7 +3738,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/restricts/{src_actor_id}/{dst_actor_id}": {
         parameters: {
             query?: never;
@@ -1913,7 +3754,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/search/actors": {
         parameters: {
             query?: never;
@@ -1930,7 +3770,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/search/hashtags": {
         parameters: {
             query?: never;
@@ -1947,7 +3786,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/search/posts": {
         parameters: {
             query?: never;
@@ -1964,7 +3802,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks": {
         parameters: {
             query?: never;
@@ -1981,7 +3818,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -1998,7 +3834,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -2015,7 +3850,6 @@ export interface paths {
         patch: operations["WebhooksController_social_community_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -2032,7 +3866,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -2049,7 +3882,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -2066,7 +3898,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -2083,7 +3914,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -2100,7 +3930,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -2117,7 +3946,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/{webhook_id}": {
         parameters: {
             query?: never;
@@ -2134,7 +3962,6 @@ export interface paths {
         patch: operations["WebhookController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/{webhook_id}/deliveries": {
         parameters: {
             query?: never;
@@ -2151,7 +3978,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/{webhook_id}/deliveries/{delivery_id}/redeliver": {
         parameters: {
             query?: never;
@@ -2168,7 +3994,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/{webhook_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -2185,7 +4010,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/communities/{community_id}/webhooks/{webhook_id}/test": {
         parameters: {
             query?: never;
@@ -2202,7 +4026,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/webhook-event-types": {
         parameters: {
             query?: never;
@@ -2219,7 +4042,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities": {
         parameters: {
             query?: never;
@@ -2236,7 +4058,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}": {
         parameters: {
             query?: never;
@@ -2253,7 +4074,6 @@ export interface paths {
         patch: operations["CommunityController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/actors/{actor_id}/comments": {
         parameters: {
             query?: never;
@@ -2270,7 +4090,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/actors/{actor_id}/reactions": {
         parameters: {
             query?: never;
@@ -2287,7 +4106,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/analytics": {
         parameters: {
             query?: never;
@@ -2304,7 +4122,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/actions": {
         parameters: {
             query?: never;
@@ -2321,7 +4138,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/actors/{actor_id}/shadow-ban": {
         parameters: {
             query?: never;
@@ -2338,7 +4154,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/audit": {
         parameters: {
             query?: never;
@@ -2355,7 +4170,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/blocked-terms": {
         parameters: {
             query?: never;
@@ -2372,7 +4186,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/blocked-terms/{term}": {
         parameters: {
             query?: never;
@@ -2389,7 +4202,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/conversations": {
         parameters: {
             query?: never;
@@ -2406,7 +4218,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/conversations/{conversation_id}/messages": {
         parameters: {
             query?: never;
@@ -2423,7 +4234,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/flags": {
         parameters: {
             query?: never;
@@ -2440,7 +4250,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/flags/{flag_id}/actions": {
         parameters: {
             query?: never;
@@ -2457,7 +4266,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/shadow-banned": {
         parameters: {
             query?: never;
@@ -2474,7 +4282,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -2491,7 +4298,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -2508,7 +4314,6 @@ export interface paths {
         patch: operations["WebhooksController_social_workspace_community_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -2525,7 +4330,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -2542,7 +4346,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -2559,7 +4362,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -2576,7 +4378,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -2593,7 +4394,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -2610,7 +4410,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/stats": {
         parameters: {
             query?: never;
@@ -2627,7 +4426,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -2644,7 +4442,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -2661,7 +4458,6 @@ export interface paths {
         patch: operations["WebhooksController_social_workspace_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -2678,7 +4474,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -2695,7 +4490,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -2712,7 +4506,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -2729,7 +4522,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -2746,7 +4538,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -2763,13 +4554,1000 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+};
+
+export { PermissionDeniedError }
+
+export { ProductCraftError }
+
+export { RateLimitError }
+
+// @public
+class Social extends SocialResources {
+    constructor(options?: ClientOptions);
+    get client(): Client<paths>;
+    community(communityId: string): SocialCommunity;
 }
 
 // @public
-export class Social {
-    constructor(config?: PCClientConfig);
-    readonly client: ReturnType<typeof makeClient<paths>>;
+namespace Social {
+    // (undocumented)
+    type ActOnFlag = __ActOnFlag;
+    // (undocumented)
+    type Actor = __Actor;
+    // (undocumented)
+    type ActorArchivedListParams = __ActorArchivedListParams;
+    const // (undocumented)
+    ActorListVisibility: {
+        values: readonly ["public", "private"];
+    };
+    // (undocumented)
+    type ActorAssetListParams = __ActorAssetListParams;
+    const // (undocumented)
+    ActorStatus: {
+        values: readonly ["active", "suspended", "deleted"];
+    };
+    // (undocumented)
+    type ActorBatchParams = __ActorBatchParams;
+    const // (undocumented)
+    AssetKind: {
+        values: readonly ["image", "video"];
+    };
+    // (undocumented)
+    type ActorBlockListParams = __ActorBlockListParams;
+    const // (undocumented)
+    AssetRenditionName: {
+        values: readonly ["original", "medium", "thumb", "video", "poster"];
+    };
+    // (undocumented)
+    type ActorBookmarkListParams = __ActorBookmarkListParams;
+    const // (undocumented)
+    AssetStatus: {
+        values: readonly ["uploading", "processing", "ready", "failed"];
+    };
+    // (undocumented)
+    type ActorByExternalBatchParams = __ActorByExternalBatchParams;
+    const // (undocumented)
+    AssetUploadMethod: {
+        values: readonly ["PUT"];
+    };
+    // (undocumented)
+    type ActorCloseFriendListParams = __ActorCloseFriendListParams;
+    const // (undocumented)
+    BlockedTermAction: {
+        values: readonly ["hide", "pending_approval"];
+    };
+    // (undocumented)
+    type ActorComments = __ActorComments;
+    const // (undocumented)
+    CollectionKind: {
+        values: readonly ["bookmark", "highlight"];
+    };
+    // (undocumented)
+    type ActorCounters = __ActorCounters;
+    const // (undocumented)
+    CollectionVisibility: {
+        values: readonly ["public", "private"];
+    };
+    // (undocumented)
+    type ActorCreateParams = __ActorCreateParams;
+    const // (undocumented)
+    CommentPolicy: {
+        values: readonly ["everyone", "followers", "mentioned", "off"];
+    };
+    // (undocumented)
+    type ActorDismissedSuggestionListParams = __ActorDismissedSuggestionListParams;
+    const // (undocumented)
+    CommentStatus: {
+        values: readonly ["published", "hidden", "removed", "pending_approval"];
+    };
+    // (undocumented)
+    type ActorDraftListParams = __ActorDraftListParams;
+    const // (undocumented)
+    CommentVisibility: {
+        values: readonly ["public", "author_only"];
+    };
+    // (undocumented)
+    type ActorFeedListParams = __ActorFeedListParams;
+    const // (undocumented)
+    CommunityStatus: {
+        values: readonly ["active", "suspended", "archived"];
+    };
+    // (undocumented)
+    type ActorFollowerListParams = __ActorFollowerListParams;
+    const // (undocumented)
+    ConnectionStatus: {
+        values: readonly ["pending", "connected"];
+    };
+    // (undocumented)
+    type ActorFollowerPoint = __ActorFollowerPoint;
+    const // (undocumented)
+    ConversationKind: {
+        values: readonly ["direct", "group"];
+    };
+    // (undocumented)
+    type ActorFollowingListParams = __ActorFollowingListParams;
+    const // (undocumented)
+    ConversationRole: {
+        values: readonly ["member", "admin"];
+    };
+    // (undocumented)
+    type ActorFollowRequestListParams = __ActorFollowRequestListParams;
+    const // (undocumented)
+    DirectMessageKind: {
+        values: readonly ["text", "image", "video", "audio", "system"];
+    };
+    // (undocumented)
+    type ActorHashtagFollowCreateParams = __ActorHashtagFollowCreateParams;
+    const // (undocumented)
+    EdgeKind: {
+        values: readonly ["follow", "mute", "block", "restrict"];
+    };
+    // (undocumented)
+    type ActorHashtagFollowListParams = __ActorHashtagFollowListParams;
+    const // (undocumented)
+    FlagStatus: {
+        values: readonly ["open", "dismissed", "actioned"];
+    };
+    // (undocumented)
+    type ActorHideListParams = __ActorHideListParams;
+    const // (undocumented)
+    FollowStatus: {
+        values: readonly ["followed", "pending"];
+    };
+    // (undocumented)
+    type ActorHighlightListParams = __ActorHighlightListParams;
+    const // (undocumented)
+    MentionSource: {
+        values: readonly ["post", "comment"];
+    };
+    // (undocumented)
+    type ActorInsights = __ActorInsights;
+    const // (undocumented)
+    ModerationActionType: {
+        values: readonly ["hide", "remove", "warn", "ban", "dismiss", "unhide", "restore"];
+    };
+    // (undocumented)
+    type ActorInsightsParams = __ActorInsightsParams;
+    const // (undocumented)
+    ModerationTargetKind: {
+        values: readonly ["post", "comment", "actor", "direct_message"];
+    };
+    // (undocumented)
+    type ActorList = __ActorList;
+    const // (undocumented)
+    MutedTermAction: {
+        values: readonly ["mute", "pending_approval"];
+    };
+    // (undocumented)
+    type ActorListList = __ActorListList;
+    const // (undocumented)
+    MutedTermScope: {
+        values: readonly ["feed", "dm", "mention", "all"];
+    };
+    // (undocumented)
+    type ActorListMember = __ActorListMember;
+    const // (undocumented)
+    NotificationKind: {
+        values: readonly ["follow", "reaction", "comment_on_post", "reply_to_comment", "mention", "vote", "repost", "quote_post", "dm_new_message", "dm_added_to_group", "dm_role_changed", "dm_reaction", "tag", "follow_request", "follow_request_approved"];
+    };
+    // (undocumented)
+    type ActorListMemberList = __ActorListMemberList;
+    const // (undocumented)
+    NotificationTargetKind: {
+        values: readonly ["actor", "post", "comment", "direct_message"];
+    };
+    // (undocumented)
+    type ActorListParams = __ActorListParams;
+    const // (undocumented)
+    PostStatus: {
+        values: readonly ["published", "hidden", "removed", "draft", "scheduled", "archived"];
+    };
+    // (undocumented)
+    type ActorListVisibility = __ActorListVisibility;
+    const // (undocumented)
+    PostTagState: {
+        values: readonly ["pending", "approved", "removed"];
+    };
+    // (undocumented)
+    type ActorMentionListParams = __ActorMentionListParams;
+    const // (undocumented)
+    PostVisibility: {
+        values: readonly ["public", "followers", "close_friends", "private"];
+    };
+    // (undocumented)
+    type ActorMutedTermCreateParams = __ActorMutedTermCreateParams;
+    const // (undocumented)
+    ReactionTargetType: {
+        values: readonly ["post", "comment"];
+    };
+    // (undocumented)
+    type ActorMutedTermListParams = __ActorMutedTermListParams;
+    const // (undocumented)
+    SocialStatsMetric: {
+        values: readonly ["active_members"];
+    };
+    // (undocumented)
+    type ActorMuteListParams = __ActorMuteListParams;
+    const // (undocumented)
+    StatsGranularity: {
+        values: readonly ["day"];
+    };
+    // (undocumented)
+    type ActorNotificationListParams = __ActorNotificationListParams;
+    const // (undocumented)
+    StatsWindow: {
+        values: readonly ["1d", "7d", "30d"];
+    };
+    // (undocumented)
+    type ActorNotificationMarkAllReadParams = __ActorNotificationMarkAllReadParams;
+    const // (undocumented)
+    SuggestionReason: {
+        values: readonly ["followed_by_friends", "top_in_community"];
+    };
+    // (undocumented)
+    type ActorNotificationPrefUpdateParams = __ActorNotificationPrefUpdateParams;
+    const // (undocumented)
+    WebhookAttemptTrigger: {
+        values: readonly ["automatic", "replay", "test"];
+    };
+    // (undocumented)
+    type ActorNotificationUpdateParams = __ActorNotificationUpdateParams;
+    const // (undocumented)
+    WebhookEndpointDisabledReason: {
+        values: readonly ["manual", "failing"];
+    };
+    // (undocumented)
+    type ActorPage = __ActorPage;
+    const // (undocumented)
+    WebhookEndpointStatus: {
+        values: readonly ["enabled", "disabled", "auto_disabled"];
+    };
+    // (undocumented)
+    type ActorPostStateParams = __ActorPostStateParams;
+    const // (undocumented)
+    WebhookEventStatus: {
+        values: readonly ["pending", "delivered", "failed", "not_sent"];
+    };
+    // (undocumented)
+    type ActorReactionEntry = __ActorReactionEntry;
+    const // (undocumented)
+    WebhookEventType: {
+        values: readonly ["post.created", "post.updated", "post.deleted", "post.reaction.created", "repost.created", "comment.created", "comment.updated", "comment.deleted", "comment.reaction.created", "edge.follow.created", "edge.follow.deleted", "edge.follow.requested", "edge.follow.request_approved", "flag.created", "flag.updated", "moderation.action.applied", "actor.updated", "dm.message.created", "tag.created", "asset.ready", "asset.failed"];
+    };
+    // (undocumented)
+    type ActorReactions = __ActorReactions;
+    // (undocumented)
+    type ActorRelationshipListParams = __ActorRelationshipListParams;
+    // (undocumented)
+    type ActorRestrictListParams = __ActorRestrictListParams;
+    // (undocumented)
+    type ActorsByExternalBatch = __ActorsByExternalBatch;
+    // (undocumented)
+    type ActorScheduledPostListParams = __ActorScheduledPostListParams;
+    // (undocumented)
+    type ActorSearch = __ActorSearch;
+    // (undocumented)
+    type ActorSearchHit = __ActorSearchHit;
+    // (undocumented)
+    type ActorStatus = __ActorStatus;
+    // (undocumented)
+    type ActorSuggestedFollowListParams = __ActorSuggestedFollowListParams;
+    // (undocumented)
+    type ActorSummary = __ActorSummary;
+    // (undocumented)
+    type ActorTaggedListParams = __ActorTaggedListParams;
+    // (undocumented)
+    type ActorUpdatedEvent = __ActorUpdatedEvent;
+    // (undocumented)
+    type ActorUpdatedEventData = __ActorUpdatedEventData;
+    // (undocumented)
+    type ActorUpdateParams = __ActorUpdateParams;
+    // (undocumented)
+    type AddCommentReaction = __AddCommentReaction;
+    // (undocumented)
+    type Asset = __Asset;
+    // (undocumented)
+    type AssetAttachment = __AssetAttachment;
+    // (undocumented)
+    type AssetCreateParams = __AssetCreateParams;
+    // (undocumented)
+    type AssetFailedEvent = __AssetFailedEvent;
+    // (undocumented)
+    type AssetFailedEventData = __AssetFailedEventData;
+    // (undocumented)
+    type AssetKind = __AssetKind;
+    // (undocumented)
+    type AssetList = __AssetList;
+    // (undocumented)
+    type AssetReadyEvent = __AssetReadyEvent;
+    // (undocumented)
+    type AssetReadyEventData = __AssetReadyEventData;
+    // (undocumented)
+    type AssetRendition = __AssetRendition;
+    // (undocumented)
+    type AssetRenditionName = __AssetRenditionName;
+    // (undocumented)
+    type AssetStatus = __AssetStatus;
+    // (undocumented)
+    type AssetUpload = __AssetUpload;
+    // (undocumented)
+    type AssetUploadMethod = __AssetUploadMethod;
+    // (undocumented)
+    type AuditList = __AuditList;
+    // (undocumented)
+    type BatchActorResult = __BatchActorResult;
+    // (undocumented)
+    type BatchActors = __BatchActors;
+    // (undocumented)
+    type BatchCounters = __BatchCounters;
+    // (undocumented)
+    type BatchFollowResult = __BatchFollowResult;
+    // (undocumented)
+    type BatchFollows = __BatchFollows;
+    // (undocumented)
+    type BatchItemError = __BatchItemError;
+    // (undocumented)
+    type BlockCreateParams = __BlockCreateParams;
+    // (undocumented)
+    type BlockedTerm = __BlockedTerm;
+    // (undocumented)
+    type BlockedTermAction = __BlockedTermAction;
+    // (undocumented)
+    type BlockedTermList = __BlockedTermList;
+    // (undocumented)
+    type Bookmark = __Bookmark;
+    // (undocumented)
+    type BookmarkList = __BookmarkList;
+    // (undocumented)
+    type BookmarkToggle = __BookmarkToggle;
+    // (undocumented)
+    type CloseFriendCreateParams = __CloseFriendCreateParams;
+    // (undocumented)
+    type CloseFriendResponse = __CloseFriendResponse;
+    // (undocumented)
+    type CloseFriendsListResponse = __CloseFriendsListResponse;
+    // (undocumented)
+    type Collection = __Collection;
+    // (undocumented)
+    type CollectionCreateParams = __CollectionCreateParams;
+    // (undocumented)
+    type CollectionDeleteParams = __CollectionDeleteParams;
+    // (undocumented)
+    type CollectionItem = __CollectionItem;
+    // (undocumented)
+    type CollectionItemCreateParams = __CollectionItemCreateParams;
+    // (undocumented)
+    type CollectionItemDeleteParams = __CollectionItemDeleteParams;
+    // (undocumented)
+    type CollectionItemList = __CollectionItemList;
+    // (undocumented)
+    type CollectionItemListParams = __CollectionItemListParams;
+    // (undocumented)
+    type CollectionItemUpdateParams = __CollectionItemUpdateParams;
+    // (undocumented)
+    type CollectionKind = __CollectionKind;
+    // (undocumented)
+    type CollectionList = __CollectionList;
+    // (undocumented)
+    type CollectionListParams = __CollectionListParams;
+    // (undocumented)
+    type CollectionRetrieveParams = __CollectionRetrieveParams;
+    // (undocumented)
+    type CollectionUpdateParams = __CollectionUpdateParams;
+    // (undocumented)
+    type CollectionVisibility = __CollectionVisibility;
+    // (undocumented)
+    type Comment = __Comment;
+    // (undocumented)
+    type CommentCreatedEvent = __CommentCreatedEvent;
+    // (undocumented)
+    type CommentCreatedEventData = __CommentCreatedEventData;
+    // (undocumented)
+    type CommentDeletedEvent = __CommentDeletedEvent;
+    // (undocumented)
+    type CommentDeletedEventData = __CommentDeletedEventData;
+    // (undocumented)
+    type CommentList = __CommentList;
+    // (undocumented)
+    type CommentPolicy = __CommentPolicy;
+    // (undocumented)
+    type CommentReactionCounts = __CommentReactionCounts;
+    // (undocumented)
+    type CommentReactionCreatedEvent = __CommentReactionCreatedEvent;
+    // (undocumented)
+    type CommentReactionCreatedEventData = __CommentReactionCreatedEventData;
+    // (undocumented)
+    type CommentReactionEntry = __CommentReactionEntry;
+    // (undocumented)
+    type CommentReactionList = __CommentReactionList;
+    // (undocumented)
+    type CommentStatus = __CommentStatus;
+    // (undocumented)
+    type CommentUpdatedEvent = __CommentUpdatedEvent;
+    // (undocumented)
+    type CommentUpdatedEventData = __CommentUpdatedEventData;
+    // (undocumented)
+    type CommentVisibility = __CommentVisibility;
+    // (undocumented)
+    type Community = __Community;
+    // (undocumented)
+    type CommunityActorCommentListParams = __CommunityActorCommentListParams;
+    // (undocumented)
+    type CommunityActorReactionListParams = __CommunityActorReactionListParams;
+    // (undocumented)
+    type CommunityAnalytics = __CommunityAnalytics;
+    // (undocumented)
+    type CommunityCreateParams = __CommunityCreateParams;
+    // (undocumented)
+    type CommunityList = __CommunityList;
+    // (undocumented)
+    type CommunityListParams = __CommunityListParams;
+    // (undocumented)
+    type CommunityModerationActionCreateParams = __CommunityModerationActionCreateParams;
+    // (undocumented)
+    type CommunityModerationActorShadowBanParams = __CommunityModerationActorShadowBanParams;
+    // (undocumented)
+    type CommunityModerationAuditListParams = __CommunityModerationAuditListParams;
+    // (undocumented)
+    type CommunityModerationBlockedTermCreateParams = __CommunityModerationBlockedTermCreateParams;
+    // (undocumented)
+    type CommunityModerationBlockedTermListParams = __CommunityModerationBlockedTermListParams;
+    // (undocumented)
+    type CommunityModerationConversationListParams = __CommunityModerationConversationListParams;
+    // (undocumented)
+    type CommunityModerationConversationMessageListParams = __CommunityModerationConversationMessageListParams;
+    // (undocumented)
+    type CommunityModerationFlagListParams = __CommunityModerationFlagListParams;
+    // (undocumented)
+    type CommunityModerationFlagResolveParams = __CommunityModerationFlagResolveParams;
+    // (undocumented)
+    type CommunityModerationShadowBannedListParams = __CommunityModerationShadowBannedListParams;
+    // (undocumented)
+    type CommunityRankingSettings = __CommunityRankingSettings;
+    // (undocumented)
+    type CommunityRankingWeights = __CommunityRankingWeights;
+    // (undocumented)
+    type CommunityScopedWebhookEndpointCreateParams = __CommunityScopedWebhookEndpointCreateParams;
+    // (undocumented)
+    type CommunityScopedWebhookEndpointRotateSecretParams = __CommunityScopedWebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type CommunityScopedWebhookEndpointTestParams = __CommunityScopedWebhookEndpointTestParams;
+    // (undocumented)
+    type CommunityScopedWebhookEndpointUpdateParams = __CommunityScopedWebhookEndpointUpdateParams;
+    // (undocumented)
+    type CommunityScopedWebhookEventListParams = __CommunityScopedWebhookEventListParams;
+    // (undocumented)
+    type CommunityScopedWebhookEventReplayParams = __CommunityScopedWebhookEventReplayParams;
+    // (undocumented)
+    type CommunitySettings = __CommunitySettings;
+    // (undocumented)
+    type CommunityStatus = __CommunityStatus;
+    // (undocumented)
+    type CommunityUpdateParams = __CommunityUpdateParams;
+    // (undocumented)
+    type CommunityWebhookEndpointCreateParams = __CommunityWebhookEndpointCreateParams;
+    // (undocumented)
+    type CommunityWebhookEndpointRotateSecretParams = __CommunityWebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type CommunityWebhookEndpointTestParams = __CommunityWebhookEndpointTestParams;
+    // (undocumented)
+    type CommunityWebhookEndpointUpdateParams = __CommunityWebhookEndpointUpdateParams;
+    // (undocumented)
+    type CommunityWebhookEventListParams = __CommunityWebhookEventListParams;
+    // (undocumented)
+    type CommunityWebhookEventReplayParams = __CommunityWebhookEventReplayParams;
+    // (undocumented)
+    type ConnectionCreateParams = __ConnectionCreateParams;
+    // (undocumented)
+    type ConnectionResult = __ConnectionResult;
+    // (undocumented)
+    type ConnectionStatus = __ConnectionStatus;
+    // (undocumented)
+    type Conversation = __Conversation;
+    // (undocumented)
+    type ConversationAdmin = __ConversationAdmin;
+    // (undocumented)
+    type ConversationAdminList = __ConversationAdminList;
+    // (undocumented)
+    type ConversationCreateParams = __ConversationCreateParams;
+    // (undocumented)
+    type ConversationDeleteParams = __ConversationDeleteParams;
+    // (undocumented)
+    type ConversationKind = __ConversationKind;
+    // (undocumented)
+    type ConversationList = __ConversationList;
+    // (undocumented)
+    type ConversationListParams = __ConversationListParams;
+    // (undocumented)
+    type ConversationMarkReadParams = __ConversationMarkReadParams;
+    // (undocumented)
+    type ConversationMemberCreateParams = __ConversationMemberCreateParams;
+    // (undocumented)
+    type ConversationMemberDeleteParams = __ConversationMemberDeleteParams;
+    // (undocumented)
+    type ConversationMemberUpdateParams = __ConversationMemberUpdateParams;
+    // (undocumented)
+    type ConversationMessageCreateParams = __ConversationMessageCreateParams;
+    // (undocumented)
+    type ConversationMessageDeleteParams = __ConversationMessageDeleteParams;
+    // (undocumented)
+    type ConversationMessageListParams = __ConversationMessageListParams;
+    // (undocumented)
+    type ConversationMessageReactionCreateParams = __ConversationMessageReactionCreateParams;
+    // (undocumented)
+    type ConversationMessageReactionListParams = __ConversationMessageReactionListParams;
+    // (undocumented)
+    type ConversationMessageRetrieveParams = __ConversationMessageRetrieveParams;
+    // (undocumented)
+    type ConversationMessageUpdateParams = __ConversationMessageUpdateParams;
+    // (undocumented)
+    type ConversationParticipant = __ConversationParticipant;
+    // (undocumented)
+    type ConversationRetrieveParams = __ConversationRetrieveParams;
+    // (undocumented)
+    type ConversationRole = __ConversationRole;
+    // (undocumented)
+    type ConversationUnreadCountParams = __ConversationUnreadCountParams;
+    // (undocumented)
+    type ConversationUpdateParams = __ConversationUpdateParams;
+    // (undocumented)
+    type CounterListParams = __CounterListParams;
+    // (undocumented)
+    type CreateEdge = __CreateEdge;
+    // (undocumented)
+    type CreateFlag = __CreateFlag;
+    // (undocumented)
+    type CreateRepost = __CreateRepost;
+    // (undocumented)
+    type DirectMessage = __DirectMessage;
+    // (undocumented)
+    type DirectMessageAdmin = __DirectMessageAdmin;
+    // (undocumented)
+    type DirectMessageAdminList = __DirectMessageAdminList;
+    // (undocumented)
+    type DirectMessageAttachment = __DirectMessageAttachment;
+    // (undocumented)
+    type DirectMessageKind = __DirectMessageKind;
+    // (undocumented)
+    type DirectMessageList = __DirectMessageList;
+    // (undocumented)
+    type DirectMessageReaction = __DirectMessageReaction;
+    // (undocumented)
+    type DirectMessageReactionCreated = __DirectMessageReactionCreated;
+    // (undocumented)
+    type DirectMessageReactionList = __DirectMessageReactionList;
+    // (undocumented)
+    type DirectMessageReactionRemoved = __DirectMessageReactionRemoved;
+    // (undocumented)
+    type DiscoverFeedListParams = __DiscoverFeedListParams;
+    // (undocumented)
+    type DismissedSuggestionCreateParams = __DismissedSuggestionCreateParams;
+    // (undocumented)
+    type DmMessageCreatedEvent = __DmMessageCreatedEvent;
+    // (undocumented)
+    type DmMessageCreatedEventData = __DmMessageCreatedEventData;
+    // (undocumented)
+    type DraftList = __DraftList;
+    // (undocumented)
+    type Edge = __Edge;
+    // (undocumented)
+    type EdgeFollowCreatedEvent = __EdgeFollowCreatedEvent;
+    // (undocumented)
+    type EdgeFollowCreatedEventData = __EdgeFollowCreatedEventData;
+    // (undocumented)
+    type EdgeFollowDeletedEvent = __EdgeFollowDeletedEvent;
+    // (undocumented)
+    type EdgeFollowDeletedEventData = __EdgeFollowDeletedEventData;
+    // (undocumented)
+    type EdgeFollowRequestApprovedEvent = __EdgeFollowRequestApprovedEvent;
+    // (undocumented)
+    type EdgeFollowRequestApprovedEventData = __EdgeFollowRequestApprovedEventData;
+    // (undocumented)
+    type EdgeFollowRequestedEvent = __EdgeFollowRequestedEvent;
+    // (undocumented)
+    type EdgeFollowRequestedEventData = __EdgeFollowRequestedEventData;
+    // (undocumented)
+    type EdgeKind = __EdgeKind;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type Feed = __Feed;
+    // (undocumented)
+    type Flag = __Flag;
+    // (undocumented)
+    type FlagCreatedEvent = __FlagCreatedEvent;
+    // (undocumented)
+    type FlagCreatedEventData = __FlagCreatedEventData;
+    // (undocumented)
+    type FlagCreateParams = __FlagCreateParams;
+    // (undocumented)
+    type FlagList = __FlagList;
+    // (undocumented)
+    type FlagListParams = __FlagListParams;
+    // (undocumented)
+    type FlagStatus = __FlagStatus;
+    // (undocumented)
+    type FlagUpdatedEvent = __FlagUpdatedEvent;
+    // (undocumented)
+    type FlagUpdatedEventData = __FlagUpdatedEventData;
+    // (undocumented)
+    type FollowBatchParams = __FollowBatchParams;
+    // (undocumented)
+    type FollowCreateParams = __FollowCreateParams;
+    // (undocumented)
+    type FollowerEdge = __FollowerEdge;
+    // (undocumented)
+    type FollowerEdgeList = __FollowerEdgeList;
+    // (undocumented)
+    type FollowRequestEntry = __FollowRequestEntry;
+    // (undocumented)
+    type FollowRequestList = __FollowRequestList;
+    // (undocumented)
+    type FollowResult = __FollowResult;
+    // (undocumented)
+    type FollowStatus = __FollowStatus;
+    // (undocumented)
+    type Hashtag = __Hashtag;
+    // (undocumented)
+    type HashtagAutocomplete = __HashtagAutocomplete;
+    // (undocumented)
+    type HashtagDetail = __HashtagDetail;
+    // (undocumented)
+    type HashtagFollow = __HashtagFollow;
+    // (undocumented)
+    type HashtagFollowList = __HashtagFollowList;
+    // (undocumented)
+    type HashtagList = __HashtagList;
+    // (undocumented)
+    type HashtagListParams = __HashtagListParams;
+    // (undocumented)
+    type HashtagPostList = __HashtagPostList;
+    // (undocumented)
+    type HashtagPostListParams = __HashtagPostListParams;
+    // (undocumented)
+    type HideCreateParams = __HideCreateParams;
+    // (undocumented)
+    type HideEntry = __HideEntry;
+    // (undocumented)
+    type HideList = __HideList;
+    // (undocumented)
+    type HideResult = __HideResult;
+    // (undocumented)
+    type HighlightsResponse = __HighlightsResponse;
+    // (undocumented)
+    type InsightsDailyBucket = __InsightsDailyBucket;
+    // (undocumented)
+    type ListCreateParams = __ListCreateParams;
+    // (undocumented)
+    type ListDeleteParams = __ListDeleteParams;
+    // (undocumented)
+    type ListFeedListParams = __ListFeedListParams;
+    // (undocumented)
+    type ListListParams = __ListListParams;
+    // (undocumented)
+    type ListMemberCreateParams = __ListMemberCreateParams;
+    // (undocumented)
+    type ListMemberDeleteParams = __ListMemberDeleteParams;
+    // (undocumented)
+    type ListMemberListParams = __ListMemberListParams;
+    // (undocumented)
+    type ListRetrieveParams = __ListRetrieveParams;
+    // (undocumented)
+    type ListUpdateParams = __ListUpdateParams;
+    // (undocumented)
+    type ListWebhookEndpoints = __ListWebhookEndpoints;
+    // (undocumented)
+    type ListWebhookEvents = __ListWebhookEvents;
+    // (undocumented)
+    type ListWebhookEventTypes = __ListWebhookEventTypes;
+    // (undocumented)
+    type MarkAllReadResponse = __MarkAllReadResponse;
+    // (undocumented)
+    type MentionEntry = __MentionEntry;
+    // (undocumented)
+    type MentionList = __MentionList;
+    // (undocumented)
+    type MentionSource = __MentionSource;
+    // (undocumented)
+    type ModerationAction = __ModerationAction;
+    // (undocumented)
+    type ModerationActionAppliedEvent = __ModerationActionAppliedEvent;
+    // (undocumented)
+    type ModerationActionAppliedEventData = __ModerationActionAppliedEventData;
+    // (undocumented)
+    type ModerationActionType = __ModerationActionType;
+    // (undocumented)
+    type ModerationActor = __ModerationActor;
+    // (undocumented)
+    type ModerationActorList = __ModerationActorList;
+    // (undocumented)
+    type ModerationTargetKind = __ModerationTargetKind;
+    // (undocumented)
+    type MuteCreateParams = __MuteCreateParams;
+    // (undocumented)
+    type MutedTerm = __MutedTerm;
+    // (undocumented)
+    type MutedTermAction = __MutedTermAction;
+    // (undocumented)
+    type MutedTermList = __MutedTermList;
+    // (undocumented)
+    type MutedTermScope = __MutedTermScope;
+    // (undocumented)
+    type NotificationKind = __NotificationKind;
+    // (undocumented)
+    type NotificationListResponse = __NotificationListResponse;
+    // (undocumented)
+    type NotificationPref = __NotificationPref;
+    // (undocumented)
+    type NotificationPrefList = __NotificationPrefList;
+    // (undocumented)
+    type NotificationResponse = __NotificationResponse;
+    // (undocumented)
+    type NotificationTargetKind = __NotificationTargetKind;
+    // (undocumented)
+    type OutboundEdge = __OutboundEdge;
+    // (undocumented)
+    type OutboundEdgeList = __OutboundEdgeList;
+    // (undocumented)
+    type Pagination = __Pagination;
+    // (undocumented)
+    type ParticipantSummary = __ParticipantSummary;
+    // (undocumented)
+    type PollOptions = __PollOptions;
+    // (undocumented)
+    type PollResultOptionResponse = __PollResultOptionResponse;
+    // (undocumented)
+    type PollResultsResponse = __PollResultsResponse;
+    // (undocumented)
+    type PollVoteResponse = __PollVoteResponse;
+    // (undocumented)
+    type PollVoterResponse = __PollVoterResponse;
+    // (undocumented)
+    type PollVotersResponse = __PollVotersResponse;
+    // (undocumented)
+    type Post = __Post;
+    // (undocumented)
+    type PostBookmarkParams = __PostBookmarkParams;
+    // (undocumented)
+    type PostCommentApproveParams = __PostCommentApproveParams;
+    // (undocumented)
+    type PostCommentCreateParams = __PostCommentCreateParams;
+    // (undocumented)
+    type PostCommentListParams = __PostCommentListParams;
+    // (undocumented)
+    type PostCommentPinParams = __PostCommentPinParams;
+    // (undocumented)
+    type PostCommentReactionCreateParams = __PostCommentReactionCreateParams;
+    // (undocumented)
+    type PostCommentReactionListParams = __PostCommentReactionListParams;
+    // (undocumented)
+    type PostCommentRetrieveParams = __PostCommentRetrieveParams;
+    // (undocumented)
+    type PostCommentUnpinParams = __PostCommentUnpinParams;
+    // (undocumented)
+    type PostCommentUpdateParams = __PostCommentUpdateParams;
+    // (undocumented)
+    type PostCreatedEvent = __PostCreatedEvent;
+    // (undocumented)
+    type PostCreatedEventData = __PostCreatedEventData;
+    // (undocumented)
+    type PostCreateParams = __PostCreateParams;
+    // (undocumented)
+    type PostDeletedEvent = __PostDeletedEvent;
+    // (undocumented)
+    type PostDeletedEventData = __PostDeletedEventData;
+    // (undocumented)
+    type PostInsights = __PostInsights;
+    // (undocumented)
+    type PostInsightsParams = __PostInsightsParams;
+    // (undocumented)
+    type PostList = __PostList;
+    // (undocumented)
+    type PostListParams = __PostListParams;
+    // (undocumented)
+    type PostQuoteListParams = __PostQuoteListParams;
+    // (undocumented)
+    type PostReactionCreatedEvent = __PostReactionCreatedEvent;
+    // (undocumented)
+    type PostReactionCreatedEventData = __PostReactionCreatedEventData;
+    // (undocumented)
+    type PostReactionCreateParams = __PostReactionCreateParams;
+    // (undocumented)
+    type PostReactionEntry = __PostReactionEntry;
+    // (undocumented)
+    type PostReactionList = __PostReactionList;
+    // (undocumented)
+    type PostReactionListParams = __PostReactionListParams;
+    // (undocumented)
+    type PostRecordImpressionsParams = __PostRecordImpressionsParams;
+    // (undocumented)
+    type PostRecordViewParams = __PostRecordViewParams;
+    // (undocumented)
+    type PostRepostListParams = __PostRepostListParams;
+    // (undocumented)
+    type PostRepostParams = __PostRepostParams;
+    // (undocumented)
+    type PostRetrieveParams = __PostRetrieveParams;
+    // (undocumented)
+    type PostRevision = __PostRevision;
+    // (undocumented)
+    type PostRevisionList = __PostRevisionList;
+    // (undocumented)
+    type PostRevisionListParams = __PostRevisionListParams;
+    // (undocumented)
+    type PostSearch = __PostSearch;
+    // (undocumented)
+    type PostSearchHit = __PostSearchHit;
+    // (undocumented)
+    type PostSettings = __PostSettings;
+    // (undocumented)
+    type PostState = __PostState;
+    // (undocumented)
+    type PostStatus = __PostStatus;
+    // (undocumented)
+    type PostTag = __PostTag;
+    // (undocumented)
+    type PostTagApproveParams = __PostTagApproveParams;
+    // (undocumented)
+    type PostTagDeleteParams = __PostTagDeleteParams;
+    // (undocumented)
+    type PostTagState = __PostTagState;
+    // (undocumented)
+    type PostUnbookmarkParams = __PostUnbookmarkParams;
+    // (undocumented)
+    type PostUnrepostParams = __PostUnrepostParams;
+    // (undocumented)
+    type PostUpdatedEvent = __PostUpdatedEvent;
+    // (undocumented)
+    type PostUpdatedEventData = __PostUpdatedEventData;
+    // (undocumented)
+    type PostUpdateParams = __PostUpdateParams;
+    // (undocumented)
+    type PostViewerListParams = __PostViewerListParams;
+    // (undocumented)
+    type PostViewerStateEntry = __PostViewerStateEntry;
+    // (undocumented)
+    type PostVisibility = __PostVisibility;
+    // (undocumented)
+    type PostVoteCreateParams = __PostVoteCreateParams;
+    // (undocumented)
+    type PostVoterListParams = __PostVoterListParams;
+    // (undocumented)
+    type Reaction = __Reaction;
+    // (undocumented)
+    type ReactionCounts = __ReactionCounts;
+    // (undocumented)
+    type ReactionEdge = __ReactionEdge;
+    // (undocumented)
+    type ReactionTargetType = __ReactionTargetType;
+    // (undocumented)
+    type RelationshipEntry = __RelationshipEntry;
+    // (undocumented)
+    type RelationshipList = __RelationshipList;
+    // (undocumented)
+    type ReplayWebhookEvent = __ReplayWebhookEvent;
+    // (undocumented)
+    type RepostCreatedEvent = __RepostCreatedEvent;
+    // (undocumented)
+    type RepostCreatedEventData = __RepostCreatedEventData;
+    // (undocumented)
+    type RepostList = __RepostList;
+    // (undocumented)
+    type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type RestrictCreateParams = __RestrictCreateParams;
+    // (undocumented)
+    type SearchActorListParams = __SearchActorListParams;
+    // (undocumented)
+    type SearchHashtagListParams = __SearchHashtagListParams;
+    // (undocumented)
+    type SearchPostListParams = __SearchPostListParams;
+    // (undocumented)
+    type SocialStatsInWindow = __SocialStatsInWindow;
+    // (undocumented)
+    type SocialStatsMetric = __SocialStatsMetric;
+    // (undocumented)
+    type SocialStatsSeries = __SocialStatsSeries;
+    // (undocumented)
+    type SocialStatsSeriesPoint = __SocialStatsSeriesPoint;
+    // (undocumented)
+    type SocialStatsTotals = __SocialStatsTotals;
+    // (undocumented)
+    type SocialWorkspaceStats = __SocialWorkspaceStats;
+    // (undocumented)
+    type StatsGranularity = __StatsGranularity;
+    // (undocumented)
+    type StatsRetrieveParams = __StatsRetrieveParams;
+    // (undocumented)
+    type StatsWindow = __StatsWindow;
+    // (undocumented)
+    type StoryTrayEntryResponse = __StoryTrayEntryResponse;
+    // (undocumented)
+    type StoryTrayResponse = __StoryTrayResponse;
+    // (undocumented)
+    type StoryViewerResponse = __StoryViewerResponse;
+    // (undocumented)
+    type StoryViewersResponse = __StoryViewersResponse;
+    // (undocumented)
+    type SuggestedFollow = __SuggestedFollow;
+    // (undocumented)
+    type SuggestedFollowsList = __SuggestedFollowsList;
+    // (undocumented)
+    type SuggestionReason = __SuggestionReason;
+    // (undocumented)
+    type TagCreatedEvent = __TagCreatedEvent;
+    // (undocumented)
+    type TagCreatedEventData = __TagCreatedEventData;
+    // (undocumented)
+    type TaggedPostsResponse = __TaggedPostsResponse;
+    // (undocumented)
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
+    // (undocumented)
+    type UnreadCount = __UnreadCount;
+    // (undocumented)
+    type UnreadCountResponse = __UnreadCountResponse;
+    // (undocumented)
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
+    // (undocumented)
+    type UploadAsset = __UploadAsset;
+    // (undocumented)
+    type UpsertActor = __UpsertActor;
+    // (undocumented)
+    type WebhookAttemptTrigger = __WebhookAttemptTrigger;
+    // (undocumented)
+    type WebhookDeliveryAttempt = __WebhookDeliveryAttempt;
+    // (undocumented)
+    type WebhookEndpoint = __WebhookEndpoint;
+    // (undocumented)
+    type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
+    // (undocumented)
+    type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type WebhookEndpointStatus = __WebhookEndpointStatus;
+    // (undocumented)
+    type WebhookEndpointTestParams = __WebhookEndpointTestParams;
+    // (undocumented)
+    type WebhookEndpointUpdateParams = __WebhookEndpointUpdateParams;
+    // (undocumented)
+    type WebhookEndpointWithSecret = __WebhookEndpointWithSecret;
+    // (undocumented)
+    type WebhookEvent = __WebhookEvent;
+    // (undocumented)
+    type WebhookEventDelivery = __WebhookEventDelivery;
+    // (undocumented)
+    type WebhookEventDetail = __WebhookEventDetail;
+    // (undocumented)
+    type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplayParams = __WebhookEventReplayParams;
+    // (undocumented)
+    type WebhookEventStatus = __WebhookEventStatus;
+    // (undocumented)
+    type WebhookEventType = __WebhookEventType;
+    // (undocumented)
+    type WebhookEventTypeInfo = __WebhookEventTypeInfo;
+    // (undocumented)
+    type WebhookPagination = __WebhookPagination;
+    // (undocumented)
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
 }
+export { Social }
+export default Social;
+
+// @public
+export type SocialErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ASSET_INVALID_CONTAINER" | "ASSET_INVALID_SIZE" | "ASSET_INVALID_TYPE" | "ASSET_MAGIC_MISMATCH" | "ASSET_NOT_OWNED" | "ASSET_NOT_READY" | "ASSET_NOT_VIDEO" | "ASSET_PROCESSING_FAILED" | "ASSET_TOO_LARGE" | "ASSET_TRANSCODE_FAILED" | "ASSET_UPLOAD_INCOMPLETE" | "CANNOT_QUOTE_PRIVATE" | "CANNOT_QUOTE_SELF" | "CANNOT_REPOST_PRIVATE" | "CANNOT_REPOST_SELF" | "COMMENTS_DISABLED" | "COMMENTS_FOLLOWERS_ONLY" | "COMMENTS_MENTIONED_ONLY" | "EDIT_WINDOW_EXPIRED" | "INVALID_CURSOR" | "INVALID_DATE_FILTER" | "INVALID_EXPAND" | "INVALID_IDENTIFIER" | "INVALID_ID_LIST" | "INVALID_NOTIFICATION_KIND" | "INVALID_ORDER" | "INVALID_SEARCH_QUERY" | "PIN_CAP_REACHED" | "POLL_CLOSED" | "QUOTE_NOT_ALLOWED" | "QUOTE_REQUIRES_BODY" | "QUOTE_REQUIRES_SOURCE" | "REPOST_NOT_ALLOWED" | "SOURCE_POST_ID_REQUIRES_QUOTE" | "TOO_MANY_ACTIVE_UPLOADS" | "TOO_MANY_ATTACHMENTS" | "TOO_MANY_IDS" | (string & {});
+
+// @public (undocumented)
+export const SocialErrorCode: {
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ASSET_INVALID_CONTAINER", "ASSET_INVALID_SIZE", "ASSET_INVALID_TYPE", "ASSET_MAGIC_MISMATCH", "ASSET_NOT_OWNED", "ASSET_NOT_READY", "ASSET_NOT_VIDEO", "ASSET_PROCESSING_FAILED", "ASSET_TOO_LARGE", "ASSET_TRANSCODE_FAILED", "ASSET_UPLOAD_INCOMPLETE", "CANNOT_QUOTE_PRIVATE", "CANNOT_QUOTE_SELF", "CANNOT_REPOST_PRIVATE", "CANNOT_REPOST_SELF", "COMMENTS_DISABLED", "COMMENTS_FOLLOWERS_ONLY", "COMMENTS_MENTIONED_ONLY", "EDIT_WINDOW_EXPIRED", "INVALID_CURSOR", "INVALID_DATE_FILTER", "INVALID_EXPAND", "INVALID_IDENTIFIER", "INVALID_ID_LIST", "INVALID_NOTIFICATION_KIND", "INVALID_ORDER", "INVALID_SEARCH_QUERY", "PIN_CAP_REACHED", "POLL_CLOSED", "QUOTE_NOT_ALLOWED", "QUOTE_REQUIRES_BODY", "QUOTE_REQUIRES_SOURCE", "REPOST_NOT_ALLOWED", "SOURCE_POST_ID_REQUIRES_QUOTE", "TOO_MANY_ACTIVE_UPLOADS", "TOO_MANY_ATTACHMENTS", "TOO_MANY_IDS"];
+};
+
+export { UnprocessableEntityError }
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 

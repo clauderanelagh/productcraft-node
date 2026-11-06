@@ -256,7 +256,8 @@ export function buildTrees(model) {
 function paramsSig(o) {
   if (!o.paramsType) return null;
   let t = `T.${o.paramsType}`;
-  if (o.scope?.actor && (o.actor === "body" || o.actor === "both")) t = `T.WithOptionalActor<${t}>`;
+  // A required actor_id in the query or the body is filled by `.as(actorId)`, so it is optional here.
+  if (o.scope?.actor && o.actor) t = `T.WithOptionalActor<${t}>`;
   return `params${o.hasRequiredParams && !(o.scope?.actor && onlyActorRequired(o)) ? "" : "?"}: ${t}`;
 }
 const onlyActorRequired = (o) => o.requiredNames?.length === 1 && o.requiredNames[0] === "actor_id";
