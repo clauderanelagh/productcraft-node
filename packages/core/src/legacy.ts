@@ -6,6 +6,7 @@
  */
 
 import createClient, { type Client, type Middleware } from "openapi-fetch";
+import { CORE_VERSION } from "./version.js";
 
 /**
  * The auth credential the SDK presents to ProductCraft APIs.
@@ -135,5 +136,31 @@ export function makeClient<TPaths extends object>(
     fetch: config.fetch,
   });
   client.use(authMiddleware(resolveAuth(config.auth)));
+  client.use(userAgentMiddleware());
   return client;
+}
+
+/**
+ * Identify `.client` calls as the SDK (`productcraft-node/core@<version>
+ * node/<version>`), as `APIClient` does, outside the browser (where
+ * `User-Agent` cannot be set) and unless the caller set one. APIs key
+ * SDK-only behaviour on it: Platform's `GET …/api-keys` always answers
+ * the paged envelope the generated types describe to an SDK.
+ */
+function userAgentMiddleware(): Middleware {
+  const g = globalThis as {
+    window?: { document?: unknown };
+    navigator?: unknown;
+    process?: { versions?: { node?: string } };
+  };
+  const browser = typeof g.window?.document !== "undefined" && typeof g.navigator !== "undefined";
+  const node = g.process?.versions?.node;
+  const userAgent = `productcraft-node/core@${CORE_VERSION}${node ? ` node/${node}` : ""}`;
+  return {
+    onRequest({ request }) {
+      if (browser || request.headers.has("user-agent")) return undefined;
+      request.headers.set("User-Agent", userAgent);
+      return request;
+    },
+  };
 }
