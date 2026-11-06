@@ -1,5 +1,11 @@
 # @productcraft/trawl
 
+## 1.0.3
+
+### Patch Changes
+
+- ca7418e: Refresh trawl OpenAPI types from production.
+
 ## 1.0.2
 
 ### Patch Changes
