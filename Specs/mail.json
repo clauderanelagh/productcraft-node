@@ -1370,7 +1370,8 @@
           },
           "enabled": {
             "default": true,
-            "description": "Create it switched off.",
+            "description": "Send `false` to create it switched off.",
+            "example": true,
             "type": "boolean"
           },
           "event_types": {
@@ -7353,6 +7354,7 @@
           "grace_hours": {
             "default": 24,
             "description": "Hours the previous secret keeps signing too (0 ends it now).",
+            "example": 24,
             "maximum": 168,
             "minimum": 0,
             "type": "number"
@@ -8810,6 +8812,7 @@
         "properties": {
           "description": {
             "description": "A new label; null clears it.",
+            "example": "Production receiver",
             "maxLength": 200,
             "nullable": true,
             "type": "string"
@@ -8822,10 +8825,15 @@
           },
           "enabled": {
             "description": "Switch it on or off. Switching on also clears an automatic disable.",
+            "example": true,
             "type": "boolean"
           },
           "event_types": {
             "description": "Replaces the subscription. Event types from `GET …/webhooks/event-types`. Empty or omitted means every event, including types added later. Older names (`message.sent`, `message.delivered`, `message.deferred`, `message.bounced`, `message.complained`, `message.failed`) are still accepted; an endpoint subscribed under one receives the event with that name as its `type`.",
+            "example": [
+              "email.sent",
+              "email.delivered"
+            ],
             "items": {
               "enum": [
                 "email.sent",
@@ -38445,6 +38453,7 @@
         ]
       },
       "get": {
+        "description": "The endpoint's URL, subscription, on/off state, failure streak and the last 4 characters of its signing secret. The full secret is only returned when the endpoint is created or its secret is rotated.",
         "operationId": "WebhooksController_mail_workspace_getEndpoint",
         "parameters": [
           {
@@ -39745,6 +39754,7 @@
     },
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
       "get": {
+        "description": "The event as it was sent (`type`, `data`) and every delivery attempt to every endpoint, with its trigger, HTTP status, error and the start of the response body. Use it to debug a receiver, then `replay` to send it again.",
         "operationId": "WebhooksController_mail_workspace_getEvent",
         "parameters": [
           {
