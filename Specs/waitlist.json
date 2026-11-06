@@ -406,6 +406,7 @@
       "CreateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A label for people.",
             "example": "Production receiver",
             "maxLength": 200,
             "nullable": true,
@@ -882,6 +883,7 @@
       "ListWebhookEndpointsResponseDto": {
         "properties": {
           "data": {
+            "description": "The endpoints, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEndpointDto"
             },
@@ -905,6 +907,7 @@
       "ListWebhookEventTypesResponseDto": {
         "properties": {
           "data": {
+            "description": "Every event type this product sends.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventTypeDto"
             },
@@ -919,13 +922,19 @@
       "ListWebhookEventsResponseDto": {
         "properties": {
           "data": {
+            "description": "The events, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventDto"
             },
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/WebhookPaginationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
           }
         },
         "required": [
@@ -1299,6 +1308,7 @@
             "type": "array"
           },
           "event_id": {
+            "description": "The replayed event (the same id as the original).",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           }
@@ -1564,6 +1574,7 @@
       "UpdateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A new label; null clears it.",
             "maxLength": 200,
             "nullable": true,
             "type": "string"
@@ -1585,6 +1596,7 @@
             "type": "array"
           },
           "url": {
+            "description": "A new absolute https:// URL on a public host.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "maxLength": 2048,
@@ -1770,6 +1782,7 @@
               "ACTIONS_NOT_GRANTABLE",
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
+              "IDEMPOTENCY_IN_PROGRESS",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
@@ -1798,6 +1811,7 @@
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
           "GONE": "The resource existed but has been removed for good.",
+          "IDEMPOTENCY_IN_PROGRESS": "A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response.",
           "IDEMPOTENCY_KEY_REQUIRED": "This operation requires an `Idempotency-Key` header.",
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
           "INTERNAL_SERVER_ERROR": "An unexpected server error. Retrying is safe for idempotent requests; quote `request_id` to support.",
@@ -2227,6 +2241,14 @@
         ],
         "type": "object"
       },
+      "WebhookAttemptTrigger": {
+        "enum": [
+          "automatic",
+          "replay",
+          "test"
+        ],
+        "type": "string"
+      },
       "WebhookCreateResponseDto": {
         "properties": {
           "active": {
@@ -2317,32 +2339,39 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the attempt was made.",
             "format": "date-time",
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint it was delivered to.",
             "format": "uuid",
             "type": "string"
           },
           "error_message": {
+            "description": "Why the attempt failed when no 2xx came back; null on success.",
             "example": "request timed out",
             "nullable": true,
             "type": "string"
           },
           "event_id": {
+            "description": "The event that was delivered.",
             "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           },
           "event_type": {
+            "description": "The event's type.",
             "example": "user.created",
             "type": "string"
           },
           "id": {
+            "description": "The attempt's id.",
             "format": "uuid",
             "type": "string"
           },
           "latency_ms": {
+            "description": "Milliseconds until the response; null when none came back.",
             "nullable": true,
             "type": "number"
           },
@@ -2361,13 +2390,12 @@
             "type": "boolean"
           },
           "trigger": {
-            "description": "`automatic` (first delivery or a retry), `replay` or `test`.",
-            "enum": [
-              "automatic",
-              "replay",
-              "test"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookAttemptTrigger"
+              }
             ],
-            "type": "string"
+            "description": "`automatic` (first delivery or a retry), `replay` or `test`."
           },
           "url": {
             "description": "Where it was sent.",
@@ -2410,6 +2438,13 @@
         ],
         "type": "object"
       },
+      "WebhookEndpointDisabledReason": {
+        "enum": [
+          "manual",
+          "failing"
+        ],
+        "type": "string"
+      },
       "WebhookEndpointDto": {
         "properties": {
           "consecutive_failures": {
@@ -2417,26 +2452,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "enabled": {
             "description": "The on/off switch (`PATCH … { enabled }`).",
@@ -2457,6 +2496,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -2489,19 +2529,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -2529,6 +2570,14 @@
         ],
         "type": "object"
       },
+      "WebhookEndpointStatus": {
+        "enum": [
+          "enabled",
+          "disabled",
+          "auto_disabled"
+        ],
+        "type": "string"
+      },
       "WebhookEndpointWithSecretDto": {
         "properties": {
           "consecutive_failures": {
@@ -2536,26 +2585,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "enabled": {
             "description": "The on/off switch (`PATCH … { enabled }`).",
@@ -2576,6 +2629,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -2613,19 +2667,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -2661,10 +2716,12 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the latest attempt was made.",
             "format": "date-time",
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint.",
             "format": "uuid",
             "type": "string"
           },
@@ -2675,6 +2732,7 @@
             "type": "string"
           },
           "status_code": {
+            "description": "HTTP status of the latest attempt; null when no response came back.",
             "nullable": true,
             "type": "number"
           },
@@ -2703,6 +2761,7 @@
             "type": "array"
           },
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -2725,27 +2784,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "entry.created",
-              "entry.approved",
-              "entry.rejected"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "entry.created",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "entry.created"
           }
         },
         "required": [
@@ -2763,6 +2820,7 @@
       "WebhookEventDto": {
         "properties": {
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -2785,27 +2843,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "entry.created",
-              "entry.approved",
-              "entry.rejected"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "entry.created",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "entry.created"
           }
         },
         "required": [
@@ -2819,6 +2875,23 @@
         ],
         "type": "object"
       },
+      "WebhookEventStatus": {
+        "enum": [
+          "pending",
+          "delivered",
+          "failed",
+          "not_sent"
+        ],
+        "type": "string"
+      },
+      "WebhookEventType": {
+        "enum": [
+          "entry.created",
+          "entry.approved",
+          "entry.rejected"
+        ],
+        "type": "string"
+      },
       "WebhookEventTypeDto": {
         "properties": {
           "category": {
@@ -2827,6 +2900,7 @@
             "type": "string"
           },
           "description": {
+            "description": "When this event is sent.",
             "example": "A user signed up or was created by an admin.",
             "type": "string"
           },
@@ -2836,13 +2910,13 @@
             "type": "object"
           },
           "type": {
-            "enum": [
-              "entry.created",
-              "entry.approved",
-              "entry.rejected"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "entry.created",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "entry.created"
           }
         },
         "required": [
@@ -2851,7 +2925,8 @@
           "category",
           "example"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEventTypeInfo"
       },
       "WebhookListResponseDto": {
         "properties": {
@@ -3689,6 +3764,15 @@
             },
             "description": "Accepted by Mail and queued for delivery.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -3775,15 +3859,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "412": {
@@ -3988,6 +4079,15 @@
             },
             "description": "Waitlist created.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -4038,14 +4138,22 @@
                 }
               }
             },
-            "description": "Slug already taken in this workspace.",
+            "description": "Slug already taken in this workspace. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "CONFLICT"
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           }
         },
@@ -5499,6 +5607,15 @@
             },
             "description": "Test entry created.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -5567,14 +5684,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body.",
+            "description": "Idempotency-Key reused with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "CONFLICT"
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -6085,6 +6210,15 @@
             },
             "description": "Webhook created. Includes plaintext `signing_secret` exactly once.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -6098,14 +6232,22 @@
                 }
               }
             },
-            "description": "The workspace already has 10 webhooks.",
+            "description": "The workspace already has 10 webhooks. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "CONFLICT"
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           }
         },
@@ -6260,6 +6402,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -6330,8 +6481,14 @@
                 }
               }
             },
-            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -6339,7 +6496,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -6665,6 +6823,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -6753,15 +6920,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -6847,6 +7021,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -6935,15 +7118,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           }
         },
@@ -7011,6 +7201,15 @@
             },
             "description": "The attempt, successful or not.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -7099,15 +7298,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           }
         },
@@ -7242,17 +7448,12 @@
             }
           },
           {
+            "description": "Only events in this delivery status.",
             "in": "query",
             "name": "status",
             "required": false,
             "schema": {
-              "enum": [
-                "pending",
-                "delivered",
-                "failed",
-                "not_sent"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/WebhookEventStatus"
             }
           },
           {
@@ -7276,6 +7477,7 @@
             }
           },
           {
+            "description": "Page size.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -7283,7 +7485,7 @@
               "default": 20,
               "maximum": 100,
               "minimum": 1,
-              "type": "number"
+              "type": "integer"
             }
           },
           {
@@ -7560,6 +7762,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -7649,8 +7860,14 @@
                 }
               }
             },
-            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -7658,7 +7875,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           }
         },

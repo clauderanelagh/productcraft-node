@@ -1355,6 +1355,7 @@
       "CreateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A label for people.",
             "example": "Production receiver",
             "maxLength": 200,
             "nullable": true,
@@ -4578,6 +4579,7 @@
       "ListWebhookEndpointsResponseDto": {
         "properties": {
           "data": {
+            "description": "The endpoints, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEndpointDto"
             },
@@ -4601,6 +4603,7 @@
       "ListWebhookEventTypesResponseDto": {
         "properties": {
           "data": {
+            "description": "Every event type this product sends.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventTypeDto"
             },
@@ -4615,13 +4618,19 @@
       "ListWebhookEventsResponseDto": {
         "properties": {
           "data": {
+            "description": "The events, newest first.",
             "items": {
               "$ref": "#/components/schemas/WebhookEventDto"
             },
             "type": "array"
           },
           "pagination": {
-            "$ref": "#/components/schemas/WebhookPaginationDto"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookPaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
           }
         },
         "required": [
@@ -4850,6 +4859,7 @@
               "ACTIONS_NOT_GRANTABLE",
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
+              "IDEMPOTENCY_IN_PROGRESS",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
@@ -4978,6 +4988,7 @@
           "FROM_DOMAIN_MISMATCH": "The From address is not at this domain.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
           "GONE": "The resource existed but has been removed for good.",
+          "IDEMPOTENCY_IN_PROGRESS": "A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response.",
           "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW": "An `idempotency_key` on a batch row conflicts with the request key.",
           "IDEMPOTENCY_KEY_REQUIRED": "This operation requires an `Idempotency-Key` header.",
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
@@ -7237,6 +7248,7 @@
             "type": "array"
           },
           "event_id": {
+            "description": "The replayed event (the same id as the original).",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           }
@@ -8797,6 +8809,7 @@
       "UpdateWebhookEndpointDto": {
         "properties": {
           "description": {
+            "description": "A new label; null clears it.",
             "maxLength": 200,
             "nullable": true,
             "type": "string"
@@ -8888,6 +8901,7 @@
             "type": "array"
           },
           "url": {
+            "description": "A new absolute https:// URL on a public host.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "maxLength": 2048,
@@ -9119,6 +9133,14 @@
         ],
         "type": "object"
       },
+      "WebhookAttemptTrigger": {
+        "enum": [
+          "automatic",
+          "replay",
+          "test"
+        ],
+        "type": "string"
+      },
       "WebhookDeliveryAttemptDto": {
         "properties": {
           "attempt_number": {
@@ -9126,6 +9148,7 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the attempt was made.",
             "format": "date-time",
             "type": "string"
           },
@@ -9136,28 +9159,34 @@
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint it was delivered to.",
             "format": "uuid",
             "type": "string"
           },
           "error_message": {
+            "description": "Why the attempt failed when no 2xx came back; null on success.",
             "example": "request timed out",
             "nullable": true,
             "type": "string"
           },
           "event_id": {
+            "description": "The event that was delivered.",
             "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
             "pattern": "^evt_[0-9a-f-]{36}$",
             "type": "string"
           },
           "event_type": {
+            "description": "The event's type.",
             "example": "user.created",
             "type": "string"
           },
           "id": {
+            "description": "The attempt's id.",
             "format": "uuid",
             "type": "string"
           },
           "latency_ms": {
+            "description": "Milliseconds until the response; null when none came back.",
             "nullable": true,
             "type": "number"
           },
@@ -9181,13 +9210,12 @@
             "type": "boolean"
           },
           "trigger": {
-            "description": "`automatic` (first delivery or a retry), `replay` or `test`.",
-            "enum": [
-              "automatic",
-              "replay",
-              "test"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookAttemptTrigger"
+              }
             ],
-            "type": "string"
+            "description": "`automatic` (first delivery or a retry), `replay` or `test`."
           },
           "url": {
             "description": "Where it was sent.",
@@ -9214,6 +9242,13 @@
         ],
         "type": "object"
       },
+      "WebhookEndpointDisabledReason": {
+        "enum": [
+          "manual",
+          "failing"
+        ],
+        "type": "string"
+      },
       "WebhookEndpointDto": {
         "properties": {
           "consecutive_failures": {
@@ -9221,26 +9256,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "domain_id": {
             "description": "Only events about this domain; null for every event of the workspace.",
@@ -9277,6 +9316,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -9318,19 +9358,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -9361,6 +9402,14 @@
         ],
         "type": "object"
       },
+      "WebhookEndpointStatus": {
+        "enum": [
+          "enabled",
+          "disabled",
+          "auto_disabled"
+        ],
+        "type": "string"
+      },
       "WebhookEndpointWithSecretDto": {
         "properties": {
           "consecutive_failures": {
@@ -9368,26 +9417,30 @@
             "type": "number"
           },
           "created_at": {
+            "description": "When the endpoint was created.",
             "format": "date-time",
             "type": "string"
           },
           "description": {
+            "description": "A label for people; null when unset.",
             "example": "Production receiver",
             "nullable": true,
             "type": "string"
           },
           "disabled_at": {
+            "description": "When it was switched off; null while enabled.",
             "format": "date-time",
             "nullable": true,
             "type": "string"
           },
           "disabled_reason": {
-            "enum": [
-              "manual",
-              "failing"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointDisabledReason"
+              }
             ],
-            "nullable": true,
-            "type": "string"
+            "description": "`manual`: switched off by a caller. `failing`: switched off automatically after failed deliveries. Null while enabled.",
+            "nullable": true
           },
           "domain_id": {
             "description": "Only events about this domain; null for every event of the workspace.",
@@ -9424,6 +9477,7 @@
             "type": "string"
           },
           "id": {
+            "description": "The endpoint's id.",
             "format": "uuid",
             "type": "string"
           },
@@ -9470,19 +9524,20 @@
             "type": "string"
           },
           "status": {
-            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on.",
-            "enum": [
-              "enabled",
-              "disabled",
-              "auto_disabled"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEndpointStatus"
+              }
             ],
-            "type": "string"
+            "description": "`enabled` receives events. `disabled` was switched off. `auto_disabled` was switched off after 20 failed deliveries in a row or 24 hours of failures; `PATCH { enabled: true }` turns it back on."
           },
           "updated_at": {
+            "description": "When the endpoint last changed.",
             "format": "date-time",
             "type": "string"
           },
           "url": {
+            "description": "Where events are sent.",
             "example": "https://api.acme.com/webhooks",
             "format": "uri",
             "type": "string"
@@ -9521,10 +9576,12 @@
             "type": "number"
           },
           "attempted_at": {
+            "description": "When the latest attempt was made.",
             "format": "date-time",
             "type": "string"
           },
           "endpoint_id": {
+            "description": "The endpoint.",
             "format": "uuid",
             "type": "string"
           },
@@ -9535,6 +9592,7 @@
             "type": "string"
           },
           "status_code": {
+            "description": "HTTP status of the latest attempt; null when no response came back.",
             "nullable": true,
             "type": "number"
           },
@@ -9563,6 +9621,7 @@
             "type": "array"
           },
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -9597,47 +9656,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "email.sent",
-              "email.delivered",
-              "email.delivery_delayed",
-              "email.bounced",
-              "email.complained",
-              "email.failed",
-              "email.suppressed",
-              "email.skipped",
-              "email.scheduled",
-              "email.canceled",
-              "email.opened",
-              "email.clicked",
-              "email.received",
-              "domain.created",
-              "domain.updated",
-              "domain.verified",
-              "domain.deleted",
-              "suppression.added",
-              "suppression.removed",
-              "sending_defaults.updated",
-              "contact.created",
-              "contact.updated",
-              "contact.deleted"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "email.sent",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "email.sent"
           }
         },
         "required": [
@@ -9657,6 +9694,7 @@
       "WebhookEventDto": {
         "properties": {
           "created_at": {
+            "description": "When the event happened.",
             "format": "date-time",
             "type": "string"
           },
@@ -9691,47 +9729,25 @@
             "type": "object"
           },
           "status": {
-            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed.",
-            "enum": [
-              "pending",
-              "delivered",
-              "failed",
-              "not_sent"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventStatus"
+              }
             ],
-            "type": "string"
+            "description": "`pending`: a delivery is queued. `failed`: the latest attempt to some endpoint failed and none is queued. `delivered`: every endpoint answered 2xx. `not_sent`: no endpoint subscribed."
           },
           "test": {
             "description": "Made by \"Send test\".",
             "type": "boolean"
           },
           "type": {
-            "enum": [
-              "email.sent",
-              "email.delivered",
-              "email.delivery_delayed",
-              "email.bounced",
-              "email.complained",
-              "email.failed",
-              "email.suppressed",
-              "email.skipped",
-              "email.scheduled",
-              "email.canceled",
-              "email.opened",
-              "email.clicked",
-              "email.received",
-              "domain.created",
-              "domain.updated",
-              "domain.verified",
-              "domain.deleted",
-              "suppression.added",
-              "suppression.removed",
-              "sending_defaults.updated",
-              "contact.created",
-              "contact.updated",
-              "contact.deleted"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "email.sent",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "email.sent"
           }
         },
         "required": [
@@ -9747,6 +9763,43 @@
         ],
         "type": "object"
       },
+      "WebhookEventStatus": {
+        "enum": [
+          "pending",
+          "delivered",
+          "failed",
+          "not_sent"
+        ],
+        "type": "string"
+      },
+      "WebhookEventType": {
+        "enum": [
+          "email.sent",
+          "email.delivered",
+          "email.delivery_delayed",
+          "email.bounced",
+          "email.complained",
+          "email.failed",
+          "email.suppressed",
+          "email.skipped",
+          "email.scheduled",
+          "email.canceled",
+          "email.opened",
+          "email.clicked",
+          "email.received",
+          "domain.created",
+          "domain.updated",
+          "domain.verified",
+          "domain.deleted",
+          "suppression.added",
+          "suppression.removed",
+          "sending_defaults.updated",
+          "contact.created",
+          "contact.updated",
+          "contact.deleted"
+        ],
+        "type": "string"
+      },
       "WebhookEventTypeDto": {
         "properties": {
           "category": {
@@ -9755,6 +9808,7 @@
             "type": "string"
           },
           "description": {
+            "description": "When this event is sent.",
             "example": "A user signed up or was created by an admin.",
             "type": "string"
           },
@@ -9774,33 +9828,13 @@
             "type": "string"
           },
           "type": {
-            "enum": [
-              "email.sent",
-              "email.delivered",
-              "email.delivery_delayed",
-              "email.bounced",
-              "email.complained",
-              "email.failed",
-              "email.suppressed",
-              "email.skipped",
-              "email.scheduled",
-              "email.canceled",
-              "email.opened",
-              "email.clicked",
-              "email.received",
-              "domain.created",
-              "domain.updated",
-              "domain.verified",
-              "domain.deleted",
-              "suppression.added",
-              "suppression.removed",
-              "sending_defaults.updated",
-              "contact.created",
-              "contact.updated",
-              "contact.deleted"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEventType"
+              }
             ],
-            "example": "email.sent",
-            "type": "string"
+            "description": "The event type (one of this product's catalogue).",
+            "example": "email.sent"
           }
         },
         "required": [
@@ -9811,7 +9845,8 @@
           "emitted",
           "legacy_alias"
         ],
-        "type": "object"
+        "type": "object",
+        "x-pc-sdk-model": "WebhookEventTypeInfo"
       },
       "WebhookPaginationDto": {
         "properties": {
@@ -10879,6 +10914,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -10983,15 +11027,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -11237,6 +11288,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -11341,15 +11401,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -11631,6 +11698,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -11735,15 +11811,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -12410,6 +12493,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -12515,8 +12607,14 @@
                 }
               }
             },
-            "description": "Not a draft any more (`BROADCAST_NOT_DRAFT`, `details.status`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Not a draft any more (`BROADCAST_NOT_DRAFT`, `details.status`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -12524,7 +12622,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "BROADCAST_NOT_DRAFT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -12631,6 +12730,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -12736,8 +12844,14 @@
                 }
               }
             },
-            "description": "Draft, sent or already canceled (`BROADCAST_NOT_CANCELABLE`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Draft, sent or already canceled (`BROADCAST_NOT_CANCELABLE`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -12745,7 +12859,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "BROADCAST_NOT_CANCELABLE",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -13002,6 +13117,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -13107,15 +13231,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -13420,6 +13551,15 @@
             },
             "description": "`status` is `sending` or `scheduled`.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -13525,8 +13665,14 @@
                 }
               }
             },
-            "description": "Not a draft (`BROADCAST_NOT_DRAFT`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Not a draft (`BROADCAST_NOT_DRAFT`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -13534,7 +13680,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "BROADCAST_NOT_DRAFT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -13823,6 +13970,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -13927,8 +14083,14 @@
                 }
               }
             },
-            "description": "The key exists (`CONTACT_PROPERTY_EXISTS`), the workspace has 50 properties (`CONTACT_PROPERTY_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "The key exists (`CONTACT_PROPERTY_EXISTS`), the workspace has 50 properties (`CONTACT_PROPERTY_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -13937,7 +14099,8 @@
               "CONFLICT",
               "CONTACT_PROPERTY_EXISTS",
               "CONTACT_PROPERTY_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -14383,6 +14546,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -14488,15 +14660,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -14800,6 +14979,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -14905,8 +15093,14 @@
                 }
               }
             },
-            "description": "A contact with this email exists (`CONTACT_EXISTS`), the workspace has 100,000 contacts (`CONTACT_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "A contact with this email exists (`CONTACT_EXISTS`), the workspace has 100,000 contacts (`CONTACT_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -14915,7 +15109,8 @@
               "CONFLICT",
               "CONTACT_EXISTS",
               "CONTACT_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -15201,6 +15396,15 @@
             },
             "description": "Queued.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -15306,8 +15510,14 @@
                 }
               }
             },
-            "description": "Two imports are already running (`IMPORT_IN_PROGRESS`), or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route.",
+            "description": "Two imports are already running (`IMPORT_IN_PROGRESS`), or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -15315,7 +15525,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "IMPORT_IN_PROGRESS",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "413": {
@@ -15952,6 +16163,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -16057,15 +16277,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -16545,6 +16772,15 @@
             },
             "description": "Already a member; nothing changed.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -16578,6 +16814,15 @@
             },
             "description": "Added.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -16684,15 +16929,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -16978,6 +17230,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -17084,15 +17345,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -17557,6 +17825,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -17663,8 +17940,14 @@
                 }
               }
             },
-            "description": "Domain already registered (globally unique); `MAIL_FROM_HOST_IN_USE`: the `custom_return_path` host already has records that are not ours (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route.",
+            "description": "Domain already registered (globally unique); `MAIL_FROM_HOST_IN_USE`: the `custom_return_path` host already has records that are not ours (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -17672,7 +17955,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "MAIL_FROM_HOST_IN_USE",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -18331,6 +18615,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -18437,8 +18730,14 @@
                 }
               }
             },
-            "description": "`CAPABILITY_NOT_VERIFIED`: a verified domain cannot gain sending or receiving until the new records verify (`details.failing`, `details.records`); `DOMAIN_HAS_MAILBOXES`: receiving cannot be turned off while active mailboxes exist (`details.count`, `details.mailboxes[].id|address`); `MAIL_FROM_HOST_IN_USE`: the MAIL FROM host already has a CNAME, a foreign MX or a foreign SPF record (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "`CAPABILITY_NOT_VERIFIED`: a verified domain cannot gain sending or receiving until the new records verify (`details.failing`, `details.records`); `DOMAIN_HAS_MAILBOXES`: receiving cannot be turned off while active mailboxes exist (`details.count`, `details.mailboxes[].id|address`); `MAIL_FROM_HOST_IN_USE`: the MAIL FROM host already has a CNAME, a foreign MX or a foreign SPF record (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -18448,7 +18747,8 @@
               "CAPABILITY_NOT_VERIFIED",
               "DOMAIN_HAS_MAILBOXES",
               "MAIL_FROM_HOST_IN_USE",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -18749,6 +19049,15 @@
             },
             "description": "The plan (dry run), or the plan with each record's `result` and the post-apply DNS check.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -18858,8 +19167,14 @@
                 }
               }
             },
-            "description": "`DNS_CONFLICTS`: a blocking conflict (a second SPF record, a CNAME at the name, another DKIM key at our selector, other MX records at the MAIL FROM host or the domain, a merge over 10 SPF lookups). Nothing was written; the body carries the full `plan` and `conflicts`. Or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "`DNS_CONFLICTS`: a blocking conflict (a second SPF record, a CNAME at the name, another DKIM key at our selector, other MX records at the MAIL FROM host or the domain, a merge over 10 SPF lookups). Nothing was written; the body carries the full `plan` and `conflicts`. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -18867,7 +19182,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "DNS_CONFLICTS",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -19381,6 +19697,15 @@
             },
             "description": "The signed apply URL to open in the browser.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -19485,8 +19810,14 @@
                 }
               }
             },
-            "description": "One-click setup is not possible for this domain; nothing was started. `DOMAIN_CONNECT_DISABLED`: ProductCraft has not switched Domain Connect on. `DOMAIN_CONNECT_UNAVAILABLE`: the DNS provider does not run Domain Connect or has not onboarded our template (`details.reason`: `no_record`, `settings_unreachable`, `template_not_onboarded` or `lookup_failed`; `details.provider_name`). `DOMAIN_CONNECT_NOT_SENDING`: a receive-only domain. `DOMAIN_CONNECT_MAIL_FROM_LABEL`: the MAIL FROM label is not `bounce` or MAIL FROM is off. `DKIM_KEY_MISSING`: no DKIM key to publish. Or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "One-click setup is not possible for this domain; nothing was started. `DOMAIN_CONNECT_DISABLED`: ProductCraft has not switched Domain Connect on. `DOMAIN_CONNECT_UNAVAILABLE`: the DNS provider does not run Domain Connect or has not onboarded our template (`details.reason`: `no_record`, `settings_unreachable`, `template_not_onboarded` or `lookup_failed`; `details.provider_name`). `DOMAIN_CONNECT_NOT_SENDING`: a receive-only domain. `DOMAIN_CONNECT_MAIL_FROM_LABEL`: the MAIL FROM label is not `bounce` or MAIL FROM is off. `DKIM_KEY_MISSING`: no DKIM key to publish. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -19498,7 +19829,8 @@
               "DOMAIN_CONNECT_NOT_SENDING",
               "DOMAIN_CONNECT_MAIL_FROM_LABEL",
               "DKIM_KEY_MISSING",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -19974,6 +20306,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -20078,15 +20419,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the key was used with a different body.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -20702,6 +21050,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -20806,15 +21163,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -21079,6 +21443,15 @@
             },
             "description": "Accepted; queued for delivery.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -21184,15 +21557,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -21928,6 +22308,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -22032,15 +22421,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -22461,6 +22857,15 @@
           "204": {
             "description": "Saved.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -22565,15 +22970,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -22649,6 +23061,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -22753,15 +23174,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -23007,6 +23435,15 @@
           "204": {
             "description": "Disconnected.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -23111,15 +23548,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -23550,6 +23994,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -23654,15 +24107,22 @@
                 }
               }
             },
-            "description": "Mailbox local-part already exists on this domain, or the domain is not yet verified, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route.",
+            "description": "Mailbox local-part already exists on this domain, or the domain is not yet verified, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -24102,6 +24562,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -24206,15 +24675,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -26362,6 +26838,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -26466,15 +26951,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -28629,6 +29121,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -28733,8 +29234,14 @@
                 }
               }
             },
-            "description": "A segment with this name exists (`SEGMENT_EXISTS`), the workspace has 100 segments (`SEGMENT_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "A segment with this name exists (`SEGMENT_EXISTS`), the workspace has 100 segments (`SEGMENT_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -28743,7 +29250,8 @@
               "CONFLICT",
               "SEGMENT_EXISTS",
               "SEGMENT_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -29378,6 +29886,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -29483,8 +30000,14 @@
                 }
               }
             },
-            "description": "Another segment has this name (`SEGMENT_EXISTS`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Another segment has this name (`SEGMENT_EXISTS`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -29492,7 +30015,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "SEGMENT_EXISTS",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -30629,6 +31153,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -30733,15 +31266,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -31699,6 +32239,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -31803,15 +32352,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -32290,6 +32846,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -32394,15 +32959,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -33573,6 +34145,15 @@
             },
             "description": "Send accepted; queued for delivery.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -33677,14 +34258,22 @@
                 }
               }
             },
-            "description": "IDEMPOTENCY_KEY_REUSE — same key, different body.",
+            "description": "IDEMPOTENCY_KEY_REUSE — same key, different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "CONFLICT"
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -33823,6 +34412,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -33928,15 +34526,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -34050,6 +34655,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -34154,15 +34768,22 @@
                 }
               }
             },
-            "description": "Cannot test-send a layout/partial, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route.",
+            "description": "Cannot test-send a layout/partial, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -34637,6 +35258,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -34741,8 +35371,14 @@
                 }
               }
             },
-            "description": "A topic with this name exists (`TOPIC_EXISTS`), the workspace has 50 topics (`TOPIC_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "A topic with this name exists (`TOPIC_EXISTS`), the workspace has 50 topics (`TOPIC_LIMIT`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -34751,7 +35387,8 @@
               "CONFLICT",
               "TOPIC_EXISTS",
               "TOPIC_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -35177,6 +35814,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -35282,8 +35928,14 @@
                 }
               }
             },
-            "description": "Another topic has this name (`TOPIC_EXISTS`), or `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Another topic has this name (`TOPIC_EXISTS`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -35291,7 +35943,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "TOPIC_EXISTS",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -36056,6 +36709,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -36160,15 +36822,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -36263,6 +36932,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -36367,15 +37045,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -36800,6 +37485,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -36904,15 +37598,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -37016,6 +37717,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -37120,15 +37830,22 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route.",
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -37374,6 +38091,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -37479,8 +38205,14 @@
                 }
               }
             },
-            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -37488,7 +38220,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_LIMIT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -37932,6 +38665,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -38037,15 +38779,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "422": {
@@ -38159,6 +38908,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -38264,15 +39022,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -38368,6 +39133,15 @@
             },
             "description": "The attempt, successful or not.",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -38473,15 +39247,22 @@
                 }
               }
             },
-            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
               "CONFLICT",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
@@ -38746,17 +39527,12 @@
             }
           },
           {
+            "description": "Only events in this delivery status.",
             "in": "query",
             "name": "status",
             "required": false,
             "schema": {
-              "enum": [
-                "pending",
-                "delivered",
-                "failed",
-                "not_sent"
-              ],
-              "type": "string"
+              "$ref": "#/components/schemas/WebhookEventStatus"
             }
           },
           {
@@ -38780,6 +39556,7 @@
             }
           },
           {
+            "description": "Page size.",
             "in": "query",
             "name": "limit",
             "required": false,
@@ -38787,7 +39564,7 @@
               "default": 20,
               "maximum": 100,
               "minimum": 1,
-              "type": "number"
+              "type": "integer"
             }
           },
           {
@@ -39192,6 +39969,15 @@
             },
             "description": "",
             "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
               "X-RateLimit-Limit-long": {
                 "$ref": "#/components/headers/X-RateLimit-Limit-long"
               },
@@ -39298,8 +40084,14 @@
                 }
               }
             },
-            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`).",
+            "description": "`endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
             "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
@@ -39307,7 +40099,8 @@
             "x-pc-error-codes": [
               "CONFLICT",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
-              "IDEMPOTENCY_KEY_REUSE"
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
           "429": {
