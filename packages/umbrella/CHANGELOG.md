@@ -1,5 +1,24 @@
 # productcraft
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [4a00e63]
+- Updated dependencies [4a00e63]
+- Updated dependencies [4a00e63]
+- Updated dependencies [4a00e63]
+- Updated dependencies [4a00e63]
+- Updated dependencies [4a00e63]
+- Updated dependencies [1a6edbb]
+  - @productcraft/auth@0.8.3
+  - @productcraft/mail@0.2.3
+  - @productcraft/platform-auth@0.1.3
+  - @productcraft/social@1.0.2
+  - @productcraft/trawl@0.2.3
+  - @productcraft/waitlist@0.2.3
+  - @productcraft/core@0.4.0
+
 ## 0.3.1
 
 ### Patch Changes
