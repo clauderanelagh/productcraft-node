@@ -1,5 +1,11 @@
 # @productcraft/platform-auth
 
+## 0.1.2
+
+### Patch Changes
+
+- 534e23d: Refresh platform-auth OpenAPI types from production.
+
 ## 0.1.1
 
 ### Patch Changes
