@@ -374,6 +374,12 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 
 ## 13. Decision log
 
+2026-11-06, task 005 (Mail 1.0) as built:
+
+- **`messages.body(id)` resolves to JSON**, not a `Response`: the API answers `GET /messages/{id}/body` with `application/json` (the cleartext body inside an object), so section 4's "message bodies return `Response`" applies to raw MIME and attachments (`received.raw`, `mailboxes.messages.raw`, `*.attachments.retrieve`) and the CSV exports. The generator follows the content type; nothing was renamed.
+- **Example variables never use JS keywords:** `contacts.imports.list` singularised to `import`; the generator now suffixes keyword names (`importItem`, `defaultResult`).
+- **The live smoke sends from a standing sending domain.** Mail refuses a From on any domain that is not an active sending domain of the workspace (422 `from_domain_not_verified`), and verifying a throwaway domain needs DNS writes per run. testing-environment therefore keeps one standing sending domain, `sdk-live.productcraft.co` (DKIM, return-path and DMARC records in the DigitalOcean `productcraft.co` zone, added 2026-11-06); `scripts/live/mail.mjs` only reads it and sends to `success@simulator.amazonses.com`. Its own throwaway resource is a `sdk-smoke-<ts>` template.
+
 2026-11-06, task 004 (Trawl 1.0, the first generated product) as built:
 
 - **Typed polled results come from the spec.** `x-pc-sdk.poll.result` (monorepo `@SdkPoll({ …, result })`, checked by openapi-audit: it must name a free-form object property of the 200 response) makes `poll<TResult>` / `createAndPoll<TResult>` generic; the generator emits `WithResult<Model, "result", TResult>` (a reserved helper name), which keeps the property's optional/nullable modifiers. No per-product rename table in the SDK.

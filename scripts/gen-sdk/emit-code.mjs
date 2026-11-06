@@ -54,6 +54,11 @@ export function scopeExpr(o, deref, given = undefined) {
   return expr;
 }
 
+/** JS words that cannot name a variable in an example (`for await (const import of …)`). */
+const JS_KEYWORDS = new Set("break case catch class const continue debugger default delete do else enum export extends false finally for function if import in instanceof let new null package private protected public return static super switch this throw true try typeof var void while with yield await implements interface".split(" "));
+/** An example variable name that is always a legal identifier: `import` becomes `importItem`. */
+export const exampleVar = (name, suffix = "Item") => (JS_KEYWORDS.has(name) ? `${name}${suffix}` : name);
+
 /** A short, runnable call example for one operation. */
 export function callExample(o, cfg, deref) {
   const v = cfg.clientVar;
@@ -64,13 +69,13 @@ export function callExample(o, cfg, deref) {
   const call = `${v}${scopeExpr(o, deref)}.${o.resource}.${o.method}(${args.join(", ")})`;
   const out = [];
   if (o.paginated) {
-    const item = camel(singular(o.segs[o.segs.length - 1]));
+    const item = exampleVar(camel(singular(o.segs[o.segs.length - 1])));
     out.push(`for await (const ${item} of ${call}) {`, `  console.log(${item});`, "}");
     if (optionalOnly) out.push(`const page = await ${v}${scopeExpr(o, deref)}.${o.resource}.${o.method}(${[...o.positional.map((p, i) => lit(pathValue(p, i, deref))), "{}"].join(", ")}, { timeout: 5_000 });`);
   } else if (o.success.kind === "void") out.push(`await ${call};`);
   else if (o.success.kind === "raw") out.push(`const response = await ${call};`, "const text = await response.text();");
   else {
-    const name = o.responseType && !/Response$/.test(o.responseType) ? camel(o.responseType) : "result";
+    const name = o.responseType && !/Response$/.test(o.responseType) ? exampleVar(camel(o.responseType), "Result") : "result";
     out.push(`const ${name} = await ${call};`);
   }
   return out.join("\n");

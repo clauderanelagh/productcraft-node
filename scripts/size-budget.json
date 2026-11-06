@@ -6,5 +6,9 @@
   "@productcraft/trawl": {
     "measuredGzipBytes": 9841,
     "limitGzipBytes": 10826
+  },
+  "@productcraft/mail": {
+    "measuredGzipBytes": 13656,
+    "limitGzipBytes": 15022
   }
 }
