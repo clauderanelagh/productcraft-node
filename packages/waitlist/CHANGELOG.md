@@ -1,5 +1,11 @@
 # @productcraft/rally
 
+## 0.2.4
+
+### Patch Changes
+
+- b87f6f9: Refresh waitlist OpenAPI types from production.
+
 ## 0.2.3
 
 ### Patch Changes
