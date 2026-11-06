@@ -30,6 +30,14 @@ describe("@productcraft/trawl", () => {
     expect(fetch.calls[1]!.url.pathname).toBe(`/v1/workspaces/${WORKSPACE_ID}/jobs/job-1`);
   });
 
+  it("createAndPoll over the default mock finishes (a polled retrieve answers with a terminal status)", async () => {
+    const trawl = new Trawl({ apiKey: "pcft_test", workspaceId: WORKSPACE_ID, fetch: createMockFetch(), maxRetries: 0 });
+    const job = await trawl.jobs.createAndPoll<Tiers>({ description: "x", json_schema: { type: "object" } }, { intervalMs: 1, timeoutMs: 1_000 });
+    expect(job.status).toBe("succeeded");
+    const listed = await trawl.jobs.list();
+    expect(typeof listed.data[0]?.status).toBe("string");
+  });
+
   it("generates an Idempotency-Key for a create and keeps .client typed", async () => {
     const fetch = createMockFetch();
     const trawl = new Trawl({ apiKey: "pcft_test", workspaceId: WORKSPACE_ID, fetch, maxRetries: 0 });

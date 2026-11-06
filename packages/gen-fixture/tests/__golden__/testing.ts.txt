@@ -101,7 +101,7 @@ const ROUTES: Route[] = [
     id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
     name: "Gadget",
     color: "red",
-    status: "draft",
+    status: "active",
     nickname: null,
     metadata: {},
     created_at: "2026-11-06T09:30:00.000Z",
