@@ -8,7 +8,7 @@
 //   node scripts/api-report.mjs --update   rewrite the committed reports
 //   node scripts/api-report.mjs <dir>…     only these packages (directory names under packages/)
 
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
@@ -18,6 +18,8 @@ const args = process.argv.slice(2);
 const update = args.includes("--update");
 const only = args.filter((a) => !a.startsWith("--"));
 const tmpBase = process.env.TMPDIR ?? join(ROOT, "node_modules/.cache");
+// A fresh checkout (spec-refresh.yml) has no node_modules/.cache yet.
+mkdirSync(tmpBase, { recursive: true });
 
 let failed = false;
 for (const dir of readdirSync(join(ROOT, "packages")).sort()) {
