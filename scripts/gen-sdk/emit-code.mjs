@@ -513,6 +513,8 @@ export function emitTesting(model, cfg) {
     if (o.success.kind === "json") {
       body = o.success.example ?? sample(o.success.schema, deref, "response");
       if (o.paginated && body && typeof body === "object") body = { ...body, pagination: { next_cursor: null, has_more: false } };
+      // A polled retrieve answers with a terminal value, so `poll()` / `createAndPoll()` over the mock finish.
+      if (o.poll && body && typeof body === "object") body = { ...body, [o.poll.field]: o.poll.terminal[0] };
     } else if (o.success.kind === "raw") body = typeof o.success.example === "string" ? o.success.example : "";
     return {
       op: o.name, method: o.http, pattern: `^${segs.join("/")}$`, params: (o.path.match(/\{/g) ?? []).length,
@@ -640,7 +642,7 @@ export function emitOpsTest(model, cfg) {
     if (actor && (o.actor === "query" || o.actor === "both")) query.push(["actor_id", actor]);
     if (actor && (o.actor === "body" || o.actor === "both")) bodyExpect.actor_id = actor;
     query.sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
-    const overrides = o.poll ? `{ ${lit(o.name)}: { ...(${tsLiteral(sample(o.success.schema, deref, "response"))}), ${o.poll.field}: ${lit(o.poll.terminal[0])} } }` : "";
+    const overrides = "";
     L.push(`  it(${lit(`${o.name}: ${o.http} ${o.path}`)}, async () => {`, `    const { fetch, ${v} } = setup(${overrides});`);
     L.push(`    const result = await ${call};`);
     if (o.success.kind === "raw") L.push("    expect(result).toBeInstanceOf(Response);");

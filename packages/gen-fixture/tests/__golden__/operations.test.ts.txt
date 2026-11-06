@@ -187,15 +187,7 @@ describe("generated operations (gen-fixture)", () => {
     expect(call.headers.has("authorization")).toBe(true);
   });
   it("widgets.retrieve: GET /v1/workspaces/{workspace_id}/widgets/{id}", async () => {
-    const { fetch, fixture } = setup({ "widgets.retrieve": { ...({
-  id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
-  name: "Gadget",
-  color: "red",
-  status: "draft",
-  nickname: null,
-  metadata: {},
-  created_at: "2026-11-06T09:30:00.000Z",
-}), status: "active" } });
+    const { fetch, fixture } = setup();
     const result = await fixture.widgets.retrieve("id-1");
     expect(result).toBeDefined();
     const call = fetch.calls[0]!;

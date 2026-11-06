@@ -85,7 +85,7 @@ export const placeholderUuid = (i) => UUIDS[i % UUIDS.length];
  * `mode: "response"` fills every property (what a mock returns).
  */
 export function sample(schema, deref, mode = "response", depth = 0, seen = new Set()) {
-  if (!schema || depth > 6) return null;
+  if (!schema || depth > 12) return null; // recursion is cut by `seen`; this only bounds pathological nesting
   if (schema.$ref) {
     if (seen.has(schema.$ref)) return mode === "response" ? null : {};
     const next = new Set(seen).add(schema.$ref);
@@ -94,7 +94,16 @@ export function sample(schema, deref, mode = "response", depth = 0, seen = new S
   if (schema.example !== undefined) return structuredClone(schema.example);
   if (schema.default !== undefined) return structuredClone(schema.default);
   if (Array.isArray(schema.enum) && schema.enum.length) return schema.enum[0];
-  if (schema.allOf) return Object.assign({}, ...schema.allOf.map((s) => sample(s, deref, mode, depth + 1, seen)));
+  if (schema.allOf) {
+    // `allOf: [{ $ref: SomeEnum }]` (how Nest documents a described enum property) samples
+    // to that member's value; only object members are merged.
+    const parts = schema.allOf.map((s) => sample(s, deref, mode, depth + 1, seen));
+    const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+    const scalar = parts.find((v) => v !== null && !isObj(v));
+    if (scalar !== undefined) return scalar;
+    const objects = parts.filter(isObj);
+    return objects.length ? Object.assign({}, ...objects) : null;
+  }
   for (const k of ["oneOf", "anyOf"]) {
     if (schema[k]) {
       const first = schema[k].find((s) => s.type !== "null") ?? schema[k][0];

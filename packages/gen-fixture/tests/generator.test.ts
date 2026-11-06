@@ -24,6 +24,17 @@ async function problems(mutate: (spec: Spec) => void): Promise<string[]> {
   return [];
 }
 
+describe("mock samples", () => {
+  it("an allOf around an enum $ref samples to the enum value, not a spread string", async () => {
+    // @ts-expect-error plain ESM script without type declarations
+    const { sample } = await import("../../../scripts/gen-sdk/util.mjs");
+    const schemas: Record<string, unknown> = { S: { type: "string", enum: ["queued", "done"] }, O: { type: "object", properties: { a: { type: "string" } } } };
+    const deref = (x: { $ref?: string }) => (x.$ref ? schemas[x.$ref.split("/").pop()!] : x);
+    expect(sample({ allOf: [{ $ref: "#/components/schemas/S" }], description: "d" }, deref)).toBe("queued");
+    expect(sample({ allOf: [{ $ref: "#/components/schemas/O" }, { type: "object", properties: { b: { type: "integer" } } }] }, deref)).toEqual({ a: "string", b: 1 });
+  });
+});
+
 describe("golden output", () => {
   it("matches the checked-in goldens for every generated file", async () => {
     const { files } = await generate("gen-fixture");
