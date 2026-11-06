@@ -1,5 +1,11 @@
 # @productcraft/trawl
 
+## 0.2.5
+
+### Patch Changes
+
+- 32e342a: Refresh trawl OpenAPI types from production: descriptions on every operation, examples on every parameter and request field, and `GET /workspaces/{workspace_id}/credits` no longer takes a `limit` query (it always returns the 50 newest ledger entries; a `limit` sent anyway is ignored).
+
 ## 0.2.4
 
 ### Patch Changes
