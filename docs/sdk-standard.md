@@ -59,7 +59,7 @@ await pub.entries.create({ email: "ada@example.com" });
 
 // Trawl
 type Tiers = { tiers: { name: string; price: string }[] };
-const job = await trawl.jobs.createAndPoll<Tiers>({ description: "Pricing tiers", json_schema: schema, urls: ["https://…"] });
+const job = await trawl.jobs.createAndPoll<Tiers>({ description: "Pricing tiers", json_schema: schema, suggested_urls: ["https://…"] });
 job.result?.tiers[0].name;                                                     // typed by the generic
 await trawl.jobs.cancel(job.id);
 
@@ -143,7 +143,7 @@ Every operation in every public `/docs-json` carries:
 "x-pc-sdk": { "resource": "posts.comments", "method": "create", "bind": ["community_id"], "paginated": true }
 ```
 
-or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes. Optional keys: `poll` (on a retrieve op: `{ "field": "status", "terminal": ["completed", "failed", "cancelled"] }`, which generates `poll(id)` and, where a create exists, `createAndPoll`) and `public: true` (no auth header, browser-safe).
+or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes. Optional keys: `poll` (on a retrieve op: `{ "field": "status", "terminal": ["completed", "failed", "cancelled"] }`, which generates `poll(id)` and, where a create exists, `createAndPoll`; an optional `"result": "<property>"` names a free-form object property of the response, and makes both helpers generic so `createAndPoll<T>` types that property as `T`) and `public: true` (no auth header, browser-safe).
 
 Component schemas carry `x-pc-sdk-model: "Domain"` (derived by stripping `ResponseDto`/`Dto`, overridable with `@SdkModel`). It is the public type name; Nest class names never reach users.
 
@@ -373,6 +373,13 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 - Zod input for Trawl typed results (`jobs.create({ schema: zodSchema })`): the generic `createAndPoll<T>` ships now; zod support would add a peer dependency.
 
 ## 13. Decision log
+
+2026-11-06, task 004 (Trawl 1.0, the first generated product) as built:
+
+- **Typed polled results come from the spec.** `x-pc-sdk.poll.result` (monorepo `@SdkPoll({ …, result })`, checked by openapi-audit: it must name a free-form object property of the 200 response) makes `poll<TResult>` / `createAndPoll<TResult>` generic; the generator emits `WithResult<Model, "result", TResult>` (a reserved helper name), which keeps the property's optional/nullable modifiers. No per-product rename table in the SDK.
+- **The wire field is `suggested_urls`**, not `urls`: the call-site examples in the task and in 2.2 used a name the API never had; the SDK does not rename fields (3.4), so the examples were corrected instead.
+- **`manifest.json`** is copied to the package root at build time (gitignored there) and exported as `@productcraft/trawl/manifest.json`; `scripts/check-pack.mjs` asserts in CI that every generated public package packs `manifest.json`, `api.md`, the README and the `/testing` build.
+- **Live smoke credential:** `scripts/live/trawl.mjs` signs in as the platform user and uses the session as a bearer token (logged out in `finally`), so it never mints or revokes a workspace key. Jobs have no delete and no name, so the smoke tags them with a trailing `[sdk-smoke-<ts>]` in `description` (a leading tag made the extraction agent report the task incomplete) and cancels its own; one small extraction runs to completion (a few credits in testing-environment).
 
 2026-11-06, task 003 (generator pipeline) as built:
 

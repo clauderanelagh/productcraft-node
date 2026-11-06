@@ -4,12 +4,427 @@
 
 ```ts
 
-import { makeClient } from '@productcraft/core';
-import { PCClientConfig } from '@productcraft/core';
+import { APIClient } from '@productcraft/core';
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
+import { AuthenticationError } from '@productcraft/core';
+import { BadRequestError } from '@productcraft/core';
+import { Client } from 'openapi-fetch';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
+import { LastResponse } from '@productcraft/core';
+import { NotFoundError } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
+import { PermissionDeniedError } from '@productcraft/core';
+import { PollOptions } from '@productcraft/core';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { WebhookHeaders } from '@productcraft/core';
+import { WebhookPayload } from '@productcraft/core';
+import { WebhookVerificationError } from '@productcraft/core';
 
-// @public
-export interface paths {
-    // (undocumented)
+export { APIConnectionError }
+
+export { APIError }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
+
+export { AuthenticationError }
+
+export { BadRequestError }
+
+// @public (undocumented)
+export type components = {
+    schemas: {
+        CreateJobDto: {
+            description: string;
+            json_schema: {
+                [key: string]: unknown;
+            };
+            max_steps?: number;
+            model_tier?: string;
+            suggested_urls?: string[];
+            timeout_s?: number;
+            webhook_id?: string;
+        };
+        CreateWebhookDto: {
+            active?: boolean;
+            url: string;
+        };
+        CreateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("job.succeeded" | "job.failed" | "credits.low")[];
+            url: string;
+        };
+        CreditLedgerEntryDto: {
+            created_at: string;
+            delta_steps: number;
+            id: string;
+            job_id: string | null;
+            reason: string;
+        };
+        CreditsLowEvent: {
+            created_at: string;
+            data: components["schemas"]["CreditsLowEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "credits.low";
+            workspace_id?: string;
+        };
+        CreditsLowEventDataDto: {
+            balance_steps: number;
+            last_top_up_steps: number;
+            threshold_steps: number;
+        };
+        CreditsResponseDto: {
+            balance_steps: number;
+            entries: components["schemas"]["CreditLedgerEntryDto"][];
+            low_balance: boolean;
+            low_balance_threshold_steps: number;
+        };
+        ErrorParamDto: {
+            code: string;
+            message: string;
+            param: string;
+        };
+        ErrorResponseDto: {
+            code: components["schemas"]["TrawlErrorCode"];
+            details?: {
+                [key: string]: unknown;
+            };
+            errors: components["schemas"]["ErrorParamDto"][];
+            message: string | string[];
+            request_id: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        JobEventDataDto: {
+            job: components["schemas"]["JobOutcomeDto"];
+        };
+        JobFailedEvent: {
+            created_at: string;
+            data: components["schemas"]["JobEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "job.failed";
+            workspace_id?: string;
+        };
+        JobListPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        JobListResponseDto: {
+            data: components["schemas"]["JobResponseDto"][];
+            pagination: components["schemas"]["JobListPaginationDto"];
+        };
+        JobOutcomeDto: {
+            error: string | null;
+            id: string;
+            result: {
+                [key: string]: unknown;
+            } | null;
+            status: components["schemas"]["JobOutcomeStatus"];
+        };
+        JobOutcomeStatus: "succeeded" | "failed";
+        JobResponseDto: {
+            attempts: number;
+            completed_at: string | null;
+            created_at: string;
+            description: string;
+            enqueued_at: string;
+            error: string | null;
+            id: string;
+            json_schema: {
+                [key: string]: unknown;
+            };
+            max_steps: number;
+            model_tier: string;
+            result: {
+                [key: string]: unknown;
+            } | null;
+            started_at: string | null;
+            status: components["schemas"]["JobStatus"];
+            suggested_urls: string[] | null;
+            timeout_s: number;
+            webhook_id: string | null;
+            workspace_id: string;
+        };
+        JobStatus: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        JobSucceededEvent: {
+            created_at: string;
+            data: components["schemas"]["JobEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "job.succeeded";
+            workspace_id?: string;
+        };
+        ListWebhookEndpointsResponseDto: {
+            data: components["schemas"]["WebhookEndpointDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ListWebhookEventTypesResponseDto: {
+            data: components["schemas"]["WebhookEventTypeDto"][];
+        };
+        ListWebhookEventsResponseDto: {
+            data: components["schemas"]["WebhookEventDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ReplayWebhookEventResponseDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            event_id: string;
+        };
+        RotateWebhookSecretDto: {
+            grace_hours?: number;
+        };
+        SendWebhookTestDto: {
+            event_type: "job.succeeded" | "job.failed" | "credits.low";
+        };
+        StatsGranularity: "day";
+        StatsWindow: "1d" | "7d" | "30d";
+        TrawlErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "TOO_MANY_ACTIVE_JOBS" | "TRAWL_CREDITS_EXHAUSTED") | string;
+        TrawlStatsInWindowDto: {
+            failed: number;
+            jobs: number;
+            steps_used: number;
+            succeeded: number;
+        };
+        TrawlStatsMetric: "jobs";
+        TrawlStatsSeriesDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["TrawlStatsMetric"];
+            points: components["schemas"]["TrawlStatsSeriesPointDto"][];
+        };
+        TrawlStatsSeriesPointDto: {
+            date: string;
+            value: number;
+        };
+        TrawlStatsTotalsDto: {
+            balance_steps: number;
+            jobs: number;
+        };
+        TrawlWorkspaceStatsDto: {
+            generated_at: string;
+            in_window: components["schemas"]["TrawlStatsInWindowDto"];
+            last_activity_at: string | null;
+            series: components["schemas"]["TrawlStatsSeriesDto"];
+            totals: components["schemas"]["TrawlStatsTotalsDto"];
+            window: components["schemas"]["StatsWindow"];
+        };
+        UpdateWebhookDto: {
+            active?: boolean;
+            url?: string;
+        };
+        UpdateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("job.succeeded" | "job.failed" | "credits.low")[];
+            url?: string;
+        };
+        WebhookAttemptTrigger: "automatic" | "replay" | "test";
+        WebhookCreateResponseDto: {
+            active: boolean;
+            auto_disabled_at: string | null;
+            created_at: string;
+            failure_count: number;
+            first_failure_at: string | null;
+            id: string;
+            last_attempt_at: string | null;
+            last_status_code: number | null;
+            secret_set?: boolean;
+            signing_secret: string;
+            url: string;
+            workspace_id: string;
+        };
+        WebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+            trigger: components["schemas"]["WebhookAttemptTrigger"];
+            url: string;
+        };
+        WebhookDeliveryListResponseDto: {
+            data: components["schemas"]["WebhookDeliveryResponseDto"][];
+            pagination: components["schemas"]["WebhookListPaginationDto"];
+        };
+        WebhookDeliveryResponseDto: {
+            attempt_number: number;
+            attempted_at: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            job_id: string | null;
+            latency_ms: number | null;
+            response_body_truncated: string | null;
+            status_code: number | null;
+            webhook_id: string;
+        };
+        WebhookEndpointDisabledReason: "manual" | "failing";
+        WebhookEndpointDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEndpointStatus: "enabled" | "disabled" | "auto_disabled";
+        WebhookEndpointWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEventDeliveryDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            next_attempt_at: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+        };
+        WebhookEventDetailDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventDto: {
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
+        WebhookEventType: "job.succeeded" | "job.failed" | "credits.low";
+        WebhookEventTypeDto: {
+            category: string;
+            description: string;
+            example: {
+                [key: string]: unknown;
+            };
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookListPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        WebhookListResponseDto: {
+            data: components["schemas"]["WebhookResponseDto"][];
+            pagination: components["schemas"]["WebhookListPaginationDto"];
+        };
+        WebhookPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        WebhookResponseDto: {
+            active: boolean;
+            auto_disabled_at: string | null;
+            created_at: string;
+            failure_count: number;
+            first_failure_at: string | null;
+            id: string;
+            last_attempt_at: string | null;
+            last_status_code: number | null;
+            secret_set?: boolean;
+            url: string;
+            workspace_id: string;
+        };
+        WebhookRotateSecretResponseDto: {
+            id: string;
+            secret: string;
+        };
+        WebhookTestAcceptedDto: {
+            accepted: boolean;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: {
+        RequestId: string;
+        "Retry-After": number;
+        "Retry-After-long": number;
+        "Retry-After-short": number;
+        "X-RateLimit-Limit-long": number;
+        "X-RateLimit-Limit-short": number;
+        "X-RateLimit-Remaining-long": number;
+        "X-RateLimit-Remaining-short": number;
+        "X-RateLimit-Reset-long": number;
+        "X-RateLimit-Reset-short": number;
+    };
+    pathItems: never;
+};
+
+export { ConfigurationError }
+
+export { ConflictError }
+
+export { IdempotencyKeyReuseError }
+
+export { InternalServerError }
+
+export { NotFoundError }
+
+// @public (undocumented)
+export type paths = {
     "/v1/workspaces/{workspace_id}/credits": {
         parameters: {
             query?: never;
@@ -26,7 +441,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/jobs": {
         parameters: {
             query?: never;
@@ -43,7 +457,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/jobs/{id}": {
         parameters: {
             query?: never;
@@ -60,7 +473,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/jobs/{id}/cancel": {
         parameters: {
             query?: never;
@@ -77,7 +489,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/stats": {
         parameters: {
             query?: never;
@@ -94,7 +505,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks": {
         parameters: {
             query?: never;
@@ -111,7 +521,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -128,7 +537,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -145,7 +553,6 @@ export interface paths {
         patch: operations["WebhooksController_trawl_workspace_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -162,7 +569,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -179,7 +585,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -196,7 +601,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -213,7 +617,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -230,7 +633,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -247,7 +649,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}": {
         parameters: {
             query?: never;
@@ -264,7 +665,6 @@ export interface paths {
         patch: operations["WebhookController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
         parameters: {
             query?: never;
@@ -281,7 +681,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -298,7 +697,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
         parameters: {
             query?: never;
@@ -315,13 +713,183 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+};
+
+export { PermissionDeniedError }
+
+export { ProductCraftError }
+
+export { RateLimitError }
+
+// @public
+class Trawl extends TrawlResources {
+    constructor(options?: ClientOptions);
+    get client(): Client<paths>;
 }
 
 // @public
-export class Trawl {
-    constructor(config?: PCClientConfig);
-    readonly client: ReturnType<typeof makeClient<paths>>;
+namespace Trawl {
+    // (undocumented)
+    type CreditLedgerEntry = CreditLedgerEntry;
+    // (undocumented)
+    type Credits = Credits;
+    // (undocumented)
+    type CreditsLowEvent = CreditsLowEvent;
+    const // (undocumented)
+    JobOutcomeStatus: {
+        values: readonly ["succeeded", "failed"];
+    };
+    // (undocumented)
+    type CreditsLowEventData = CreditsLowEventData;
+    const // (undocumented)
+    JobStatus: {
+        values: readonly ["queued", "running", "succeeded", "failed", "cancelled"];
+    };
+    // (undocumented)
+    type ErrorCode = TrawlErrorCode;
+    const // (undocumented)
+    StatsGranularity: {
+        values: readonly ["day"];
+    };
+    // (undocumented)
+    type Job = Job;
+    const // (undocumented)
+    StatsWindow: {
+        values: readonly ["1d", "7d", "30d"];
+    };
+    // (undocumented)
+    type JobCreateParams = JobCreateParams;
+    const // (undocumented)
+    TrawlStatsMetric: {
+        values: readonly ["jobs"];
+    };
+    // (undocumented)
+    type JobEventData = JobEventData;
+    const // (undocumented)
+    WebhookAttemptTrigger: {
+        values: readonly ["automatic", "replay", "test"];
+    };
+    // (undocumented)
+    type JobFailedEvent = JobFailedEvent;
+    const // (undocumented)
+    WebhookEndpointDisabledReason: {
+        values: readonly ["manual", "failing"];
+    };
+    // (undocumented)
+    type JobList = JobList;
+    const // (undocumented)
+    WebhookEndpointStatus: {
+        values: readonly ["enabled", "disabled", "auto_disabled"];
+    };
+    // (undocumented)
+    type JobListPagination = JobListPagination;
+    const // (undocumented)
+    WebhookEventStatus: {
+        values: readonly ["pending", "delivered", "failed", "not_sent"];
+    };
+    // (undocumented)
+    type JobListParams = JobListParams;
+    const // (undocumented)
+    WebhookEventType: {
+        values: readonly ["job.succeeded", "job.failed", "credits.low"];
+    };
+    // (undocumented)
+    type JobOutcome = JobOutcome;
+    // (undocumented)
+    type JobOutcomeStatus = JobOutcomeStatus;
+    // (undocumented)
+    type JobStatus = JobStatus;
+    // (undocumented)
+    type JobSucceededEvent = JobSucceededEvent;
+    // (undocumented)
+    type ListWebhookEndpoints = ListWebhookEndpoints;
+    // (undocumented)
+    type ListWebhookEvents = ListWebhookEvents;
+    // (undocumented)
+    type ListWebhookEventTypes = ListWebhookEventTypes;
+    // (undocumented)
+    type PollOptions = PollOptions;
+    // (undocumented)
+    type ReplayWebhookEvent = ReplayWebhookEvent;
+    // (undocumented)
+    type RequestOptions = RequestOptions;
+    // (undocumented)
+    type StatsGranularity = StatsGranularity;
+    // (undocumented)
+    type StatsRetrieveParams = StatsRetrieveParams;
+    // (undocumented)
+    type StatsWindow = StatsWindow;
+    // (undocumented)
+    type TrawlStatsInWindow = TrawlStatsInWindow;
+    // (undocumented)
+    type TrawlStatsMetric = TrawlStatsMetric;
+    // (undocumented)
+    type TrawlStatsSeries = TrawlStatsSeries;
+    // (undocumented)
+    type TrawlStatsSeriesPoint = TrawlStatsSeriesPoint;
+    // (undocumented)
+    type TrawlStatsTotals = TrawlStatsTotals;
+    // (undocumented)
+    type TrawlWorkspaceStats = TrawlWorkspaceStats;
+    // (undocumented)
+    type UnknownWebhookEvent = UnknownWebhookEvent;
+    // (undocumented)
+    type UnwrapWebhookEvent = UnwrapWebhookEvent;
+    // (undocumented)
+    type WebhookAttemptTrigger = WebhookAttemptTrigger;
+    // (undocumented)
+    type WebhookDeliveryAttempt = WebhookDeliveryAttempt;
+    // (undocumented)
+    type WebhookEndpoint = WebhookEndpoint;
+    // (undocumented)
+    type WebhookEndpointCreateParams = WebhookEndpointCreateParams;
+    // (undocumented)
+    type WebhookEndpointDisabledReason = WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointRotateSecretParams = WebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type WebhookEndpointStatus = WebhookEndpointStatus;
+    // (undocumented)
+    type WebhookEndpointTestParams = WebhookEndpointTestParams;
+    // (undocumented)
+    type WebhookEndpointUpdateParams = WebhookEndpointUpdateParams;
+    // (undocumented)
+    type WebhookEndpointWithSecret = WebhookEndpointWithSecret;
+    // (undocumented)
+    type WebhookEvent = WebhookEvent;
+    // (undocumented)
+    type WebhookEventDelivery = WebhookEventDelivery;
+    // (undocumented)
+    type WebhookEventDetail = WebhookEventDetail;
+    // (undocumented)
+    type WebhookEventListParams = WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplayParams = WebhookEventReplayParams;
+    // (undocumented)
+    type WebhookEventStatus = WebhookEventStatus;
+    // (undocumented)
+    type WebhookEventType = WebhookEventType;
+    // (undocumented)
+    type WebhookEventTypeInfo = WebhookEventTypeInfo;
+    // (undocumented)
+    type WebhookPagination = WebhookPagination;
+    // (undocumented)
+    type WebhookUnwrapParams = WebhookUnwrapParams;
 }
+export { Trawl }
+export default Trawl;
+
+// @public
+export type TrawlErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "TOO_MANY_ACTIVE_JOBS" | "TRAWL_CREDITS_EXHAUSTED" | (string & {});
+
+// @public (undocumented)
+export const TrawlErrorCode: {
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "TOO_MANY_ACTIVE_JOBS", "TRAWL_CREDITS_EXHAUSTED"];
+};
+
+export { UnprocessableEntityError }
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 

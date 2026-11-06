@@ -24,6 +24,12 @@ const consumers = {
 const pc = new APIClient({ apiKey: "pcft_live_x", workspaceId: "ws" }, "https://api.mail.productcraft.co");
 export const run = () => pc.request({ method: "POST", path: "/v1/workspaces/{workspace_id}/templates/{name}/send", pathParams: { name: "welcome" }, body: { to: "a@b.c" }, idempotent: true });`,
   },
+  "@productcraft/trawl": {
+    dir: "packages/trawl",
+    code: `import { Trawl } from "@productcraft/trawl";
+const trawl = new Trawl({ apiKey: "pcft_live_x", workspaceId: "ws" });
+export const run = () => trawl.jobs.createAndPoll({ description: "Title", json_schema: { type: "object" } });`,
+  },
 };
 
 const record = process.argv.includes("--record");

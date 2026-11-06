@@ -57,6 +57,8 @@ jobs:
         run: node scripts/api-report.mjs
       - name: Dist smoke (ESM + CJS, cross-build instanceof)
         run: node scripts/smoke-dist.mjs
+      - name: Packed files (manifest.json, api.md, /testing in every generated package)
+        run: node scripts/check-pack.mjs
       - name: Size budget (esbuild one-call bundle, gzip)
         run: node scripts/size-budget.mjs
       - name: Report final status on the head commit

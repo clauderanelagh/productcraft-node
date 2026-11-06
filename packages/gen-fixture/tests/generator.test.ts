@@ -70,7 +70,7 @@ describe("golden output", () => {
     expect(manifest.PublicEntryController_create).toMatchObject({ public: true, idempotent: false });
     expect(manifest.PostController_list).toMatchObject({ actor: "query", scope: "community" });
     expect(manifest.PostController_create).toMatchObject({ actor: "body" });
-    expect(manifest.WidgetController_get.poll).toEqual({ field: "status", terminal: ["active", "archived"] });
+    expect(manifest.WidgetController_get.poll).toEqual({ field: "status", terminal: ["active", "archived"], result: "metadata" });
   });
 
   it("makes defaulted fields optional in requests and required in responses", async () => {
@@ -142,6 +142,12 @@ describe("failures name the operation and exit non-zero", () => {
   it("paginated without the page shape", async () => {
     const p = await problems((s) => ((s.paths[`${W}/widgets/count`]!.get!["x-pc-sdk"] as Record<string, unknown>).paginated = true));
     expect(p.join()).toMatch(/WidgetController_count\): x-pc-sdk.paginated but the response is not/);
+  });
+
+  it("poll.result that is missing or not a free-form object", async () => {
+    const set = (r: string) => (s: Spec) => ((s.paths[`${W}/widgets/{id}`]!.get!["x-pc-sdk"] as { poll: { result?: string } }).poll.result = r);
+    expect((await problems(set("nope"))).join()).toMatch(/WidgetController_get\): x-pc-sdk.poll.result "nope" is not in the response/);
+    expect((await problems(set("name"))).join()).toMatch(/WidgetController_get\): x-pc-sdk.poll.result "name" is not a free-form object/);
   });
 
   it("poll on a field the response lacks", async () => {

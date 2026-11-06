@@ -33,6 +33,19 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
  * scopes: { accessor: { bind: [path params], args: "positional" | { field: param }, actor?: true, doc } }
  */
 export const SURFACES = {
+  trawl: {
+    spec: "Specs/trawl.json",
+    packageDir: "packages/trawl",
+    packageName: "@productcraft/trawl",
+    sdkName: "trawl",
+    className: "Trawl",
+    clientVar: "trawl",
+    title: "ProductCraft Trawl API client (AI web extraction)",
+    baseUrlKey: "trawl",
+    docsUrl: "https://productcraft.co/docs/trawl",
+    webhookSecretEnv: "PRODUCTCRAFT_TRAWL_WEBHOOK_SECRET",
+    scopes: {},
+  },
   "gen-fixture": {
     spec: "packages/gen-fixture/fixture.openapi.json",
     packageDir: "packages/gen-fixture",

@@ -12,6 +12,8 @@ export type Open<T> = OpenValue<Exclude<T, null | undefined>> | Extract<T, null 
 export type WithLastResponse<T> = T & { readonly lastResponse: LastResponse };
 /** Params inside a scope bound with `.as(actorId)`: `actor_id` may be left out. */
 export type WithOptionalActor<P> = P extends { actor_id: unknown } ? Omit<P, "actor_id"> & { actor_id?: P["actor_id"] } : P;
+/** A polled model whose free-form `K` the caller types as `R` (`createAndPoll<R>`); optional and nullable stay as declared. */
+export type WithResult<M, K extends keyof M, R> = Omit<M, K> & { [P in keyof M as P extends K ? P : never]: R | Extract<M[P], null> };
 
 /**
  * Lifecycle of a widget.
