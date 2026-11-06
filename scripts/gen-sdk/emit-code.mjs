@@ -464,10 +464,22 @@ export function emitClient(model, cfg) {
     }
   }
   L.push("}", "");
+  // Namespace members alias module-level `__<Name>` types, never `T.<Name>` directly:
+  // the .d.ts bundler flattens `T.Job` to `Job`, and `export type Job = Job` inside
+  // the namespace would refer to itself (TS2456; `any` under skipLibCheck).
   const ns = [];
-  const typeOnly = (n, src) => ns.push(`  export type ${n} = ${src}.${n};`);
-  ns.push("  export type RequestOptions = CoreRequestOptions;", "  export type PollOptions = CorePollOptions;");
-  for (const e of model.enums) ns.push(`  export type ${e.name} = T.${e.name};`, `  export const ${e.name} = T.${e.name};`);
+  const aliases = [];
+  const alias = (n, target) => {
+    aliases.push(`type __${n} = ${target};`);
+    ns.push(`  export type ${n} = __${n};`);
+  };
+  const typeOnly = (n, src) => alias(n, `${src}.${n}`);
+  alias("RequestOptions", "CoreRequestOptions");
+  alias("PollOptions", "CorePollOptions");
+  for (const e of model.enums) {
+    alias(e.name, `T.${e.name}`);
+    ns.push(`  export const ${e.name} = T.${e.name};`);
+  }
   const hookSchemas = new Set(model.webhooks.map((h) => h.schema));
   for (const m of model.models) if (!hookSchemas.has(m.schema)) typeOnly(m.name, "T");
   for (const o of model.ops) {
@@ -475,12 +487,16 @@ export function emitClient(model, cfg) {
     if (o.itemType && !model.models.some((m) => m.name === o.itemType)) typeOnly(o.itemType, "T");
     if (o.responseType && !model.models.some((m) => m.name === o.responseType)) typeOnly(o.responseType, "T");
   }
-  ns.push(`  export type ErrorCode = E.${cfg.className}ErrorCode;`);
+  alias("ErrorCode", `E.${cfg.className}ErrorCode`);
   for (const h of model.webhooks) typeOnly(h.typeName, "W");
   if (model.webhooks.length) {
     for (const n of ["UnknownWebhookEvent", "UnwrapWebhookEvent", "WebhookUnwrapParams"]) typeOnly(n, "W");
-    if (!model.apiEventTypes) ns.push("  export type WebhookEventType = W.WebhookEventType;", "  export const WebhookEventType = W.WebhookEventType;");
+    if (!model.apiEventTypes) {
+      alias("WebhookEventType", "W.WebhookEventType");
+      ns.push("  export const WebhookEventType = W.WebhookEventType;");
+    }
   }
+  L.push(...aliases);
   L.push(`/** Public types: \`${cfg.className}.${model.models[0]?.name ?? "Model"}\`, \`${cfg.className}.${model.ops.find((o) => o.paramsType)?.paramsType ?? "Params"}\`, … */`);
   L.push(`export namespace ${cfg.className} {`, ...ns, "}");
   return L.filter((l) => l !== null).join("\n") + "\n";
