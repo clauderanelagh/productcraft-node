@@ -20,7 +20,7 @@ import: `npm install productcraft`.
 
 ## Usage
 
-```ts
+```ts before
 import { Trawl } from "@productcraft/trawl";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment

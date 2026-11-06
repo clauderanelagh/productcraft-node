@@ -10,7 +10,7 @@ The waitlist-entries endpoint can be called unauthenticated from a marketing-sit
 
 ## Quick start — accept a signup from a public form
 
-```ts
+```ts before
 import { Waitlist } from "@productcraft/waitlist";
 
 // No auth — public surface
@@ -37,7 +37,7 @@ If the waitlist has `settings.recaptcha_site_key` set, also pass a `recaptcha_to
 
 ## Quick start — workspace-admin (authenticated)
 
-```ts
+```ts before
 import { Waitlist } from "@productcraft/waitlist";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
@@ -70,7 +70,7 @@ PRODUCTCRAFT_API_KEY=pcft_live_...
 
 ## Configuration
 
-```ts
+```ts before
 new Waitlist({
   // Optional: required for workspace-admin calls. Public submit works without auth.
   // Omit to use PRODUCTCRAFT_API_KEY from the environment
@@ -86,7 +86,7 @@ new Waitlist({
 
 ### Public surface
 
-```ts
+```ts before
 // Read the waitlist's public metadata (name, position-window, active variant, ...)
 await waitlist.client.GET(
   "/v1/waitlists/{workspace_slug}/{waitlist_slug}",
@@ -102,7 +102,7 @@ await waitlist.client.GET(
 
 ### Entries (workspace-admin)
 
-```ts
+```ts before
 // List entries
 await waitlist.client.GET(
   "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries",
@@ -138,7 +138,7 @@ await waitlist.client.GET(
 
 Variants split two ways: `kind: "ab"` for split-traffic A/B/n tests, or `kind: "locale"` for per-locale copy switching. Pick one; the body shape is `{ kind, slug, locale? }`.
 
-```ts
+```ts before
 // A/B variant
 await waitlist.client.POST(
   "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants",
@@ -162,7 +162,7 @@ Front-end picks up the active variant from `GET /v1/waitlists/:workspace_slug/:w
 
 ### Analytics
 
-```ts
+```ts before
 // Conversion + per-variant counts
 await waitlist.client.GET(
   "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics",
@@ -184,7 +184,7 @@ await waitlist.client.GET(
 
 ### Webhooks
 
-```ts
+```ts before
 // Subscribe to entry.created / entry.approved / entry.rejected
 await waitlist.client.POST(
   "/v1/workspaces/{workspace_id}/webhooks",

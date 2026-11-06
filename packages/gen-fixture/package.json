@@ -1,0 +1,35 @@
+{
+  "name": "@productcraft/gen-fixture",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Test fixture for scripts/gen-sdk.mjs: a package generated from fixture.openapi.json. Never published.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
+    }
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "tsc -p tests/tsconfig.json && vitest run"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@productcraft/core": "workspace:^",
+    "openapi-fetch": "^0.13.0"
+  }
+}

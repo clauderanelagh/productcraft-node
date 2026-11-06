@@ -21,7 +21,7 @@ The SDK splits into three caller contexts.
 
 ### 1. Workspace-wide admin
 
-```ts
+```ts before
 // /v1/apps, /v1/stats/me
 const apps = await auth.apps.list();
 
@@ -39,7 +39,7 @@ const stats = await auth.stats.get();
 
 Pre-binds the appId path param so resource methods read like `app.endUsers.list()`.
 
-```ts
+```ts before
 const app = auth.app("<app-uuid>");
 
 // EndUsers — profile updates only carry { display_name?, email? }.
@@ -71,7 +71,7 @@ await app.authConfig.update({ passwordMinLength: 12 });
 
 For backend route handlers mediating auth between your SPA and Auth. Pre-binds the appSlug.
 
-```ts
+```ts before
 const consumer = auth.consumer("my-app-slug");
 
 // Sign-in
@@ -143,7 +143,7 @@ Both `request*` and `send*` return `{}` when the contact doesn't match (or is al
 
 `consumer.auth.signinWithProvider` lets a BFF exchange a provider-issued identity token for an Auth `{ access_token, refresh_token }` pair. The endpoint creates the EndUser on first sign-in and returns the same account on subsequent ones — the SDK is a thin wrapper over Auth's `POST /{appSlug}/v1/auth/oauth/{provider}` which does the heavy lifting (Apple JWKS verification, issuer pinning, audience validation against the app's configured native client ids, server-side nonce replay protection, account creation / linking).
 
-```ts
+```ts before
 import { Auth, AuthHttpError } from "@productcraft/auth";
 
 const auth = new Auth();
@@ -186,7 +186,7 @@ Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them
 
 ### Error handling
 
-```ts
+```ts before
 try {
   await consumer.auth.signinWithProvider({ provider: "apple", id_token, nonce });
 } catch (err) {
@@ -206,7 +206,7 @@ try {
 
 The Auth API uses a single `POST /{appSlug}/v1/auth/oauth/{provider}` endpoint for every supported IdP — the `provider` URL segment selects the verifier. Once Google is enabled on Auth's side, the SDK call becomes:
 
-```ts
+```ts before
 await consumer.auth.signinWithProvider({
   provider: "google",
   id_token: tokenFromGoogleSignInSdk,
@@ -225,7 +225,7 @@ is one call on `auth.consumer(appSlug).passkeys`. The helpers run
 the package anywhere is safe; nothing touches a browser global until you
 call them.
 
-```ts
+```ts before
 import { Auth, isPasskeySupported, PasskeyError } from "@productcraft/auth";
 
 if (!isPasskeySupported()) hidePasskeyButton(); // false in Node and in insecure contexts
@@ -292,7 +292,7 @@ Tokens issued before the 2026-05-24 per-app-issuer migration carried `iss: "heim
 
 ### One-line verify (the 80% case)
 
-```ts
+```ts before
 import { Auth, JwtExpiredError } from "@productcraft/auth";
 
 const auth = new Auth();
@@ -315,7 +315,7 @@ Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), 
 
 `scope.jwks.getKey` is a [jose-compatible](https://github.com/panva/jose) key resolver — pass it anywhere a `GetKeyFunction` is expected.
 
-```ts
+```ts before
 import { jwtVerify } from "jose";
 
 const scope = auth.consumer("my-app-slug");
@@ -336,7 +336,7 @@ Use the companion package [`@productcraft/auth-passport`](https://github.com/cla
 npm install @productcraft/auth-passport passport-jwt
 ```
 
-```ts
+```ts before
 import passportJwt from "passport-jwt";
 import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";
 
@@ -387,7 +387,7 @@ PRODUCTCRAFT_AUTH_APP=acme           # default slug for auth.consumer()
 
 ## Configuration
 
-```ts
+```ts before
 new Auth({
   // Auth credential the SDK presents to Auth
   // Omit to use PRODUCTCRAFT_API_KEY from the environment

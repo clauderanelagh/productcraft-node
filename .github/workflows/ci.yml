@@ -40,9 +40,21 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run codegen
+      - name: Checked-in generator output is current (api.md, README regions, examples)
+        run: git diff --exit-code -- . ':(exclude)pnpm-lock.yaml'
+      - name: Generator determinism (codegen twice in memory, diff)
+        run: node scripts/gen-sdk.mjs --check
+      - name: Hand-written allowlist
+        run: node scripts/check-handwritten.mjs
       - run: pnpm run lint
       - run: pnpm run build
+      # Includes the generator's golden + failure tests and the generated
+      # per-operation test (packages/gen-fixture); CI=true makes snapshots strict.
       - run: pnpm run test
+      - name: Snippet typecheck (READMEs, api.md, docs/, examples/)
+        run: node scripts/check-snippets.mjs
+      - name: Public API reports (api-extractor) match the committed api-report.md
+        run: node scripts/api-report.mjs
       - name: Dist smoke (ESM + CJS, cross-build instanceof)
         run: node scripts/smoke-dist.mjs
       - name: Size budget (esbuild one-call bundle, gzip)

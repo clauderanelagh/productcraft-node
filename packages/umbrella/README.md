@@ -22,7 +22,7 @@ The per-product packages are leaner (no bundled deps for the surfaces you don't 
 
 ## Quick start
 
-```ts
+```ts before
 import { ProductCraft } from "productcraft";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
@@ -65,7 +65,7 @@ await pc.waitlist.client.POST(
 
 ## What gets instantiated
 
-```ts
+```ts before
 class ProductCraft {
   readonly auth: Auth;       // @productcraft/auth
   readonly mail: Mail;              // @productcraft/mail
@@ -92,7 +92,7 @@ PRODUCTCRAFT_API_KEY=pcft_live_...
 
 ## Configuration
 
-```ts
+```ts before
 new ProductCraft({
   // Shared auth credential — applied to every surface
   // Omit to use PRODUCTCRAFT_API_KEY from the environment

@@ -54,10 +54,15 @@ jobs:
       - name: Fetch latest specs
         run: bash scripts/refresh-specs.sh
 
-      - name: Regenerate types
+      # codegen also rewrites the checked-in generator output (api.md, README
+      # regions, examples/) and the API reports, so the PR carries them and
+      # CI's "checked-in output is current" and api-report gates pass.
+      - name: Regenerate types, docs and API reports
         run: |
           pnpm install --frozen-lockfile
           pnpm run codegen
+          pnpm run build
+          node scripts/api-report.mjs --update
 
       - name: Generate per-surface changesets for changed specs
         id: gen
@@ -85,6 +90,40 @@ jobs:
             echo "surfaces=${changed[*]}" >> "$GITHUB_OUTPUT"
           fi
 
+      # A break is flagged two ways (sdk-standard section 7): oasdiff on the
+      # spec, and removed lines in a public API report (type-level breaks
+      # a spec diff can miss). Pinned binary, verified against its checksum.
+      - name: Breaking-change check (oasdiff + API reports)
+        id: breaking
+        if: steps.gen.outputs.changed == 'true'
+        env:
+          OASDIFF_VERSION: "1.34.1"
+          OASDIFF_SHA256: "75775f65b0adebd26a8e013af51a799342dfdc6262d89efa9e3b7bdf89657d90"
+          SURFACES: ${{ steps.gen.outputs.surfaces }}
+        run: |
+          set -euo pipefail
+          tgz="$RUNNER_TEMP/oasdiff.tar.gz"
+          curl -fsSL -o "$tgz" "https://github.com/oasdiff/oasdiff/releases/download/v${OASDIFF_VERSION}/oasdiff_${OASDIFF_VERSION}_linux_amd64.tar.gz"
+          echo "${OASDIFF_SHA256}  $tgz" | sha256sum -c -
+          tar -xzf "$tgz" -C "$RUNNER_TEMP" oasdiff
+          breaking=false
+          report="$RUNNER_TEMP/breaking.md"
+          : > "$report"
+          for surface in $SURFACES; do
+            git show "HEAD:Specs/${surface}.json" > "$RUNNER_TEMP/base-${surface}.json"
+            if ! "$RUNNER_TEMP/oasdiff" breaking "$RUNNER_TEMP/base-${surface}.json" "Specs/${surface}.json" --fail-on ERR > "$RUNNER_TEMP/oasdiff-${surface}.txt"; then
+              breaking=true
+              { echo "#### ${surface} (oasdiff)"; echo '```'; head -c 20000 "$RUNNER_TEMP/oasdiff-${surface}.txt"; echo '```'; } >> "$report"
+            fi
+          done
+          removed="$(git diff --numstat -- 'packages/*/api-report.md' | awk '$2 > 0 { print $3 " (-" $2 ")" }')"
+          if [[ -n "$removed" ]]; then
+            breaking=true
+            { echo "#### API reports with removed lines"; echo "$removed"; } >> "$report"
+          fi
+          echo "breaking=$breaking" >> "$GITHUB_OUTPUT"
+          { echo "report<<EOF_REPORT"; cat "$report"; echo "EOF_REPORT"; } >> "$GITHUB_OUTPUT"
+
       - name: Open PR
         id: cpr
         if: steps.gen.outputs.changed == 'true'
@@ -106,6 +145,10 @@ jobs:
 
             Merge only on green CI.
 
+            ${{ steps.breaking.outputs.breaking == 'true' && '**Breaking changes detected** (label `breaking`): check the semver bump before merging.' || 'No breaking change found by oasdiff or the API reports.' }}
+
+            ${{ steps.breaking.outputs.report }}
+
             Specs refreshed from:
             - `https://api.platform-auth.productcraft.co/docs-json`
             - `https://api.auth.productcraft.co/docs-json`
@@ -115,6 +158,13 @@ jobs:
             - `https://api.trawl.productcraft.co/docs-json`
           branch: chore/refresh-specs
           delete-branch: true
+          labels: ${{ steps.breaking.outputs.breaking == 'true' && 'breaking' || '' }}
+
+      - name: Clear a stale breaking label
+        if: steps.cpr.outputs.pull-request-number != '' && steps.breaking.outputs.breaking != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
+        run: gh pr edit "${{ steps.cpr.outputs.pull-request-number }}" --repo "$GITHUB_REPOSITORY" --remove-label breaking 2>/dev/null || true
 
       - name: Run CI on the PR branch (no App token)
         if: steps.cpr.outputs.pull-request-number != '' && steps.cpr.outputs.pull-request-operation != 'none' && steps.app-token.outputs.token == ''

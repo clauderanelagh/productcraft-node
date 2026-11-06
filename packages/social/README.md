@@ -21,7 +21,7 @@ The customer backend acts on behalf of one of its EndUsers via the `X-Acting-As`
 
 ## Quick start — create a community (admin)
 
-```ts
+```ts before
 import { Social } from "@productcraft/social";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
@@ -38,7 +38,7 @@ const { data, error } = await social.client.POST(
 
 ## Quick start — post on behalf of an EndUser (customer backend)
 
-```ts
+```ts before
 const actor_id = "<actor-uuid>"; // the EndUser's Social actor id
 
 const { data, error } = await social.client.POST(
@@ -66,7 +66,7 @@ Social's wire is snake_case both at the DTO level and in TS types — there's no
 
 1.0 renames every **path parameter** to snake_case, to match the rest of the ProductCraft APIs: `{communityId}` is now `{community_id}`, `{actorId}` is `{actor_id}`, `{srcActorId}` is `{src_actor_id}`, and so on. Request URLs are unchanged, so nothing breaks at runtime; the change is in the TypeScript path keys and in `params.path`:
 
-```ts
+```ts before
 // 0.x
 await social.client.GET("/v1/communities/{communityId}/posts/{postId}", {
   params: { path: { communityId, postId } },
@@ -95,7 +95,7 @@ PRODUCTCRAFT_API_KEY=pcft_live_...
 
 ## Configuration
 
-```ts
+```ts before
 new Social({
   // Omit to use PRODUCTCRAFT_API_KEY from the environment
   auth: { type: "apiKey", key: "pcft_live_..." }
@@ -110,7 +110,7 @@ new Social({
 
 ### Posts + feeds
 
-```ts
+```ts before
 // Create a post
 await social.client.POST(
   "/v1/communities/{community_id}/posts",
@@ -134,7 +134,7 @@ await social.client.GET(
 
 ### Stories
 
-```ts
+```ts before
 // Post a story (24h TTL)
 await social.client.POST(
   "/v1/communities/{community_id}/stories",
@@ -150,7 +150,7 @@ await social.client.GET(
 
 ### Social graph
 
-```ts
+```ts before
 // Follow / unfollow
 await social.client.PUT(
   "/v1/communities/{community_id}/follows/{src_actor_id}/{dst_actor_id}",
@@ -163,7 +163,7 @@ await social.client.PUT(
 
 ### Notifications
 
-```ts
+```ts before
 // List
 await social.client.GET(
   "/v1/communities/{community_id}/actors/{actor_id}/notifications",
@@ -185,7 +185,7 @@ await social.client.POST(
 
 ### Direct conversations
 
-```ts
+```ts before
 // Start / open a conversation
 await social.client.POST(
   "/v1/communities/{community_id}/conversations",
@@ -201,7 +201,7 @@ await social.client.POST(
 
 ### Moderation (workspace admin)
 
-```ts
+```ts before
 // List flags
 await social.client.GET(
   "/v1/workspaces/{workspace_id}/communities/{community_id}/moderation/flags",

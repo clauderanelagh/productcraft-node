@@ -9,3 +9,4 @@ packages/*/src/_generated/
 .env.local
 .netrc
 coverage/
+packages/*/tests/_generated/

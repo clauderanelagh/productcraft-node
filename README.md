@@ -26,7 +26,7 @@ Requires Node 18+.
 
 ## Quick start — single product
 
-```ts
+```ts before
 import { Mail } from "@productcraft/mail";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
@@ -46,7 +46,7 @@ console.log(data.id);
 
 ## Quick start — all products via umbrella
 
-```ts
+```ts before
 import { ProductCraft } from "productcraft";
 
 // Reads PRODUCTCRAFT_API_KEY from the environment
