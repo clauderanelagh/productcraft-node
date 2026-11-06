@@ -1,5 +1,14 @@
 # productcraft
 
+## 0.3.7
+
+### Patch Changes
+
+- Updated dependencies [cd07984]
+- Updated dependencies [d34d638]
+  - @productcraft/platform-auth@0.2.0
+  - @productcraft/core@0.4.1
+
 ## 0.3.6
 
 ### Patch Changes
