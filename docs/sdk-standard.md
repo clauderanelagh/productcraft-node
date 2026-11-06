@@ -374,6 +374,14 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 
 ## 13. Decision log
 
+2026-11-06, task 008 (Social 1.1) as built:
+
+- **Names are unique per scope, as openapi-audit checks them.** Social has the same webhook routes on the workspace root and inside a community, so `social.webhooks.endpoints.list()` and `social.community(id).webhooks.endpoints.list()` are different methods. The generator's collision check now keys on scope + `resource.method`. Where a `resource.method` exists in more than one scope, the scoped copy's type names carry `<Scope>Scoped` (`Social.CommunityScopedWebhookEndpointCreateParams`); the root keeps the plain name. "Scoped" keeps them apart from a root `communities.*` stem.
+- **`delete` may name a POST action** that removes one object without an HTTP `DELETE` (`POST …/posts/{post_id}/tags/{tagged_actor_id}/remove` is `posts.tags.delete`): the path verb would be the banned `remove`, and openapi-audit accepts it. It still needs an id. Retries follow the HTTP method, so it is not retried without an idempotency key.
+- **`.as(actorId)` makes a required `actor_id` optional in queries too**, not only in bodies (`lists.feed.list(listId)`, `conversations.messages.list(id)`): the generated examples for those failed the snippet check.
+- **Additive, so a minor.** 1.0's public surface is all still there (`Social`, `.client`, `paths`); the API report also shows `paths` moving from an interface to a type alias (the generator's `--export-type`) and `client` becoming a getter, neither of which breaks a caller. Inside a community scope, `actor_id` is optional in the types whether or not `.as()` was called (one class serves both); the API answers 400 when a required one is missing.
+- **Live smoke credential:** `scripts/live/social.mjs` uses the standing testing-environment workspace key (`[productcraft.social_verify]`) and keeps everything inside one throwaway `sdk-smoke-<ts>` community, which it deletes (and sweeps stale ones first).
+
 2026-11-06, task 007 (Platform 1.0) as built:
 
 - **Form uploads are typed fields, not a raw body.** Platform is the first spec with a `multipart/form-data` body (workspace and user avatars). The generator now types each form field (`format: binary` as `Blob`, so a `File` keeps its name) and sends a `FormData` it builds itself: `platform.workspaces.avatar.upload("acme", { file })`. Other non-JSON bodies take `{ body }` typed as `RequestInit["body"]` (the DOM-only `BodyInit` broke the `.d.ts` build without the DOM lib).

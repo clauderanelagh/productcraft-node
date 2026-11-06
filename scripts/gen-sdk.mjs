@@ -87,6 +87,21 @@ export const SURFACES = {
     webhookSecretEnv: "PRODUCTCRAFT_PLATFORM_WEBHOOK_SECRET",
     scopes: {},
   },
+  social: {
+    spec: "Specs/social.json",
+    packageDir: "packages/social",
+    packageName: "@productcraft/social",
+    sdkName: "social",
+    className: "Social",
+    clientVar: "social",
+    title: "ProductCraft Social API client (communities, actors, posts, feeds, conversations, notifications and moderation)",
+    baseUrlKey: "social",
+    docsUrl: "https://productcraft.co/docs/social",
+    webhookSecretEnv: "PRODUCTCRAFT_SOCIAL_WEBHOOK_SECRET",
+    scopes: {
+      community: { bind: ["community_id"], args: "positional", actor: true, doc: "Calls scoped to one community. Chain `.as(actorId)` to act as one of its actors: `actor_id` is filled in every body or query that declares it." },
+    },
+  },
   "gen-fixture": {
     spec: "packages/gen-fixture/fixture.openapi.json",
     packageDir: "packages/gen-fixture",
