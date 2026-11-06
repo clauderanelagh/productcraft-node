@@ -10,5 +10,9 @@
   "@productcraft/mail": {
     "measuredGzipBytes": 13656,
     "limitGzipBytes": 15022
+  },
+  "@productcraft/waitlist": {
+    "measuredGzipBytes": 10551,
+    "limitGzipBytes": 11607
   }
 }

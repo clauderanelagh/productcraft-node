@@ -1,19 +1,10 @@
-import type { paths } from "./_generated.js";
-import { makeClient, PC_BASE_URL, type PCClientConfig } from "@productcraft/core";
-
 /**
- * Waitlist — typed `openapi-fetch` client for every endpoint in
- * `Specs/waitlist.json`. Reach for `client.GET("/v1/...")` or
- * `client.POST(...)`; request / response types come from the
- * generated `paths` interface.
+ * @productcraft/waitlist: waitlists, signups, variants, referrals and
+ * leaderboards. Every resource method, type, error class and mock is generated
+ * from the Waitlist OpenAPI document (scripts/gen-sdk.mjs); this file only
+ * re-exports them.
  */
-export class Waitlist {
-  /** The underlying typed client. v0 surface — every endpoint reachable. */
-  public readonly client: ReturnType<typeof makeClient<paths>>;
-
-  constructor(config: PCClientConfig = {}) {
-    this.client = makeClient<paths>(PC_BASE_URL.waitlist, config);
-  }
-}
-
-export type { paths } from "./_generated.js";
+export { Waitlist } from "./_generated/client.js";
+export * from "./_generated/errors.js";
+export type { paths, components } from "./_generated/paths.js";
+export { Waitlist as default } from "./_generated/client.js";

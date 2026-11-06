@@ -4,12 +4,720 @@
 
 ```ts
 
-import { makeClient } from '@productcraft/core';
-import { PCClientConfig } from '@productcraft/core';
+import { APIClient } from '@productcraft/core';
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
+import { AuthenticationError } from '@productcraft/core';
+import { BadRequestError } from '@productcraft/core';
+import { Client } from 'openapi-fetch';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
+import { LastResponse } from '@productcraft/core';
+import { NotFoundError } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
+import { PermissionDeniedError } from '@productcraft/core';
+import { PollOptions } from '@productcraft/core';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { WebhookHeaders } from '@productcraft/core';
+import { WebhookPayload } from '@productcraft/core';
+import { WebhookVerificationError } from '@productcraft/core';
 
-// @public
-export interface paths {
-    // (undocumented)
+export { APIConnectionError }
+
+export { APIError }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
+
+export { AuthenticationError }
+
+export { BadRequestError }
+
+// @public (undocumented)
+export type components = {
+    schemas: {
+        AnalyticsTimelinePointDto: {
+            count: number;
+            date: string;
+        };
+        AnalyticsTimelineResponseDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            points: components["schemas"]["AnalyticsTimelinePointDto"][];
+        };
+        AnalyticsTopReferralDto: {
+            effective_position: number;
+            email: string;
+            id: string;
+            name: string;
+            position: number;
+            referral_code: string;
+            referral_count: number;
+        };
+        AnalyticsTopReferrerDto: {
+            count: number;
+            referrer: string | null;
+        };
+        BulkEntryActionDto: {
+            action: components["schemas"]["BulkEntryActionType"];
+            app_slug?: string;
+            ids: string[];
+            send_email?: boolean;
+        };
+        BulkEntryActionResponseDto: {
+            failed: number;
+            requested: number;
+            results: components["schemas"]["BulkEntryResultDto"][];
+            succeeded: number;
+        };
+        BulkEntryActionType: "approve" | "reject" | "invite-to-app";
+        BulkEntryErrorDto: {
+            code: number;
+            message: string;
+        };
+        BulkEntryResultDto: {
+            error?: components["schemas"]["BulkEntryErrorDto"];
+            id: string;
+            status: components["schemas"]["BulkEntryResultStatus"];
+        };
+        BulkEntryResultStatus: "ok" | "error";
+        CreateEntryDto: {
+            email: string;
+            interest?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            name: string;
+            recaptcha_token?: string;
+            referral_code?: string;
+            referrer?: string;
+            variant_id?: string;
+        };
+        CreateTestEntryDto: {
+            name?: string;
+            send_welcome_email?: boolean;
+            trigger_webhooks?: boolean;
+        };
+        CreateVariantDto: {
+            active?: boolean;
+            copy: components["schemas"]["VariantCopyDto"];
+            kind: components["schemas"]["VariantKind"];
+            locale: string;
+            weight?: number;
+        };
+        CreateWaitlistDto: {
+            allowed_origins?: string[];
+            description?: string;
+            display_name: string;
+            settings?: components["schemas"]["WaitlistConfigInputDto"];
+            slug: string;
+            status?: "draft" | "active";
+        };
+        CreateWebhookDto: {
+            active?: boolean;
+            events: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            url: string;
+        };
+        CreateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            url: string;
+        };
+        CustomFieldDto: {
+            key: string;
+            label?: string;
+            options?: string[];
+            required?: boolean;
+            type?: string;
+        };
+        EffectiveSenderDto: {
+            address: string | null;
+            domain_status: components["schemas"]["SenderDomainStatus"] | null;
+            source: components["schemas"]["SenderMode"];
+            verified: boolean | null;
+        };
+        EmailSetupDto: {
+            mail_checked: boolean;
+            missing: components["schemas"]["EmailSetupMissing"][];
+            missing_templates: components["schemas"]["TemplateSlot"][];
+            state: components["schemas"]["EmailSetupState"];
+        };
+        EmailSetupMissing: "not_enabled" | "no_sender_domain" | "sender_domain_unverified" | "no_sender_address" | "no_template";
+        EmailSetupState: "ready" | "incomplete" | "off";
+        EntryApprovedEvent: {
+            created_at: string;
+            data: components["schemas"]["EntryEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "entry.approved";
+            waitlist_id?: string;
+            workspace_id?: string;
+        };
+        EntryCountResponseDto: {
+            count: number;
+        };
+        EntryCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["EntryEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "entry.created";
+            waitlist_id?: string;
+            workspace_id?: string;
+        };
+        EntryDecision: "approved" | "rejected";
+        EntryEventDataDto: {
+            entry: components["schemas"]["WebhookEntryDto"];
+            waitlist_id: string;
+        };
+        EntryListPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        EntryListResponseDto: {
+            data: components["schemas"]["EntryResponseDto"][];
+            pagination: components["schemas"]["EntryListPaginationDto"];
+        };
+        EntryRejectedEvent: {
+            created_at: string;
+            data: components["schemas"]["EntryEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "entry.rejected";
+            waitlist_id?: string;
+            workspace_id?: string;
+        };
+        EntryResponseDto: {
+            created_at: string;
+            email: string;
+            id: string;
+            interest: string | null;
+            invited_at: string | null;
+            invited_to_app_slug: string | null;
+            is_test: boolean;
+            metadata: {
+                [key: string]: unknown;
+            };
+            name: string;
+            position: number;
+            referral_code: string;
+            referral_count: number;
+            referred_by_entry_id: string | null;
+            referrer: string | null;
+            status: components["schemas"]["EntryStatus"];
+            updated_at: string;
+            waitlist_id: string;
+            workspace_id: string;
+        };
+        EntryStatus: "pending" | "approved" | "rejected";
+        ErrorParamDto: {
+            code: string;
+            message: string;
+            param: string;
+        };
+        ErrorResponseDto: {
+            code: components["schemas"]["WaitlistErrorCode"];
+            details?: {
+                [key: string]: unknown;
+            };
+            errors: components["schemas"]["ErrorParamDto"][];
+            message: string | string[];
+            request_id: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        InviteToAppDto: {
+            app_slug?: string;
+            send_email?: boolean;
+        };
+        InviteToAppResponseDto: {
+            entry: components["schemas"]["EntryResponseDto"];
+            invite_id: string;
+            invite_url?: string;
+        };
+        LegacyWebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: "entry.created" | "entry.approved" | "entry.rejected";
+            id: string;
+            latency_ms: number | null;
+            response_body_truncated: string | null;
+            status_code: number | null;
+            webhook_id: string;
+        };
+        ListWebhookEndpointsResponseDto: {
+            data: components["schemas"]["WebhookEndpointDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ListWebhookEventTypesResponseDto: {
+            data: components["schemas"]["WebhookEventTypeDto"][];
+        };
+        ListWebhookEventsResponseDto: {
+            data: components["schemas"]["WebhookEventDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        NotificationTestResponseDto: {
+            from: string | null;
+            message_id: string | null;
+            template_name: string;
+            to: string;
+        };
+        OriginNotAllowedErrorDto: {
+            code: "ORIGIN_NOT_ALLOWED";
+            message: string;
+            origin: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        PaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        PublicEntryCreatedDto: {
+            created_at: string;
+            effective_position: number;
+            email: string;
+            id: string;
+            is_test: boolean;
+            name: string;
+            position: number;
+            referral_code: string;
+            status: components["schemas"]["PublicEntryStatus"];
+        };
+        PublicEntryStatus: "pending" | "approved";
+        PublicLeaderboardDto: {
+            data: components["schemas"]["PublicLeaderboardEntryDto"][];
+        };
+        PublicLeaderboardEntryDto: {
+            masked_email: string;
+            position: number;
+            referral_count: number;
+        };
+        PublicWaitlistBrandDto: {
+            brand_logo_url: string | null;
+            brand_name: string | null;
+            primary_color: string | null;
+        };
+        PublicWaitlistInfoDto: {
+            brand: components["schemas"]["PublicWaitlistBrandDto"];
+            canonical_workspace_slug: string;
+            confirmation_message: string;
+            custom_fields: components["schemas"]["CustomFieldDto"][];
+            description: string | null;
+            display_name: string;
+            recaptcha_site_key: string | null;
+            referral_rewards: components["schemas"]["ReferralRewardsDto"];
+            slug: string;
+            status: string;
+            variant: components["schemas"]["PublicWaitlistVariantDto"] | null;
+            workspace_slug: string;
+        };
+        PublicWaitlistVariantDto: {
+            id: string;
+            kind: components["schemas"]["VariantKind"];
+            locale: string;
+        };
+        ReferralRewardMilestoneDto: {
+            count: number;
+            reward: string;
+        };
+        ReferralRewardsDto: {
+            milestones: components["schemas"]["ReferralRewardMilestoneDto"][];
+        };
+        ReplayWebhookEventResponseDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            event_id: string;
+        };
+        RotateWebhookSecretDto: {
+            grace_hours?: number;
+        };
+        SendWebhookTestDto: {
+            event_type: "entry.created" | "entry.approved" | "entry.rejected";
+        };
+        SenderDomainStatus: "not_started" | "pending" | "partially_verified" | "verified" | "temporary_failure" | "failed" | "disabled" | "deleted" | "not_found";
+        SenderMode: "workspace" | "custom";
+        StatsGranularity: "day";
+        StatsSeriesPointDto: {
+            date: string;
+            value: number;
+        };
+        StatsWindow: "1d" | "7d" | "30d";
+        TemplateSlot: "welcome" | "approved" | "rejected";
+        TestWebhookDto: {
+            event: "entry.created" | "entry.approved" | "entry.rejected";
+            waitlist_id?: string;
+        };
+        UpdateEntryStatusDto: {
+            status: components["schemas"]["EntryDecision"];
+        };
+        UpdateSettingsDto: {
+            approved_template_name?: string | null;
+            brand_logo_url?: string | null;
+            brand_name?: string | null;
+            default_heimdall_app_slug?: string | null;
+            default_sender_address?: string | null;
+            default_sender_domain_id?: string | null;
+            notifications_via_envoi?: boolean;
+            primary_color?: string | null;
+            rejected_template_name?: string | null;
+            sender_mode?: components["schemas"]["SenderMode"];
+            welcome_template_name?: string | null;
+        };
+        UpdateVariantDto: {
+            active?: boolean;
+            copy?: components["schemas"]["VariantCopyDto"];
+            locale?: string;
+            weight?: number;
+        };
+        UpdateWaitlistDto: {
+            allowed_origins?: string[];
+            description?: string;
+            display_name?: string;
+            settings?: components["schemas"]["WaitlistConfigInputDto"];
+        };
+        UpdateWaitlistStatusDto: {
+            status: components["schemas"]["WaitlistStatus"];
+        };
+        UpdateWebhookDto: {
+            active?: boolean;
+            events?: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            url?: string;
+        };
+        UpdateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            url?: string;
+        };
+        VariantCopyDto: {
+            confirmation_message?: string;
+            description?: string;
+            display_name?: string;
+        };
+        VariantKind: "ab" | "locale";
+        VariantListResponseDto: {
+            data: components["schemas"]["VariantResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        VariantResponseDto: {
+            active: boolean;
+            copy: {
+                [key: string]: string;
+            };
+            created_at: string;
+            id: string;
+            kind: components["schemas"]["VariantKind"];
+            locale: string;
+            waitlist_id: string;
+            weight: number;
+        };
+        WaitlistAnalyticsResponseDto: {
+            by_status: {
+                [key: string]: number;
+            };
+            referred_count: number;
+            signups_this_month: number;
+            signups_this_week: number;
+            signups_today: number;
+            top_referrals: components["schemas"]["AnalyticsTopReferralDto"][];
+            top_referrers: components["schemas"]["AnalyticsTopReferrerDto"][];
+            total_entries: number;
+            viral_coefficient: number;
+            waitlist_id: string;
+        };
+        WaitlistConfigDto: {
+            approval_required: boolean;
+            confirmation_message?: string | null;
+            custom_fields?: components["schemas"]["CustomFieldDto"][];
+            max_entries?: number | null;
+            recaptcha_secret_configured: boolean;
+            recaptcha_site_key?: string | null;
+            referral_boost: number;
+            referral_rewards?: components["schemas"]["ReferralRewardsDto"];
+        };
+        WaitlistConfigInputDto: {
+            approval_required?: boolean;
+            confirmation_message?: string | null;
+            custom_fields?: components["schemas"]["CustomFieldDto"][];
+            max_entries?: number | null;
+            recaptcha_secret_key?: string;
+            recaptcha_site_key?: string | null;
+            referral_boost?: number;
+            referral_rewards?: components["schemas"]["ReferralRewardsDto"];
+        };
+        WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
+        WaitlistListPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        WaitlistListResponseDto: {
+            data: components["schemas"]["WaitlistResponseDto"][];
+            pagination: components["schemas"]["WaitlistListPaginationDto"];
+        };
+        WaitlistResponseDto: {
+            accepting_signups: boolean;
+            allowed_origins: string[];
+            created_at: string;
+            created_by: string;
+            description: string | null;
+            display_name: string;
+            id: string;
+            previous_workspace_slug: string | null;
+            settings: components["schemas"]["WaitlistConfigDto"];
+            signups_note: string | null;
+            slug: string;
+            status: components["schemas"]["WaitlistStatus"];
+            updated_at: string;
+            workspace_id: string;
+            workspace_slug: string;
+        };
+        WaitlistSettingsResponseDto: {
+            approved_template_name: string | null;
+            brand_logo_url: string | null;
+            brand_name: string | null;
+            default_heimdall_app_slug: string | null;
+            default_sender_address: string | null;
+            default_sender_domain_id: string | null;
+            effective_sender: components["schemas"]["EffectiveSenderDto"];
+            email_setup: components["schemas"]["EmailSetupDto"];
+            notifications_via_envoi: boolean;
+            primary_color: string | null;
+            rejected_template_name: string | null;
+            sender_mode: components["schemas"]["SenderMode"];
+            skipped_sends: components["schemas"]["WaitlistSkippedEmailsDto"];
+            updated_at: string | null;
+            welcome_template_name: string | null;
+            workspace_id: string;
+        };
+        WaitlistSkippedEmailsDto: {
+            count: number;
+            last_7_days: number;
+            last_at: string | null;
+        };
+        WaitlistStatsInWindowDto: {
+            signups: number;
+        };
+        WaitlistStatsMetric: "signups";
+        WaitlistStatsSeriesDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["WaitlistStatsMetric"];
+            points: components["schemas"]["StatsSeriesPointDto"][];
+        };
+        WaitlistStatsTotalsDto: {
+            entries: number;
+            waitlists: number;
+        };
+        WaitlistStatus: "draft" | "active" | "paused" | "closed";
+        WaitlistWorkspaceStatsDto: {
+            generated_at: string;
+            in_window: components["schemas"]["WaitlistStatsInWindowDto"];
+            last_activity_at: string | null;
+            series: components["schemas"]["WaitlistStatsSeriesDto"];
+            totals: components["schemas"]["WaitlistStatsTotalsDto"];
+            window: components["schemas"]["StatsWindow"];
+        };
+        WebhookAttemptTrigger: "automatic" | "replay" | "test";
+        WebhookCreateResponseDto: {
+            active: boolean;
+            auto_disabled_at: string | null;
+            created_at: string;
+            events: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            failure_count: number;
+            first_failure_at: string | null;
+            id: string;
+            last_attempt_at: string | null;
+            last_status_code: number | null;
+            secret_one_time_reveal: string;
+            secret_set?: boolean;
+            signing_secret: string;
+            url: string;
+            workspace_id: string;
+        };
+        WebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+            trigger: components["schemas"]["WebhookAttemptTrigger"];
+            url: string;
+        };
+        WebhookDeliveryListResponseDto: {
+            data: components["schemas"]["LegacyWebhookDeliveryAttemptDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        WebhookEndpointDisabledReason: "manual" | "failing";
+        WebhookEndpointDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEndpointStatus: "enabled" | "disabled" | "auto_disabled";
+        WebhookEndpointWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEntryDto: {
+            created_at: string;
+            email: string;
+            id: string;
+            is_test: boolean;
+            name: string;
+            position: number;
+            referral_code: string;
+            referral_count: number;
+            referred_by_entry_id: string | null;
+            status: components["schemas"]["EntryStatus"];
+            updated_at: string;
+        };
+        WebhookEventDeliveryDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            next_attempt_at: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+        };
+        WebhookEventDetailDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventDto: {
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
+        WebhookEventType: "entry.created" | "entry.approved" | "entry.rejected";
+        WebhookEventTypeDto: {
+            category: string;
+            description: string;
+            example: {
+                [key: string]: unknown;
+            };
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookListResponseDto: {
+            data: components["schemas"]["WebhookResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        WebhookPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        WebhookResponseDto: {
+            active: boolean;
+            auto_disabled_at: string | null;
+            created_at: string;
+            events: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            failure_count: number;
+            first_failure_at: string | null;
+            id: string;
+            last_attempt_at: string | null;
+            last_status_code: number | null;
+            secret_set?: boolean;
+            url: string;
+            workspace_id: string;
+        };
+        WebhookRotateSecretResponseDto: {
+            id: string;
+            secret: string;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: {
+        RequestId: string;
+        "Retry-After": number;
+        "Retry-After-long": number;
+        "Retry-After-short": number;
+        "X-RateLimit-Limit-long": number;
+        "X-RateLimit-Limit-short": number;
+        "X-RateLimit-Remaining-long": number;
+        "X-RateLimit-Remaining-short": number;
+        "X-RateLimit-Reset-long": number;
+        "X-RateLimit-Reset-short": number;
+    };
+    pathItems: never;
+};
+
+export { ConfigurationError }
+
+export { ConflictError }
+
+export { IdempotencyKeyReuseError }
+
+export { InternalServerError }
+
+export { NotFoundError }
+
+// @public (undocumented)
+export type paths = {
     "/v1/waitlists/{workspace_slug}/{waitlist_slug}": {
         parameters: {
             query?: never;
@@ -26,7 +734,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries": {
         parameters: {
             query?: never;
@@ -43,7 +750,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/waitlists/{workspace_slug}/{waitlist_slug}/leaderboard": {
         parameters: {
             query?: never;
@@ -60,7 +766,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/waitlists/{workspace_slug}/{waitlist_slug}/leaderboard/top": {
         parameters: {
             query?: never;
@@ -77,7 +782,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/stats": {
         parameters: {
             query?: never;
@@ -94,7 +798,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlist/settings": {
         parameters: {
             query?: never;
@@ -111,7 +814,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlist/settings/notifications/{slot}/test": {
         parameters: {
             query?: never;
@@ -128,7 +830,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists": {
         parameters: {
             query?: never;
@@ -145,7 +846,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{id}": {
         parameters: {
             query?: never;
@@ -162,7 +862,6 @@ export interface paths {
         patch: operations["WaitlistController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{id}/status": {
         parameters: {
             query?: never;
@@ -179,7 +878,6 @@ export interface paths {
         patch: operations["WaitlistController_updateStatus"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics": {
         parameters: {
             query?: never;
@@ -196,7 +894,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics/timeline": {
         parameters: {
             query?: never;
@@ -213,7 +910,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries": {
         parameters: {
             query?: never;
@@ -230,7 +926,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/bulk": {
         parameters: {
             query?: never;
@@ -247,7 +942,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/count": {
         parameters: {
             query?: never;
@@ -264,7 +958,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/export.csv": {
         parameters: {
             query?: never;
@@ -281,7 +974,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}": {
         parameters: {
             query?: never;
@@ -298,7 +990,6 @@ export interface paths {
         patch: operations["EntryController_updateStatus"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}/invite-to-app": {
         parameters: {
             query?: never;
@@ -315,7 +1006,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/test-entries": {
         parameters: {
             query?: never;
@@ -332,7 +1022,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants": {
         parameters: {
             query?: never;
@@ -349,7 +1038,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/variants/{id}": {
         parameters: {
             query?: never;
@@ -366,7 +1054,6 @@ export interface paths {
         patch: operations["VariantController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks": {
         parameters: {
             query?: never;
@@ -383,7 +1070,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -400,7 +1086,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -417,7 +1102,6 @@ export interface paths {
         patch: operations["WebhooksController_waitlist_workspace_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -434,7 +1118,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -451,7 +1134,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -468,7 +1150,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -485,7 +1166,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -502,7 +1182,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -519,7 +1198,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}": {
         parameters: {
             query?: never;
@@ -536,7 +1214,6 @@ export interface paths {
         patch: operations["WebhookController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/deliveries": {
         parameters: {
             query?: never;
@@ -553,7 +1230,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -570,7 +1246,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/{id}/test": {
         parameters: {
             query?: never;
@@ -587,13 +1262,339 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+};
+
+export { PermissionDeniedError }
+
+export { ProductCraftError }
+
+export { RateLimitError }
+
+export { UnprocessableEntityError }
+
+// @public
+class Waitlist extends WaitlistResources {
+    constructor(options?: ClientOptions);
+    get client(): Client<paths>;
+    public(scope: {
+        workspace: string;
+        waitlist: string;
+    }): WaitlistPublic;
 }
 
 // @public
-export class Waitlist {
-    constructor(config?: PCClientConfig);
-    readonly client: ReturnType<typeof makeClient<paths>>;
+namespace Waitlist {
+    // (undocumented)
+    type AnalyticsTimeline = __AnalyticsTimeline;
+    // (undocumented)
+    type AnalyticsTimelinePoint = __AnalyticsTimelinePoint;
+    // (undocumented)
+    type AnalyticsTopReferral = __AnalyticsTopReferral;
+    const // (undocumented)
+    BulkEntryActionType: {
+        values: readonly ["approve", "reject", "invite-to-app"];
+    };
+    // (undocumented)
+    type AnalyticsTopReferrer = __AnalyticsTopReferrer;
+    const // (undocumented)
+    BulkEntryResultStatus: {
+        values: readonly ["ok", "error"];
+    };
+    // (undocumented)
+    type BulkEntryActionResult = __BulkEntryActionResult;
+    const // (undocumented)
+    EmailSetupMissing: {
+        values: readonly ["not_enabled", "no_sender_domain", "sender_domain_unverified", "no_sender_address", "no_template"];
+    };
+    // (undocumented)
+    type BulkEntryActionType = __BulkEntryActionType;
+    const // (undocumented)
+    EmailSetupState: {
+        values: readonly ["ready", "incomplete", "off"];
+    };
+    // (undocumented)
+    type BulkEntryError = __BulkEntryError;
+    const // (undocumented)
+    EntryDecision: {
+        values: readonly ["approved", "rejected"];
+    };
+    // (undocumented)
+    type BulkEntryResult = __BulkEntryResult;
+    const // (undocumented)
+    EntryStatus: {
+        values: readonly ["pending", "approved", "rejected"];
+    };
+    // (undocumented)
+    type BulkEntryResultStatus = __BulkEntryResultStatus;
+    const // (undocumented)
+    PublicEntryStatus: {
+        values: readonly ["pending", "approved"];
+    };
+    // (undocumented)
+    type CustomField = __CustomField;
+    const // (undocumented)
+    SenderDomainStatus: {
+        values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
+    };
+    // (undocumented)
+    type EffectiveSender = __EffectiveSender;
+    const // (undocumented)
+    SenderMode: {
+        values: readonly ["workspace", "custom"];
+    };
+    // (undocumented)
+    type EmailSetup = __EmailSetup;
+    const // (undocumented)
+    StatsGranularity: {
+        values: readonly ["day"];
+    };
+    // (undocumented)
+    type EmailSetupMissing = __EmailSetupMissing;
+    const // (undocumented)
+    StatsWindow: {
+        values: readonly ["1d", "7d", "30d"];
+    };
+    // (undocumented)
+    type EmailSetupState = __EmailSetupState;
+    const // (undocumented)
+    TemplateSlot: {
+        values: readonly ["welcome", "approved", "rejected"];
+    };
+    // (undocumented)
+    type Entry = __Entry;
+    const // (undocumented)
+    VariantKind: {
+        values: readonly ["ab", "locale"];
+    };
+    // (undocumented)
+    type EntryApprovedEvent = __EntryApprovedEvent;
+    const // (undocumented)
+    WaitlistStatsMetric: {
+        values: readonly ["signups"];
+    };
+    // (undocumented)
+    type EntryCount = __EntryCount;
+    const // (undocumented)
+    WaitlistStatus: {
+        values: readonly ["draft", "active", "paused", "closed"];
+    };
+    // (undocumented)
+    type EntryCreatedEvent = __EntryCreatedEvent;
+    const // (undocumented)
+    WebhookAttemptTrigger: {
+        values: readonly ["automatic", "replay", "test"];
+    };
+    // (undocumented)
+    type EntryCreateParams = __EntryCreateParams;
+    const // (undocumented)
+    WebhookEndpointDisabledReason: {
+        values: readonly ["manual", "failing"];
+    };
+    // (undocumented)
+    type EntryDecision = __EntryDecision;
+    const // (undocumented)
+    WebhookEndpointStatus: {
+        values: readonly ["enabled", "disabled", "auto_disabled"];
+    };
+    // (undocumented)
+    type EntryEventData = __EntryEventData;
+    const // (undocumented)
+    WebhookEventStatus: {
+        values: readonly ["pending", "delivered", "failed", "not_sent"];
+    };
+    // (undocumented)
+    type EntryInvite = __EntryInvite;
+    const // (undocumented)
+    WebhookEventType: {
+        values: readonly ["entry.created", "entry.approved", "entry.rejected"];
+    };
+    // (undocumented)
+    type EntryList = __EntryList;
+    // (undocumented)
+    type EntryListPagination = __EntryListPagination;
+    // (undocumented)
+    type EntryRejectedEvent = __EntryRejectedEvent;
+    // (undocumented)
+    type EntryStatus = __EntryStatus;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type InfoRetrieveParams = __InfoRetrieveParams;
+    // (undocumented)
+    type LeaderboardListParams = __LeaderboardListParams;
+    // (undocumented)
+    type ListAnalyticsRetrieveParams = __ListAnalyticsRetrieveParams;
+    // (undocumented)
+    type ListAnalyticsTimelineParams = __ListAnalyticsTimelineParams;
+    // (undocumented)
+    type ListCreateParams = __ListCreateParams;
+    // (undocumented)
+    type ListEntryBulkParams = __ListEntryBulkParams;
+    // (undocumented)
+    type ListEntryCountParams = __ListEntryCountParams;
+    // (undocumented)
+    type ListEntryExportParams = __ListEntryExportParams;
+    // (undocumented)
+    type ListEntryInviteToAppParams = __ListEntryInviteToAppParams;
+    // (undocumented)
+    type ListEntryListParams = __ListEntryListParams;
+    // (undocumented)
+    type ListEntryUpdateParams = __ListEntryUpdateParams;
+    // (undocumented)
+    type ListListParams = __ListListParams;
+    // (undocumented)
+    type ListTestEntryCreateParams = __ListTestEntryCreateParams;
+    // (undocumented)
+    type ListUpdateParams = __ListUpdateParams;
+    // (undocumented)
+    type ListUpdateStatusParams = __ListUpdateStatusParams;
+    // (undocumented)
+    type ListVariantCreateParams = __ListVariantCreateParams;
+    // (undocumented)
+    type ListVariantListParams = __ListVariantListParams;
+    // (undocumented)
+    type ListVariantUpdateParams = __ListVariantUpdateParams;
+    // (undocumented)
+    type ListWebhookEndpoints = __ListWebhookEndpoints;
+    // (undocumented)
+    type ListWebhookEvents = __ListWebhookEvents;
+    // (undocumented)
+    type ListWebhookEventTypes = __ListWebhookEventTypes;
+    // (undocumented)
+    type NotificationTest = __NotificationTest;
+    // (undocumented)
+    type Pagination = __Pagination;
+    // (undocumented)
+    type PollOptions = __PollOptions;
+    // (undocumented)
+    type PublicEntryCreated = __PublicEntryCreated;
+    // (undocumented)
+    type PublicEntryStatus = __PublicEntryStatus;
+    // (undocumented)
+    type PublicLeaderboard = __PublicLeaderboard;
+    // (undocumented)
+    type PublicLeaderboardEntry = __PublicLeaderboardEntry;
+    // (undocumented)
+    type PublicWaitlistBrand = __PublicWaitlistBrand;
+    // (undocumented)
+    type PublicWaitlistInfo = __PublicWaitlistInfo;
+    // (undocumented)
+    type PublicWaitlistVariant = __PublicWaitlistVariant;
+    // (undocumented)
+    type ReferralRewardMilestone = __ReferralRewardMilestone;
+    // (undocumented)
+    type ReferralRewards = __ReferralRewards;
+    // (undocumented)
+    type ReplayWebhookEvent = __ReplayWebhookEvent;
+    // (undocumented)
+    type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type SenderDomainStatus = __SenderDomainStatus;
+    // (undocumented)
+    type SenderMode = __SenderMode;
+    // (undocumented)
+    type SettingsUpdateParams = __SettingsUpdateParams;
+    // (undocumented)
+    type StatsGranularity = __StatsGranularity;
+    // (undocumented)
+    type StatsRetrieveParams = __StatsRetrieveParams;
+    // (undocumented)
+    type StatsSeriesPoint = __StatsSeriesPoint;
+    // (undocumented)
+    type StatsWindow = __StatsWindow;
+    // (undocumented)
+    type TemplateSlot = __TemplateSlot;
+    // (undocumented)
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
+    // (undocumented)
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
+    // (undocumented)
+    type Variant = __Variant;
+    // (undocumented)
+    type VariantKind = __VariantKind;
+    // (undocumented)
+    type VariantList = __VariantList;
+    // (undocumented)
+    type Waitlist = __Waitlist;
+    // (undocumented)
+    type WaitlistAnalytics = __WaitlistAnalytics;
+    // (undocumented)
+    type WaitlistConfig = __WaitlistConfig;
+    // (undocumented)
+    type WaitlistList = __WaitlistList;
+    // (undocumented)
+    type WaitlistListPagination = __WaitlistListPagination;
+    // (undocumented)
+    type WaitlistSettings = __WaitlistSettings;
+    // (undocumented)
+    type WaitlistSkippedEmails = __WaitlistSkippedEmails;
+    // (undocumented)
+    type WaitlistStatsInWindow = __WaitlistStatsInWindow;
+    // (undocumented)
+    type WaitlistStatsMetric = __WaitlistStatsMetric;
+    // (undocumented)
+    type WaitlistStatsSeries = __WaitlistStatsSeries;
+    // (undocumented)
+    type WaitlistStatsTotals = __WaitlistStatsTotals;
+    // (undocumented)
+    type WaitlistStatus = __WaitlistStatus;
+    // (undocumented)
+    type WaitlistWorkspaceStats = __WaitlistWorkspaceStats;
+    // (undocumented)
+    type WebhookAttemptTrigger = __WebhookAttemptTrigger;
+    // (undocumented)
+    type WebhookDeliveryAttempt = __WebhookDeliveryAttempt;
+    // (undocumented)
+    type WebhookEndpoint = __WebhookEndpoint;
+    // (undocumented)
+    type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
+    // (undocumented)
+    type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type WebhookEndpointStatus = __WebhookEndpointStatus;
+    // (undocumented)
+    type WebhookEndpointTestParams = __WebhookEndpointTestParams;
+    // (undocumented)
+    type WebhookEndpointUpdateParams = __WebhookEndpointUpdateParams;
+    // (undocumented)
+    type WebhookEndpointWithSecret = __WebhookEndpointWithSecret;
+    // (undocumented)
+    type WebhookEntry = __WebhookEntry;
+    // (undocumented)
+    type WebhookEvent = __WebhookEvent;
+    // (undocumented)
+    type WebhookEventDelivery = __WebhookEventDelivery;
+    // (undocumented)
+    type WebhookEventDetail = __WebhookEventDetail;
+    // (undocumented)
+    type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplayParams = __WebhookEventReplayParams;
+    // (undocumented)
+    type WebhookEventStatus = __WebhookEventStatus;
+    // (undocumented)
+    type WebhookEventType = __WebhookEventType;
+    // (undocumented)
+    type WebhookEventTypeInfo = __WebhookEventTypeInfo;
+    // (undocumented)
+    type WebhookPagination = __WebhookPagination;
+    // (undocumented)
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
 }
+export { Waitlist }
+export default Waitlist;
+
+// @public
+export type WaitlistErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | (string & {});
+
+// @public (undocumented)
+export const WaitlistErrorCode: {
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "MAIL_UNREACHABLE", "ORIGIN_NOT_ALLOWED", "WAITLIST_NOT_FOUND", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender"];
+};
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 

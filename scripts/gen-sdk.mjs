@@ -59,6 +59,21 @@ export const SURFACES = {
     webhookSecretEnv: "PRODUCTCRAFT_MAIL_WEBHOOK_SECRET",
     scopes: {},
   },
+  waitlist: {
+    spec: "Specs/waitlist.json",
+    packageDir: "packages/waitlist",
+    packageName: "@productcraft/waitlist",
+    sdkName: "waitlist",
+    className: "Waitlist",
+    clientVar: "waitlist",
+    title: "ProductCraft Waitlist API client (waitlists, signups, variants, referrals and leaderboards)",
+    baseUrlKey: "waitlist",
+    docsUrl: "https://productcraft.co/docs/waitlist",
+    webhookSecretEnv: "PRODUCTCRAFT_WAITLIST_WEBHOOK_SECRET",
+    scopes: {
+      public: { bind: ["workspace_slug", "waitlist_slug"], args: { workspace: "workspace_slug", waitlist: "waitlist_slug" }, doc: "Keyless, browser-safe calls for one public waitlist (the signup form, position and leaderboard)." },
+    },
+  },
   "gen-fixture": {
     spec: "packages/gen-fixture/fixture.openapi.json",
     packageDir: "packages/gen-fixture",
