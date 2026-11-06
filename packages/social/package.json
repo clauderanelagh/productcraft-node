@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/social",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Communities, actors, posts, ranked feeds, stories, conversations, notifications and moderation (ProductCraft Social). Resources, community scopes with .as(actorId), auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
