@@ -374,6 +374,13 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 
 ## 13. Decision log
 
+2026-11-06, task 007 (Platform 1.0) as built:
+
+- **Form uploads are typed fields, not a raw body.** Platform is the first spec with a `multipart/form-data` body (workspace and user avatars). The generator now types each form field (`format: binary` as `Blob`, so a `File` keeps its name) and sends a `FormData` it builds itself: `platform.workspaces.avatar.upload("acme", { file })`. Other non-JSON bodies take `{ body }` typed as `RequestInit["body"]` (the DOM-only `BodyInit` broke the `.d.ts` build without the DOM lib).
+- **conquer-api's `.client.POST('/v1/introspect/api-key', { params: { header: { authorization: "" } } })` no longer compiles**, since platform-auth-api/021 (published in 0.2.0) stopped declaring `authorization` as a header parameter. The call without that line compiles and runs on 1.0; the migration guide says to delete it. Re-declaring a fake header in the API to keep a workaround compiling was rejected.
+- **The live smoke mints and revokes one `sdk-smoke-` key** bound to the workspace's existing readonly-preset policy (passing `preset` could create that policy, which the smoke must not do), and signs in through the SDK's own public `auth.signin`.
+- **`check-dts` brands with an object-or-symbol union**: a free-form body (`additionalProperties: true`, the service settings) is a real type that accepts any object, so the object-only brand reported it as `any`.
+
 2026-11-06, task 006 (Waitlist 1.0) as built:
 
 - **Field names follow the spec, not the task sketch.** The task's call sites used `lists.create({ name })` and a public submit with only `email`; the API's wire fields are `display_name` (create) and a required `name` (public submit), so the acceptance and section 2.2 use those. No API change: renaming a stable wire field is not worth a 1.0.

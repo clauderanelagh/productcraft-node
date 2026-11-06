@@ -36,6 +36,12 @@ export const run = () => mail.emails.send({ from: "a@b.c", to: "d@e.f", subject:
 const form = new Waitlist().public({ workspace: "acme", waitlist: "beta" });
 export const run = () => form.entries.create({ email: "a@b.c", name: "Ada" });`,
   },
+  "@productcraft/platform-auth": {
+    dir: "packages/platform-auth",
+    code: `import { PlatformAuth } from "@productcraft/platform-auth";
+const platform = new PlatformAuth({ apiKey: "pcft_live_x" });
+export const run = () => platform.apiKeys.self();`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

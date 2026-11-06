@@ -38,10 +38,18 @@ export function stableJson(value, indent = 2) {
   return JSON.stringify(sort(value), null, indent) + "\n";
 }
 
+/** A TypeScript expression that `tsLiteral` prints verbatim (an example `new File(…)`). */
+export class Code {
+  constructor(code) {
+    this.code = code;
+  }
+}
+
 const SAFE_KEY = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 /** A value as a TypeScript literal (keys unquoted where legal), on one line when short. */
 export function tsLiteral(value, indent = "") {
   const one = (v) => {
+    if (v instanceof Code) return v.code;
     if (v === undefined) return "undefined";
     if (v === null || typeof v !== "object") return JSON.stringify(v);
     if (Array.isArray(v)) return `[${v.map(one).join(", ")}]`;
@@ -49,7 +57,7 @@ export function tsLiteral(value, indent = "") {
     return entries.length ? `{ ${entries.join(", ")} }` : "{}";
   };
   const flat = one(value);
-  if (flat.length <= 90 || value === null || typeof value !== "object") return flat;
+  if (flat.length <= 90 || value === null || typeof value !== "object" || value instanceof Code) return flat;
   const inner = indent + "  ";
   if (Array.isArray(value)) return `[\n${value.map((x) => inner + tsLiteral(x, inner)).join(",\n")},\n${indent}]`;
   const lines = Object.entries(value).map(([k, x]) => `${inner}${SAFE_KEY.test(k) ? k : JSON.stringify(k)}: ${tsLiteral(x, inner)}`);

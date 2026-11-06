@@ -148,6 +148,17 @@ export function buildModel(spec, config) {
           if (!isObject && query.length) problems.push(`${w}: a non-object JSON body cannot be merged with query parameters`);
           const clash = query.filter((q) => body.properties.includes(q.name)).map((q) => q.name);
           if (clash.length) problems.push(`${w}: query and body both declare ${clash.join(", ")}`);
+        } else if (types.includes("multipart/form-data") && deref(rb.content["multipart/form-data"].schema)?.properties) {
+          // A form upload: typed fields (binary ones as Blob/File), sent as FormData.
+          const resolved = deref(rb.content["multipart/form-data"].schema);
+          const req = resolved.required ?? [];
+          const fields = Object.entries(resolved.properties).map(([name, f]) => {
+            const fs = deref(f) ?? {};
+            return { name, binary: fs.format === "binary", required: req.includes(name), description: fs.description, schema: fs };
+          });
+          const clash = query.filter((q) => fields.some((f) => f.name === q.name)).map((q) => q.name);
+          if (clash.length) problems.push(`${w}: query and form both declare ${clash.join(", ")}`);
+          body = { json: false, multipart: true, required: rb.required !== false, contentType: "multipart/form-data", fields, properties: fields.map((f) => f.name), requiredProps: req };
         } else if (types.length) {
           body = { json: false, required: rb.required !== false, contentType: types[0] };
         }
@@ -214,8 +225,8 @@ export function buildModel(spec, config) {
         success, errors, paginated, poll, actor,
         paramsType: body || query.length ? `${stem}${pascal(method)}Params` : null,
         pathParamSchemas: Object.fromEntries(pathParams.map((p) => [p.name, p.schema ?? { type: "string" }])),
-        requiredNames: [...(body?.json && body.required ? body.requiredProps : []), ...query.filter((q) => q.required).map((q) => q.name)],
-        hasRequiredParams: (body?.required && (!body.json || !body.isObject || hasRequired(deref(body.schema)))) || query.some((q) => q.required),
+        requiredNames: [...((body?.json || body?.multipart) && body.required ? body.requiredProps : []), ...query.filter((q) => q.required).map((q) => q.name)],
+        hasRequiredParams: (body?.required && (body.multipart ? body.requiredProps.length > 0 : !body.json || !body.isObject || hasRequired(deref(body.schema)))) || query.some((q) => q.required),
         stem,
       });
     }

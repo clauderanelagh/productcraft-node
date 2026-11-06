@@ -32,7 +32,11 @@ for (const [surface, cfg] of Object.entries(SURFACES)) {
     `import { createMockFetch } from "${pkg.name}/testing";`,
     // A real type rejects an unrelated value; an `any`-like one (the circular alias) does not,
     // so the directive goes unused and fails. (An IsAny<T> test misses the error type.)
-    "declare const brand: { readonly __pcBrand: unique symbol };",
+    // The brand is an object OR a symbol: a free-form body (`additionalProperties: true`,
+    // Platform's service settings) is a real type that accepts any object but no symbol,
+    // and an all-optional params type accepts a symbol but not an unrelated object.
+    "declare const sym: unique symbol;",
+    "declare const brand: { readonly __pcBrand: typeof sym } | typeof sym;",
     ...[...names, `${C}.RequestOptions`].flatMap((n, i) => ["// @ts-expect-error", `export const t${i}: ${n} = brand;`]),
     `void createMockFetch;`,
   ].join("\n");

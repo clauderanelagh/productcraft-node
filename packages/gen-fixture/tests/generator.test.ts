@@ -54,6 +54,44 @@ describe("example variable names", () => {
   });
 });
 
+describe("form uploads", () => {
+  it("a multipart/form-data body becomes typed fields (binary as Blob) sent as FormData (Platform's avatar upload)", async () => {
+    const spec = fresh();
+    spec.paths[`${W}/widgets/{widget_id}/image`] = {
+      post: {
+        security: [{ bearer: [] }],
+        operationId: "WidgetController_uploadImage",
+        summary: "Upload a widget image",
+        tags: ["widgets"],
+        parameters: [
+          { name: "workspace_id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+          { name: "widget_id", in: "path", required: true, schema: { type: "string", format: "uuid" } },
+        ],
+        requestBody: {
+          required: true,
+          content: { "multipart/form-data": { schema: { type: "object", required: ["file"], properties: { file: { type: "string", format: "binary", description: "PNG, at most 2 MB." }, caption: { type: "string" } } } } },
+        },
+        responses: { "204": { description: "Stored." } },
+        "x-pc-sdk": { resource: "widgets.image", method: "upload", bind: ["workspace_id"], paginated: false },
+      },
+    };
+    const { files } = await generate("gen-fixture", spec);
+    const g = "packages/gen-fixture/src/_generated";
+    expect(files[`${g}/types.ts`]).toContain('export type WidgetImageUploadParams = { /** PNG, at most 2 MB. */ file: Blob; caption?: NonNullable<');
+    expect(files[`${g}/resources.ts`]).toContain("function formData(fields: object | undefined): FormData {");
+    expect(files[`${g}/resources.ts`]).toContain("body: formData(params)");
+    expect(files[`${g}/types.ts`]).not.toContain("BodyInit");
+    const opsTest = files["packages/gen-fixture/tests/_generated/operations.test.ts"];
+    expect(opsTest).toContain('{ file: new File(["…"], "image.png", { type: "image/png" }) }');
+    expect(opsTest).toContain('expect((call.body as FormData).get("file")).toBeInstanceOf(Blob);');
+  });
+
+  it("emits no formData helper for a spec without form uploads", async () => {
+    const { files } = await generate("gen-fixture");
+    expect(files["packages/gen-fixture/src/_generated/resources.ts"]).not.toContain("function formData(");
+  });
+});
+
 describe("golden output", () => {
   it("matches the checked-in goldens for every generated file", async () => {
     const { files } = await generate("gen-fixture");
