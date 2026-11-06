@@ -35,6 +35,16 @@ describe("mock samples", () => {
   });
 });
 
+describe("example variable names", () => {
+  it("never names an example variable with a JS keyword (Mail's contacts.imports.list)", async () => {
+    // @ts-expect-error plain ESM script without type declarations
+    const { exampleVar } = await import("../../../scripts/gen-sdk/emit-code.mjs");
+    expect(exampleVar("import")).toBe("importItem");
+    expect(exampleVar("default", "Result")).toBe("defaultResult");
+    expect(exampleVar("domain")).toBe("domain");
+  });
+});
+
 describe("golden output", () => {
   it("matches the checked-in goldens for every generated file", async () => {
     const { files } = await generate("gen-fixture");

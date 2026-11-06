@@ -1,19 +1,10 @@
-import type { paths } from "./_generated.js";
-import { makeClient, PC_BASE_URL, type PCClientConfig } from "@productcraft/core";
-
 /**
- * Mail — typed `openapi-fetch` client for every endpoint in
- * `Specs/mail.json`. Reach for `client.GET("/v1/...")` or
- * `client.POST(...)`; request / response types come from the
- * generated `paths` interface.
+ * @productcraft/mail: transactional email, templates, domains, contacts and
+ * broadcasts. Every resource method, type, error class and mock is generated
+ * from the Mail OpenAPI document (scripts/gen-sdk.mjs); this file only
+ * re-exports them.
  */
-export class Mail {
-  /** The underlying typed client. v0 surface — every endpoint reachable. */
-  public readonly client: ReturnType<typeof makeClient<paths>>;
-
-  constructor(config: PCClientConfig = {}) {
-    this.client = makeClient<paths>(PC_BASE_URL.mail, config);
-  }
-}
-
-export type { paths } from "./_generated.js";
+export { Mail } from "./_generated/client.js";
+export * from "./_generated/errors.js";
+export type { paths, components } from "./_generated/paths.js";
+export { Mail as default } from "./_generated/client.js";

@@ -4,18 +4,3331 @@
 
 ```ts
 
-import { makeClient } from '@productcraft/core';
-import { PCClientConfig } from '@productcraft/core';
+import { APIClient } from '@productcraft/core';
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
+import { AuthenticationError } from '@productcraft/core';
+import { BadRequestError } from '@productcraft/core';
+import { Client } from 'openapi-fetch';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
+import { LastResponse } from '@productcraft/core';
+import { NotFoundError } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
+import { PermissionDeniedError } from '@productcraft/core';
+import { PollOptions } from '@productcraft/core';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { WebhookHeaders } from '@productcraft/core';
+import { WebhookPayload } from '@productcraft/core';
+import { WebhookVerificationError } from '@productcraft/core';
+
+export { APIConnectionError }
+
+export { APIError }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
+
+export { AuthenticationError }
+
+export { BadRequestError }
+
+// @public (undocumented)
+export type components = {
+    schemas: {
+        AddSuppressionDto: {
+            email: string;
+            reason?: string;
+        };
+        ApplyDnsRecordsDto: {
+            dry_run: boolean;
+            include_dmarc?: boolean;
+            provider: "cloudflare" | "digitalocean";
+            token: string;
+            zone?: string;
+        };
+        BounceSource: "relay" | "ses" | "mixed" | "none";
+        BounceType: "Permanent" | "Transient" | "Undetermined";
+        BrandResponseDto: {
+            raw: components["schemas"]["RawBrandDto"] | null;
+            resolved: components["schemas"]["ResolvedBrandTokensDto"];
+        };
+        BroadcastAudienceDto: {
+            computed_at: string;
+            recipients: number;
+            segment_contacts: number | null;
+        };
+        BroadcastCountsDto: {
+            bounced: number;
+            canceled: number;
+            clicked: number;
+            complained: number;
+            delivered: number;
+            failed: number;
+            opened: number;
+            pending: number;
+            recipients: number;
+            sent: number;
+            skipped: number;
+            unsubscribed: number;
+        };
+        BroadcastDto: {
+            canceled_at: string | null;
+            completed_at: string | null;
+            counts: components["schemas"]["BroadcastCountsDto"] | null;
+            created_at: string;
+            failure_reason: string | null;
+            from: string | null;
+            html: string | null;
+            id: string;
+            name: string;
+            rate_per_minute: number | null;
+            scheduled_at: string | null;
+            segment_id: string | null;
+            started_at: string | null;
+            status: components["schemas"]["BroadcastStatus"];
+            subject: string | null;
+            template_name: string | null;
+            text: string | null;
+            topic_id: string | null;
+            updated_at: string;
+        };
+        BroadcastRecipientDto: {
+            contact_id: string | null;
+            email: string;
+            error: string | null;
+            error_code: string | null;
+            id: string;
+            message_id: string | null;
+            message_status: string | null;
+            sent_at: string | null;
+            status: components["schemas"]["BroadcastRecipientStatus"];
+        };
+        BroadcastRecipientStatus: "pending" | "sending" | "sent" | "skipped" | "failed" | "canceled";
+        BroadcastSettingsDto: {
+            default_rate_per_minute: number;
+            effective_rate_per_minute: number;
+            rate_per_minute: number | null;
+        };
+        BroadcastStatus: "draft" | "scheduled" | "sending" | "sent" | "canceled";
+        ClickedLinkDto: {
+            clicks: number;
+            unique_recipients: number;
+            url: string;
+        };
+        ClickedLinksResponseDto: {
+            data: components["schemas"]["ClickedLinkDto"][];
+        };
+        ConnectGitHubRequestDto: {
+            return_to: string;
+        };
+        ConnectGitHubResponseDto: {
+            authorize_url: string;
+        };
+        ConsentDto: {
+            consented_at?: string;
+            source: string;
+        };
+        ContactCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["ContactEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "contact.created";
+            workspace_id?: string;
+        };
+        ContactCreatedVia: "api" | "dashboard" | "import" | "unsubscribe";
+        ContactDeletedEvent: {
+            created_at: string;
+            data: components["schemas"]["ContactDeletedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "contact.deleted";
+            workspace_id?: string;
+        };
+        ContactDeletedEventDataDto: {
+            created_at: string | null;
+            deleted_at: string;
+            email: string;
+            first_name: string | null;
+            id: string;
+            last_name: string | null;
+            unsubscribed: boolean;
+            updated_at: string | null;
+        };
+        ContactDto: {
+            consent_source: string | null;
+            consented_at: string | null;
+            created_at: string;
+            created_via: components["schemas"]["ContactCreatedVia"];
+            email: string;
+            first_name: string | null;
+            id: string;
+            last_name: string | null;
+            properties: {
+                [key: string]: string | number;
+            };
+            unsubscribed: boolean;
+            unsubscribed_at: string | null;
+            updated_at: string;
+        };
+        ContactEventDataDto: {
+            created_at: string | null;
+            email: string;
+            first_name: string | null;
+            id: string;
+            last_name: string | null;
+            unsubscribed: boolean;
+            updated_at: string | null;
+        };
+        ContactImportConflictMode: "upsert" | "skip";
+        ContactImportDto: {
+            completed_at: string | null;
+            consent_source: string | null;
+            consented_count: number;
+            created_at: string;
+            created_count: number;
+            error_count: number;
+            errors: components["schemas"]["ContactImportErrorDto"][];
+            failure_reason: string | null;
+            filename: string | null;
+            id: string;
+            on_conflict: components["schemas"]["ContactImportConflictMode"];
+            processed_rows: number;
+            size_bytes: number;
+            skipped_count: number;
+            started_at: string | null;
+            status: components["schemas"]["ContactImportStatus"];
+            topic_ids: string[];
+            total_rows: number;
+            updated_count: number;
+        };
+        ContactImportErrorDto: {
+            error: string;
+            line: number;
+        };
+        ContactImportStatus: "queued" | "processing" | "completed" | "failed";
+        ContactPropertyDto: {
+            created_at: string;
+            fallback_value: (string | number) | null;
+            id: string;
+            key: string;
+            type: components["schemas"]["ContactPropertyType"];
+            updated_at: string;
+        };
+        ContactPropertyType: "string" | "number";
+        ContactSegmentsResponseDto: {
+            contact_id: string;
+            data: components["schemas"]["SegmentDto"][];
+        };
+        ContactTopicDto: {
+            default_subscription: components["schemas"]["Subscription"];
+            description: string | null;
+            id: string;
+            name: string;
+            reason: components["schemas"]["SubscriptionReason"];
+            subscribed: boolean;
+            subscription: components["schemas"]["Subscription"] | null;
+            visibility: components["schemas"]["TopicVisibility"];
+        };
+        ContactTopicsResponseDto: {
+            contact_id: string;
+            data: components["schemas"]["ContactTopicDto"][];
+        };
+        ContactUpdatedEvent: {
+            created_at: string;
+            data: components["schemas"]["ContactEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "contact.updated";
+            workspace_id?: string;
+        };
+        CreateBroadcastDto: {
+            from?: string | null;
+            html?: string | null;
+            name: string;
+            rate_per_minute?: number | null;
+            scheduled_at?: string | null;
+            segment_id?: string | null;
+            subject?: string | null;
+            template_name?: string | null;
+            text?: string | null;
+            topic_id?: string | null;
+        };
+        CreateContactDto: {
+            consent?: components["schemas"]["ConsentDto"] | null;
+            email: string;
+            first_name?: string | null;
+            last_name?: string | null;
+            properties?: {
+                [key: string]: string | number;
+            };
+            topics?: components["schemas"]["TopicSubscriptionInputDto"][];
+            unsubscribed?: boolean;
+        };
+        CreateContactImportDto: {
+            consent_source?: string;
+            csv: string;
+            filename?: string;
+            on_conflict: "upsert" | "skip";
+            topic_ids?: string[];
+        };
+        CreateContactPropertyDto: {
+            fallback_value?: (string | number) | null;
+            key: string;
+            type: "string" | "number";
+        };
+        CreateDomainDto: {
+            capabilities?: components["schemas"]["DomainCapabilitiesInputDto"];
+            click_tracking?: boolean;
+            custom_return_path?: string;
+            fqdn?: string;
+            intent?: "receive" | "send" | "both";
+            name?: string;
+            open_tracking?: boolean;
+            region?: string;
+            tls?: "opportunistic" | "enforced";
+            tracking_subdomain?: string;
+        };
+        CreateMailboxDto: {
+            display_name?: string;
+            domain_id: string;
+            local_part: string;
+            retention_days?: number;
+        };
+        CreateSegmentDto: {
+            description?: string | null;
+            name: string;
+            rule?: components["schemas"]["SegmentRuleDto"] | null;
+        };
+        CreateShareLinkDto: {
+            email_to?: string[];
+            expires_in_days?: number;
+        };
+        CreateTopicDto: {
+            default_subscription: "opt_in" | "opt_out";
+            description?: string | null;
+            name: string;
+            visibility?: "public" | "private";
+        };
+        CreateWebhookEndpointDto: {
+            description?: string | null;
+            domain_id?: string | null;
+            enabled?: boolean;
+            event_types?: ("email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted" | "message.sent" | "message.delivered" | "message.deferred" | "message.bounced" | "message.complained" | "message.failed")[];
+            events?: ("email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted" | "message.sent" | "message.delivered" | "message.deferred" | "message.bounced" | "message.complained" | "message.failed")[];
+            url: string;
+        };
+        CreatedShareLinkDto: {
+            api_url: string;
+            created_at: string;
+            created_by: string | null;
+            domain_id: string;
+            emailed_to: string[];
+            emailed_to_count: number;
+            expires_at: string;
+            id: string;
+            last_viewed_at: string | null;
+            revoked_at: string | null;
+            status: components["schemas"]["ShareLinkStatus"];
+            url: string;
+        };
+        DefaultSenderDto: {
+            address: string;
+            domain_id: string | null;
+            domain_status: components["schemas"]["SenderDomainStatus"];
+            verified: boolean;
+        };
+        DefaultSenderSkippedSendsDto: {
+            count: number;
+            last_at: string | null;
+            last_template: string | null;
+        };
+        DeleteByRecipientResponseDto: {
+            deleted: number;
+        };
+        DeliverabilityBlockSignalDto: {
+            count: number;
+            detail: string;
+        };
+        DeliverabilityDomainDto: {
+            dmarc: components["schemas"]["DmarcGradeDto"] | null;
+            fqdn: string;
+            status: components["schemas"]["DomainStatus"];
+        };
+        DeliverabilityDto: {
+            block_signals: components["schemas"]["DeliverabilityBlockSignalDto"][];
+            bounced: number;
+            confirmed: number;
+            confirmed_rate: number;
+            deferred: number;
+            domains: components["schemas"]["DeliverabilityDomainDto"][];
+            left_queue: number;
+            negative: number;
+            negative_rate: number;
+            queued: number;
+            summary: string;
+            verdict: components["schemas"]["DeliverabilityVerdict"];
+            window_days: number;
+        };
+        DeliverabilityVerdict: "no_data" | "healthy" | "unconfirmed" | "degraded" | "blocked";
+        DmarcAlignmentMode: "r" | "s";
+        DmarcGradeDto: {
+            adkim: components["schemas"]["DmarcAlignmentMode"] | null;
+            aspf: components["schemas"]["DmarcAlignmentMode"] | null;
+            domain_policy: components["schemas"]["DmarcPolicy"] | null;
+            host: string | null;
+            location: components["schemas"]["DmarcRecordLocation"];
+            pct: number | null;
+            policy: components["schemas"]["DmarcPolicy"] | null;
+            record: string | null;
+            rua: string[];
+            subdomain_policy: components["schemas"]["DmarcPolicy"] | null;
+            warning: string | null;
+        };
+        DmarcPolicy: "none" | "quarantine" | "reject";
+        DmarcRecordLocation: "subdomain" | "organizational" | "none";
+        DnsApplyAction: "create" | "update" | "skip";
+        DnsApplyConflictDto: {
+            code: components["schemas"]["DnsConflictCode"];
+            host: string;
+            message: string;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            severity: components["schemas"]["DnsConflictSeverity"];
+            suggested_value?: string;
+        };
+        DnsApplyCountsDto: {
+            create: number;
+            failed: number;
+            skip: number;
+            update: number;
+        };
+        DnsApplyPlanItemDto: {
+            action: components["schemas"]["DnsApplyAction"];
+            after: string | null;
+            before: string | null;
+            conflicts: components["schemas"]["DnsRecordConflictDto"][];
+            error: string | null;
+            existing: string[];
+            host: string;
+            name_relative: string;
+            note: string | null;
+            optional: boolean;
+            priority: number | null;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            required: boolean;
+            result: components["schemas"]["DnsApplyRecordResult"] | null;
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        DnsApplyProvider: "cloudflare" | "digitalocean";
+        DnsApplyRecordResult: "created" | "updated" | "unchanged" | "failed";
+        DnsApplyResultDto: {
+            applied: boolean;
+            conflicts: components["schemas"]["DnsApplyConflictDto"][];
+            counts: components["schemas"]["DnsApplyCountsDto"];
+            dmarc_available: boolean;
+            dns_records: components["schemas"]["DomainDnsRecordsDto"] | null;
+            domain_id: string;
+            dry_run: boolean;
+            fqdn: string;
+            plan: components["schemas"]["DnsApplyPlanItemDto"][];
+            provider: components["schemas"]["DnsApplyProvider"];
+            warnings: components["schemas"]["DnsApplyWarning"][];
+            zone: string;
+        };
+        DnsApplyWarning: "token_scope_broader_than_zone" | "dmarc_lookup_failed" | "partially_applied";
+        DnsConflictCode: "spf_multiple" | "spf_merge" | "spf_lookup_limit" | "cname_at_host" | "mail_from_mx_multiple" | "dmarc_duplicate" | "dkim_selector_taken" | "mx_foreign";
+        DnsConflictSeverity: "blocking" | "warning";
+        DnsInstructionDto: {
+            host: string;
+            priority?: number;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            required: boolean;
+            ttl?: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        DnsProviderId: "cloudflare" | "digitalocean" | "namecheap" | "godaddy" | "squarespace" | "route53" | "porkbun" | "vercel" | "netlify" | "gandi" | "hover" | "other";
+        DnsProviderLookupSource: "ns" | "domain_connect";
+        DnsProviderSource: "user" | "detected";
+        DnsRecordConflictDto: {
+            code: components["schemas"]["DnsConflictCode"];
+            message: string;
+            severity: components["schemas"]["DnsConflictSeverity"];
+            suggested_value?: string;
+        };
+        DnsRecordPurpose: "dkim" | "mx" | "verification" | "spf" | "mail_from_mx" | "mail_from_spf" | "dmarc";
+        DnsRecordState: "missing" | "mismatch" | "conflict" | "propagating" | "verified";
+        DnsRecordStatusDto: {
+            conflicts: components["schemas"]["DnsRecordConflictDto"][];
+            covered_by: string | null;
+            first_verified_at: string | null;
+            found: string[];
+            hint: string | null;
+            host: string;
+            id: string | null;
+            last_changed_at: string | null;
+            last_checked_at: string | null;
+            name_relative: string;
+            priority: number | null;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            required: boolean;
+            state: components["schemas"]["DnsRecordState"];
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        DnsRecordType: "TXT" | "MX";
+        DomainCapabilitiesDto: {
+            receiving: components["schemas"]["DomainCapabilityState"];
+            sending: components["schemas"]["DomainCapabilityState"];
+        };
+        DomainCapabilitiesInputDto: {
+            receiving?: "enabled" | "disabled";
+            sending?: "enabled" | "disabled";
+        };
+        DomainCapabilityState: "enabled" | "disabled";
+        DomainConnectStartDto: {
+            expires_at: string;
+            includes_dmarc: boolean;
+            provider_name: string;
+            url: string;
+            zone: string;
+        };
+        DomainConnectUnavailableReason: "no_record" | "settings_unreachable" | "template_not_onboarded" | "lookup_failed" | "disabled";
+        DomainCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["DomainCreatedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "domain.created";
+            workspace_id?: string;
+        };
+        DomainCreatedEventDataDto: {
+            created_at: string | null;
+            fqdn: string;
+            health: string;
+            id: string;
+            intent: string;
+            status: string;
+        };
+        DomainDeletedEvent: {
+            created_at: string;
+            data: components["schemas"]["DomainDeletedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "domain.deleted";
+            workspace_id?: string;
+        };
+        DomainDeletedEventDataDto: {
+            fqdn: string;
+            health: string;
+            id: string;
+            status: string;
+        };
+        DomainDetailDto: {
+            capabilities: components["schemas"]["DomainCapabilitiesDto"];
+            click_tracking: boolean;
+            created_at: string;
+            dkim_public_key: string | null;
+            dkim_selector: string | null;
+            dmarc_grade: components["schemas"]["DmarcGradeDto"] | null;
+            dmarc_managed: boolean;
+            dns_check_results: {
+                [key: string]: unknown;
+            } | null;
+            dns_instructions: components["schemas"]["DnsInstructionDto"][];
+            dns_provider: components["schemas"]["DomainDnsProviderDto"] | null;
+            dns_provider_detected: components["schemas"]["DnsProviderId"] | null;
+            dns_provider_id: string | null;
+            dns_zone: string | null;
+            events: components["schemas"]["DomainEventDto"][];
+            fqdn: string;
+            health: components["schemas"]["DomainHealth"];
+            health_changed_at: string | null;
+            health_grace_ends_at: string | null;
+            id: string;
+            intent: components["schemas"]["DomainIntent"];
+            last_dns_check_at: string | null;
+            mail_from_status: components["schemas"]["SesMailFromStatus"] | null;
+            mail_from_subdomain: string | null;
+            name: string;
+            open_tracking: boolean;
+            owner_account_id: string | null;
+            recommended_pending: number;
+            records: components["schemas"]["DomainRecordDto"][];
+            region: string | null;
+            region_name: string | null;
+            seq_id: string;
+            ses_dkim_status: components["schemas"]["SesDkimStatus"] | null;
+            setup_method: components["schemas"]["DomainSetupMethod"] | null;
+            status: components["schemas"]["DomainStatus"];
+            test_address: string;
+            test_received_at: string | null;
+            test_token: string;
+            tls: components["schemas"]["DomainTlsMode"];
+            tracking_subdomain: string | null;
+            verification_status: components["schemas"]["DomainVerificationStatus"];
+            verification_token: string | null;
+            verified_at: string | null;
+            workspace_id: string;
+        };
+        DomainDnsProviderDto: {
+            id: string;
+            name: string;
+            source: components["schemas"]["DnsProviderSource"];
+        };
+        DomainDnsRecordsDto: {
+            domain_id: string;
+            fqdn: string;
+            health: components["schemas"]["DomainHealth"];
+            health_changed_at: string | null;
+            health_grace_ends_at: string | null;
+            last_checked_at: string | null;
+            records: components["schemas"]["DnsRecordStatusDto"][];
+            ses: components["schemas"]["DomainSesStatusDto"];
+            status: components["schemas"]["DomainStatus"];
+            zone: string | null;
+        };
+        DomainDto: {
+            capabilities: components["schemas"]["DomainCapabilitiesDto"];
+            click_tracking: boolean;
+            created_at: string;
+            dkim_public_key: string | null;
+            dkim_selector: string | null;
+            dmarc_grade: components["schemas"]["DmarcGradeDto"] | null;
+            dmarc_managed: boolean;
+            dns_check_results: {
+                [key: string]: unknown;
+            } | null;
+            dns_instructions: components["schemas"]["DnsInstructionDto"][];
+            dns_provider: components["schemas"]["DomainDnsProviderDto"] | null;
+            dns_provider_detected: components["schemas"]["DnsProviderId"] | null;
+            dns_provider_id: string | null;
+            dns_zone: string | null;
+            fqdn: string;
+            health: components["schemas"]["DomainHealth"];
+            health_changed_at: string | null;
+            health_grace_ends_at: string | null;
+            id: string;
+            intent: components["schemas"]["DomainIntent"];
+            last_dns_check_at: string | null;
+            mail_from_status: components["schemas"]["SesMailFromStatus"] | null;
+            mail_from_subdomain: string | null;
+            name: string;
+            open_tracking: boolean;
+            owner_account_id: string | null;
+            recommended_pending: number;
+            records: components["schemas"]["DomainRecordDto"][];
+            region: string | null;
+            region_name: string | null;
+            seq_id: string;
+            ses_dkim_status: components["schemas"]["SesDkimStatus"] | null;
+            setup_method: components["schemas"]["DomainSetupMethod"] | null;
+            status: components["schemas"]["DomainStatus"];
+            test_address: string;
+            test_received_at: string | null;
+            test_token: string;
+            tls: components["schemas"]["DomainTlsMode"];
+            tracking_subdomain: string | null;
+            verification_status: components["schemas"]["DomainVerificationStatus"];
+            verification_token: string | null;
+            verified_at: string | null;
+            workspace_id: string;
+        };
+        DomainEventDto: {
+            detail: {
+                [key: string]: unknown;
+            };
+            domain_id: string;
+            id: string;
+            occurred_at: string;
+            type: components["schemas"]["DomainEventType"];
+        };
+        DomainEventType: "added" | "records_found" | "verified" | "degraded" | "failing" | "recovered" | "mail_from_verified" | "dmarc_detected" | "check_failed" | "deleted";
+        DomainHealth: "ok" | "degraded" | "failing";
+        DomainIntent: "receive" | "send" | "both";
+        DomainLookupDto: {
+            domain_connect: components["schemas"]["LookupDomainConnectDto"];
+            existing: components["schemas"]["LookupExistingDto"];
+            fqdn: string;
+            provider: components["schemas"]["LookupProviderDto"];
+            suggestion: components["schemas"]["LookupSuggestionDto"] | null;
+            zone: string | null;
+        };
+        DomainRecordChangeDto: {
+            from: string | null;
+            purpose: string;
+            to: string;
+        };
+        DomainRecordDto: {
+            name: string;
+            priority?: number;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            record: components["schemas"]["DomainRecordKind"];
+            required: boolean;
+            status: components["schemas"]["DomainRecordStatus"];
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        DomainRecordKind: "DKIM" | "SPF" | "MX" | "DMARC" | "Verification";
+        DomainRecordStatus: "not_started" | "pending" | "verified" | "failed" | "temporary_failure";
+        DomainSesStatusDto: {
+            dkim_status: components["schemas"]["SesDkimStatus"] | null;
+            enabled: boolean;
+            mail_from_status: components["schemas"]["SesMailFromStatus"] | null;
+        };
+        DomainSetupMethod: "manual" | "domain_connect" | "provider_api";
+        DomainStatus: "pending" | "active" | "disabled";
+        DomainTestSendDto: {
+            from?: string;
+            to: string;
+        };
+        DomainTlsMode: "opportunistic";
+        DomainUpdatedEvent: {
+            created_at: string;
+            data: components["schemas"]["DomainUpdatedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "domain.updated";
+            workspace_id?: string;
+        };
+        DomainUpdatedEventDataDto: {
+            changes: components["schemas"]["DomainRecordChangeDto"][];
+            fqdn: string;
+            health: string;
+            id: string;
+            status: string;
+        };
+        DomainVerificationStatus: "not_started" | "pending" | "partially_verified" | "verified" | "temporary_failure" | "failed" | "disabled";
+        DomainVerifiedEvent: {
+            created_at: string;
+            data: components["schemas"]["DomainVerifiedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "domain.verified";
+            workspace_id?: string;
+        };
+        DomainVerifiedEventDataDto: {
+            fqdn: string;
+            health: string;
+            id: string;
+            status: string;
+            verified_at: string | null;
+        };
+        EmailBouncedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailBouncedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.bounced";
+            workspace_id?: string;
+        };
+        EmailBouncedEventDataDto: {
+            action?: string;
+            bounce_subtype?: string;
+            bounce_type?: string;
+            bounced_at?: string;
+            diagnostic_code?: string;
+            email_id?: string;
+            event?: string;
+            feedback_id?: string;
+            from: string;
+            message_id?: string;
+            occurred_at?: string;
+            remote_mta?: string;
+            reporting_mta?: string;
+            ses_event?: string;
+            smtp_code?: string;
+            smtp_response?: string;
+            source?: string;
+            to: string;
+        };
+        EmailCanceledEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailCanceledEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.canceled";
+            workspace_id?: string;
+        };
+        EmailCanceledEventDataDto: {
+            canceled_at: string;
+            email_id: string;
+            from: string;
+            to: string;
+        };
+        EmailClickedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailClickedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.clicked";
+            workspace_id?: string;
+        };
+        EmailClickedEventDataDto: {
+            clicked_at: string;
+            email_id: string;
+            link: string;
+            to: string;
+        };
+        EmailComplainedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailComplainedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.complained";
+            workspace_id?: string;
+        };
+        EmailComplainedEventDataDto: {
+            complaint_subtype?: string;
+            email_id?: string;
+            event?: string;
+            feedback_id?: string;
+            feedback_type?: string;
+            from: string;
+            message_id?: string;
+            occurred_at?: string;
+            reporting_mta?: string;
+            ses_event?: string;
+            source?: string;
+            to: string;
+            user_agent?: string;
+        };
+        EmailDeliveredEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailDeliveredEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.delivered";
+            workspace_id?: string;
+        };
+        EmailDeliveredEventDataDto: {
+            email_id?: string;
+            event?: string;
+            from: string;
+            message_id?: string;
+            occurred_at?: string;
+            processing_time_ms?: number;
+            remote_mta?: string;
+            reporting_mta?: string;
+            ses_event?: string;
+            smtp_response?: string;
+            source?: string;
+            to: string;
+        };
+        EmailDeliveryDelayedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailDeliveryDelayedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.delivery_delayed";
+            workspace_id?: string;
+        };
+        EmailDeliveryDelayedEventDataDto: {
+            action?: string;
+            bounce_subtype?: string;
+            bounce_type?: string;
+            deferred_at?: string;
+            delay_type?: string;
+            diagnostic_code?: string;
+            email_id?: string;
+            event?: string;
+            feedback_id?: string;
+            from: string;
+            message_id?: string;
+            occurred_at?: string;
+            remote_mta?: string;
+            reporting_mta?: string;
+            retry_until?: string;
+            ses_event?: string;
+            smtp_code?: string;
+            smtp_response?: string;
+            source?: string;
+            to: string;
+        };
+        EmailDetailDto: {
+            bcc: string[];
+            cc: string[];
+            created_at: string;
+            from: string;
+            headers: {
+                [key: string]: string;
+            };
+            id: string;
+            last_event: components["schemas"]["MessageStatus"];
+            messages: components["schemas"]["EmailMessageSummaryDto"][];
+            recipient_count: number;
+            reply_to: string[];
+            subject: string | null;
+            tags: components["schemas"]["EmailTagDto"][];
+            template_name: string | null;
+            to: string[];
+        };
+        EmailDto: {
+            bcc: string[];
+            cc: string[];
+            created_at: string;
+            from: string;
+            id: string;
+            last_event: components["schemas"]["MessageStatus"];
+            recipient_count: number;
+            reply_to: string[];
+            subject: string | null;
+            tags: components["schemas"]["EmailTagDto"][];
+            template_name: string | null;
+            to: string[];
+        };
+        EmailFailedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailFailedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.failed";
+            workspace_id?: string;
+        };
+        EmailFailedEventDataDto: {
+            email_id?: string;
+            error?: string | null;
+            event?: string;
+            failed_at?: string;
+            from: string;
+            message_id?: string;
+            occurred_at?: string;
+            reason?: string;
+            reporting_mta?: string;
+            ses_event?: string;
+            source?: string;
+            template_name?: string;
+            to: string;
+            transport?: string | null;
+        };
+        EmailMessageSummaryDto: {
+            id: string;
+            status: components["schemas"]["MessageStatus"];
+            to: string;
+        };
+        EmailMetricsCountersDto: {
+            bounce_rate: number | null;
+            bounced: number;
+            complained: number;
+            complaint_rate: number | null;
+            deferred: number;
+            delivered: number;
+            delivery_rate: number | null;
+            failed: number;
+            sent: number;
+            suppressed: number;
+            tracked: number;
+            unconfirmed: number;
+        };
+        EmailMetricsDataItemDto: {
+            bounce_rate: number | null;
+            bounced: number;
+            complained: number;
+            complaint_rate: number | null;
+            deferred: number;
+            delivered: number;
+            delivery_rate: number | null;
+            domain_id?: string | null;
+            domain_name?: string | null;
+            failed: number;
+            period: string | null;
+            sent: number;
+            suppressed: number;
+            tracked: number;
+            unconfirmed: number;
+        };
+        EmailMetricsGranularity: "hourly" | "daily";
+        EmailMetricsMeasuredDto: {
+            complaint: boolean;
+            delivery: boolean;
+        };
+        EmailMetricsObject: "metrics";
+        EmailMetricsResponseDto: {
+            bounce_source: components["schemas"]["BounceSource"];
+            data: components["schemas"]["EmailMetricsDataItemDto"][];
+            end_date: string;
+            granularity: components["schemas"]["EmailMetricsGranularity"];
+            measured: components["schemas"]["EmailMetricsMeasuredDto"];
+            object: components["schemas"]["EmailMetricsObject"];
+            start_date: string;
+            timezone: string;
+            totals: components["schemas"]["EmailMetricsCountersDto"];
+        };
+        EmailOpenedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailOpenedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.opened";
+            workspace_id?: string;
+        };
+        EmailOpenedEventDataDto: {
+            email_id: string;
+            opened_at: string;
+            to: string;
+        };
+        EmailPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        EmailReceivedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailReceivedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.received";
+            workspace_id?: string;
+        };
+        EmailReceivedEventDataDto: {
+            from: string;
+            received_at: string;
+            subject: string | null;
+            to: string;
+        };
+        EmailScheduledEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailScheduledEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.scheduled";
+            workspace_id?: string;
+        };
+        EmailScheduledEventDataDto: {
+            email_id: string;
+            from: string;
+            scheduled_at: string;
+            to: string;
+        };
+        EmailSentEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailSentEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.sent";
+            workspace_id?: string;
+        };
+        EmailSentEventDataDto: {
+            email_id?: string;
+            from: string;
+            message_id?: string | null;
+            sent_at: string;
+            smtp_response?: string | null;
+            to: string;
+            transport?: string | null;
+        };
+        EmailSkippedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailSkippedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.skipped";
+            workspace_id?: string;
+        };
+        EmailSkippedEventDataDto: {
+            reason: string;
+            skipped_at: string;
+            template: string;
+            to: string;
+        };
+        EmailSuppressedEvent: {
+            created_at: string;
+            data: components["schemas"]["EmailSuppressedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "email.suppressed";
+            workspace_id?: string;
+        };
+        EmailSuppressedEventDataDto: {
+            from: string;
+            reason: string;
+            refused_at: string;
+            template?: string;
+            to: string;
+            topic_id?: string;
+        };
+        EmailTagDto: {
+            name: string;
+            value: string;
+        };
+        EmailTemplateRefDto: {
+            data?: {
+                [key: string]: unknown;
+            };
+            name: string;
+        };
+        ErrorParamDto: {
+            code: string;
+            message: string;
+            param: string;
+        };
+        ErrorResponseDto: {
+            code: components["schemas"]["MailErrorCode"];
+            details?: {
+                [key: string]: unknown;
+            };
+            errors: components["schemas"]["ErrorParamDto"][];
+            message: string | string[];
+            request_id: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        GetSmtpConfigResponseDto: {
+            data: components["schemas"]["SmtpConfigDto"] | null;
+        };
+        GitHubBranchDto: {
+            name: string;
+        };
+        GitHubRepoDto: {
+            default_branch: string;
+            full_name: string;
+            html_url: string;
+            private: boolean;
+            updated_at: string;
+        };
+        IntegrationDetailDto: {
+            account_avatar_url: string | null;
+            account_login: string;
+            credentials_redacted: {
+                [key: string]: unknown;
+            };
+            display_name: string;
+            last_error: string | null;
+            last_synced_at: string | null;
+            provider: string;
+            settings: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["IntegrationStatus"];
+            updated_at: string;
+        };
+        IntegrationListItemDto: {
+            account_avatar_url: string | null;
+            account_login: string;
+            display_name: string;
+            last_error: string | null;
+            last_synced_at: string | null;
+            provider: string;
+            settings: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["IntegrationStatus"];
+            updated_at: string;
+        };
+        IntegrationStatus: "active" | "error" | "revoked";
+        IntegrationSyncState: "running" | "completed" | "failed";
+        LintFindingDto: {
+            id: string;
+            message: string;
+            severity: components["schemas"]["LintSeverity"];
+            suggestion?: string;
+        };
+        LintResultDto: {
+            findings: components["schemas"]["LintFindingDto"][];
+            score: number;
+        };
+        LintSeverity: "error" | "warn" | "info";
+        LintTemplateDto: {
+            body_html: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            subject?: string;
+        };
+        ListBroadcastRecipientsResponseDto: {
+            data: components["schemas"]["BroadcastRecipientDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListBroadcastsResponseDto: {
+            data: components["schemas"]["BroadcastDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListContactImportsResponseDto: {
+            data: components["schemas"]["ContactImportDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListContactPropertiesResponseDto: {
+            data: components["schemas"]["ContactPropertyDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListContactsResponseDto: {
+            data: components["schemas"]["ContactDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListDomainEventsResponseDto: {
+            data: components["schemas"]["DomainEventDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListDomainsResponseDto: {
+            data: components["schemas"]["DomainDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListEmailsResponseDto: {
+            data: components["schemas"]["EmailDto"][];
+            pagination: components["schemas"]["EmailPaginationDto"];
+        };
+        ListIntegrationsResponseDto: {
+            data: components["schemas"]["IntegrationListItemDto"][];
+        };
+        ListMailboxesResponseDto: {
+            data: components["schemas"]["MailboxDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListMessagesResponseDto: {
+            data: components["schemas"]["MessageDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListOutboundMessagesResponseDto: {
+            data: components["schemas"]["OutboundMessageDto"][];
+            pagination: components["schemas"]["OutboundMessagePaginationDto"];
+        };
+        ListReceivedEmailsResponseDto: {
+            data: components["schemas"]["ReceivedEmailDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListSegmentContactsResponseDto: {
+            data: components["schemas"]["ContactDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListSegmentsResponseDto: {
+            data: components["schemas"]["SegmentDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListShareLinksResponseDto: {
+            data: components["schemas"]["ShareLinkDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListSmtpConfigsResponseDto: {
+            data: components["schemas"]["SmtpConfigDto"][];
+        };
+        ListSuppressionResponseDto: {
+            data: components["schemas"]["SuppressionEntryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListTemplateTagsResponseDto: {
+            data: string[];
+        };
+        ListTemplatesResponseDto: {
+            data: components["schemas"]["TemplateDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListTopicsResponseDto: {
+            data: components["schemas"]["TopicDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListWebhookAttemptsResponseDto: {
+            data: components["schemas"]["OutboundWebhookAttemptDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ListWebhookEndpointsResponseDto: {
+            data: components["schemas"]["WebhookEndpointDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ListWebhookEventTypesResponseDto: {
+            data: components["schemas"]["WebhookEventTypeDto"][];
+        };
+        ListWebhookEventsResponseDto: {
+            data: components["schemas"]["WebhookEventDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        LookupDmarcDto: {
+            host: string;
+            record: string;
+        };
+        LookupDomainConnectDto: {
+            available: boolean;
+            provider_id: string | null;
+            provider_name: string | null;
+            reason: components["schemas"]["DomainConnectUnavailableReason"] | null;
+            supported: boolean;
+        };
+        LookupExistingDto: {
+            dkim_selector_taken: boolean;
+            dmarc: components["schemas"]["LookupDmarcDto"] | null;
+            mx: string[];
+            spf: components["schemas"]["LookupSpfDto"][];
+        };
+        LookupProviderDto: {
+            id: components["schemas"]["DnsProviderId"];
+            name: string;
+            nameservers: string[];
+            source: components["schemas"]["DnsProviderLookupSource"];
+        };
+        LookupSpfDto: {
+            host: string;
+            record: string;
+        };
+        LookupSuggestionDto: {
+            fqdn: string;
+            reason: string;
+        };
+        MailErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace") | string;
+        MailStatsInWindowDto: {
+            bounce_rate: number | null;
+            bounced: number;
+            complained: number;
+            complaint_rate: number | null;
+            deferred: number;
+            delivered: number;
+            delivery_rate: number | null;
+            emails: number;
+            failed: number;
+            sent: number;
+            suppressed: number;
+            tracked: number;
+            unconfirmed: number;
+        };
+        MailStatsSeriesDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["StatsSeriesMetric"];
+            points: components["schemas"]["StatsSeriesPointDto"][];
+        };
+        MailStatsTotalsDto: {
+            attention_domains: number;
+            domains: number;
+            verified_domains: number;
+        };
+        MailWorkspaceStatsDto: {
+            generated_at: string;
+            in_window: components["schemas"]["MailStatsInWindowDto"];
+            last_activity_at: string | null;
+            series: components["schemas"]["MailStatsSeriesDto"];
+            totals: components["schemas"]["MailStatsTotalsDto"];
+            window: components["schemas"]["StatsWindow"];
+        };
+        MailboxDto: {
+            created_at: string;
+            display_name: string | null;
+            domain_id: string;
+            id: string;
+            local_part: string;
+            owner_account_id: string | null;
+            retention_days: number;
+            seq_id: string;
+            status: components["schemas"]["MailboxStatus"];
+            workspace_id: string;
+        };
+        MailboxStatus: "active" | "disabled";
+        MessageAttachmentDto: {
+            content_id: string | null;
+            content_type: string;
+            filename: string | null;
+            position: number;
+            sha256: string;
+            size_bytes: number;
+        };
+        MessageDetailDto: {
+            attachments: components["schemas"]["MessageAttachmentDto"][];
+            body_preview: string | null;
+            cc_addresses: string[];
+            deleted_at: string | null;
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            envelope_to: string;
+            from_address: string;
+            from_domain: string;
+            from_local: string;
+            id: string;
+            mailbox_id: string;
+            quarantined: boolean;
+            raw_object_key: string;
+            read_at: string | null;
+            received_at: string;
+            rfc822_message_id: string | null;
+            seq_id: string;
+            size_bytes: number;
+            spam_score: string | null;
+            spam_verdict: string | null;
+            spf_result: string | null;
+            subject: string | null;
+            to_addresses: string[];
+        };
+        MessageDto: {
+            body_preview: string | null;
+            cc_addresses: string[];
+            deleted_at: string | null;
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            envelope_to: string;
+            from_address: string;
+            from_domain: string;
+            from_local: string;
+            id: string;
+            mailbox_id: string;
+            quarantined: boolean;
+            raw_object_key: string;
+            read_at: string | null;
+            received_at: string;
+            rfc822_message_id: string | null;
+            seq_id: string;
+            size_bytes: number;
+            spam_score: string | null;
+            spam_verdict: string | null;
+            spf_result: string | null;
+            subject: string | null;
+            to_addresses: string[];
+        };
+        MessageEventDto: {
+            detail: {
+                [key: string]: unknown;
+            };
+            id: string;
+            occurred_at: string;
+            type: components["schemas"]["MessageEventType"];
+        };
+        MessageEventType: "queued" | "sent" | "delivered" | "deferred" | "bounced" | "complained" | "failed" | "suppressed";
+        MessageSource: "api_key" | "dashboard" | "platform" | "test_send";
+        MessageStatus: "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "suppressed" | "deferred";
+        MessageTimelineResponseDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["TimelineMetric"];
+            points: components["schemas"]["TimelinePointDto"][];
+        };
+        MessageTransport: "smtp" | "ses";
+        OutboundMessageDetailDto: {
+            api_key_id: string | null;
+            bcc: string[] | null;
+            bounce_code: string | null;
+            bounce_detail: string | null;
+            bounce_subtype: string | null;
+            bounce_type: components["schemas"]["BounceType"] | null;
+            cc: string[] | null;
+            created_at: string;
+            deferral_count: number;
+            deferred_at: string | null;
+            delivered_at: string | null;
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            domain_id: string | null;
+            email_id: string | null;
+            events: components["schemas"]["MessageEventDto"][];
+            from_address: string;
+            id: string;
+            last_event: components["schemas"]["MessageEventDto"] | null;
+            reply_to: string[] | null;
+            sent_at: string | null;
+            smtp_transcript: string | null;
+            source: components["schemas"]["MessageSource"];
+            spf_result: string | null;
+            status: components["schemas"]["MessageStatus"];
+            subject: string | null;
+            tags: components["schemas"]["EmailTagDto"][] | null;
+            template_name: string | null;
+            to_address: string;
+            transport: components["schemas"]["MessageTransport"] | null;
+            workspace_id: string;
+        };
+        OutboundMessageDto: {
+            api_key_id: string | null;
+            bcc: string[] | null;
+            bounce_code: string | null;
+            bounce_detail: string | null;
+            bounce_subtype: string | null;
+            bounce_type: components["schemas"]["BounceType"] | null;
+            cc: string[] | null;
+            created_at: string;
+            deferral_count: number;
+            deferred_at: string | null;
+            delivered_at: string | null;
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            domain_id: string | null;
+            email_id: string | null;
+            from_address: string;
+            id: string;
+            reply_to: string[] | null;
+            sent_at: string | null;
+            smtp_transcript: string | null;
+            source: components["schemas"]["MessageSource"];
+            spf_result: string | null;
+            status: components["schemas"]["MessageStatus"];
+            subject: string | null;
+            tags: components["schemas"]["EmailTagDto"][] | null;
+            template_name: string | null;
+            to_address: string;
+            transport: components["schemas"]["MessageTransport"] | null;
+            workspace_id: string;
+        };
+        OutboundMessagePaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        OutboundMessageSettingsDto: {
+            redact_bodies: boolean;
+            workspace_id: string;
+        };
+        OutboundMessageWithBodyDto: {
+            api_key_id: string | null;
+            bcc: string[] | null;
+            body_html: string | null;
+            body_text: string | null;
+            bounce_code: string | null;
+            bounce_detail: string | null;
+            bounce_subtype: string | null;
+            bounce_type: components["schemas"]["BounceType"] | null;
+            cc: string[] | null;
+            created_at: string;
+            deferral_count: number;
+            deferred_at: string | null;
+            delivered_at: string | null;
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            domain_id: string | null;
+            email_id: string | null;
+            from_address: string;
+            id: string;
+            reply_to: string[] | null;
+            sent_at: string | null;
+            smtp_transcript: string | null;
+            source: components["schemas"]["MessageSource"];
+            spf_result: string | null;
+            status: components["schemas"]["MessageStatus"];
+            subject: string | null;
+            tags: components["schemas"]["EmailTagDto"][] | null;
+            template_name: string | null;
+            to_address: string;
+            transport: components["schemas"]["MessageTransport"] | null;
+            workspace_id: string;
+        };
+        OutboundWebhookAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            domain_id: string | null;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body_truncated: string | null;
+            status_code: number | null;
+            url: string;
+        };
+        OutboundWebhookConfigDto: {
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            domain_id: string | null;
+            event_types: string[];
+            id: string;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+            workspace_id: string;
+        };
+        OutboundWebhookConfigWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            domain_id: string | null;
+            event_types: string[];
+            id: string;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            signing_secret: string;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+            workspace_id: string;
+        };
+        PaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        PreviewSegmentDto: {
+            rule: components["schemas"]["SegmentRuleDto"];
+        };
+        PreviewTemplateDto: {
+            body_html: string;
+            data?: {
+                [key: string]: unknown;
+            };
+            subject?: string;
+        };
+        PublicDnsRecordDto: {
+            conflicts: components["schemas"]["DnsRecordConflictDto"][];
+            covered_by: string | null;
+            found: string[];
+            hint: string | null;
+            host: string;
+            last_checked_at: string | null;
+            name_relative: string;
+            priority: number | null;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            required: boolean;
+            state: components["schemas"]["DnsRecordState"];
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        PublicDomainSetupDto: {
+            expires_at: string;
+            exports: components["schemas"]["PublicSetupExportsDto"];
+            fqdn: string;
+            last_checked_at: string | null;
+            records: components["schemas"]["PublicDnsRecordDto"][];
+            ses: components["schemas"]["PublicSesStatusDto"];
+            status: components["schemas"]["DomainStatus"];
+            zone: string | null;
+        };
+        PublicSesStatusDto: {
+            dkim_status: components["schemas"]["SesDkimStatus"] | null;
+            mail_from_status: components["schemas"]["SesMailFromStatus"] | null;
+        };
+        PublicSetupExportsDto: {
+            bind: string;
+            csv: string;
+        };
+        PutSendingDefaultsDto: {
+            address: string | null;
+        };
+        RawBrandDto: {
+            background_color: string | null;
+            brand_name: string | null;
+            button_radius: string | null;
+            card_background_color: string | null;
+            container_max_width: string | null;
+            extras: {
+                [key: string]: unknown;
+            } | null;
+            font_stack: string | null;
+            footer_address: string | null;
+            footer_html: string | null;
+            logo_url: string | null;
+            muted_text_color: string | null;
+            primary_color: string | null;
+            secondary_color: string | null;
+            social_links: {
+                [key: string]: unknown;
+            } | null;
+            text_color: string | null;
+            updated_at: string;
+        };
+        ReceivedEmailAttachmentDto: {
+            content_id: string | null;
+            content_type: string;
+            filename: string | null;
+            position: number;
+            sha256: string;
+            size_bytes: number;
+        };
+        ReceivedEmailDetailDto: {
+            attachment_count: number;
+            attachments: components["schemas"]["ReceivedEmailAttachmentDto"][];
+            body_preview: string | null;
+            cc: string[];
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            envelope_to: string;
+            from: string;
+            id: string;
+            mailbox_address: string;
+            mailbox_id: string;
+            read_at: string | null;
+            received_at: string;
+            rfc822_message_id: string | null;
+            size_bytes: number;
+            spam: boolean;
+            spam_verdict: components["schemas"]["SpamVerdict"] | null;
+            spf_result: string | null;
+            subject: string | null;
+            to: string[];
+        };
+        ReceivedEmailDto: {
+            attachment_count: number;
+            cc: string[];
+            dkim_result: string | null;
+            dmarc_result: string | null;
+            from: string;
+            id: string;
+            mailbox_address: string;
+            mailbox_id: string;
+            read_at: string | null;
+            received_at: string;
+            rfc822_message_id: string | null;
+            size_bytes: number;
+            spam: boolean;
+            spam_verdict: components["schemas"]["SpamVerdict"] | null;
+            spf_result: string | null;
+            subject: string | null;
+            to: string[];
+        };
+        RenderTemplateDto: {
+            data: {
+                [key: string]: unknown;
+            };
+        };
+        RenderedMessageDto: {
+            html: string;
+            subject: string;
+            text: string;
+        };
+        ReplayWebhookEventResponseDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            event_id: string;
+        };
+        ResolvedBrandTokensDto: {
+            background_color: string;
+            brand_name: string | null;
+            button_radius: string;
+            card_background_color: string;
+            container_max_width: string;
+            extras: {
+                [key: string]: string;
+            };
+            font_stack: string;
+            footer_address: string | null;
+            footer_html: string | null;
+            logo_url: string | null;
+            muted_text_color: string;
+            primary_color: string;
+            secondary_color: string;
+            social_links: {
+                [key: string]: string;
+            };
+            text_color: string;
+        };
+        RotateWebhookSecretDto: {
+            grace_hours?: number;
+        };
+        SegmentConditionDto: {
+            field: string;
+            operator: components["schemas"]["SegmentOperator"];
+            value?: string | number;
+        };
+        SegmentDto: {
+            created_at: string;
+            description: string | null;
+            id: string;
+            name: string;
+            rule: components["schemas"]["SegmentRuleDto"] | null;
+            type: components["schemas"]["SegmentType"];
+            updated_at: string;
+        };
+        SegmentMatch: "all" | "any";
+        SegmentMembershipDto: {
+            added_at: string;
+            contact_id: string;
+            segment_id: string;
+        };
+        SegmentMetricsDto: {
+            computed_at: string;
+            consented_count: number;
+            contact_count: number;
+            segment_id: string | null;
+            unsubscribed_count: number;
+            unsubscribed_share: number;
+        };
+        SegmentOperator: "equals" | "contains" | "exists";
+        SegmentPreviewDto: {
+            metrics: components["schemas"]["SegmentMetricsDto"];
+            sample: components["schemas"]["ContactDto"][];
+        };
+        SegmentRuleDto: {
+            conditions: components["schemas"]["SegmentConditionDto"][];
+            match: components["schemas"]["SegmentMatch"];
+        };
+        SegmentType: "static" | "rule";
+        SendAcceptedDto: {
+            accepted: boolean;
+            email_id: string;
+            from: string;
+            id: string | null;
+            subject: string;
+            to: string | string[];
+        };
+        SendBatchDto: {
+            messages: components["schemas"]["SendBatchRowDto"][];
+        };
+        SendBatchOpenApiResponseDto: {
+            data: components["schemas"]["SendBatchRowStatusDto"][];
+            summary: components["schemas"]["SendBatchSummaryDto"];
+        };
+        SendBatchRowDto: {
+            bcc?: string | string[];
+            cc?: string | string[];
+            data: {
+                [key: string]: unknown;
+            };
+            from: string;
+            headers?: {
+                [key: string]: string;
+            };
+            idempotency_key?: string;
+            reply_to?: string | string[];
+            subject?: string;
+            tags?: components["schemas"]["EmailTagDto"][];
+            to: string | string[];
+            topic_id?: string;
+        };
+        SendBatchRowErrorDto: {
+            code: string;
+            message: string;
+        };
+        SendBatchRowState: "accepted" | "rejected";
+        SendBatchRowStatusDto: {
+            error?: components["schemas"]["SendBatchRowErrorDto"] | null;
+            id?: string | null;
+            index: number;
+            status: components["schemas"]["SendBatchRowState"];
+        };
+        SendBatchSummaryDto: {
+            accepted: number;
+            rejected: number;
+        };
+        SendBroadcastDto: {
+            scheduled_at?: string | null;
+        };
+        SendEmailBatchDto: {
+            emails: components["schemas"]["SendEmailBatchRowDto"][];
+        };
+        SendEmailBatchRowDto: {
+            bcc?: string | string[];
+            cc?: string | string[];
+            from: string;
+            headers?: {
+                [key: string]: string;
+            };
+            html?: string;
+            idempotency_key?: string;
+            reply_to?: string | string[];
+            subject?: string;
+            tags?: components["schemas"]["EmailTagDto"][];
+            template?: components["schemas"]["EmailTemplateRefDto"];
+            text?: string;
+            to: string | string[];
+        };
+        SendEmailDto: {
+            bcc?: string | string[];
+            cc?: string | string[];
+            from: string;
+            headers?: {
+                [key: string]: string;
+            };
+            html?: string;
+            reply_to?: string | string[];
+            subject?: string;
+            tags?: components["schemas"]["EmailTagDto"][];
+            template?: components["schemas"]["EmailTemplateRefDto"];
+            text?: string;
+            to: string | string[];
+        };
+        SendEmailResponseDto: {
+            id: string;
+        };
+        SendTemplateDto: {
+            bcc?: string | string[];
+            cc?: string | string[];
+            data: {
+                [key: string]: unknown;
+            };
+            from?: string;
+            headers?: {
+                [key: string]: string;
+            };
+            reply_to?: string | string[];
+            subject?: string;
+            tags?: components["schemas"]["EmailTagDto"][];
+            to: string | string[];
+            topic_id?: string;
+        };
+        SendWebhookTestDto: {
+            event_type: "email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted";
+        };
+        SenderDomainStatus: "not_started" | "pending" | "partially_verified" | "verified" | "temporary_failure" | "failed" | "disabled" | "deleted" | "not_found";
+        SendingDefaultsDto: {
+            default_sender: components["schemas"]["DefaultSenderDto"] | null;
+            skipped_sends: components["schemas"]["DefaultSenderSkippedSendsDto"];
+            updated_at: string | null;
+        };
+        SendingDefaultsEventSenderDto: {
+            address: string;
+            domain_id: string | null;
+            domain_status: string;
+            verified: boolean;
+        };
+        SendingDefaultsUpdatedEvent: {
+            created_at: string;
+            data: components["schemas"]["SendingDefaultsUpdatedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "sending_defaults.updated";
+            workspace_id?: string;
+        };
+        SendingDefaultsUpdatedEventDataDto: {
+            default_sender: components["schemas"]["SendingDefaultsEventSenderDto"] | null;
+            previous_address: string | null;
+            updated_at: string;
+        };
+        SesDkimStatus: "PENDING" | "SUCCESS" | "FAILED" | "TEMPORARY_FAILURE" | "NOT_STARTED" | "not_enabled";
+        SesMailFromStatus: "PENDING" | "SUCCESS" | "FAILED" | "TEMPORARY_FAILURE";
+        ShareLinkDto: {
+            created_at: string;
+            created_by: string | null;
+            domain_id: string;
+            emailed_to_count: number;
+            expires_at: string;
+            id: string;
+            last_viewed_at: string | null;
+            revoked_at: string | null;
+            status: components["schemas"]["ShareLinkStatus"];
+        };
+        ShareLinkStatus: "active" | "expired" | "revoked";
+        SmtpConfigDto: {
+            created_at: string;
+            domain_id: string | null;
+            from_email: string;
+            from_name: string;
+            host: string;
+            last_verified_at: string | null;
+            last_verify_error: string | null;
+            password: string | null;
+            password_set: boolean;
+            port: number;
+            secure: boolean;
+            status: components["schemas"]["SmtpConfigStatus"];
+            updated_at: string;
+            username: string | null;
+            workspace_id: string;
+        };
+        SmtpConfigStatus: "pending" | "active" | "failed";
+        SmtpVerifyErrorDto: {
+            code: string;
+            message: string;
+        };
+        SmtpVerifyResultDto: {
+            error?: components["schemas"]["SmtpVerifyErrorDto"] | null;
+            ok: boolean;
+        };
+        SpamVerdict: "ham" | "junk" | "reject";
+        StartDomainConnectDto: {
+            include_dmarc?: boolean;
+        };
+        StartSyncResponseDto: {
+            started_at: string;
+            sync_id: string;
+        };
+        StatsGranularity: "day";
+        StatsSeriesMetric: "sent";
+        StatsSeriesPointDto: {
+            date: string;
+            value: number;
+        };
+        StatsWindow: "1d" | "7d" | "30d";
+        Subscription: "opt_in" | "opt_out";
+        SubscriptionReason: "opted_in" | "default_with_consent" | "unsubscribed" | "opted_out" | "no_consent" | "not_opted_in";
+        SuppressionAddedEvent: {
+            created_at: string;
+            data: components["schemas"]["SuppressionAddedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "suppression.added";
+            workspace_id?: string;
+        };
+        SuppressionAddedEventDataDto: {
+            added_at: string;
+            email: string;
+            reason: string | null;
+            source: string;
+        };
+        SuppressionEntryDto: {
+            added_at: string;
+            email: string;
+            id: string;
+            reason: string | null;
+            source: components["schemas"]["SuppressionSource"];
+            workspace_id: string;
+        };
+        SuppressionRemovedEvent: {
+            created_at: string;
+            data: components["schemas"]["SuppressionRemovedEventDataDto"];
+            domain_id?: string | null;
+            id: string;
+            test?: boolean;
+            type: "suppression.removed";
+            workspace_id?: string;
+        };
+        SuppressionRemovedEventDataDto: {
+            email: string;
+            removed_at: string;
+        };
+        SuppressionSource: "manual" | "bounce" | "complaint";
+        SyncStatusDto: {
+            ended_at: string | null;
+            error: string | null;
+            started_at: string;
+            status: components["schemas"]["IntegrationSyncState"];
+            summary: {
+                [key: string]: unknown;
+            } | null;
+        };
+        TemplateDto: {
+            body_html: string;
+            body_text: string | null;
+            created_at: string;
+            id: string;
+            kind: components["schemas"]["TemplateKind"];
+            name: string;
+            source: components["schemas"]["TemplateSource"];
+            source_ref: string | null;
+            source_synced_at: string | null;
+            subject: string;
+            tags: string[];
+            updated_at: string;
+            variables_schema: {
+                [key: string]: unknown;
+            } | null;
+            workspace_id: string;
+        };
+        TemplateKind: "template" | "layout" | "partial";
+        TemplateSource: "manual" | "github";
+        TemplateVariablesResponseDto: {
+            data: string[];
+        };
+        TestSendTemplateDto: {
+            data?: {
+                [key: string]: unknown;
+            };
+            from: string;
+            to: string;
+        };
+        TimelineMetric: "sent" | "bounced";
+        TimelinePointDto: {
+            count: number;
+            date: string;
+        };
+        TopicDto: {
+            created_at: string;
+            default_subscription: components["schemas"]["Subscription"];
+            description: string | null;
+            id: string;
+            name: string;
+            updated_at: string;
+            visibility: components["schemas"]["TopicVisibility"];
+        };
+        TopicSubscriptionInputDto: {
+            id: string;
+            subscription: "opt_in" | "opt_out";
+        };
+        TopicVisibility: "public" | "private";
+        UpdateBrandDto: {
+            background_color?: string;
+            brand_name?: string;
+            button_radius?: string;
+            card_background_color?: string;
+            container_max_width?: string;
+            extras?: {
+                [key: string]: string;
+            };
+            font_stack?: string;
+            footer_address?: string;
+            footer_html?: string;
+            logo_url?: string;
+            muted_text_color?: string;
+            primary_color?: string;
+            secondary_color?: string;
+            social_links?: {
+                [key: string]: string;
+            };
+            text_color?: string;
+        };
+        UpdateBroadcastDto: {
+            from?: string | null;
+            html?: string | null;
+            name?: string;
+            rate_per_minute?: number | null;
+            scheduled_at?: string | null;
+            segment_id?: string | null;
+            subject?: string | null;
+            template_name?: string | null;
+            text?: string | null;
+            topic_id?: string | null;
+        };
+        UpdateBroadcastSettingsDto: {
+            rate_per_minute: number | null;
+        };
+        UpdateContactDto: {
+            consent?: components["schemas"]["ConsentDto"] | null;
+            first_name?: string | null;
+            last_name?: string | null;
+            properties?: {
+                [key: string]: (string | number) | null;
+            };
+            unsubscribed?: boolean;
+        };
+        UpdateContactPropertyDto: {
+            fallback_value?: (string | number) | null;
+        };
+        UpdateContactTopicsDto: {
+            topics: components["schemas"]["TopicSubscriptionInputDto"][];
+        };
+        UpdateDomainDto: {
+            capabilities?: components["schemas"]["DomainCapabilitiesInputDto"];
+            click_tracking?: boolean;
+            dmarc_managed?: boolean;
+            dns_provider?: string | null;
+            intent?: "receive" | "send" | "both";
+            mail_from_subdomain?: string | null;
+            open_tracking?: boolean;
+            tls?: "opportunistic" | "enforced";
+            tracking_subdomain?: string;
+        };
+        UpdateGitHubSettingsDto: {
+            branch: string;
+            repo_full_name: string;
+            templates_path: string;
+        };
+        UpdateMailboxDto: {
+            display_name?: string;
+            retention_days?: number;
+            status?: "active" | "disabled";
+        };
+        UpdateOutboundMessageSettingsDto: {
+            redact_bodies: boolean;
+        };
+        UpdateSegmentDto: {
+            description?: string | null;
+            name?: string;
+            rule?: components["schemas"]["SegmentRuleDto"];
+        };
+        UpdateTopicDto: {
+            description?: string | null;
+            name?: string;
+            visibility?: "public" | "private";
+        };
+        UpdateWebhookEndpointDto: {
+            description?: string | null;
+            domain_id?: string | null;
+            enabled?: boolean;
+            event_types?: ("email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted" | "message.sent" | "message.delivered" | "message.deferred" | "message.bounced" | "message.complained" | "message.failed")[];
+            events?: ("email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted" | "message.sent" | "message.delivered" | "message.deferred" | "message.bounced" | "message.complained" | "message.failed")[];
+            url?: string;
+        };
+        UpsertOutboundWebhookDto: {
+            event_types: ("email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted" | "message.sent" | "message.delivered" | "message.deferred" | "message.bounced" | "message.complained" | "message.failed")[];
+            url: string;
+        };
+        UpsertSmtpConfigDto: {
+            from_email: string;
+            from_name: string;
+            host: string;
+            password?: string;
+            port: number;
+            secure: boolean;
+            username?: string;
+        };
+        UpsertTemplateDto: {
+            body_html: string;
+            body_text?: string;
+            kind?: "template" | "layout" | "partial";
+            name: string;
+            subject: string;
+            tags?: string[];
+            variables_schema?: {
+                [key: string]: unknown;
+            } | null;
+        };
+        VerifySmtpConfigDto: {
+            from_email: string;
+            from_name: string;
+            host: string;
+            password?: string;
+            port: number;
+            secure: boolean;
+            username?: string;
+        };
+        WebhookAttemptTrigger: "automatic" | "replay" | "test";
+        WebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            domain_id: string | null;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body: string | null;
+            response_body_truncated: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+            trigger: components["schemas"]["WebhookAttemptTrigger"];
+            url: string;
+        };
+        WebhookEndpointDisabledReason: "manual" | "failing";
+        WebhookEndpointDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            domain_id: string | null;
+            enabled: boolean;
+            event_types: string[];
+            events: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            legacy_slot: components["schemas"]["WebhookEndpointLegacySlot"] | null;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEndpointLegacySlot: "default" | "domain";
+        WebhookEndpointStatus: "enabled" | "disabled" | "auto_disabled";
+        WebhookEndpointWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            domain_id: string | null;
+            enabled: boolean;
+            event_types: string[];
+            events: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            legacy_slot: components["schemas"]["WebhookEndpointLegacySlot"] | null;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEventDeliveryDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            next_attempt_at: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+        };
+        WebhookEventDetailDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            domain_id: string | null;
+            email_id: string | null;
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventDto: {
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            domain_id: string | null;
+            email_id: string | null;
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
+        WebhookEventType: "email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted";
+        WebhookEventTypeDto: {
+            category: string;
+            description: string;
+            emitted: boolean;
+            example: {
+                [key: string]: unknown;
+            };
+            legacy_alias: string | null;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: {
+        RequestId: string;
+        "Retry-After": number;
+        "Retry-After-long": number;
+        "Retry-After-short": number;
+        "X-RateLimit-Limit-long": number;
+        "X-RateLimit-Limit-short": number;
+        "X-RateLimit-Remaining-long": number;
+        "X-RateLimit-Remaining-short": number;
+        "X-RateLimit-Reset-long": number;
+        "X-RateLimit-Reset-short": number;
+    };
+    pathItems: never;
+};
+
+export { ConfigurationError }
+
+export { ConflictError }
+
+export { IdempotencyKeyReuseError }
+
+export { InternalServerError }
 
 // @public
-export class Mail {
-    constructor(config?: PCClientConfig);
-    readonly client: ReturnType<typeof makeClient<paths>>;
+class Mail extends MailResources {
+    constructor(options?: ClientOptions);
+    get client(): Client<paths>;
 }
 
 // @public
-export interface paths {
+namespace Mail {
     // (undocumented)
+    type BounceSource = __BounceSource;
+    // (undocumented)
+    type BounceType = __BounceType;
+    // (undocumented)
+    type Brand = __Brand;
+    const // (undocumented)
+    BounceSource: {
+        values: readonly ["relay", "ses", "mixed", "none"];
+    };
+    // (undocumented)
+    type BrandUpdateParams = __BrandUpdateParams;
+    const // (undocumented)
+    BounceType: {
+        values: readonly ["Permanent", "Transient", "Undetermined"];
+    };
+    // (undocumented)
+    type Broadcast = __Broadcast;
+    const // (undocumented)
+    BroadcastRecipientStatus: {
+        values: readonly ["pending", "sending", "sent", "skipped", "failed", "canceled"];
+    };
+    // (undocumented)
+    type BroadcastAudience = __BroadcastAudience;
+    const // (undocumented)
+    BroadcastStatus: {
+        values: readonly ["draft", "scheduled", "sending", "sent", "canceled"];
+    };
+    // (undocumented)
+    type BroadcastAudienceParams = __BroadcastAudienceParams;
+    const // (undocumented)
+    ContactCreatedVia: {
+        values: readonly ["api", "dashboard", "import", "unsubscribe"];
+    };
+    // (undocumented)
+    type BroadcastCounts = __BroadcastCounts;
+    const // (undocumented)
+    ContactImportConflictMode: {
+        values: readonly ["upsert", "skip"];
+    };
+    // (undocumented)
+    type BroadcastCreateParams = __BroadcastCreateParams;
+    const // (undocumented)
+    ContactImportStatus: {
+        values: readonly ["queued", "processing", "completed", "failed"];
+    };
+    // (undocumented)
+    type BroadcastListParams = __BroadcastListParams;
+    const // (undocumented)
+    ContactPropertyType: {
+        values: readonly ["string", "number"];
+    };
+    // (undocumented)
+    type BroadcastRecipient = __BroadcastRecipient;
+    const // (undocumented)
+    DeliverabilityVerdict: {
+        values: readonly ["no_data", "healthy", "unconfirmed", "degraded", "blocked"];
+    };
+    // (undocumented)
+    type BroadcastRecipientListParams = __BroadcastRecipientListParams;
+    const // (undocumented)
+    DmarcAlignmentMode: {
+        values: readonly ["r", "s"];
+    };
+    // (undocumented)
+    type BroadcastRecipientStatus = __BroadcastRecipientStatus;
+    const // (undocumented)
+    DmarcPolicy: {
+        values: readonly ["none", "quarantine", "reject"];
+    };
+    // (undocumented)
+    type BroadcastSendParams = __BroadcastSendParams;
+    const // (undocumented)
+    DmarcRecordLocation: {
+        values: readonly ["subdomain", "organizational", "none"];
+    };
+    // (undocumented)
+    type BroadcastSettings = __BroadcastSettings;
+    const // (undocumented)
+    DnsApplyAction: {
+        values: readonly ["create", "update", "skip"];
+    };
+    // (undocumented)
+    type BroadcastSettingsUpdateParams = __BroadcastSettingsUpdateParams;
+    const // (undocumented)
+    DnsApplyProvider: {
+        values: readonly ["cloudflare", "digitalocean"];
+    };
+    // (undocumented)
+    type BroadcastStatus = __BroadcastStatus;
+    const // (undocumented)
+    DnsApplyRecordResult: {
+        values: readonly ["created", "updated", "unchanged", "failed"];
+    };
+    // (undocumented)
+    type BroadcastUpdateParams = __BroadcastUpdateParams;
+    const // (undocumented)
+    DnsApplyWarning: {
+        values: readonly ["token_scope_broader_than_zone", "dmarc_lookup_failed", "partially_applied"];
+    };
+    // (undocumented)
+    type ClickedLink = __ClickedLink;
+    const // (undocumented)
+    DnsConflictCode: {
+        values: readonly ["spf_multiple", "spf_merge", "spf_lookup_limit", "cname_at_host", "mail_from_mx_multiple", "dmarc_duplicate", "dkim_selector_taken", "mx_foreign"];
+    };
+    // (undocumented)
+    type ClickedLinks = __ClickedLinks;
+    const // (undocumented)
+    DnsConflictSeverity: {
+        values: readonly ["blocking", "warning"];
+    };
+    // (undocumented)
+    type ConnectGitHub = __ConnectGitHub;
+    const // (undocumented)
+    DnsProviderId: {
+        values: readonly ["cloudflare", "digitalocean", "namecheap", "godaddy", "squarespace", "route53", "porkbun", "vercel", "netlify", "gandi", "hover", "other"];
+    };
+    // (undocumented)
+    type Contact = __Contact;
+    const // (undocumented)
+    DnsProviderLookupSource: {
+        values: readonly ["ns", "domain_connect"];
+    };
+    // (undocumented)
+    type ContactCreatedEvent = __ContactCreatedEvent;
+    const // (undocumented)
+    DnsProviderSource: {
+        values: readonly ["user", "detected"];
+    };
+    // (undocumented)
+    type ContactCreatedVia = __ContactCreatedVia;
+    const // (undocumented)
+    DnsRecordPurpose: {
+        values: readonly ["dkim", "mx", "verification", "spf", "mail_from_mx", "mail_from_spf", "dmarc"];
+    };
+    // (undocumented)
+    type ContactCreateParams = __ContactCreateParams;
+    const // (undocumented)
+    DnsRecordState: {
+        values: readonly ["missing", "mismatch", "conflict", "propagating", "verified"];
+    };
+    // (undocumented)
+    type ContactDeletedEvent = __ContactDeletedEvent;
+    const // (undocumented)
+    DnsRecordType: {
+        values: readonly ["TXT", "MX"];
+    };
+    // (undocumented)
+    type ContactDeletedEventData = __ContactDeletedEventData;
+    const // (undocumented)
+    DomainCapabilityState: {
+        values: readonly ["enabled", "disabled"];
+    };
+    // (undocumented)
+    type ContactEventData = __ContactEventData;
+    const // (undocumented)
+    DomainConnectUnavailableReason: {
+        values: readonly ["no_record", "settings_unreachable", "template_not_onboarded", "lookup_failed", "disabled"];
+    };
+    // (undocumented)
+    type ContactImport = __ContactImport;
+    const // (undocumented)
+    DomainEventType: {
+        values: readonly ["added", "records_found", "verified", "degraded", "failing", "recovered", "mail_from_verified", "dmarc_detected", "check_failed", "deleted"];
+    };
+    // (undocumented)
+    type ContactImportConflictMode = __ContactImportConflictMode;
+    const // (undocumented)
+    DomainHealth: {
+        values: readonly ["ok", "degraded", "failing"];
+    };
+    // (undocumented)
+    type ContactImportCreateParams = __ContactImportCreateParams;
+    const // (undocumented)
+    DomainIntent: {
+        values: readonly ["receive", "send", "both"];
+    };
+    // (undocumented)
+    type ContactImportError = __ContactImportError;
+    const // (undocumented)
+    DomainRecordKind: {
+        values: readonly ["DKIM", "SPF", "MX", "DMARC", "Verification"];
+    };
+    // (undocumented)
+    type ContactImportListParams = __ContactImportListParams;
+    const // (undocumented)
+    DomainRecordStatus: {
+        values: readonly ["not_started", "pending", "verified", "failed", "temporary_failure"];
+    };
+    // (undocumented)
+    type ContactImportStatus = __ContactImportStatus;
+    const // (undocumented)
+    DomainSetupMethod: {
+        values: readonly ["manual", "domain_connect", "provider_api"];
+    };
+    // (undocumented)
+    type ContactListParams = __ContactListParams;
+    const // (undocumented)
+    DomainStatus: {
+        values: readonly ["pending", "active", "disabled"];
+    };
+    // (undocumented)
+    type ContactProperty = __ContactProperty;
+    const // (undocumented)
+    DomainTlsMode: {
+        values: readonly ["opportunistic"];
+    };
+    // (undocumented)
+    type ContactPropertyCreateParams = __ContactPropertyCreateParams;
+    const // (undocumented)
+    DomainVerificationStatus: {
+        values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled"];
+    };
+    // (undocumented)
+    type ContactPropertyListParams = __ContactPropertyListParams;
+    const // (undocumented)
+    EmailMetricsGranularity: {
+        values: readonly ["hourly", "daily"];
+    };
+    // (undocumented)
+    type ContactPropertyType = __ContactPropertyType;
+    const // (undocumented)
+    EmailMetricsObject: {
+        values: readonly ["metrics"];
+    };
+    // (undocumented)
+    type ContactPropertyUpdateParams = __ContactPropertyUpdateParams;
+    const // (undocumented)
+    IntegrationStatus: {
+        values: readonly ["active", "error", "revoked"];
+    };
+    // (undocumented)
+    type ContactSegments = __ContactSegments;
+    const // (undocumented)
+    IntegrationSyncState: {
+        values: readonly ["running", "completed", "failed"];
+    };
+    // (undocumented)
+    type ContactTopic = __ContactTopic;
+    const // (undocumented)
+    LintSeverity: {
+        values: readonly ["error", "warn", "info"];
+    };
+    // (undocumented)
+    type ContactTopics = __ContactTopics;
+    const // (undocumented)
+    MailboxStatus: {
+        values: readonly ["active", "disabled"];
+    };
+    // (undocumented)
+    type ContactTopicUpdateParams = __ContactTopicUpdateParams;
+    const // (undocumented)
+    MessageEventType: {
+        values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed"];
+    };
+    // (undocumented)
+    type ContactUpdatedEvent = __ContactUpdatedEvent;
+    const // (undocumented)
+    MessageSource: {
+        values: readonly ["api_key", "dashboard", "platform", "test_send"];
+    };
+    // (undocumented)
+    type ContactUpdateParams = __ContactUpdateParams;
+    const // (undocumented)
+    MessageStatus: {
+        values: readonly ["queued", "sent", "delivered", "bounced", "complained", "failed", "suppressed", "deferred"];
+    };
+    // (undocumented)
+    type CreatedShareLink = __CreatedShareLink;
+    const // (undocumented)
+    MessageTransport: {
+        values: readonly ["smtp", "ses"];
+    };
+    // (undocumented)
+    type DefaultSender = __DefaultSender;
+    const // (undocumented)
+    SegmentMatch: {
+        values: readonly ["all", "any"];
+    };
+    // (undocumented)
+    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
+    const // (undocumented)
+    SegmentOperator: {
+        values: readonly ["equals", "contains", "exists"];
+    };
+    // (undocumented)
+    type DeleteByRecipient = __DeleteByRecipient;
+    const // (undocumented)
+    SegmentType: {
+        values: readonly ["static", "rule"];
+    };
+    // (undocumented)
+    type Deliverability = __Deliverability;
+    const // (undocumented)
+    SendBatchRowState: {
+        values: readonly ["accepted", "rejected"];
+    };
+    // (undocumented)
+    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
+    const // (undocumented)
+    SenderDomainStatus: {
+        values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
+    };
+    // (undocumented)
+    type DeliverabilityDomain = __DeliverabilityDomain;
+    const // (undocumented)
+    SesDkimStatus: {
+        values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE", "NOT_STARTED", "not_enabled"];
+    };
+    // (undocumented)
+    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
+    const // (undocumented)
+    SesMailFromStatus: {
+        values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE"];
+    };
+    // (undocumented)
+    type DeliverabilityVerdict = __DeliverabilityVerdict;
+    const // (undocumented)
+    ShareLinkStatus: {
+        values: readonly ["active", "expired", "revoked"];
+    };
+    // (undocumented)
+    type DmarcAlignmentMode = __DmarcAlignmentMode;
+    const // (undocumented)
+    SmtpConfigStatus: {
+        values: readonly ["pending", "active", "failed"];
+    };
+    // (undocumented)
+    type DmarcGrade = __DmarcGrade;
+    const // (undocumented)
+    SpamVerdict: {
+        values: readonly ["ham", "junk", "reject"];
+    };
+    // (undocumented)
+    type DmarcPolicy = __DmarcPolicy;
+    const // (undocumented)
+    StatsGranularity: {
+        values: readonly ["day"];
+    };
+    // (undocumented)
+    type DmarcRecordLocation = __DmarcRecordLocation;
+    const // (undocumented)
+    StatsSeriesMetric: {
+        values: readonly ["sent"];
+    };
+    // (undocumented)
+    type DnsApplyAction = __DnsApplyAction;
+    const // (undocumented)
+    StatsWindow: {
+        values: readonly ["1d", "7d", "30d"];
+    };
+    // (undocumented)
+    type DnsApplyConflict = __DnsApplyConflict;
+    const // (undocumented)
+    Subscription: {
+        values: readonly ["opt_in", "opt_out"];
+    };
+    // (undocumented)
+    type DnsApplyCounts = __DnsApplyCounts;
+    const // (undocumented)
+    SubscriptionReason: {
+        values: readonly ["opted_in", "default_with_consent", "unsubscribed", "opted_out", "no_consent", "not_opted_in"];
+    };
+    // (undocumented)
+    type DnsApplyPlanItem = __DnsApplyPlanItem;
+    const // (undocumented)
+    SuppressionSource: {
+        values: readonly ["manual", "bounce", "complaint"];
+    };
+    // (undocumented)
+    type DnsApplyProvider = __DnsApplyProvider;
+    const // (undocumented)
+    TemplateKind: {
+        values: readonly ["template", "layout", "partial"];
+    };
+    // (undocumented)
+    type DnsApplyRecordResult = __DnsApplyRecordResult;
+    const // (undocumented)
+    TemplateSource: {
+        values: readonly ["manual", "github"];
+    };
+    // (undocumented)
+    type DnsApplyResult = __DnsApplyResult;
+    const // (undocumented)
+    TimelineMetric: {
+        values: readonly ["sent", "bounced"];
+    };
+    // (undocumented)
+    type DnsApplyWarning = __DnsApplyWarning;
+    const // (undocumented)
+    TopicVisibility: {
+        values: readonly ["public", "private"];
+    };
+    // (undocumented)
+    type DnsConflictCode = __DnsConflictCode;
+    const // (undocumented)
+    WebhookAttemptTrigger: {
+        values: readonly ["automatic", "replay", "test"];
+    };
+    // (undocumented)
+    type DnsConflictSeverity = __DnsConflictSeverity;
+    const // (undocumented)
+    WebhookEndpointDisabledReason: {
+        values: readonly ["manual", "failing"];
+    };
+    // (undocumented)
+    type DnsInstruction = __DnsInstruction;
+    const // (undocumented)
+    WebhookEndpointLegacySlot: {
+        values: readonly ["default", "domain"];
+    };
+    // (undocumented)
+    type DnsProviderId = __DnsProviderId;
+    const // (undocumented)
+    WebhookEndpointStatus: {
+        values: readonly ["enabled", "disabled", "auto_disabled"];
+    };
+    // (undocumented)
+    type DnsProviderLookupSource = __DnsProviderLookupSource;
+    const // (undocumented)
+    WebhookEventStatus: {
+        values: readonly ["pending", "delivered", "failed", "not_sent"];
+    };
+    // (undocumented)
+    type DnsProviderSource = __DnsProviderSource;
+    const // (undocumented)
+    WebhookEventType: {
+        values: readonly ["email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained", "email.failed", "email.suppressed", "email.skipped", "email.scheduled", "email.canceled", "email.opened", "email.clicked", "email.received", "domain.created", "domain.updated", "domain.verified", "domain.deleted", "suppression.added", "suppression.removed", "sending_defaults.updated", "contact.created", "contact.updated", "contact.deleted"];
+    };
+    // (undocumented)
+    type DnsRecordConflict = __DnsRecordConflict;
+    // (undocumented)
+    type DnsRecordPurpose = __DnsRecordPurpose;
+    // (undocumented)
+    type DnsRecordState = __DnsRecordState;
+    // (undocumented)
+    type DnsRecordStatus = __DnsRecordStatus;
+    // (undocumented)
+    type DnsRecordType = __DnsRecordType;
+    // (undocumented)
+    type Domain = __Domain;
+    // (undocumented)
+    type DomainCapabilities = __DomainCapabilities;
+    // (undocumented)
+    type DomainCapabilityState = __DomainCapabilityState;
+    // (undocumented)
+    type DomainConnectStart = __DomainConnectStart;
+    // (undocumented)
+    type DomainConnectUnavailableReason = __DomainConnectUnavailableReason;
+    // (undocumented)
+    type DomainCreatedEvent = __DomainCreatedEvent;
+    // (undocumented)
+    type DomainCreatedEventData = __DomainCreatedEventData;
+    // (undocumented)
+    type DomainCreateParams = __DomainCreateParams;
+    // (undocumented)
+    type DomainDeletedEvent = __DomainDeletedEvent;
+    // (undocumented)
+    type DomainDeletedEventData = __DomainDeletedEventData;
+    // (undocumented)
+    type DomainDetail = __DomainDetail;
+    // (undocumented)
+    type DomainDnsProvider = __DomainDnsProvider;
+    // (undocumented)
+    type DomainDnsRecordApplyParams = __DomainDnsRecordApplyParams;
+    // (undocumented)
+    type DomainDnsRecordCheckParams = __DomainDnsRecordCheckParams;
+    // (undocumented)
+    type DomainDnsRecordExportParams = __DomainDnsRecordExportParams;
+    // (undocumented)
+    type DomainDnsRecordListParams = __DomainDnsRecordListParams;
+    // (undocumented)
+    type DomainDnsRecords = __DomainDnsRecords;
+    // (undocumented)
+    type DomainDomainConnectStartParams = __DomainDomainConnectStartParams;
+    // (undocumented)
+    type DomainEvent = __DomainEvent;
+    // (undocumented)
+    type DomainEventListParams = __DomainEventListParams;
+    // (undocumented)
+    type DomainEventType = __DomainEventType;
+    // (undocumented)
+    type DomainHealth = __DomainHealth;
+    // (undocumented)
+    type DomainIntent = __DomainIntent;
+    // (undocumented)
+    type DomainListParams = __DomainListParams;
+    // (undocumented)
+    type DomainLookup = __DomainLookup;
+    // (undocumented)
+    type DomainLookupParams = __DomainLookupParams;
+    // (undocumented)
+    type DomainRecord = __DomainRecord;
+    // (undocumented)
+    type DomainRecordChange = __DomainRecordChange;
+    // (undocumented)
+    type DomainRecordKind = __DomainRecordKind;
+    // (undocumented)
+    type DomainRecordStatus = __DomainRecordStatus;
+    // (undocumented)
+    type DomainSesStatus = __DomainSesStatus;
+    // (undocumented)
+    type DomainSetupMethod = __DomainSetupMethod;
+    // (undocumented)
+    type DomainShareLinkCreateParams = __DomainShareLinkCreateParams;
+    // (undocumented)
+    type DomainShareLinkListParams = __DomainShareLinkListParams;
+    // (undocumented)
+    type DomainSmtpConfigUpdateParams = __DomainSmtpConfigUpdateParams;
+    // (undocumented)
+    type DomainStatus = __DomainStatus;
+    // (undocumented)
+    type DomainTestSendParams = __DomainTestSendParams;
+    // (undocumented)
+    type DomainTlsMode = __DomainTlsMode;
+    // (undocumented)
+    type DomainUpdatedEvent = __DomainUpdatedEvent;
+    // (undocumented)
+    type DomainUpdatedEventData = __DomainUpdatedEventData;
+    // (undocumented)
+    type DomainUpdateParams = __DomainUpdateParams;
+    // (undocumented)
+    type DomainVerificationStatus = __DomainVerificationStatus;
+    // (undocumented)
+    type DomainVerifiedEvent = __DomainVerifiedEvent;
+    // (undocumented)
+    type DomainVerifiedEventData = __DomainVerifiedEventData;
+    // (undocumented)
+    type Email = __Email;
+    // (undocumented)
+    type EmailBatchParams = __EmailBatchParams;
+    // (undocumented)
+    type EmailBouncedEvent = __EmailBouncedEvent;
+    // (undocumented)
+    type EmailBouncedEventData = __EmailBouncedEventData;
+    // (undocumented)
+    type EmailCanceledEvent = __EmailCanceledEvent;
+    // (undocumented)
+    type EmailCanceledEventData = __EmailCanceledEventData;
+    // (undocumented)
+    type EmailClickedEvent = __EmailClickedEvent;
+    // (undocumented)
+    type EmailClickedEventData = __EmailClickedEventData;
+    // (undocumented)
+    type EmailComplainedEvent = __EmailComplainedEvent;
+    // (undocumented)
+    type EmailComplainedEventData = __EmailComplainedEventData;
+    // (undocumented)
+    type EmailDeliveredEvent = __EmailDeliveredEvent;
+    // (undocumented)
+    type EmailDeliveredEventData = __EmailDeliveredEventData;
+    // (undocumented)
+    type EmailDeliveryDelayedEvent = __EmailDeliveryDelayedEvent;
+    // (undocumented)
+    type EmailDeliveryDelayedEventData = __EmailDeliveryDelayedEventData;
+    // (undocumented)
+    type EmailDetail = __EmailDetail;
+    // (undocumented)
+    type EmailFailedEvent = __EmailFailedEvent;
+    // (undocumented)
+    type EmailFailedEventData = __EmailFailedEventData;
+    // (undocumented)
+    type EmailListParams = __EmailListParams;
+    // (undocumented)
+    type EmailMessageSummary = __EmailMessageSummary;
+    // (undocumented)
+    type EmailMetrics = __EmailMetrics;
+    // (undocumented)
+    type EmailMetricsCounters = __EmailMetricsCounters;
+    // (undocumented)
+    type EmailMetricsDataItem = __EmailMetricsDataItem;
+    // (undocumented)
+    type EmailMetricsGranularity = __EmailMetricsGranularity;
+    // (undocumented)
+    type EmailMetricsMeasured = __EmailMetricsMeasured;
+    // (undocumented)
+    type EmailMetricsObject = __EmailMetricsObject;
+    // (undocumented)
+    type EmailMetricsParams = __EmailMetricsParams;
+    // (undocumented)
+    type EmailOpenedEvent = __EmailOpenedEvent;
+    // (undocumented)
+    type EmailOpenedEventData = __EmailOpenedEventData;
+    // (undocumented)
+    type EmailPagination = __EmailPagination;
+    // (undocumented)
+    type EmailReceivedEvent = __EmailReceivedEvent;
+    // (undocumented)
+    type EmailReceivedEventData = __EmailReceivedEventData;
+    // (undocumented)
+    type EmailScheduledEvent = __EmailScheduledEvent;
+    // (undocumented)
+    type EmailScheduledEventData = __EmailScheduledEventData;
+    // (undocumented)
+    type EmailSendParams = __EmailSendParams;
+    // (undocumented)
+    type EmailSentEvent = __EmailSentEvent;
+    // (undocumented)
+    type EmailSentEventData = __EmailSentEventData;
+    // (undocumented)
+    type EmailSkippedEvent = __EmailSkippedEvent;
+    // (undocumented)
+    type EmailSkippedEventData = __EmailSkippedEventData;
+    // (undocumented)
+    type EmailSuppressedEvent = __EmailSuppressedEvent;
+    // (undocumented)
+    type EmailSuppressedEventData = __EmailSuppressedEventData;
+    // (undocumented)
+    type EmailTag = __EmailTag;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type GetSmtpConfig = __GetSmtpConfig;
+    // (undocumented)
+    type GitHubBranch = __GitHubBranch;
+    // (undocumented)
+    type GitHubRepo = __GitHubRepo;
+    // (undocumented)
+    type IntegrationDetail = __IntegrationDetail;
+    // (undocumented)
+    type IntegrationGithubConnectParams = __IntegrationGithubConnectParams;
+    // (undocumented)
+    type IntegrationGithubRepoBranchListResponse = __IntegrationGithubRepoBranchListResponse;
+    // (undocumented)
+    type IntegrationGithubRepoListResponse = __IntegrationGithubRepoListResponse;
+    // (undocumented)
+    type IntegrationGithubSettingsUpdateParams = __IntegrationGithubSettingsUpdateParams;
+    // (undocumented)
+    type IntegrationListItem = __IntegrationListItem;
+    // (undocumented)
+    type IntegrationStatus = __IntegrationStatus;
+    // (undocumented)
+    type IntegrationSyncState = __IntegrationSyncState;
+    // (undocumented)
+    type LintFinding = __LintFinding;
+    // (undocumented)
+    type LintResult = __LintResult;
+    // (undocumented)
+    type LintSeverity = __LintSeverity;
+    // (undocumented)
+    type ListBroadcastRecipients = __ListBroadcastRecipients;
+    // (undocumented)
+    type ListBroadcasts = __ListBroadcasts;
+    // (undocumented)
+    type ListContactImports = __ListContactImports;
+    // (undocumented)
+    type ListContactProperties = __ListContactProperties;
+    // (undocumented)
+    type ListContacts = __ListContacts;
+    // (undocumented)
+    type ListDomainEvents = __ListDomainEvents;
+    // (undocumented)
+    type ListDomains = __ListDomains;
+    // (undocumented)
+    type ListEmails = __ListEmails;
+    // (undocumented)
+    type ListIntegrations = __ListIntegrations;
+    // (undocumented)
+    type ListMailboxes = __ListMailboxes;
+    // (undocumented)
+    type ListMessages = __ListMessages;
+    // (undocumented)
+    type ListOutboundMessages = __ListOutboundMessages;
+    // (undocumented)
+    type ListReceivedEmails = __ListReceivedEmails;
+    // (undocumented)
+    type ListSegmentContacts = __ListSegmentContacts;
+    // (undocumented)
+    type ListSegments = __ListSegments;
+    // (undocumented)
+    type ListShareLinks = __ListShareLinks;
+    // (undocumented)
+    type ListSmtpConfigs = __ListSmtpConfigs;
+    // (undocumented)
+    type ListSuppression = __ListSuppression;
+    // (undocumented)
+    type ListTemplates = __ListTemplates;
+    // (undocumented)
+    type ListTemplateTags = __ListTemplateTags;
+    // (undocumented)
+    type ListTopics = __ListTopics;
+    // (undocumented)
+    type ListWebhookAttempts = __ListWebhookAttempts;
+    // (undocumented)
+    type ListWebhookEndpoints = __ListWebhookEndpoints;
+    // (undocumented)
+    type ListWebhookEvents = __ListWebhookEvents;
+    // (undocumented)
+    type ListWebhookEventTypes = __ListWebhookEventTypes;
+    // (undocumented)
+    type LookupDmarc = __LookupDmarc;
+    // (undocumented)
+    type LookupDomainConnect = __LookupDomainConnect;
+    // (undocumented)
+    type LookupExisting = __LookupExisting;
+    // (undocumented)
+    type LookupProvider = __LookupProvider;
+    // (undocumented)
+    type LookupSpf = __LookupSpf;
+    // (undocumented)
+    type LookupSuggestion = __LookupSuggestion;
+    // (undocumented)
+    type Mailbox = __Mailbox;
+    // (undocumented)
+    type MailboxCreateParams = __MailboxCreateParams;
+    // (undocumented)
+    type MailboxListParams = __MailboxListParams;
+    // (undocumented)
+    type MailboxMessageListParams = __MailboxMessageListParams;
+    // (undocumented)
+    type MailboxStatus = __MailboxStatus;
+    // (undocumented)
+    type MailboxUpdateParams = __MailboxUpdateParams;
+    // (undocumented)
+    type MailStatsInWindow = __MailStatsInWindow;
+    // (undocumented)
+    type MailStatsSeries = __MailStatsSeries;
+    // (undocumented)
+    type MailStatsTotals = __MailStatsTotals;
+    // (undocumented)
+    type MailWorkspaceStats = __MailWorkspaceStats;
+    // (undocumented)
+    type Message = __Message;
+    // (undocumented)
+    type MessageAttachment = __MessageAttachment;
+    // (undocumented)
+    type MessageDetail = __MessageDetail;
+    // (undocumented)
+    type MessageEraseParams = __MessageEraseParams;
+    // (undocumented)
+    type MessageEvent = __MessageEvent;
+    // (undocumented)
+    type MessageEventType = __MessageEventType;
+    // (undocumented)
+    type MessageExportParams = __MessageExportParams;
+    // (undocumented)
+    type MessageListParams = __MessageListParams;
+    // (undocumented)
+    type MessageSettingsUpdateParams = __MessageSettingsUpdateParams;
+    // (undocumented)
+    type MessageSource = __MessageSource;
+    // (undocumented)
+    type MessageStatus = __MessageStatus;
+    // (undocumented)
+    type MessageTimeline = __MessageTimeline;
+    // (undocumented)
+    type MessageTimelineParams = __MessageTimelineParams;
+    // (undocumented)
+    type MessageTransport = __MessageTransport;
+    // (undocumented)
+    type OutboundMessage = __OutboundMessage;
+    // (undocumented)
+    type OutboundMessageDetail = __OutboundMessageDetail;
+    // (undocumented)
+    type OutboundMessagePagination = __OutboundMessagePagination;
+    // (undocumented)
+    type OutboundMessageSettings = __OutboundMessageSettings;
+    // (undocumented)
+    type OutboundMessageWithBody = __OutboundMessageWithBody;
+    // (undocumented)
+    type OutboundWebhookAttempt = __OutboundWebhookAttempt;
+    // (undocumented)
+    type Pagination = __Pagination;
+    // (undocumented)
+    type PollOptions = __PollOptions;
+    // (undocumented)
+    type RawBrand = __RawBrand;
+    // (undocumented)
+    type ReceivedEmail = __ReceivedEmail;
+    // (undocumented)
+    type ReceivedEmailAttachment = __ReceivedEmailAttachment;
+    // (undocumented)
+    type ReceivedEmailDetail = __ReceivedEmailDetail;
+    // (undocumented)
+    type ReceivedExportParams = __ReceivedExportParams;
+    // (undocumented)
+    type ReceivedListParams = __ReceivedListParams;
+    // (undocumented)
+    type RenderedMessage = __RenderedMessage;
+    // (undocumented)
+    type ReplayWebhookEvent = __ReplayWebhookEvent;
+    // (undocumented)
+    type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type ResolvedBrandTokens = __ResolvedBrandTokens;
+    // (undocumented)
+    type Segment = __Segment;
+    // (undocumented)
+    type SegmentCondition = __SegmentCondition;
+    // (undocumented)
+    type SegmentContactListParams = __SegmentContactListParams;
+    // (undocumented)
+    type SegmentCreateParams = __SegmentCreateParams;
+    // (undocumented)
+    type SegmentListParams = __SegmentListParams;
+    // (undocumented)
+    type SegmentMatch = __SegmentMatch;
+    // (undocumented)
+    type SegmentMembership = __SegmentMembership;
+    // (undocumented)
+    type SegmentMetrics = __SegmentMetrics;
+    // (undocumented)
+    type SegmentOperator = __SegmentOperator;
+    // (undocumented)
+    type SegmentPreview = __SegmentPreview;
+    // (undocumented)
+    type SegmentPreviewParams = __SegmentPreviewParams;
+    // (undocumented)
+    type SegmentRule = __SegmentRule;
+    // (undocumented)
+    type SegmentType = __SegmentType;
+    // (undocumented)
+    type SegmentUpdateParams = __SegmentUpdateParams;
+    // (undocumented)
+    type SendAccepted = __SendAccepted;
+    // (undocumented)
+    type SendBatchOpenApi = __SendBatchOpenApi;
+    // (undocumented)
+    type SendBatchRowError = __SendBatchRowError;
+    // (undocumented)
+    type SendBatchRowState = __SendBatchRowState;
+    // (undocumented)
+    type SendBatchRowStatus = __SendBatchRowStatus;
+    // (undocumented)
+    type SendBatchSummary = __SendBatchSummary;
+    // (undocumented)
+    type SendEmail = __SendEmail;
+    // (undocumented)
+    type SenderDomainStatus = __SenderDomainStatus;
+    // (undocumented)
+    type SendingDefaults = __SendingDefaults;
+    // (undocumented)
+    type SendingDefaultsEventSender = __SendingDefaultsEventSender;
+    // (undocumented)
+    type SendingDefaultsUpdatedEvent = __SendingDefaultsUpdatedEvent;
+    // (undocumented)
+    type SendingDefaultsUpdatedEventData = __SendingDefaultsUpdatedEventData;
+    // (undocumented)
+    type SendingDefaultUpdateParams = __SendingDefaultUpdateParams;
+    // (undocumented)
+    type SesDkimStatus = __SesDkimStatus;
+    // (undocumented)
+    type SesMailFromStatus = __SesMailFromStatus;
+    // (undocumented)
+    type ShareLink = __ShareLink;
+    // (undocumented)
+    type ShareLinkStatus = __ShareLinkStatus;
+    // (undocumented)
+    type SmtpConfig = __SmtpConfig;
+    // (undocumented)
+    type SmtpConfigStatus = __SmtpConfigStatus;
+    // (undocumented)
+    type SmtpConfigUpdateParams = __SmtpConfigUpdateParams;
+    // (undocumented)
+    type SmtpConfigVerifyParams = __SmtpConfigVerifyParams;
+    // (undocumented)
+    type SmtpVerifyError = __SmtpVerifyError;
+    // (undocumented)
+    type SmtpVerifyResult = __SmtpVerifyResult;
+    // (undocumented)
+    type SpamVerdict = __SpamVerdict;
+    // (undocumented)
+    type StartSync = __StartSync;
+    // (undocumented)
+    type StatsGranularity = __StatsGranularity;
+    // (undocumented)
+    type StatsRetrieveParams = __StatsRetrieveParams;
+    // (undocumented)
+    type StatsSeriesMetric = __StatsSeriesMetric;
+    // (undocumented)
+    type StatsSeriesPoint = __StatsSeriesPoint;
+    // (undocumented)
+    type StatsWindow = __StatsWindow;
+    // (undocumented)
+    type Subscription = __Subscription;
+    // (undocumented)
+    type SubscriptionReason = __SubscriptionReason;
+    // (undocumented)
+    type SuppressionAddedEvent = __SuppressionAddedEvent;
+    // (undocumented)
+    type SuppressionAddedEventData = __SuppressionAddedEventData;
+    // (undocumented)
+    type SuppressionCreateParams = __SuppressionCreateParams;
+    // (undocumented)
+    type SuppressionEntry = __SuppressionEntry;
+    // (undocumented)
+    type SuppressionListParams = __SuppressionListParams;
+    // (undocumented)
+    type SuppressionRemovedEvent = __SuppressionRemovedEvent;
+    // (undocumented)
+    type SuppressionRemovedEventData = __SuppressionRemovedEventData;
+    // (undocumented)
+    type SuppressionSource = __SuppressionSource;
+    // (undocumented)
+    type SyncStatus = __SyncStatus;
+    // (undocumented)
+    type Template = __Template;
+    // (undocumented)
+    type TemplateCreateParams = __TemplateCreateParams;
+    // (undocumented)
+    type TemplateKind = __TemplateKind;
+    // (undocumented)
+    type TemplateLintParams = __TemplateLintParams;
+    // (undocumented)
+    type TemplateListParams = __TemplateListParams;
+    // (undocumented)
+    type TemplatePreviewParams = __TemplatePreviewParams;
+    // (undocumented)
+    type TemplateRenderParams = __TemplateRenderParams;
+    // (undocumented)
+    type TemplateSendBatchParams = __TemplateSendBatchParams;
+    // (undocumented)
+    type TemplateSendParams = __TemplateSendParams;
+    // (undocumented)
+    type TemplateSource = __TemplateSource;
+    // (undocumented)
+    type TemplateTestSendParams = __TemplateTestSendParams;
+    // (undocumented)
+    type TemplateVariables = __TemplateVariables;
+    // (undocumented)
+    type TimelineMetric = __TimelineMetric;
+    // (undocumented)
+    type TimelinePoint = __TimelinePoint;
+    // (undocumented)
+    type Topic = __Topic;
+    // (undocumented)
+    type TopicCreateParams = __TopicCreateParams;
+    // (undocumented)
+    type TopicListParams = __TopicListParams;
+    // (undocumented)
+    type TopicUpdateParams = __TopicUpdateParams;
+    // (undocumented)
+    type TopicVisibility = __TopicVisibility;
+    // (undocumented)
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
+    // (undocumented)
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
+    // (undocumented)
+    type WebhookAttemptListParams = __WebhookAttemptListParams;
+    // (undocumented)
+    type WebhookAttemptTrigger = __WebhookAttemptTrigger;
+    // (undocumented)
+    type WebhookDeliveryAttempt = __WebhookDeliveryAttempt;
+    // (undocumented)
+    type WebhookEndpoint = __WebhookEndpoint;
+    // (undocumented)
+    type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
+    // (undocumented)
+    type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointLegacySlot = __WebhookEndpointLegacySlot;
+    // (undocumented)
+    type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type WebhookEndpointStatus = __WebhookEndpointStatus;
+    // (undocumented)
+    type WebhookEndpointTestParams = __WebhookEndpointTestParams;
+    // (undocumented)
+    type WebhookEndpointUpdateParams = __WebhookEndpointUpdateParams;
+    // (undocumented)
+    type WebhookEndpointWithSecret = __WebhookEndpointWithSecret;
+    // (undocumented)
+    type WebhookEvent = __WebhookEvent;
+    // (undocumented)
+    type WebhookEventDelivery = __WebhookEventDelivery;
+    // (undocumented)
+    type WebhookEventDetail = __WebhookEventDetail;
+    // (undocumented)
+    type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplayParams = __WebhookEventReplayParams;
+    // (undocumented)
+    type WebhookEventStatus = __WebhookEventStatus;
+    // (undocumented)
+    type WebhookEventType = __WebhookEventType;
+    // (undocumented)
+    type WebhookEventTypeInfo = __WebhookEventTypeInfo;
+    // (undocumented)
+    type WebhookPagination = __WebhookPagination;
+    // (undocumented)
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
+}
+export { Mail }
+export default Mail;
+
+// @public
+export type MailErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace" | (string & {});
+
+// @public (undocumented)
+export const MailErrorCode: {
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "AUDIENCE_REQUIRED", "BROADCAST_AUDIENCE_EMPTY", "BROADCAST_CONTENT_CONFLICT", "BROADCAST_NOT_CANCELABLE", "BROADCAST_NOT_DELETABLE", "BROADCAST_NOT_DRAFT", "BROADCAST_NOT_FOUND", "BROADCAST_NOT_READY", "CAPABILITY_NOT_VERIFIED", "CONTACT_EXISTS", "CONTACT_LIMIT", "CONTACT_NOT_FOUND", "CONTACT_PROPERTY_EXISTS", "CONTACT_PROPERTY_LIMIT", "CONTACT_PROPERTY_NOT_FOUND", "DATE_RANGE_BEYOND_RETENTION", "DATE_RANGE_TOO_WIDE", "DATE_WINDOW_TOO_WIDE", "DKIM_KEY_MISSING", "DNS_CONFLICTS", "DOMAIN_CONNECT_DISABLED", "DOMAIN_CONNECT_MAIL_FROM_LABEL", "DOMAIN_CONNECT_NOT_SENDING", "DOMAIN_CONNECT_UNAVAILABLE", "DOMAIN_HAS_MAILBOXES", "DOMAIN_NOT_FOUND", "EMAIL_CONTENT_CONFLICT", "EMAIL_NOT_FOUND", "EMAIL_UNAVAILABLE", "FROM_DOMAIN_MISMATCH", "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW", "IMPORT_IN_PROGRESS", "IMPORT_NOT_FOUND", "IMPORT_TOO_LARGE", "INVALID_CAPABILITIES", "INVALID_CONTACT_PROPERTY_VALUE", "INVALID_CSV", "INVALID_DATE", "INVALID_DATE_RANGE", "INVALID_DATE_WINDOW", "INVALID_FORMAT", "INVALID_FROM_ADDRESS", "INVALID_SEGMENT_RULE", "INVALID_TIMEZONE", "INVALID_ZONE", "MAIL_FROM_HOST_IN_USE", "MAIL_FROM_NOT_SENDING", "MAIL_HEADER_NOT_ALLOWED", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "RECIPIENT_LIMIT", "RECIPIENT_SUPPRESSED", "REGION_NOT_AVAILABLE", "RESERVED_PROPERTY_KEY", "SEGMENT_EXISTS", "SEGMENT_LIMIT", "SEGMENT_NOT_FOUND", "SEGMENT_RULE_BASED", "SEGMENT_TYPE_FIXED", "SES_IDENTITY_DELETE_FAILED", "SHARE_LINK_NOT_FOUND", "SMTP_AUTH_PARTIAL", "SMTP_CONFIG_NOT_FOUND", "SMTP_PASSWORD_REQUIRED", "TEMPLATE_DATA_INVALID", "TEMPLATE_KIND_NOT_SENDABLE", "TEMPLATE_NOT_FOUND", "TEMPLATE_RENDER_FAILED", "TLS_ENFORCED_NOT_AVAILABLE", "TOPIC_EXISTS", "TOPIC_LIMIT", "TOPIC_NOT_FOUND", "TRACKING_NOT_AVAILABLE", "UNKNOWN_CONTACT_PROPERTY", "UNSUBSCRIBE_LINK_REQUIRED", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender", "sender_domain_not_in_workspace"];
+};
+
+export { NotFoundError }
+
+// @public (undocumented)
+export type paths = {
     "/v1/public/domain-setup/{token}": {
         parameters: {
             query?: never;
@@ -32,7 +3345,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/public/domain-setup/{token}/export": {
         parameters: {
             query?: never;
@@ -49,7 +3361,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/u/{token}": {
         parameters: {
             query?: never;
@@ -66,7 +3377,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/brand": {
         parameters: {
             query?: never;
@@ -83,7 +3393,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcast-settings": {
         parameters: {
             query?: never;
@@ -100,7 +3409,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts": {
         parameters: {
             query?: never;
@@ -117,7 +3425,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/audience": {
         parameters: {
             query?: never;
@@ -134,7 +3441,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}": {
         parameters: {
             query?: never;
@@ -151,7 +3457,6 @@ export interface paths {
         patch: operations["BroadcastsController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}/cancel": {
         parameters: {
             query?: never;
@@ -168,7 +3473,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}/clicked-links": {
         parameters: {
             query?: never;
@@ -185,7 +3489,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}/duplicate": {
         parameters: {
             query?: never;
@@ -202,7 +3505,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}/recipients": {
         parameters: {
             query?: never;
@@ -219,7 +3521,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/broadcasts/{broadcast_id}/send": {
         parameters: {
             query?: never;
@@ -236,7 +3537,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contact-properties": {
         parameters: {
             query?: never;
@@ -253,7 +3553,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contact-properties/{property_id}": {
         parameters: {
             query?: never;
@@ -270,7 +3569,6 @@ export interface paths {
         patch: operations["ContactPropertiesController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts": {
         parameters: {
             query?: never;
@@ -287,7 +3585,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/imports": {
         parameters: {
             query?: never;
@@ -304,7 +3601,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/imports/{import_id}": {
         parameters: {
             query?: never;
@@ -321,7 +3617,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/{contact}": {
         parameters: {
             query?: never;
@@ -338,7 +3633,6 @@ export interface paths {
         patch: operations["ContactsController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/{contact}/segments": {
         parameters: {
             query?: never;
@@ -355,7 +3649,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/{contact}/segments/{segment_id}": {
         parameters: {
             query?: never;
@@ -372,7 +3665,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/contacts/{contact}/topics": {
         parameters: {
             query?: never;
@@ -389,7 +3681,6 @@ export interface paths {
         patch: operations["ContactsController_updateTopics"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/deliverability": {
         parameters: {
             query?: never;
@@ -406,7 +3697,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains": {
         parameters: {
             query?: never;
@@ -423,7 +3713,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/lookup": {
         parameters: {
             query?: never;
@@ -440,7 +3729,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}": {
         parameters: {
             query?: never;
@@ -457,7 +3745,6 @@ export interface paths {
         patch: operations["DomainController_updateDomain"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/dns-records": {
         parameters: {
             query?: never;
@@ -474,7 +3761,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/dns-records/apply": {
         parameters: {
             query?: never;
@@ -491,7 +3777,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/dns-records/check": {
         parameters: {
             query?: never;
@@ -508,7 +3793,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/dns-records/export": {
         parameters: {
             query?: never;
@@ -525,7 +3809,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/domain-connect/start": {
         parameters: {
             query?: never;
@@ -542,7 +3825,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/events": {
         parameters: {
             query?: never;
@@ -559,7 +3841,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/share-links": {
         parameters: {
             query?: never;
@@ -576,7 +3857,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/share-links/{link_id}": {
         parameters: {
             query?: never;
@@ -593,7 +3873,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/smtp-config": {
         parameters: {
             query?: never;
@@ -610,7 +3889,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/smtp-config/verify-saved": {
         parameters: {
             query?: never;
@@ -627,7 +3905,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/test-send": {
         parameters: {
             query?: never;
@@ -644,7 +3921,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/domains/{domain_id}/verify": {
         parameters: {
             query?: never;
@@ -661,7 +3937,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/emails": {
         parameters: {
             query?: never;
@@ -678,7 +3953,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/emails/batch": {
         parameters: {
             query?: never;
@@ -695,7 +3969,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/emails/metrics": {
         parameters: {
             query?: never;
@@ -712,7 +3985,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/emails/{id}": {
         parameters: {
             query?: never;
@@ -729,7 +4001,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations": {
         parameters: {
             query?: never;
@@ -746,7 +4017,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/connect": {
         parameters: {
             query?: never;
@@ -763,7 +4033,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/repos": {
         parameters: {
             query?: never;
@@ -780,7 +4049,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/repos/{owner}/{repo}/branches": {
         parameters: {
             query?: never;
@@ -797,7 +4065,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/settings": {
         parameters: {
             query?: never;
@@ -814,7 +4081,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/sync": {
         parameters: {
             query?: never;
@@ -831,7 +4097,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/github/sync/{sync_id}": {
         parameters: {
             query?: never;
@@ -848,7 +4113,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/integrations/{provider}": {
         parameters: {
             query?: never;
@@ -865,7 +4129,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes": {
         parameters: {
             query?: never;
@@ -882,7 +4145,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}": {
         parameters: {
             query?: never;
@@ -899,7 +4161,6 @@ export interface paths {
         patch: operations["MailboxController_updateMailbox"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages": {
         parameters: {
             query?: never;
@@ -916,7 +4177,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}": {
         parameters: {
             query?: never;
@@ -933,7 +4193,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/attachments/{position}": {
         parameters: {
             query?: never;
@@ -950,7 +4209,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/raw": {
         parameters: {
             query?: never;
@@ -967,7 +4225,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/read": {
         parameters: {
             query?: never;
@@ -984,7 +4241,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages": {
         parameters: {
             query?: never;
@@ -1001,7 +4257,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages/export": {
         parameters: {
             query?: never;
@@ -1018,7 +4273,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages/settings": {
         parameters: {
             query?: never;
@@ -1035,7 +4289,6 @@ export interface paths {
         patch: operations["OutboundMessageController_updateSettings"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages/timeline": {
         parameters: {
             query?: never;
@@ -1052,7 +4305,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages/{id}": {
         parameters: {
             query?: never;
@@ -1069,7 +4321,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/messages/{id}/body": {
         parameters: {
             query?: never;
@@ -1086,7 +4337,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received": {
         parameters: {
             query?: never;
@@ -1103,7 +4353,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received/export": {
         parameters: {
             query?: never;
@@ -1120,7 +4369,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received/{id}": {
         parameters: {
             query?: never;
@@ -1137,7 +4385,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received/{id}/attachments/{position}": {
         parameters: {
             query?: never;
@@ -1154,7 +4401,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received/{id}/raw": {
         parameters: {
             query?: never;
@@ -1171,7 +4417,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/received/{id}/read": {
         parameters: {
             query?: never;
@@ -1188,7 +4433,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/segments": {
         parameters: {
             query?: never;
@@ -1205,7 +4449,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/segments/preview": {
         parameters: {
             query?: never;
@@ -1222,7 +4465,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/segments/{segment_id}": {
         parameters: {
             query?: never;
@@ -1239,7 +4481,6 @@ export interface paths {
         patch: operations["SegmentsController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/segments/{segment_id}/contacts": {
         parameters: {
             query?: never;
@@ -1256,7 +4497,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/segments/{segment_id}/metrics": {
         parameters: {
             query?: never;
@@ -1273,7 +4513,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/sending-defaults": {
         parameters: {
             query?: never;
@@ -1290,7 +4529,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/smtp-config": {
         parameters: {
             query?: never;
@@ -1307,7 +4545,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/smtp-config/verify": {
         parameters: {
             query?: never;
@@ -1324,7 +4561,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/smtp-config/verify-saved": {
         parameters: {
             query?: never;
@@ -1341,7 +4577,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/smtp-configs": {
         parameters: {
             query?: never;
@@ -1358,7 +4593,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/stats": {
         parameters: {
             query?: never;
@@ -1375,7 +4609,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/suppression": {
         parameters: {
             query?: never;
@@ -1392,7 +4625,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/suppression/{email}": {
         parameters: {
             query?: never;
@@ -1409,7 +4641,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates": {
         parameters: {
             query?: never;
@@ -1426,7 +4657,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/lint": {
         parameters: {
             query?: never;
@@ -1443,7 +4673,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/preview": {
         parameters: {
             query?: never;
@@ -1460,7 +4689,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/tags": {
         parameters: {
             query?: never;
@@ -1477,7 +4705,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}": {
         parameters: {
             query?: never;
@@ -1494,7 +4721,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}/render": {
         parameters: {
             query?: never;
@@ -1511,7 +4737,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}/send": {
         parameters: {
             query?: never;
@@ -1528,7 +4753,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}/send-batch": {
         parameters: {
             query?: never;
@@ -1545,7 +4769,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}/test-send": {
         parameters: {
             query?: never;
@@ -1562,7 +4785,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/templates/{name}/variables": {
         parameters: {
             query?: never;
@@ -1579,7 +4801,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/topics": {
         parameters: {
             query?: never;
@@ -1596,7 +4817,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/topics/{topic_id}": {
         parameters: {
             query?: never;
@@ -1613,7 +4833,6 @@ export interface paths {
         patch: operations["TopicsController_update"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks": {
         parameters: {
             query?: never;
@@ -1630,7 +4849,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/attempts": {
         parameters: {
             query?: never;
@@ -1647,7 +4865,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/default": {
         parameters: {
             query?: never;
@@ -1664,7 +4881,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/default/rotate-secret": {
         parameters: {
             query?: never;
@@ -1681,7 +4897,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/domains/{domain_id}": {
         parameters: {
             query?: never;
@@ -1698,7 +4913,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/domains/{domain_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -1715,7 +4929,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints": {
         parameters: {
             query?: never;
@@ -1732,7 +4945,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}": {
         parameters: {
             query?: never;
@@ -1749,7 +4961,6 @@ export interface paths {
         patch: operations["WebhooksController_mail_workspace_updateEndpoint"];
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
         parameters: {
             query?: never;
@@ -1766,7 +4977,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/endpoints/{endpoint_id}/test": {
         parameters: {
             query?: never;
@@ -1783,7 +4993,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/event-types": {
         parameters: {
             query?: never;
@@ -1800,7 +5009,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events": {
         parameters: {
             query?: never;
@@ -1817,7 +5025,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}": {
         parameters: {
             query?: never;
@@ -1834,7 +5041,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    // (undocumented)
     "/v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay": {
         parameters: {
             query?: never;
@@ -1851,7 +5057,17 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-}
+};
+
+export { PermissionDeniedError }
+
+export { ProductCraftError }
+
+export { RateLimitError }
+
+export { UnprocessableEntityError }
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 
