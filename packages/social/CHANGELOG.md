@@ -1,5 +1,11 @@
 # @productcraft/agora
 
+## 1.0.3
+
+### Patch Changes
+
+- 32e342a: Refresh social OpenAPI types from production.
+
 ## 1.0.2
 
 ### Patch Changes

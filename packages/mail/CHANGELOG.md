@@ -1,5 +1,11 @@
 # @productcraft/envoi
 
+## 0.2.4
+
+### Patch Changes
+
+- 32e342a: Refresh mail OpenAPI types from production.
+
 ## 0.2.3
 
 ### Patch Changes

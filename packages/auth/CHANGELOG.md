@@ -1,5 +1,11 @@
 # @productcraft/heimdall
 
+## 0.8.4
+
+### Patch Changes
+
+- 32e342a: Refresh auth OpenAPI types from production.
+
 ## 0.8.3
 
 ### Patch Changes
