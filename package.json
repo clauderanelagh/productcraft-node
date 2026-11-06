@@ -5,7 +5,7 @@
   "description": "Workspace root for the ProductCraft Node SDK packages. Source lives under packages/.",
   "type": "module",
   "engines": {
-    "node": ">=18",
+    "node": ">=20.3",
     "pnpm": ">=10"
   },
   "packageManager": "pnpm@10.24.0",
@@ -42,6 +42,7 @@
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "esbuild": "0.27.7",
     "eslint": "^9.0.0",
     "openapi-typescript": "^7.4.0",
     "prettier": "^3.3.0",

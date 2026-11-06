@@ -1,0 +1,138 @@
+#!/usr/bin/env node
+// Smoke-tests the BUILT dist of every package from a real ESM and a real
+// CJS consumer (vitest transforms src, so it proves nothing about the
+// published artefact; see memory feedback_tsup_esm_bare_require). For
+// @productcraft/core it also loads both builds in ONE process and checks
+// that errors thrown by one build pass `instanceof` against the other,
+// and runs a real request + webhook verification through each build.
+//
+// Usage: node scripts/smoke-dist.mjs   (after `pnpm run build`)
+
+import { createRequire } from "node:module";
+import { createServer } from "node:http";
+import { readdirSync, readFileSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import assert from "node:assert/strict";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(import.meta.url);
+let failures = 0;
+const check = async (name, fn) => {
+  try {
+    await fn();
+    console.log(`ok   ${name}`);
+  } catch (err) {
+    failures++;
+    console.error(`FAIL ${name}\n     ${err?.stack ?? err}`);
+  }
+};
+
+const [major, minor] = process.versions.node.split(".").map(Number);
+console.log(`node ${process.versions.node}`);
+assert.ok(major > 20 || (major === 20 && minor >= 3), "the SDK requires Node 20.3+");
+
+// 1. Every package's dist loads from ESM and CJS and exposes the same names.
+for (const dir of readdirSync(join(root, "packages"))) {
+  const pkgPath = join(root, "packages", dir, "package.json");
+  if (!existsSync(pkgPath)) continue;
+  const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+  const entry = pkg.exports?.["."];
+  if (!entry?.import || !entry?.require) continue;
+  await check(`${pkg.name}: ESM and CJS builds load with the same exports`, async () => {
+    const base = join(root, "packages", dir);
+    const esm = await import(pathToFileURL(join(base, entry.import)).href);
+    const cjs = require(join(base, entry.require));
+    const names = (m) => Object.keys(m).filter((k) => k !== "default" && k !== "__esModule").sort();
+    assert.ok(names(esm).length > 0, "ESM build exports nothing");
+    assert.deepEqual(names(cjs), names(esm));
+    assert.equal(pkg.engines?.node, ">=20.3", "engines.node must be >=20.3");
+  });
+}
+
+// 2. @productcraft/core: cross-build behaviour.
+const coreDir = join(root, "packages", "core");
+const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);
+const cjs = require(join(coreDir, "dist/index.cjs"));
+const corePkg = JSON.parse(readFileSync(join(coreDir, "package.json"), "utf8"));
+
+await check("core: errors from one build pass instanceof against the other", () => {
+  for (const [a, b] of [[esm, cjs], [cjs, esm]]) {
+    const err = a.APIError.generate(404, { code: "NOT_FOUND", message: "x" }, new Headers());
+    assert.ok(err instanceof b.NotFoundError, "NotFoundError across builds");
+    assert.ok(err instanceof b.APIError, "APIError across builds");
+    assert.ok(err instanceof b.ProductCraftError, "ProductCraftError across builds");
+    assert.ok(!(err instanceof b.ConflictError), "not a ConflictError");
+    const reuse = a.APIError.generate(409, { code: "IDEMPOTENCY_KEY_REUSE" }, new Headers());
+    assert.ok(reuse instanceof b.IdempotencyKeyReuseError && reuse instanceof b.ConflictError);
+    assert.ok(new a.APITimeoutError() instanceof b.APIConnectionError);
+    assert.ok(new a.ConfigurationError("x") instanceof b.ConfigurationError);
+  }
+});
+
+await check("core: CORE_VERSION matches package.json in both builds", () => {
+  assert.equal(esm.CORE_VERSION, corePkg.version);
+  assert.equal(cjs.CORE_VERSION, corePkg.version);
+});
+
+await check("core: a real request with retry, pagination and lastResponse through both builds", async () => {
+  let n = 0;
+  const seen = [];
+  const server = createServer((req, res) => {
+    n++;
+    seen.push({ url: req.url, ua: req.headers["user-agent"], key: req.headers["idempotency-key"] });
+    if (n === 1) {
+      res.writeHead(503, { "content-type": "application/json", "retry-after": "0" });
+      return res.end(JSON.stringify({ code: "UNAVAILABLE", message: "down" }));
+    }
+    const cursor = new URL(req.url, "http://x").searchParams.get("cursor");
+    res.writeHead(200, { "content-type": "application/json", "x-request-id": "req_smoke" });
+    res.end(JSON.stringify({ data: [{ id: cursor ?? "first" }], pagination: { next_cursor: cursor ? null : "c2", has_more: !cursor } }));
+  });
+  await new Promise((ok) => server.listen(0, "127.0.0.1", ok));
+  const url = `http://127.0.0.1:${server.address().port}`;
+  try {
+    for (const m of [esm, cjs]) {
+      n = 0;
+      seen.length = 0;
+      const client = new m.APIClient({ apiKey: "pcft_smoke", workspaceId: "ws1" }, url);
+      const items = await client.list({ method: "GET", path: "/v1/workspaces/{workspace_id}/things" }).toArray({ maxItems: 10 });
+      assert.deepEqual(items.map((i) => i.id), ["first", "c2"]);
+      assert.equal(seen.length, 3, "one retry + two pages");
+      assert.match(seen[0].ua, /^productcraft-node\/core@\S+ node\//);
+      const one = await client.request({ method: "GET", path: "/v1/workspaces/{workspace_id}/things" });
+      assert.equal(one.lastResponse.requestId, "req_smoke");
+      assert.equal(JSON.stringify(one).includes("lastResponse"), false);
+    }
+  } finally {
+    server.close();
+  }
+});
+
+await check("core: verifyWebhook (Standard Webhooks vector) through both builds", async () => {
+  for (const m of [esm, cjs]) {
+    const out = await m.verifyWebhook({
+      payload: '{"test": 2432232314}',
+      headers: { "webhook-id": "msg_p5jXN8AQM9LWM0D4loKWxJek", "webhook-timestamp": "1614265330", "webhook-signature": "v1,g0hM9SsE+OTPJTGt/tmIKtSyZlE3uFJELVlNIOLJ1OE=" },
+      secret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw",
+      now: 1614265330 * 1000,
+    });
+    assert.deepEqual(out, { test: 2432232314 });
+  }
+});
+
+await check("core: makeClient and createOpenAPIClient build openapi-fetch clients", () => {
+  for (const m of [esm, cjs]) {
+    const c = m.makeClient("https://example.invalid", { auth: { type: "apiKey", key: "k" } });
+    assert.equal(typeof c.GET, "function");
+    assert.equal(typeof m.PC_BASE_URL.mail, "string");
+    const raw = m.createOpenAPIClient(new m.APIClient({ apiKey: "k" }, "https://example.invalid"));
+    assert.equal(typeof raw.POST, "function");
+  }
+});
+
+if (failures > 0) {
+  console.error(`${failures} smoke check(s) failed`);
+  process.exit(1);
+}
+console.log("dist smoke passed");
