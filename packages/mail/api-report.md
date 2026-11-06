@@ -16,23 +16,6 @@ export class Mail {
 // @public
 export interface paths {
     // (undocumented)
-    "/v1/domain-connect/callback": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get: operations["DomainConnectCallbackController_callback"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    // (undocumented)
     "/v1/public/domain-setup/{token}": {
         parameters: {
             query?: never;
@@ -679,6 +662,40 @@ export interface paths {
         trace?: never;
     };
     // (undocumented)
+    "/v1/workspaces/{workspace_id}/emails": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmailsController_list"];
+        put?: never;
+        post: operations["EmailsController_send"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    // (undocumented)
+    "/v1/workspaces/{workspace_id}/emails/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EmailsController_sendBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    // (undocumented)
     "/v1/workspaces/{workspace_id}/emails/metrics": {
         parameters: {
             query?: never;
@@ -687,6 +704,23 @@ export interface paths {
             cookie?: never;
         };
         get: operations["EmailMetricsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    // (undocumented)
+    "/v1/workspaces/{workspace_id}/emails/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EmailsController_retrieve"];
         put?: never;
         post?: never;
         delete?: never;
