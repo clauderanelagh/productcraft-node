@@ -100,10 +100,12 @@ try {
   const form = new Waitlist({ fetch: publicFetch }).public({ workspace: WORKSPACE, waitlist: TAG });
   const info = await form.info.retrieve();
   check(info.slug === TAG, "public info.retrieve without a key");
+  const entryIds = [];
   for (const n of [1, 2, 3]) {
     const e = await form.entries.create({ email: `success+${TAG}-${n}@simulator.amazonses.com`, name: `SDK smoke ${n}` });
     // Simulator addresses are stored as test entries (negative position, left out of counts and exports by default).
     check(typeof e.id === "string" && e.is_test === true && e.position < 0, `public entries.create #${n} (test entry, position ${e.position})`);
+    entryIds.push(e.id);
   }
   check(publicHeaders.length === 4 && publicHeaders.every((h) => !h.has("authorization")), "public calls sent no Authorization header");
   check(!!publicHeaders[1].get("idempotency-key") && !publicHeaders[0].has("idempotency-key"), "public submit carries an Idempotency-Key (spec-declared), the read none");
@@ -120,6 +122,17 @@ try {
   check(real === 0, `lists.entries.count leaves test entries out (${real})`);
   const csv = await (await waitlist.lists.entries.export(wl.id, { include_test: true })).text();
   check(res_ok(csv), `lists.entries.export({ include_test: true }) returns CSV text (${csv.split("\n").filter(Boolean).length - 1} rows)`);
+
+  // Bulk: a failed row carries the string error code, like a thrown error.
+  const bulk = await waitlist.lists.entries.bulk(wl.id, { ids: [entryIds[0], "00000000-0000-4000-8000-000000000000"], action: "reject" });
+  const bad = bulk.results.find((r) => r.status === "error");
+  check(bulk.succeeded === 1 && bulk.failed === 1 && bad?.error?.code === "NOT_FOUND" && bad.error.status_code === 404,
+    `lists.entries.bulk row error is { code: ${JSON.stringify(bad?.error?.code)}, status_code: ${bad?.error?.status_code} }`);
+
+  // The reference example's range (until after since) is a valid call.
+  const since = new Date(Date.now() - 7 * 86400_000).toISOString();
+  const timeline = await waitlist.lists.analytics.timeline(wl.id, { since, until: new Date().toISOString(), include_test: true });
+  check(Array.isArray(timeline.points) && timeline.points.length >= 7, `lists.analytics.timeline with since < until (${timeline.points?.length} days)`);
 
   // Expected errors.
   try {
