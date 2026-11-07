@@ -1,4 +1,4 @@
-# @productcraft/heimdall-passport
+# @productcraft/auth-passport
 
 ## 2.1.0
 

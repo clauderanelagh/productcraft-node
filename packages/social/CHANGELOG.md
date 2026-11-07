@@ -1,4 +1,4 @@
-# @productcraft/agora
+# @productcraft/social
 
 ## 1.6.0
 
