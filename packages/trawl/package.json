@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/trawl",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "AI web extraction: send a JSON Schema and a description, get schema-shaped data extracted from the live web (ProductCraft Trawl). Resources, polling, typed errors, retries and webhook verification, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
