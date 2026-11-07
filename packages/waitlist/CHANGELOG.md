@@ -1,5 +1,16 @@
 # @productcraft/rally
 
+## 1.1.0
+
+### Minor Changes
+
+- 5084e47: `webhooks.sign({ payload })` signs a test event the way ProductCraft signs deliveries, for testing a handler with `webhooks.unwrap`. Reference examples use the spec's parameter examples, and type hovers no longer show the internal `Open<…>` wrapper.
+
+### Patch Changes
+
+- Updated dependencies [5084e47]
+  - @productcraft/core@1.1.0
+
 ## 1.0.2
 
 ### Patch Changes

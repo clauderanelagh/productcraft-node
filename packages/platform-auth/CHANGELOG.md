@@ -1,5 +1,13 @@
 # @productcraft/platform-auth
 
+## 1.0.3
+
+### Patch Changes
+
+- 5084e47: Reference examples use the spec's parameter examples, and type hovers no longer show the internal `Open<…>` wrapper.
+- Updated dependencies [5084e47]
+  - @productcraft/core@1.1.0
+
 ## 1.0.2
 
 ### Patch Changes

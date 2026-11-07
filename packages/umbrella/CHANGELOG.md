@@ -1,5 +1,25 @@
 # productcraft
 
+## 1.1.0
+
+### Minor Changes
+
+- 5084e47: Re-exports `signWebhook` (and its types) from `@productcraft/core`.
+
+### Patch Changes
+
+- Updated dependencies [5084e47]
+- Updated dependencies [5084e47]
+- Updated dependencies [5084e47]
+- Updated dependencies [5084e47]
+  - @productcraft/auth@1.1.0
+  - @productcraft/core@1.1.0
+  - @productcraft/platform-auth@1.0.3
+  - @productcraft/mail@1.1.0
+  - @productcraft/social@1.2.0
+  - @productcraft/trawl@1.1.0
+  - @productcraft/waitlist@1.1.0
+
 ## 1.0.1
 
 ### Patch Changes

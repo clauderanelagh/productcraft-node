@@ -1,5 +1,12 @@
 # @productcraft/heimdall-passport
 
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies [5084e47]
+  - @productcraft/auth@1.1.0
+
 ## 1.0.1
 
 ### Patch Changes
