@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/gen-fixture",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Test fixture for scripts/gen-sdk.mjs: a package generated from fixture.openapi.json. Never published.",
   "type": "module",

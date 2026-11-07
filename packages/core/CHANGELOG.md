@@ -1,5 +1,40 @@
 # @productcraft/core
 
+## 1.0.0
+
+### Major Changes
+
+- 9facfd6: **Stable 1.0: `@productcraft/core` and the `productcraft` umbrella.** Together with `@productcraft/auth` 1.0 and `@productcraft/auth-passport` 1.0 this completes the move of every ProductCraft package onto one generator and one runtime.
+  - `productcraft` 1.0 is the 0.4 surface (published only as a `next` preview) made stable: `new ProductCraft({ apiKey, workspaceId })`, one shared config with `overrides.<product>`, `pc.platform` (with `pc.platformAuth` as the same instance), lazily built products, and every error class, `verifyWebhook` and product type namespace re-exported. `pc.auth` is now Auth 1.x. Migration guide: https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/productcraft-1.0.0.md (per product: https://github.com/clauderanelagh/productcraft-node/tree/main/docs/migrations).
+  - `@productcraft/core` 1.0 declares the shared runtime stable (`APIClient`, retries, typed errors, pagination, polling, webhook verification). Nothing is removed: the 0.x helpers (`makeClient`, `PCAuth`, `PC_BASE_URL`) stay, deprecated. Node 20.3 or later.
+
+  From 1.0 on, a spec refresh that only adds operations or optional fields is a minor release; a break is a major with a migration guide.
+
+### Minor Changes
+
+- ac1db59: **@productcraft/auth 1.0: every Auth operation, generated.** Auth moves onto the same generator and runtime as the other ProductCraft SDKs (kubb is retired). All of the Auth API is now reachable as methods, where 0.8 covered about a third:
+  - `auth.admin.app(appId)` (alias `auth.app(appId)`): end users (contacts, invites, imports, exports, bulk actions, sessions), roles and permissions, API keys, M2M credentials, auth config and providers, custom domains, tenants and tenant keys, audit logs and the audit sink, webhook endpoints and events, notification settings, WebAuthn config, sign-in tests. `auth.apps.*` and `auth.stats.*` at the root.
+  - `auth.consumer(slug)`, flattened: `signin`, `signup`, `refresh`, `logout`, `signinWithProvider`, `verifyEmail`, password reset and verification, MFA, `me.*` (profile, sessions, activity, contacts, avatar, MFA factors, step-up), tenants and tenant keys, admin users, `verify.token/authorize`, `oauth.token/introspect`, `wellKnown.jwks`.
+  - `auth.verifyToken(jwt, { app })` at the top level, one JWKS cache per app. `consumer(slug).verifyToken`, `jwks`, the passkey ceremonies and the issuer/audience properties are unchanged.
+  - Auto-pagination, automatic `Idempotency-Key` on writes that declare it, retries with backoff honouring `Retry-After`, per-attempt timeouts, typed error classes with `requestId` and `docUrl`, `lastResponse` and `.withResponse()`, typed webhooks (`auth.webhooks.unwrap`), `@productcraft/auth/testing` mocks; `signup()` and `me.retrieve()` are typed.
+  - The CommonJS build bundles `jose`, so `require("@productcraft/auth")` works on Node 20.3+ (it threw `ERR_REQUIRE_ESM` below Node 20.19).
+
+  Every 0.6 and 0.8 method name still works as a deprecated alias calling the same route, and `AuthHttpError` is an alias of `APIError` (`instanceof` still matches every API error). Breaking: query parameters use their snake_case wire names (`workspaceId` is `workspace_id`, `actorId` is `actor_id`), list methods return pages (`page.next_cursor`, `for await`), `AuthHttpError`'s `data`/`statusText` are `body`/`status`, and a workspace key in a browser needs `dangerouslyAllowBrowser: true`. Migration guide: https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/auth-1.0.0.md
+
+  `@productcraft/auth-passport` 1.0 takes `@productcraft/auth` as a peer dependency (`^1.0.0-0 || ^1`) and its CommonJS build loads on Node 20.3+; its API is unchanged.
+
+  `@productcraft/core`: new client option `credentialFromEnv` (default `true`); `false` never reads `PRODUCTCRAFT_API_KEY`, which Auth's consumer scope uses.
+
+### Patch Changes
+
+- 6aa992e: **productcraft 0.4: one key, one shared config, every generated product.**
+  - `new ProductCraft({ apiKey, workspaceId })`: `apiKey` is a shorthand for `auth: { type: "apiKey", key }`; `auth` still takes bearer and cookie credentials. Every option (`workspaceId`, `maxRetries`, `timeout`, `fetch`, `defaultHeaders`, `logLevel`, `logger`, `dangerouslyAllowBrowser`, `webhookSecret`) is shared by all products; `overrides.<product>` merges over it.
+  - `pc.platform` is the Platform client; `pc.platformAuth` stays as the same instance.
+  - Products are built on first access, so an app that only uses `pc.mail` never constructs the others. `PRODUCTCRAFT_WORKSPACE_ID` is read once, and without a workspace id every product shares one key lookup.
+  - Re-exports every error class, `verifyWebhook`, each product's type namespace (`import type { Mail } from "productcraft"`) and its error-code type.
+
+  `@productcraft/core`: the per-process workspace lookup cache is shared across duplicate copies of core (two products on different core versions still make one lookup).
+
 ## 0.4.1
 
 ### Patch Changes

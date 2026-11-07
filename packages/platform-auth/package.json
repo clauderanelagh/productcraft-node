@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/platform-auth",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Workspaces, members, invites, roles and IAM policies, API keys, service activation and introspection (ProductCraft Platform). Resources, auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

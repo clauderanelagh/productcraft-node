@@ -1,5 +1,38 @@
 # productcraft
 
+## 1.0.0
+
+### Major Changes
+
+- 9facfd6: **Stable 1.0: `@productcraft/core` and the `productcraft` umbrella.** Together with `@productcraft/auth` 1.0 and `@productcraft/auth-passport` 1.0 this completes the move of every ProductCraft package onto one generator and one runtime.
+  - `productcraft` 1.0 is the 0.4 surface (published only as a `next` preview) made stable: `new ProductCraft({ apiKey, workspaceId })`, one shared config with `overrides.<product>`, `pc.platform` (with `pc.platformAuth` as the same instance), lazily built products, and every error class, `verifyWebhook` and product type namespace re-exported. `pc.auth` is now Auth 1.x. Migration guide: https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/productcraft-1.0.0.md (per product: https://github.com/clauderanelagh/productcraft-node/tree/main/docs/migrations).
+  - `@productcraft/core` 1.0 declares the shared runtime stable (`APIClient`, retries, typed errors, pagination, polling, webhook verification). Nothing is removed: the 0.x helpers (`makeClient`, `PCAuth`, `PC_BASE_URL`) stay, deprecated. Node 20.3 or later.
+
+  From 1.0 on, a spec refresh that only adds operations or optional fields is a minor release; a break is a major with a migration guide.
+
+### Minor Changes
+
+- 6aa992e: **productcraft 0.4: one key, one shared config, every generated product.**
+  - `new ProductCraft({ apiKey, workspaceId })`: `apiKey` is a shorthand for `auth: { type: "apiKey", key }`; `auth` still takes bearer and cookie credentials. Every option (`workspaceId`, `maxRetries`, `timeout`, `fetch`, `defaultHeaders`, `logLevel`, `logger`, `dangerouslyAllowBrowser`, `webhookSecret`) is shared by all products; `overrides.<product>` merges over it.
+  - `pc.platform` is the Platform client; `pc.platformAuth` stays as the same instance.
+  - Products are built on first access, so an app that only uses `pc.mail` never constructs the others. `PRODUCTCRAFT_WORKSPACE_ID` is read once, and without a workspace id every product shares one key lookup.
+  - Re-exports every error class, `verifyWebhook`, each product's type namespace (`import type { Mail } from "productcraft"`) and its error-code type.
+
+  `@productcraft/core`: the per-process workspace lookup cache is shared across duplicate copies of core (two products on different core versions still make one lookup).
+
+### Patch Changes
+
+- Updated dependencies [ac1db59]
+- Updated dependencies [9facfd6]
+- Updated dependencies [6aa992e]
+  - @productcraft/auth@1.0.0
+  - @productcraft/core@1.0.0
+  - @productcraft/mail@1.0.1
+  - @productcraft/platform-auth@1.0.1
+  - @productcraft/social@1.1.1
+  - @productcraft/trawl@1.0.4
+  - @productcraft/waitlist@1.0.1
+
 ## 0.3.9
 
 ### Patch Changes
