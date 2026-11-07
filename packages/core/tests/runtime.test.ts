@@ -552,6 +552,16 @@ describe("request shape", () => {
     expect(server.requests[0]?.headers.authorization).toBe("Bearer pcft_from_env");
   });
 
+  it("credentialFromEnv: false never reads PRODUCTCRAFT_API_KEY, but an explicit credential is still sent", async () => {
+    vi.stubEnv("PRODUCTCRAFT_API_KEY", "pcft_from_env");
+    server.reply({ status: 200, body: {} });
+    await new APIClient({ workspaceId: WS, credentialFromEnv: false }, server.url).request(get());
+    expect(server.requests[0]?.headers.authorization).toBeUndefined();
+    server.reply({ status: 200, body: {} });
+    await new APIClient({ workspaceId: WS, apiKey: "pcft_explicit", credentialFromEnv: false }, server.url).request(get());
+    expect(server.requests[0]?.headers.authorization).toBe("Bearer pcft_explicit");
+  });
+
   it("missing path params throw before sending", async () => {
     server.reply({ status: 200, body: {} });
     await expect(make().request({ method: "GET", path: "/v1/things/{id}" })).rejects.toThrow(/Missing path parameter "id"/);

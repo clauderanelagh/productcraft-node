@@ -22,7 +22,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { emitApiMd, emitExamples, emitManifest, emitReadmeRegion, spliceReadme } from "./gen-sdk/emit-docs.mjs";
-import { emitClient, emitErrors, emitOpsTest, emitPaths, emitResources, emitTesting, emitTypes, emitWebhooks } from "./gen-sdk/emit-code.mjs";
+import { emitClient, emitCompat, emitErrors, emitOpsTest, emitPaths, emitResources, emitTesting, emitTypes, emitWebhooks } from "./gen-sdk/emit-code.mjs";
 import { buildModel, GenError } from "./gen-sdk/model.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -102,6 +102,28 @@ export const SURFACES = {
       community: { bind: ["community_id"], args: "positional", actor: true, doc: "Calls scoped to one community. Chain `.as(actorId)` to act as one of its actors: `actor_id` is filled in every body or query that declares it." },
     },
   },
+  auth: {
+    spec: "Specs/auth.json",
+    packageDir: "packages/auth",
+    packageName: "@productcraft/auth",
+    sdkName: "auth",
+    className: "Auth",
+    clientVar: "auth",
+    title: "ProductCraft Auth API client (apps, end users, roles, sign-in flows, sessions, MFA and tenants)",
+    baseUrlKey: "auth",
+    docsUrl: "https://productcraft.co/docs/auth",
+    webhookSecretEnv: "PRODUCTCRAFT_AUTH_WEBHOOK_SECRET",
+    // Hand-written base class (src/base.ts): `consumer(slug)` with its own credential rule,
+    // top-level `verifyToken`, JWKS caches. It extends the generated AuthResources.
+    root: { module: "../base.js", base: "AuthBase", options: "AuthOptions" },
+    members: ["verifyToken", "consumer", "admin", "app"],
+    // Frozen 0.6.x and 0.8.0 names (docs/sdk-standard.md section 6); deleted in 2.0.
+    compatFile: "packages/auth/compat.json",
+    scopes: {
+      app: { bind: ["app_id"], args: "positional", accessor: "admin.app", aliases: ["app"], expose: { appId: "app_id" }, members: ["appId"], doc: "Admin calls for one app (end users, roles, keys, config). Needs a workspace API key or a platform session." },
+      consumer: { bind: ["app_slug"], args: "positional", accessor: false, members: ["verifyToken", "jwks", "passkeys", "appSlug", "expectedIssuer", "expectedAudience", "acceptedIssuers"], doc: "Calls for one app's end users (sign-in, sessions, profile, MFA, tenants)." },
+    },
+  },
   "gen-fixture": {
     spec: "packages/gen-fixture/fixture.openapi.json",
     packageDir: "packages/gen-fixture",
@@ -125,6 +147,7 @@ export async function generate(surface, spec = undefined) {
   const cfg = { surface, ...SURFACES[surface] };
   if (!SURFACES[surface]) throw new Error(`gen-sdk: unknown surface "${surface}" (switched: ${Object.keys(SURFACES).join(", ")})`);
   const doc = spec ?? JSON.parse(readFileSync(join(ROOT, cfg.spec), "utf8"));
+  if (cfg.compatFile) cfg.compat = JSON.parse(readFileSync(join(ROOT, cfg.compatFile), "utf8"));
   const model = buildModel(doc, cfg);
   const g = `${cfg.packageDir}/src/_generated`;
   const files = {
@@ -136,6 +159,7 @@ export async function generate(surface, spec = undefined) {
     [`${g}/webhooks.ts`]: emitWebhooks(model, cfg),
     [`${g}/testing.ts`]: emitTesting(model, cfg),
     [`${g}/manifest.json`]: emitManifest(model, cfg),
+    ...(cfg.compat ? { [`${g}/compat.ts`]: emitCompat(model, cfg) } : {}),
     [`${cfg.packageDir}/tests/_generated/operations.test.ts`]: emitOpsTest(model, cfg),
     [`${cfg.packageDir}/api.md`]: emitApiMd(model, cfg),
     ...emitExamples(model, cfg),

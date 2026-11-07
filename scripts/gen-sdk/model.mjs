@@ -87,8 +87,9 @@ export function buildModel(spec, config) {
         continue;
       }
       const { resource, method } = x;
-      const segs = typeof resource === "string" ? resource.split(".") : [];
-      if (!segs.length || !segs.every((s) => IDENT.test(s)) || !IDENT.test(method ?? "")) {
+      // An empty resource puts the method on the root of the bound scope (`auth.consumer(slug).signin()`).
+      const segs = resource === "" ? [] : typeof resource === "string" ? resource.split(".") : [];
+      if ((resource !== "" && !segs.length) || !segs.every((s) => IDENT.test(s)) || !IDENT.test(method ?? "")) {
         problems.push(`${w}: x-pc-sdk resource/method must be camelCase identifiers, got ${JSON.stringify({ resource, method })}`);
         continue;
       }
@@ -97,7 +98,7 @@ export function buildModel(spec, config) {
       if (BANNED_VERBS.has(method)) problems.push(`${w}: verb "${method}" is not in the closed vocabulary (section 3.2 rule 4)`);
       if (VERB_HTTP[method] && !VERB_HTTP[method].includes(m)) problems.push(`${w}: "${method}" cannot be a ${m.toUpperCase()} (section 3.2)`);
 
-      const name = `${resource}.${method}`;
+      const name = segs.length ? `${resource}.${method}` : method;
 
       const params = (op.parameters ?? []).map((p) => (p.$ref ? deref(p) ?? (problems.push(`${w}: unresolved parameter $ref ${p.$ref}`), {}) : p));
       const pathParams = params.filter((p) => p.in === "path");
@@ -111,6 +112,11 @@ export function buildModel(spec, config) {
         scope = scopeByKey.get([...scopeBind].sort().join(",")) ?? null;
         if (!scope) problems.push(`${w}: bind ${JSON.stringify(scopeBind)} has no scope in this surface's gen-sdk config`);
       }
+      if (!segs.length && !scope) problems.push(`${w}: an empty x-pc-sdk resource is only valid inside a bound scope`);
+      // Names the surface's hand-written code owns on this scope (or the client root): SURFACES `members`.
+      const owned = new Set(scope ? scope.members ?? [] : config.members ?? []);
+      const top = segs.length ? segs[0] : method;
+      if (owned.has(top)) problems.push(`${w}: "${top}" is owned by hand-written code on ${scope ? `${scope.name}(…)` : "the client"} (SURFACES members)`);
       // Unique per scope (as openapi-audit checks): `social.webhooks.endpoints.list` and
       // `social.community(id).webhooks.endpoints.list` are different methods.
       const scopedName = `${scope?.name ?? ""}:${name}`;
@@ -225,7 +231,7 @@ export function buildModel(spec, config) {
 
       const stem = typeStem(resource);
       ops.push({
-        operationId: op.operationId, http: m.toUpperCase(), path, resource, segs, method, name,
+        operationId: op.operationId, http: m.toUpperCase(), path, resource, segs, method, name, call: name,
         summary: op.summary ?? "", description: op.description && op.description !== op.summary ? op.description : "",
         deprecated: !!op.deprecated, public: x.public === true, scope, bind, positional, query, body, idempotent,
         success, errors, paginated, poll, actor,
@@ -252,7 +258,10 @@ export function buildModel(spec, config) {
   const resourceSet = new Set();
   for (const o of ops) for (let i = 1; i <= o.segs.length; i++) resourceSet.add(`${o.scope?.name ?? ""}:${o.segs.slice(0, i).join(".")}`);
   for (const o of ops) if (resourceSet.has(`${o.scope?.name ?? ""}:${o.resource}.${o.method}`)) problems.push(`${o.http} ${o.path} (${o.operationId}): method ${o.name} collides with a resource of the same name`);
-  for (const s of scopes) if (ops.some((o) => !o.scope && o.segs[0] === s.name)) problems.push(`scope accessor "${s.name}" collides with a root resource`);
+  for (const s of scopes) {
+    const head = (s.accessor || s.name).split(".")[0];
+    if (ops.some((o) => !o.scope && (o.segs[0] ?? o.method) === head)) problems.push(`scope accessor "${head}" collides with a root resource`);
+  }
 
   // Public types: models (x-pc-sdk-model), named enums, the error-code enum.
   const schemas = spec.components?.schemas ?? {};
@@ -318,8 +327,59 @@ export function buildModel(spec, config) {
   const apiEventTypes = enums.some((e) => e.name === "WebhookEventType");
   if (!apiEventTypes && webhooks.length) claim("WebhookEventType", "the generated webhook event-type union");
 
+  const compat = resolveCompat(config.compat, ops, scopes, problems, resourceSet);
+
   if (problems.length) throw new GenError(problems);
-  return { apiEventTypes, ops, scopes, models, enums, errorCode, webhooks, deref };
+  return { apiEventTypes, ops, scopes, models, enums, errorCode, webhooks, deref, compat };
+}
+
+/**
+ * Frozen 0.x names (Auth's compat.json, docs/sdk-standard.md section 6): each one maps to an
+ * operationId or to hand-written code. Names the generator already produces in the same scope need
+ * nothing; every other operation name becomes a deprecated alias method, in its 0.x namespace.
+ */
+function resolveCompat(compat, ops, scopes, problems, resourceSet) {
+  if (!compat) return { aliases: [], types: [] };
+  const aliases = [];
+  const byId = new Map(ops.map((o) => [o.operationId, o]));
+  for (const [scopeKey, names] of Object.entries(compat.methods ?? {})) {
+    const scope = scopeKey === "root" ? null : scopes.find((s) => s.name === scopeKey);
+    if (scopeKey !== "root" && !scope) {
+      problems.push(`compat: unknown scope "${scopeKey}"`);
+      continue;
+    }
+    for (const name of Object.keys(names).sort()) {
+      const entry = names[name];
+      if (entry.handwritten) continue;
+      const op = byId.get(entry.operationId);
+      if (!op) {
+        problems.push(`compat ${scopeKey}:${name}: operationId ${entry.operationId} is not a generated operation`);
+        continue;
+      }
+      if ((op.scope?.name ?? null) === (scope?.name ?? null) && op.call === name) continue;
+      const segs = name.split(".");
+      const method = segs.pop();
+      const where = `${scope?.name ?? ""}:${name}`;
+      if (resourceSet.has(where) || ops.some((o) => (o.scope?.name ?? null) === (scope?.name ?? null) && o.call === name)) {
+        problems.push(`compat ${scopeKey}:${name}: collides with a generated name`);
+        continue;
+      }
+      const scopeBind = scope ? scope.bind : [];
+      const templateNames = [...op.path.matchAll(/\{([^}]+)\}/g)].map((g) => g[1]);
+      const missing = (op.scope?.bind ?? []).filter((b) => !scopeBind.includes(b));
+      if (missing.length) {
+        problems.push(`compat ${scopeKey}:${name}: ${op.name} needs ${missing.join(", ")}, which ${scope ? `${scope.name}(…)` : "the client"} does not bind`);
+        continue;
+      }
+      const bind = templateNames.filter((n) => scopeBind.includes(n) || op.bind.includes(n));
+      const positional = op.positional.filter((p) => !scopeBind.includes(p.name));
+      const args = entry.args ?? "positional";
+      if (args !== "positional" && args !== "object") problems.push(`compat ${scopeKey}:${name}: args must be "positional" or "object"`);
+      aliases.push({ scope, segs, method, name, target: op, args, alias: { ...op, scope, bind, positional } });
+    }
+  }
+  const types = Object.entries(compat.types ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([name, schema]) => ({ name, schema }));
+  return { aliases, types };
 }
 
 function hasRequired(schema) {

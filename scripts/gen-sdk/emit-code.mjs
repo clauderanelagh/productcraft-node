@@ -53,8 +53,9 @@ export function scopeExpr(o, deref, given = undefined) {
   if (!o.scope) return "";
   const vals = given ?? Object.fromEntries(o.scope.bind.map((b, i) => [b, pathValue({ name: b, schema: o.pathParamSchemas?.[b] ?? { type: "string" } }, i + 4, deref)]));
   let expr;
-  if (o.scope.args === "positional") expr = `.${o.scope.name}(${o.scope.bind.map((b) => lit(vals[b])).join(", ")})`;
-  else expr = `.${o.scope.name}({ ${Object.entries(o.scope.args).map(([k, b]) => `${k}: ${lit(vals[b])}`).join(", ")} })`;
+  const acc = o.scope.accessor || o.scope.name;
+  if (o.scope.args === "positional") expr = `.${acc}(${o.scope.bind.map((b) => lit(vals[b])).join(", ")})`;
+  else expr = `.${acc}({ ${Object.entries(o.scope.args).map(([k, b]) => `${k}: ${lit(vals[b])}`).join(", ")} })`;
   if (o.scope.actor) expr += `.as(${lit(placeholderUuid(3))})`;
   return expr;
 }
@@ -80,12 +81,12 @@ export function callExample(o, cfg, deref) {
   const params = exampleParams(o, deref);
   const optionalOnly = o.paramsType && !o.hasRequiredParams;
   if (params && !(optionalOnly && Object.keys(params).length === 0)) args.push(tsLiteral(params));
-  const call = `${v}${scopeExpr(o, deref)}.${o.resource}.${o.method}(${args.join(", ")})`;
+  const call = `${v}${scopeExpr(o, deref)}.${o.call}(${args.join(", ")})`;
   const out = [];
   if (o.paginated) {
-    const item = resultVar(camel(singular(o.segs[o.segs.length - 1])), v, o.resource, "Item");
+    const item = resultVar(camel(singular(o.segs[o.segs.length - 1] ?? o.method)), v, o.resource, "Item");
     out.push(`for await (const ${item} of ${call}) {`, `  console.log(${item});`, "}");
-    if (optionalOnly) out.push(`const page = await ${v}${scopeExpr(o, deref)}.${o.resource}.${o.method}(${[...o.positional.map((p, i) => lit(pathValue(p, i, deref))), "{}"].join(", ")}, { timeout: 5_000 });`);
+    if (optionalOnly) out.push(`const page = await ${v}${scopeExpr(o, deref)}.${o.call}(${[...o.positional.map((p, i) => lit(pathValue(p, i, deref))), "{}"].join(", ")}, { timeout: 5_000 });`);
   } else if (o.success.kind === "void") out.push(`await ${call};`);
   else if (o.success.kind === "raw") out.push(`const response = await ${call};`, "const text = await response.text();");
   else {
@@ -245,6 +246,14 @@ export function buildTrees(model) {
     }
     node.ops.push(o);
   }
+  for (const a of model.compat?.aliases ?? []) {
+    let node = trees.get(a.scope?.name ?? "");
+    for (const seg of a.segs) {
+      if (!node.children.has(seg)) node.children.set(seg, { children: new Map(), ops: [], compatOnly: true });
+      node = node.children.get(seg);
+    }
+    (node.aliases ??= []).push(a);
+  }
   if (model.webhooks.length) {
     const root = trees.get("");
     if (!root.children.has("webhooks")) root.children.set("webhooks", { children: new Map(), ops: [] });
@@ -338,8 +347,14 @@ export function emitResources(model, cfg) {
         "  }",
       );
     }
+    if (isRoot && scopeCfg?.expose) {
+      for (const [getter, b] of Object.entries(scopeCfg.expose)) {
+        L.push(`  /** The \`{${b}}\` this scope is bound to. */`, `  get ${getter}(): string {`, `    return this._b.${b} as string;`, "  }");
+      }
+    }
     for (const k of kids) {
       const kc = resourceClassName(prefix, [...path, k]);
+      if (node.children.get(k).compatOnly) L.push(`  /** @deprecated 0.x namespace: every method in it is a deprecated alias (see its methods). Removed in 2.0. */`);
       L.push(`  get ${k}(): ${kc} {`, `    return (this.#${k} ??= new ${kc}(this._client, this._b));`, "  }");
     }
     for (const o of [...node.ops].sort((a, b) => a.method.localeCompare(b.method))) {
@@ -352,6 +367,7 @@ export function emitResources(model, cfg) {
       L.push(`  ${o.method}(${args.join(", ")}): ${returnType(o)} {`, `    return this._client.${call}(${specLiteral(o)}, options);`, "  }");
       if (o.poll) emitPoll(L, o, node, cfg, deref);
     }
+    for (const a of [...(node.aliases ?? [])].sort((x, y) => x.method.localeCompare(y.method))) emitAlias(L, a, cfg);
     if (node.unwrap) {
       L.push(
         jsdoc([
@@ -429,6 +445,47 @@ export function emitResources(model, cfg) {
   return head.join("\n") + classes.join("\n\n") + "\n";
 }
 
+/** Where the generated method an alias stands in for lives, for its `@deprecated` note. */
+function newCallPath(o, cfg) {
+  const acc = o.scope ? `.${o.scope.accessor || o.scope.name}(…)` : "";
+  return `${cfg.clientVar}${acc}.${o.call}()`;
+}
+
+/** A deprecated 0.x name (compat.json) that calls the same route as a generated method. */
+function emitAlias(L, a, cfg) {
+  const o = a.alias;
+  const ps = paramsSig(o);
+  const lines = [`0.x name for \`${newCallPath(a.target, cfg)}\` (${o.http} ${o.path}).`, "", `@deprecated Use \`${newCallPath(a.target, cfg)}\`. Kept for 0.x callers; removed in 2.0.`];
+  L.push(jsdoc(lines, "  ").trimEnd());
+  if (a.args === "object") {
+    // 0.x took the path parameters inside the params object.
+    const names = o.positional.map((p) => p.arg);
+    const t = o.paramsType ? ` & T.${o.paramsType}` : "";
+    L.push(
+      `  ${a.method}(args: { ${names.map((n) => `${n}: string`).join("; ")} }${t}, options?: RequestOptions): ${returnType(o)} {`,
+      `    const { ${names.join(", ")}, ...params } = args;`,
+      `    return this._client.${o.paginated ? "list" : "request"}(${specLiteral(o)}, options);`,
+      "  }",
+    );
+    return;
+  }
+  const args = o.positional.map((p) => `${p.arg}: string`);
+  if (ps) args.push(ps);
+  args.push("options?: RequestOptions");
+  L.push(`  ${a.method}(${args.join(", ")}): ${returnType(o)} {`, `    return this._client.${o.paginated ? "list" : "request"}(${specLiteral(o)}, options);`, "  }");
+}
+
+/** _generated/compat.ts: the frozen 0.x type names (compat.json `types`), each a deprecated alias. */
+export function emitCompat(model, cfg) {
+  const L = [banner(cfg), `import type { components } from "./paths.js";`, ""];
+  for (const t of model.compat?.types ?? []) {
+    L.push(`/** @deprecated 0.x type name. Use the \`${cfg.className}\` namespace types (\`${cfg.className}.…Params\`, models). Removed in 2.0. */`);
+    L.push(`export type ${t.name} = components["schemas"][${lit(t.schema)}];`);
+  }
+  if (!(model.compat?.types ?? []).length) L.push("export {};");
+  return L.join("\n") + "\n";
+}
+
 function emitPoll(L, o, node, cfg, deref) {
   const config = `{ field: ${lit(o.poll.field)}, terminal: ${lit(o.poll.terminal).replace(/,/g, ", ")} }`;
   // With x-pc-sdk.poll.result the poll helpers are generic over that field.
@@ -473,8 +530,10 @@ function emitPoll(L, o, node, cfg, deref) {
 // client.ts: the product class and its type namespace
 
 export function emitClient(model, cfg) {
-  const scopes = model.scopes.filter((s) => model.ops.some((o) => o.scope?.name === s.name));
-  const imports = [`${cfg.className}Resources`, ...scopes.map((s) => `${cfg.className}${pascal(s.name)}`)].sort();
+  // A scope with `accessor: false` is reached through hand-written code (the `root` base class).
+  const scopes = model.scopes.filter((s) => s.accessor !== false && model.ops.some((o) => o.scope?.name === s.name));
+  const rootBase = cfg.root;
+  const imports = [...(rootBase ? [] : [`${cfg.className}Resources`]), ...scopes.map((s) => `${cfg.className}${pascal(s.name)}`)].sort();
   const base = cfg.baseUrlKey ? `PC_BASE_URL.${cfg.baseUrlKey}` : lit(cfg.baseUrl);
   const L = [
     banner(cfg),
@@ -482,7 +541,8 @@ export function emitClient(model, cfg) {
     `import type { Client } from "openapi-fetch";`,
     `import type * as E from "./errors.js";`,
     `import type { paths } from "./paths.js";`,
-    `import { ${imports.join(", ")} } from "./resources.js";`,
+    imports.length ? `import { ${imports.join(", ")} } from "./resources.js";` : null,
+    rootBase ? `import { ${rootBase.base}, type ${rootBase.options} } from ${lit(rootBase.module)};` : null,
     `import * as T from "./types.js";`,
     model.webhooks.length ? `import ${model.apiEventTypes ? "type " : ""}* as W from "./webhooks.js";` : null,
     "",
@@ -490,18 +550,49 @@ export function emitClient(model, cfg) {
     `const VERSION = typeof __PC_SDK_VERSION__ === "string" ? __PC_SDK_VERSION__ : "0.0.0-dev";`,
     "",
     jsdoc([`${cfg.title}. Every method is generated from the API's OpenAPI document.`, "", "@example", "```ts", `import { ${cfg.className} } from ${lit(cfg.packageName)};`, `const ${cfg.clientVar} = new ${cfg.className}({ apiKey: process.env.PRODUCTCRAFT_API_KEY });`, "```"], ""),
-    `export class ${cfg.className} extends ${cfg.className}Resources {`,
+    `export class ${cfg.className} extends ${rootBase ? rootBase.base : `${cfg.className}Resources`} {`,
     "  #openapi?: Client<paths>;",
-    "  constructor(options: ClientOptions = {}) {",
-    `    super(new APIClient(options, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
-    "  }",
+    ...(rootBase
+      ? [
+          `  constructor(options: ${rootBase.options} = {}) {`,
+          `    const sdk = { name: ${lit(cfg.sdkName)}, version: VERSION };`,
+          `    super(new APIClient(options, ${base}, sdk), options, (o: ClientOptions) => new APIClient(o, ${base}, sdk));`,
+          "  }",
+        ]
+      : [
+          "  constructor(options: ClientOptions = {}) {",
+          `    super(new APIClient(options, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
+          "  }",
+        ]),
     "  /** The typed `openapi-fetch` escape hatch over the same credential and base URL. It does not retry. */",
     "  get client(): Client<paths> {",
     "    return (this.#openapi ??= createOpenAPIClient<paths>(this._client));",
     "  }",
   ];
+  // Scopes behind a namespace (`accessor: "admin.app"` is `auth.admin.app(id)`), grouped per namespace.
+  const nested = new Map();
+  for (const s of scopes.filter((x) => x.accessor?.includes("."))) {
+    const [ns, name] = s.accessor.split(".");
+    nested.set(ns, [...(nested.get(ns) ?? []), { s, name }]);
+  }
+  for (const [ns, list] of nested) {
+    const members = list.map(({ s, name }) => `${name}(${s.bind.map((b) => `${camel(b)}: string`).join(", ")}): ${cfg.className}${pascal(s.name)}`);
+    L.push(jsdoc([`Scoped namespaces under \`${ns}\`: ${list.map(({ name }) => `\`${ns}.${name}(…)\``).join(", ")}.`], "  ").trimEnd());
+    L.push(`  get ${ns}(): { ${members.join("; ")} } {`, "    const client = this._client;", "    return {");
+    for (const { s, name } of list) {
+      L.push(`      ${name}: (${s.bind.map((b) => `${camel(b)}: string`).join(", ")}) => new ${cfg.className}${pascal(s.name)}(client, { ${s.bind.map((b) => `${b}: ${camel(b)}`).join(", ")} }),`);
+    }
+    L.push("    };", "  }");
+  }
   for (const s of scopes) {
     const cls = `${cfg.className}${pascal(s.name)}`;
+    // Short aliases for a nested accessor (`auth.app(id)` for `auth.admin.app(id)`).
+    for (const alias of s.aliases ?? []) {
+      const args = s.bind.map((b) => `${camel(b)}: string`).join(", ");
+      L.push(jsdoc([`Alias of \`${cfg.clientVar}.${s.accessor}(…)\`.`, ...s.bind.map((b) => `@param ${camel(b)} - \`{${b}}\``)], "  ").trimEnd());
+      L.push(`  ${alias}(${args}): ${cls} {`, `    return new ${cls}(this._client, { ${s.bind.map((b) => `${b}: ${camel(b)}`).join(", ")} });`, "  }");
+    }
+    if (s.accessor?.includes(".")) continue;
     if (s.args === "positional") {
       const args = s.bind.map((b) => `${camel(b)}: string`).join(", ");
       L.push(jsdoc([s.doc ?? `Calls scoped to one ${s.bind.join(", ")}.`, ...s.bind.map((b) => `@param ${camel(b)} - \`{${b}}\``)], "  ").trimEnd());
@@ -680,7 +771,7 @@ export function emitOpsTest(model, cfg) {
     const params = exampleParams(o, deref, { full: true });
     const args = o.positional.map((p) => lit(values[p.name]));
     if (params) args.push(tsLiteral(params, "    "));
-    const call = `${v}${scopeExpr(o, deref, values)}.${o.resource}.${o.method}(${args.join(", ")})`;
+    const call = `${v}${scopeExpr(o, deref, values)}.${o.call}(${args.join(", ")})`;
     const query = [];
     const bodyExpect = {};
     for (const [k, val] of Object.entries(params ?? {})) {

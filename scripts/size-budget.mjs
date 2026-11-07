@@ -48,6 +48,12 @@ export const run = () => platform.apiKeys.self();`,
 const social = new Social({ apiKey: "pcft_live_x" });
 export const run = () => social.community("c").as("a").posts.create({ body: "Hello" });`,
   },
+  "@productcraft/auth": {
+    dir: "packages/auth",
+    code: `import { Auth } from "@productcraft/auth";
+const auth = new Auth();
+export const run = () => auth.consumer("my-app").signin({ identifier: "ada@example.com", password: "pw" });`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

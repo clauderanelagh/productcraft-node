@@ -4,113 +4,1202 @@
 
 ```ts
 
-import { Client } from '@kubb/plugin-client/clients/fetch';
+import { APIClient } from '@productcraft/core';
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
+import { AuthenticationError } from '@productcraft/core';
+import { BadRequestError } from '@productcraft/core';
+import { Client } from 'openapi-fetch';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
 import { CryptoKey as CryptoKey_2 } from 'jose';
 import { FlattenedJWSInput } from 'jose';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
 import { JWTHeaderParameters } from 'jose';
 import { JWTPayload } from 'jose';
+import { LastResponse } from '@productcraft/core';
+import { NotFoundError } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
 import { PCAuth } from '@productcraft/core';
 import { PCClientConfig } from '@productcraft/core';
-import { ResponseConfig } from '@kubb/plugin-client/clients/fetch';
+import { PermissionDeniedError } from '@productcraft/core';
+import { PollOptions } from '@productcraft/core';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { WebhookHeaders } from '@productcraft/core';
+import { WebhookPayload } from '@productcraft/core';
+import { WebhookVerificationError } from '@productcraft/core';
 
-// @public (undocumented)
-export class AppScope {
-    constructor(appId: string, client: Client);
+export { APIConnectionError }
+
+export { APIError }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
+
+// @public
+export class AppScope extends APIResource {
     // (undocumented)
-    readonly apiKeys: {
-        list: () => Promise<ApiKeyListResponseDto>;
-        create: (data: CreateApiKeyDto) => Promise<CreateApiKeyResponseDto>;
-        delete: (keyId: string) => Promise<any>;
+    get apiKeys(): AppApiKeysResource;
+    get appId(): string;
+    // (undocumented)
+    get auditLogs(): AppAuditLogsResource;
+    // (undocumented)
+    get auditSink(): AppAuditSinkResource;
+    // (undocumented)
+    get authConfig(): AppAuthConfigResource;
+    clone(params: CloneParams, options?: RequestOptions): APIPromise<WithLastResponse<CloneApp>>;
+    // (undocumented)
+    get credentials(): AppCredentialsResource;
+    // (undocumented)
+    get customDomains(): AppCustomDomainsResource;
+    // @deprecated
+    delete(options?: RequestOptions): APIPromise<void>;
+    // (undocumented)
+    get endUserInsights(): AppEndUserInsightsResource;
+    // (undocumented)
+    get endUsers(): AppEndUsersResource;
+    // @deprecated
+    get(options?: RequestOptions): APIPromise<WithLastResponse<App>>;
+    // @deprecated (undocumented)
+    get invites(): AppInvitesResource;
+    // (undocumented)
+    get members(): AppMembersResource;
+    // (undocumented)
+    get notifications(): AppNotificationsResource;
+    // (undocumented)
+    get notificationSettings(): AppNotificationSettingsResource;
+    // (undocumented)
+    get permissions(): AppPermissionsResource;
+    // (undocumented)
+    get roles(): AppRolesResource;
+    // (undocumented)
+    get setupStatus(): AppSetupStatusResource;
+    // (undocumented)
+    get signInTests(): AppSignInTestsResource;
+    // (undocumented)
+    get tenantApiKeys(): AppTenantApiKeysResource;
+    // (undocumented)
+    get tenants(): AppTenantsResource;
+    // (undocumented)
+    get unverifiedAccountExpiry(): AppUnverifiedAccountExpiryResource;
+    // @deprecated
+    update(params?: AppUpdateParams, options?: RequestOptions): APIPromise<WithLastResponse<App>>;
+    updateStatus(params: UpdateStatusParams, options?: RequestOptions): APIPromise<WithLastResponse<App>>;
+    // (undocumented)
+    get webauthnConfig(): AppWebauthnConfigResource;
+    // (undocumented)
+    get webhooks(): AppWebhooksResource;
+}
+
+// @public @deprecated (undocumented)
+export type AssignRoleDto = components["schemas"]["AssignRoleDto"];
+
+// @public
+class Auth extends AuthBase {
+    constructor(options?: AuthOptions);
+    get admin(): {
+        app(appId: string): AppScope;
     };
-    readonly appId: string;
-    // (undocumented)
-    readonly auditLogs: {
-        list: (params?: Partial<AppAuditControllerGetAuditLogsQueryParams>) => Promise<AuditLogListResponseDto>;
-    };
-    // (undocumented)
-    readonly authConfig: {
-        get: () => Promise<AuthConfigResponseDto>;
-        update: (data: UpdateAuthConfigDto) => Promise<AuthConfigResponseDto>;
-    };
-    // (undocumented)
-    readonly credentials: {
-        list: (params?: Partial<M2MControllerListClientsQueryParams>) => Promise<M2MClientListResponseDto>;
-        create: (data: CreateM2MClientDto) => Promise<M2MClientCreateResponseDto>;
-        get: (clientId: string) => Promise<M2MClientDetailResponseDto>;
-        update: (clientId: string, data: UpdateM2MClientDto) => Promise<M2MClientDetailResponseDto>;
-        delete: (clientId: string) => Promise<any>;
-        rotateSecret: (clientId: string) => Promise<M2MRotateSecretResponseDto>;
-        setScopes: (clientId: string, data: SetScopesDto) => Promise<M2MControllerSetScopes200>;
-    };
-    // (undocumented)
-    delete: () => Promise<any>;
-    // (undocumented)
-    readonly endUsers: {
-        list: (params?: Partial<EndUserControllerListEndUsersQueryParams>) => Promise<EndUserListResponseDto>;
-        get: (userId: string) => Promise<EndUserSummaryDto>;
-        update: (userId: string, data: UpdateEndUserDto) => Promise<EndUserSummaryDto>;
-        delete: (userId: string) => Promise<any>;
-        updateRole: (userId: string, data: UpdateEndUserRoleDto) => Promise<EndUserRoleAssignmentResponseDto>;
-        updateStatus: (userId: string, data: UpdateEndUserStatusDto) => Promise<EndUserSummaryDto>;
-        revokeAllSessions: (userId: string) => Promise<void>;
-    };
-    // (undocumented)
-    get: () => Promise<AppResponseDto>;
-    // (undocumented)
-    readonly invites: {
-        list: (params?: Partial<EndUserInviteControllerListQueryParams>) => Promise<EndUserInviteListResponseDto>;
-        create: (data: CreateEndUserInviteDto) => Promise<EndUserInviteResponseDto>;
-        revoke: (inviteId: string) => Promise<any>;
-    };
-    // (undocumented)
-    readonly members: {
-        list: (params?: Partial<AppControllerListMembersQueryParams>) => Promise<AppMemberListResponseDto>;
-        remove: (accountId: string) => Promise<any>;
-    };
-    // (undocumented)
-    readonly permissions: {
-        list: () => Promise<PermissionControllerListPermissions200>;
-        create: (data: CreatePermissionDto) => Promise<PermissionDto>;
-        delete: (permissionKey: string) => Promise<any>;
-    };
-    // (undocumented)
-    readonly roles: {
-        list: (params?: Partial<RoleControllerListRolesQueryParams>) => Promise<RoleListResponseDto>;
-        get: (roleName: string) => Promise<unknown>;
-        create: (data: CreateRoleDto) => Promise<RoleResponseDto>;
-        update: (roleName: string, data: UpdateRoleDto) => Promise<unknown>;
-        delete: (roleName: string) => Promise<void>;
-        assign: (data: AssignRoleDto) => Promise<AppMembershipResponseDto>;
-        setPermissions: (roleName: string, data: SetPermissionsDto) => Promise<RoleControllerSetPermissions200>;
-        listPermissions: () => Promise<RoleControllerListPermissions200>;
-    };
-    // (undocumented)
-    update: (data: UpdateAppDto) => Promise<AppResponseDto>;
-    // (undocumented)
-    updateStatus: (data: UpdateAppStatusDto) => Promise<AppResponseDto>;
+    app(appId: string): AppScope;
+    get client(): Client<paths>;
 }
 
 // @public
-export type AssignRoleDto = {
-    account_id: string;
-    role: string;
-};
-
-// @public (undocumented)
-export class Auth {
-    constructor(config?: AuthConfig);
-    app(appId: string): AppScope;
+namespace Auth {
     // (undocumented)
-    readonly apps: {
-        list: (params?: Partial<AppControllerListMyAppsQueryParams>) => Promise<AppListResponseDto>;
-        create: (data: CreateAppDto) => Promise<AppResponseDto>;
-    };
-    consumer(appSlug?: string): ConsumerScope;
+    type AcceptedTenantInvite = __AcceptedTenantInvite;
     // (undocumented)
-    readonly stats: {
-        get: (params?: Partial<StatsControllerGetMyStatsQueryParams>) => Promise<PlatformUserStatsResponseDto>;
+    type AcceptInviteParams = __AcceptInviteParams;
+    // (undocumented)
+    type AcceptInviteResponse = __AcceptInviteResponse;
+    const // (undocumented)
+    ApiKeyStatus: {
+        values: readonly ["active", "expired", "revoked"];
     };
+    // (undocumented)
+    type AcceptTenantInviteParams = __AcceptTenantInviteParams;
+    const // (undocumented)
+    AppEnvironment: {
+        values: readonly ["production", "staging", "development"];
+    };
+    // (undocumented)
+    type AccountContact = __AccountContact;
+    const // (undocumented)
+    AppStatus: {
+        values: readonly ["active", "suspended", "archived"];
+    };
+    // (undocumented)
+    type AccountContactList = __AccountContactList;
+    const // (undocumented)
+    ApplyPlanAction: {
+        values: readonly ["create", "skip"];
+    };
+    // (undocumented)
+    type AddMember = __AddMember;
+    const // (undocumented)
+    ApplyPlanResult: {
+        values: readonly ["created", "unchanged", "failed"];
+    };
+    // (undocumented)
+    type AdminProvisionFactor = __AdminProvisionFactor;
+    const // (undocumented)
+    AuditSinkAttemptKind: {
+        values: readonly ["batch", "test"];
+    };
+    // (undocumented)
+    type ApiKeyCreateParams = __ApiKeyCreateParams;
+    const // (undocumented)
+    AuditSinkState: {
+        values: readonly ["active", "paused", "auto_disabled"];
+    };
+    // (undocumented)
+    type ApiKeyList = __ApiKeyList;
+    const // (undocumented)
+    AuthStatsMetric: {
+        values: readonly ["active_users"];
+    };
+    // (undocumented)
+    type ApiKeyListParams = __ApiKeyListParams;
+    const // (undocumented)
+    BotProtectionProvider: {
+        values: readonly ["turnstile", "hcaptcha"];
+    };
+    // (undocumented)
+    type ApiKeyRotateParams = __ApiKeyRotateParams;
+    const // (undocumented)
+    ContactType: {
+        values: readonly ["email", "phone"];
+    };
+    // (undocumented)
+    type ApiKeyStatus = __ApiKeyStatus;
+    const // (undocumented)
+    CustomDomainApplyWarning: {
+        values: readonly ["token_scope_broader_than_zone", "partially_applied"];
+    };
+    // (undocumented)
+    type ApiKeySummary = __ApiKeySummary;
+    const // (undocumented)
+    CustomDomainStatus: {
+        values: readonly ["pending", "active", "failing"];
+    };
+    // (undocumented)
+    type App = __App;
+    const // (undocumented)
+    DnsConflictSeverity: {
+        values: readonly ["blocking", "warning"];
+    };
+    // (undocumented)
+    type AppCreateParams = __AppCreateParams;
+    const // (undocumented)
+    DnsProvider: {
+        values: readonly ["cloudflare", "digitalocean"];
+    };
+    // (undocumented)
+    type AppEnvironment = __AppEnvironment;
+    const // (undocumented)
+    DnsRecordPurpose: {
+        values: readonly ["routing", "ownership"];
+    };
+    // (undocumented)
+    type AppList = __AppList;
+    const // (undocumented)
+    DnsRecordState: {
+        values: readonly ["not_found", "propagating", "verified", "conflict", "lookup_failed"];
+    };
+    // (undocumented)
+    type AppListParams = __AppListParams;
+    const // (undocumented)
+    DnsRecordType: {
+        values: readonly ["CNAME", "TXT"];
+    };
+    // (undocumented)
+    type ApplyConflict = __ApplyConflict;
+    const // (undocumented)
+    EndUserStatus: {
+        values: readonly ["active", "suspended", "deactivated"];
+    };
+    // (undocumented)
+    type ApplyCounts = __ApplyCounts;
+    const // (undocumented)
+    EnrollmentType: {
+        values: readonly ["totp", "email", "webauthn"];
+    };
+    // (undocumented)
+    type ApplyPlanAction = __ApplyPlanAction;
+    const // (undocumented)
+    ImportJobStatus: {
+        values: readonly ["queued", "running", "succeeded", "failed"];
+    };
+    // (undocumented)
+    type ApplyPlanItem = __ApplyPlanItem;
+    const // (undocumented)
+    IntrospectedTokenType: {
+        values: readonly ["m2m", "end_user"];
+    };
+    // (undocumented)
+    type ApplyPlanResult = __ApplyPlanResult;
+    const // (undocumented)
+    JwkUse: {
+        values: readonly ["sig"];
+    };
+    // (undocumented)
+    type AppMemberList = __AppMemberList;
+    const // (undocumented)
+    MfaPolicy: {
+        values: readonly ["optional", "required"];
+    };
+    // (undocumented)
+    type AppMembership = __AppMembership;
+    const // (undocumented)
+    OAuthLinkPolicy: {
+        values: readonly ["auto", "confirm", "reject"];
+    };
+    // (undocumented)
+    type AppMemberSummary = __AppMemberSummary;
+    const // (undocumented)
+    OAuthProvider: {
+        values: readonly ["google", "github", "apple"];
+    };
+    // (undocumented)
+    type AppNotificationSettings = __AppNotificationSettings;
+    const // (undocumented)
+    PasswordBreachCheck: {
+        values: readonly ["off", "warn", "block"];
+    };
+    // (undocumented)
+    type AppPermissionCatalogEntry = __AppPermissionCatalogEntry;
+    const // (undocumented)
+    ProviderBlockedReason: {
+        values: readonly ["no_redirect_origins", "missing_credentials", "credentials_rejected"];
+    };
+    // (undocumented)
+    type AppScopedPermissionCreateParams = __AppScopedPermissionCreateParams;
+    const // (undocumented)
+    ProviderCheckResult: {
+        values: readonly ["credentials_valid", "credentials_rejected", "inconclusive"];
+    };
+    // (undocumented)
+    type AppScopedPermissionListResponse = __AppScopedPermissionListResponse;
+    const // (undocumented)
+    ProviderStatus: {
+        values: readonly ["ready", "blocked", "disabled", "not_configured"];
+    };
+    // (undocumented)
+    type AppScopedRoleCreateParams = __AppScopedRoleCreateParams;
+    const // (undocumented)
+    SenderDomainStatus: {
+        values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
+    };
+    // (undocumented)
+    type AppScopedRoleListParams = __AppScopedRoleListParams;
+    const // (undocumented)
+    SenderSource: {
+        values: readonly ["workspace", "custom"];
+    };
+    // (undocumented)
+    type AppScopedRoleUpdateParams = __AppScopedRoleUpdateParams;
+    const // (undocumented)
+    SetupRowState: {
+        values: readonly ["pass", "attention", "not_set", "blocked"];
+    };
+    // (undocumented)
+    type AppScopedRoleUpdatePermissionsParams = __AppScopedRoleUpdatePermissionsParams;
+    const // (undocumented)
+    SignInResult: {
+        values: readonly ["session", "mfa_required", "mfa_enrollment_required"];
+    };
+    // (undocumented)
+    type AppScopedRoleUpdatePermissionsResponse = __AppScopedRoleUpdatePermissionsResponse;
+    const // (undocumented)
+    SignInTestEmailNoticeCode: {
+        values: readonly ["emails_off", "email_sender_missing", "email_template_missing", "email_workspace_missing", "email_unavailable", "email_send_failed"];
+    };
+    // (undocumented)
+    type AppScopedTenantApiKeyConfigUpdateParams = __AppScopedTenantApiKeyConfigUpdateParams;
+    const // (undocumented)
+    SignInTestMethod: {
+        values: readonly ["oauth", "password", "otp"];
+    };
+    // (undocumented)
+    type AppScopedTenantApiKeyListParams = __AppScopedTenantApiKeyListParams;
+    const // (undocumented)
+    SignInTestOutcome: {
+        values: readonly ["would_sign_in_existing", "would_create"];
+    };
+    // (undocumented)
+    type AppScopedTenantCreateParams = __AppScopedTenantCreateParams;
+    const // (undocumented)
+    SignInTestState: {
+        values: readonly ["pending", "succeeded", "failed"];
+    };
+    // (undocumented)
+    type AppScopedTenantInviteCreateParams = __AppScopedTenantInviteCreateParams;
+    const // (undocumented)
+    StatsGranularity: {
+        values: readonly ["day"];
+    };
+    // (undocumented)
+    type AppScopedTenantInviteListParams = __AppScopedTenantInviteListParams;
+    const // (undocumented)
+    StatsWindow: {
+        values: readonly ["1d", "7d", "30d"];
+    };
+    // (undocumented)
+    type AppScopedTenantListParams = __AppScopedTenantListParams;
+    const // (undocumented)
+    TenantApiKeyAdminState: {
+        values: readonly ["active", "expired", "revoked", "orphaned"];
+    };
+    // (undocumented)
+    type AppScopedTenantMemberCreateParams = __AppScopedTenantMemberCreateParams;
+    const // (undocumented)
+    TenantApiKeyEffectiveStatus: {
+        values: readonly ["active", "expired", "revoked", "orphaned", "suspended"];
+    };
+    // (undocumented)
+    type AppScopedTenantMemberListParams = __AppScopedTenantMemberListParams;
+    const // (undocumented)
+    TenantApiKeyEnv: {
+        values: readonly ["live", "test"];
+    };
+    // (undocumented)
+    type AppScopedTenantMemberUpdateParams = __AppScopedTenantMemberUpdateParams;
+    const // (undocumented)
+    TenantApiKeyManagementLane: {
+        values: readonly ["direct", "app_proxy_only"];
+    };
+    // (undocumented)
+    type AppScopedTenantUpdateParams = __AppScopedTenantUpdateParams;
+    const // (undocumented)
+    TenantApiKeyRevokeReason: {
+        values: readonly ["manual", "rotated", "member_removed", "tenant_deleted"];
+    };
+    // (undocumented)
+    type AppSlugChangedEvent = __AppSlugChangedEvent;
+    const // (undocumented)
+    TenantApiKeyState: {
+        values: readonly ["active", "expired", "revoked"];
+    };
+    // (undocumented)
+    type AppSlugChangedEventData = __AppSlugChangedEventData;
+    const // (undocumented)
+    TenantInviteStatus: {
+        values: readonly ["pending", "revoked", "expired", "used"];
+    };
+    // (undocumented)
+    type AppStatus = __AppStatus;
+    const // (undocumented)
+    TenantStatus: {
+        values: readonly ["active", "suspended", "archived"];
+    };
+    // (undocumented)
+    type AppUpdateParams = __AppUpdateParams;
+    const // (undocumented)
+    TokenType: {
+        values: readonly ["Bearer"];
+    };
+    // (undocumented)
+    type AuditLogEntry = __AuditLogEntry;
+    const // (undocumented)
+    UserCreatedVia: {
+        values: readonly ["admin", "invite", "tenant_invite"];
+    };
+    // (undocumented)
+    type AuditLogExportParams = __AuditLogExportParams;
+    const // (undocumented)
+    UserDeletedReason: {
+        values: readonly ["unverified_expired"];
+    };
+    // (undocumented)
+    type AuditLogList = __AuditLogList;
+    const // (undocumented)
+    UserDeletedVia: {
+        values: readonly ["platform", "platform_bulk", "consumer_admin", "self"];
+    };
+    // (undocumented)
+    type AuditLogListParams = __AuditLogListParams;
+    const // (undocumented)
+    WebhookAttemptTrigger: {
+        values: readonly ["automatic", "replay", "test"];
+    };
+    // (undocumented)
+    type AuditSink = __AuditSink;
+    const // (undocumented)
+    WebhookEndpointDisabledReason: {
+        values: readonly ["manual", "failing"];
+    };
+    // (undocumented)
+    type AuditSinkAttemptKind = __AuditSinkAttemptKind;
+    const // (undocumented)
+    WebhookEndpointStatus: {
+        values: readonly ["enabled", "disabled", "auto_disabled"];
+    };
+    // (undocumented)
+    type AuditSinkReplaceParams = __AuditSinkReplaceParams;
+    const // (undocumented)
+    WebhookEventStatus: {
+        values: readonly ["pending", "delivered", "failed", "not_sent"];
+    };
+    // (undocumented)
+    type AuditSinkState = __AuditSinkState;
+    const // (undocumented)
+    WebhookEventType: {
+        values: readonly ["user.signup", "user.signin", "user.suspended", "user.deactivated", "user.reinstated", "user.role_changed", "user.deleted", "user.contact_verified", "user.email_verified", "user.password_reset.requested", "user.password_reset.completed", "user.mfa.factor_enrolled", "user.mfa.factor_disabled", "user.mfa.recovery_code_used", "user.mfa.step_up_succeeded", "user.mfa.step_up_locked", "user.mfa.enrollment_required", "user.mfa.reenrollment_required", "tenant.created", "tenant.updated", "tenant.deleted", "tenant.member.added", "tenant.member.removed", "tenant.member.role_changed", "tenant.invite.created", "tenant.invite.accepted", "tenant.invite.revoked", "app.slug_changed"];
+    };
+    // (undocumented)
+    type AuditSinkTestResult = __AuditSinkTestResult;
+    // (undocumented)
+    type AuditSinkUpdateParams = __AuditSinkUpdateParams;
+    // (undocumented)
+    type AuditSinkWithSecret = __AuditSinkWithSecret;
+    // (undocumented)
+    type AuthConfig = __AuthConfig;
+    // (undocumented)
+    type AuthConfigProviderListResponse = __AuthConfigProviderListResponse;
+    // (undocumented)
+    type AuthConfigProviderReplaceParams = __AuthConfigProviderReplaceParams;
+    // (undocumented)
+    type AuthConfigProviderUpdateParams = __AuthConfigProviderUpdateParams;
+    // (undocumented)
+    type AuthConfigUpdateParams = __AuthConfigUpdateParams;
+    // (undocumented)
+    type Authorize = __Authorize;
+    // (undocumented)
+    type AuthorizeBatch = __AuthorizeBatch;
+    // (undocumented)
+    type AuthorizeBatchResult = __AuthorizeBatchResult;
+    // (undocumented)
+    type AuthStatsInWindow = __AuthStatsInWindow;
+    // (undocumented)
+    type AuthStatsMetric = __AuthStatsMetric;
+    // (undocumented)
+    type AuthStatsSeries = __AuthStatsSeries;
+    // (undocumented)
+    type AuthStatsTotals = __AuthStatsTotals;
+    // (undocumented)
+    type AuthWorkspaceStats = __AuthWorkspaceStats;
+    // (undocumented)
+    type AvatarUrl = __AvatarUrl;
+    // (undocumented)
+    type BotProtection = __BotProtection;
+    // (undocumented)
+    type BotProtectionProvider = __BotProtectionProvider;
+    // (undocumented)
+    type BulkAffectedUsers = __BulkAffectedUsers;
+    // (undocumented)
+    type CloneApp = __CloneApp;
+    // (undocumented)
+    type CloneParams = __CloneParams;
+    // (undocumented)
+    type ConfirmEnrollment = __ConfirmEnrollment;
+    // (undocumented)
+    type ConsumerAddMember = __ConsumerAddMember;
+    // (undocumented)
+    type ConsumerAdminCreatedUser = __ConsumerAdminCreatedUser;
+    // (undocumented)
+    type ConsumerAdminEndUser = __ConsumerAdminEndUser;
+    // (undocumented)
+    type ConsumerAdminEndUserList = __ConsumerAdminEndUserList;
+    // (undocumented)
+    type ConsumerAdminPermission = __ConsumerAdminPermission;
+    // (undocumented)
+    type ConsumerAdminPermissionListEntry = __ConsumerAdminPermissionListEntry;
+    // (undocumented)
+    type ConsumerAdminRoleAssignment = __ConsumerAdminRoleAssignment;
+    // (undocumented)
+    type ConsumerCodeDispatch = __ConsumerCodeDispatch;
+    // (undocumented)
+    type ConsumerCodeIssue = __ConsumerCodeIssue;
+    // (undocumented)
+    type ConsumerMfaChallenge = __ConsumerMfaChallenge;
+    // (undocumented)
+    type ConsumerMfaChallengeFactor = __ConsumerMfaChallengeFactor;
+    // (undocumented)
+    type ConsumerMfaEnrollmentRequired = __ConsumerMfaEnrollmentRequired;
+    // (undocumented)
+    type ConsumerMfaEnrollVerify = __ConsumerMfaEnrollVerify;
+    // (undocumented)
+    type ConsumerMfaSendCode = __ConsumerMfaSendCode;
+    // (undocumented)
+    type ConsumerRole = __ConsumerRole;
+    // (undocumented)
+    type ConsumerRoleList = __ConsumerRoleList;
+    // (undocumented)
+    type ConsumerRolePermissionEntry = __ConsumerRolePermissionEntry;
+    // (undocumented)
+    type ConsumerRoleWithPermissions = __ConsumerRoleWithPermissions;
+    // (undocumented)
+    type ConsumerScopedPermissionCreateParams = __ConsumerScopedPermissionCreateParams;
+    // (undocumented)
+    type ConsumerScopedPermissionListResponse = __ConsumerScopedPermissionListResponse;
+    // (undocumented)
+    type ConsumerScopedRoleCreateParams = __ConsumerScopedRoleCreateParams;
+    // (undocumented)
+    type ConsumerScopedRoleListParams = __ConsumerScopedRoleListParams;
+    // (undocumented)
+    type ConsumerScopedRoleUpdateParams = __ConsumerScopedRoleUpdateParams;
+    // (undocumented)
+    type ConsumerScopedRoleUpdatePermissionsParams = __ConsumerScopedRoleUpdatePermissionsParams;
+    // (undocumented)
+    type ConsumerScopedRoleUpdatePermissionsResponse = __ConsumerScopedRoleUpdatePermissionsResponse;
+    // (undocumented)
+    type ConsumerScopedTenantApiKeyConfigUpdateParams = __ConsumerScopedTenantApiKeyConfigUpdateParams;
+    // (undocumented)
+    type ConsumerScopedTenantApiKeyListParams = __ConsumerScopedTenantApiKeyListParams;
+    // (undocumented)
+    type ConsumerScopedTenantCreateParams = __ConsumerScopedTenantCreateParams;
+    // (undocumented)
+    type ConsumerScopedTenantInviteCreateParams = __ConsumerScopedTenantInviteCreateParams;
+    // (undocumented)
+    type ConsumerScopedTenantInviteListParams = __ConsumerScopedTenantInviteListParams;
+    // (undocumented)
+    type ConsumerScopedTenantListParams = __ConsumerScopedTenantListParams;
+    // (undocumented)
+    type ConsumerScopedTenantMemberCreateParams = __ConsumerScopedTenantMemberCreateParams;
+    // (undocumented)
+    type ConsumerScopedTenantMemberListParams = __ConsumerScopedTenantMemberListParams;
+    // (undocumented)
+    type ConsumerScopedTenantMemberUpdateParams = __ConsumerScopedTenantMemberUpdateParams;
+    // (undocumented)
+    type ConsumerScopedTenantUpdateParams = __ConsumerScopedTenantUpdateParams;
+    // (undocumented)
+    type ConsumerTenant = __ConsumerTenant;
+    // (undocumented)
+    type ConsumerTenantList = __ConsumerTenantList;
+    // (undocumented)
+    type ConsumerTenantMembership = __ConsumerTenantMembership;
+    // (undocumented)
+    type ConsumerTenantMembershipList = __ConsumerTenantMembershipList;
+    // (undocumented)
+    type ConsumerToken = __ConsumerToken;
+    // (undocumented)
+    type ConsumerVerify = __ConsumerVerify;
+    // (undocumented)
+    type ConsumerWebauthnOptions = __ConsumerWebauthnOptions;
+    // (undocumented)
+    type ContactType = __ContactType;
+    // (undocumented)
+    type CreateApiKey = __CreateApiKey;
+    // (undocumented)
+    type CreateTenantInvite = __CreateTenantInvite;
+    // (undocumented)
+    type CredentialCreateParams = __CredentialCreateParams;
+    // (undocumented)
+    type CredentialListParams = __CredentialListParams;
+    // (undocumented)
+    type CredentialUpdateParams = __CredentialUpdateParams;
+    // (undocumented)
+    type CredentialUpdateScopesParams = __CredentialUpdateScopesParams;
+    // (undocumented)
+    type CredentialUpdateScopesResponse = __CredentialUpdateScopesResponse;
+    // (undocumented)
+    type CustomDomain = __CustomDomain;
+    // (undocumented)
+    type CustomDomainApplyParams = __CustomDomainApplyParams;
+    // (undocumented)
+    type CustomDomainApplyResult = __CustomDomainApplyResult;
+    // (undocumented)
+    type CustomDomainApplyWarning = __CustomDomainApplyWarning;
+    // (undocumented)
+    type CustomDomainCallbackUrls = __CustomDomainCallbackUrls;
+    // (undocumented)
+    type CustomDomainCreateParams = __CustomDomainCreateParams;
+    // (undocumented)
+    type CustomDomainExportParams = __CustomDomainExportParams;
+    // (undocumented)
+    type CustomDomainList = __CustomDomainList;
+    // (undocumented)
+    type CustomDomainRecord = __CustomDomainRecord;
+    // (undocumented)
+    type CustomDomainStatus = __CustomDomainStatus;
+    // (undocumented)
+    type DnsConflict = __DnsConflict;
+    // (undocumented)
+    type DnsConflictSeverity = __DnsConflictSeverity;
+    // (undocumented)
+    type DnsProvider = __DnsProvider;
+    // (undocumented)
+    type DnsProviderRef = __DnsProviderRef;
+    // (undocumented)
+    type DnsRecordPurpose = __DnsRecordPurpose;
+    // (undocumented)
+    type DnsRecordState = __DnsRecordState;
+    // (undocumented)
+    type DnsRecordType = __DnsRecordType;
+    // (undocumented)
+    type EffectiveSender = __EffectiveSender;
+    // (undocumented)
+    type EmailEnrollmentData = __EmailEnrollmentData;
+    // (undocumented)
+    type EndUserActionCount = __EndUserActionCount;
+    // (undocumented)
+    type EndUserActivityEntry = __EndUserActivityEntry;
+    // (undocumented)
+    type EndUserBulkDeleteParams = __EndUserBulkDeleteParams;
+    // (undocumented)
+    type EndUserBulkRevokeSessionsParams = __EndUserBulkRevokeSessionsParams;
+    // (undocumented)
+    type EndUserBulkUpdateRoleParams = __EndUserBulkUpdateRoleParams;
+    // (undocumented)
+    type EndUserBulkUpdateStatusParams = __EndUserBulkUpdateStatusParams;
+    // (undocumented)
+    type EndUserContactCreateParams = __EndUserContactCreateParams;
+    // (undocumented)
+    type EndUserDetailInsights = __EndUserDetailInsights;
+    // (undocumented)
+    type EndUserExportParams = __EndUserExportParams;
+    // (undocumented)
+    type EndUserFactorEntry = __EndUserFactorEntry;
+    // (undocumented)
+    type EndUserInsights = __EndUserInsights;
+    // (undocumented)
+    type EndUserInvite = __EndUserInvite;
+    // (undocumented)
+    type EndUserInviteCreateParams = __EndUserInviteCreateParams;
+    // (undocumented)
+    type EndUserInviteList = __EndUserInviteList;
+    // (undocumented)
+    type EndUserInviteListParams = __EndUserInviteListParams;
+    // (undocumented)
+    type EndUserList = __EndUserList;
+    // (undocumented)
+    type EndUserListParams = __EndUserListParams;
+    // (undocumented)
+    type EndUserRoleAssignment = __EndUserRoleAssignment;
+    // (undocumented)
+    type EndUserSessionEntry = __EndUserSessionEntry;
+    // (undocumented)
+    type EndUserStatus = __EndUserStatus;
+    // (undocumented)
+    type EndUserSummary = __EndUserSummary;
+    // (undocumented)
+    type EndUserUpdateParams = __EndUserUpdateParams;
+    // (undocumented)
+    type EndUserUpdateRoleParams = __EndUserUpdateRoleParams;
+    // (undocumented)
+    type EndUserUpdateStatusParams = __EndUserUpdateStatusParams;
+    // (undocumented)
+    type EnforcedPermissions = __EnforcedPermissions;
+    // (undocumented)
+    type EnrollmentType = __EnrollmentType;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type Exchange = __Exchange;
+    // (undocumented)
+    type ExchangeProviderCodeParams = __ExchangeProviderCodeParams;
+    // (undocumented)
+    type FactorList = __FactorList;
+    // (undocumented)
+    type GrantableScope = __GrantableScope;
+    // (undocumented)
+    type IdpMfaEnrollmentRequired = __IdpMfaEnrollmentRequired;
+    // (undocumented)
+    type IdpToken = __IdpToken;
+    // (undocumented)
+    type ImportJob = __ImportJob;
+    // (undocumented)
+    type ImportJobError = __ImportJobError;
+    // (undocumented)
+    type ImportJobStatus = __ImportJobStatus;
+    // (undocumented)
+    type InsightsMfa = __InsightsMfa;
+    // (undocumented)
+    type InsightsPasswordReset = __InsightsPasswordReset;
+    // (undocumented)
+    type InsightsSessions = __InsightsSessions;
+    // (undocumented)
+    type InsightsSignin = __InsightsSignin;
+    // (undocumented)
+    type InsightsUsers = __InsightsUsers;
+    // (undocumented)
+    type InsightsVerification = __InsightsVerification;
+    // (undocumented)
+    type Introspect = __Introspect;
+    // (undocumented)
+    type IntrospectedTokenType = __IntrospectedTokenType;
+    // (undocumented)
+    type IntrospectionCreator = __IntrospectionCreator;
+    // (undocumented)
+    type IssuedVerificationCode = __IssuedVerificationCode;
+    // (undocumented)
+    type Jwk = __Jwk;
+    // (undocumented)
+    type Jwks = __Jwks;
+    // (undocumented)
+    type JwkUse = __JwkUse;
+    // (undocumented)
+    type ListWebhookEndpoints = __ListWebhookEndpoints;
+    // (undocumented)
+    type ListWebhookEvents = __ListWebhookEvents;
+    // (undocumented)
+    type ListWebhookEventTypes = __ListWebhookEventTypes;
+    // (undocumented)
+    type LogoutParams = __LogoutParams;
+    // (undocumented)
+    type M2mClientCreate = __M2mClientCreate;
+    // (undocumented)
+    type M2mClientDetail = __M2mClientDetail;
+    // (undocumented)
+    type M2mClientList = __M2mClientList;
+    // (undocumented)
+    type M2mClientSummary = __M2mClientSummary;
+    // (undocumented)
+    type M2mRotateSecret = __M2mRotateSecret;
+    // (undocumented)
+    type M2mScopeEntry = __M2mScopeEntry;
+    // (undocumented)
+    type MeActivity = __MeActivity;
+    // (undocumented)
+    type MeActivityEntry = __MeActivityEntry;
+    // (undocumented)
+    type MeChangePasswordParams = __MeChangePasswordParams;
+    // (undocumented)
+    type MeContact = __MeContact;
+    // (undocumented)
+    type MeContactCreateParams = __MeContactCreateParams;
+    // (undocumented)
+    type MeContacts = __MeContacts;
+    // (undocumented)
+    type MemberListParams = __MemberListParams;
+    // (undocumented)
+    type MeMfaFactorCreateParams = __MeMfaFactorCreateParams;
+    // (undocumented)
+    type MeMfaFactorVerifyParams = __MeMfaFactorVerifyParams;
+    // (undocumented)
+    type MeMfaStepUpSendCodeParams = __MeMfaStepUpSendCodeParams;
+    // (undocumented)
+    type MeMfaStepUpVerifyParams = __MeMfaStepUpVerifyParams;
+    // (undocumented)
+    type MePermissions = __MePermissions;
+    // (undocumented)
+    type MeProfile = __MeProfile;
+    // (undocumented)
+    type MeSession = __MeSession;
+    // (undocumented)
+    type MeSessions = __MeSessions;
+    // (undocumented)
+    type MeTenantInviteAcceptParams = __MeTenantInviteAcceptParams;
+    // (undocumented)
+    type MeUpdatedAccount = __MeUpdatedAccount;
+    // (undocumented)
+    type MeUpdateParams = __MeUpdateParams;
+    // (undocumented)
+    type MeUploadAvatarParams = __MeUploadAvatarParams;
+    // (undocumented)
+    type MfaEnrollmentRequiredEventData = __MfaEnrollmentRequiredEventData;
+    // (undocumented)
+    type MfaEnrollParams = __MfaEnrollParams;
+    // (undocumented)
+    type MfaFactorEventData = __MfaFactorEventData;
+    // (undocumented)
+    type MfaPolicy = __MfaPolicy;
+    // (undocumented)
+    type MfaRecoverParams = __MfaRecoverParams;
+    // (undocumented)
+    type MfaRecoveryCodeUsedEventData = __MfaRecoveryCodeUsedEventData;
+    // (undocumented)
+    type MfaSendCodeParams = __MfaSendCodeParams;
+    // (undocumented)
+    type MfaStepUpLockedEventData = __MfaStepUpLockedEventData;
+    // (undocumented)
+    type MfaStepUpSucceededEventData = __MfaStepUpSucceededEventData;
+    // (undocumented)
+    type MfaVerifyEnrollmentParams = __MfaVerifyEnrollmentParams;
+    // (undocumented)
+    type MfaVerifyParams = __MfaVerifyParams;
+    // (undocumented)
+    type MfaWebauthnOptionsParams = __MfaWebauthnOptionsParams;
+    // (undocumented)
+    type MyTenants = __MyTenants;
+    // (undocumented)
+    type NotificationSettingUpdateParams = __NotificationSettingUpdateParams;
+    // (undocumented)
+    type NotificationTest = __NotificationTest;
+    // (undocumented)
+    type OauthIntrospectParams = __OauthIntrospectParams;
+    // (undocumented)
+    type OAuthLinkPolicy = __OAuthLinkPolicy;
+    // (undocumented)
+    type OAuthProvider = __OAuthProvider;
+    // (undocumented)
+    type OAuthToken = __OAuthToken;
+    // (undocumented)
+    type OauthTokenParams = __OauthTokenParams;
+    // (undocumented)
+    type OpenIdConfiguration = __OpenIdConfiguration;
+    // (undocumented)
+    type Pagination = __Pagination;
+    // (undocumented)
+    type PasskeyOptionsParams = __PasskeyOptionsParams;
+    // (undocumented)
+    type PasskeyVerifyParams = __PasskeyVerifyParams;
+    // (undocumented)
+    type PasswordBreachCheck = __PasswordBreachCheck;
+    // (undocumented)
+    type Permission = __Permission;
+    // (undocumented)
+    type PlatformTenantApiKey = __PlatformTenantApiKey;
+    // (undocumented)
+    type PlatformTenantApiKeyList = __PlatformTenantApiKeyList;
+    // (undocumented)
+    type PlatformUserStats = __PlatformUserStats;
+    // (undocumented)
+    type PollOptions = __PollOptions;
+    // (undocumented)
+    type ProviderBlockedReason = __ProviderBlockedReason;
+    // (undocumented)
+    type ProviderCheck = __ProviderCheck;
+    // (undocumented)
+    type ProviderCheckResult = __ProviderCheckResult;
+    // (undocumented)
+    type ProviderDetail = __ProviderDetail;
+    // (undocumented)
+    type ProviderListEntry = __ProviderListEntry;
+    // (undocumented)
+    type ProviderStatus = __ProviderStatus;
+    // (undocumented)
+    type PublicFactor = __PublicFactor;
+    // (undocumented)
+    type RecoveryCodes = __RecoveryCodes;
+    // (undocumented)
+    type RefreshParams = __RefreshParams;
+    // (undocumented)
+    type ReplayWebhookEvent = __ReplayWebhookEvent;
+    // (undocumented)
+    type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type RequestPasswordResetParams = __RequestPasswordResetParams;
+    // (undocumented)
+    type RequestVerificationParams = __RequestVerificationParams;
+    // (undocumented)
+    type RequireMfaReenrollment = __RequireMfaReenrollment;
+    // (undocumented)
+    type ResetPasswordParams = __ResetPasswordParams;
+    // (undocumented)
+    type Role = __Role;
+    // (undocumented)
+    type RoleAssignParams = __RoleAssignParams;
+    // (undocumented)
+    type RoleList = __RoleList;
+    // (undocumented)
+    type RolePermissionEntry = __RolePermissionEntry;
+    // (undocumented)
+    type RolePermissionListResponse = __RolePermissionListResponse;
+    // (undocumented)
+    type RoleWithPermissions = __RoleWithPermissions;
+    // (undocumented)
+    type RotateApiKey = __RotateApiKey;
+    // (undocumented)
+    type SenderDomainStatus = __SenderDomainStatus;
+    // (undocumented)
+    type SenderSource = __SenderSource;
+    // (undocumented)
+    type SendPasswordResetEmailParams = __SendPasswordResetEmailParams;
+    // (undocumented)
+    type SendVerificationEmailParams = __SendVerificationEmailParams;
+    // (undocumented)
+    type SetupRow = __SetupRow;
+    // (undocumented)
+    type SetupRowFix = __SetupRowFix;
+    // (undocumented)
+    type SetupRowState = __SetupRowState;
+    // (undocumented)
+    type SetupRowTest = __SetupRowTest;
+    // (undocumented)
+    type SetupStatus = __SetupStatus;
+    // (undocumented)
+    type SigninParams = __SigninParams;
+    // (undocumented)
+    type SigninResponse = __SigninResponse;
+    // (undocumented)
+    type SignInResult = __SignInResult;
+    // (undocumented)
+    type SignInTest = __SignInTest;
+    // (undocumented)
+    type SignInTestCreateParams = __SignInTestCreateParams;
+    // (undocumented)
+    type SignInTestEmailDelivery = __SignInTestEmailDelivery;
+    // (undocumented)
+    type SignInTestEmailNotice = __SignInTestEmailNotice;
+    // (undocumented)
+    type SignInTestEmailNoticeCode = __SignInTestEmailNoticeCode;
+    // (undocumented)
+    type SignInTestError = __SignInTestError;
+    // (undocumented)
+    type SignInTestIdentity = __SignInTestIdentity;
+    // (undocumented)
+    type SignInTestMethod = __SignInTestMethod;
+    // (undocumented)
+    type SignInTestOutcome = __SignInTestOutcome;
+    // (undocumented)
+    type SignInTestState = __SignInTestState;
+    // (undocumented)
+    type SigninWithProviderParams = __SigninWithProviderParams;
+    // (undocumented)
+    type SigninWithProviderResponse = __SigninWithProviderResponse;
+    // (undocumented)
+    type SignupParams = __SignupParams;
+    // (undocumented)
+    type SignupResponse = __SignupResponse;
+    // (undocumented)
+    type StartEnrollment = __StartEnrollment;
+    // (undocumented)
+    type StatsGranularity = __StatsGranularity;
+    // (undocumented)
+    type StatsMeParams = __StatsMeParams;
+    // (undocumented)
+    type StatsRetrieveParams = __StatsRetrieveParams;
+    // (undocumented)
+    type StatsSeriesPoint = __StatsSeriesPoint;
+    // (undocumented)
+    type StatsWindow = __StatsWindow;
+    // (undocumented)
+    type StepUp = __StepUp;
+    // (undocumented)
+    type StepUpSendCode = __StepUpSendCode;
+    // (undocumented)
+    type SwitchTenantParams = __SwitchTenantParams;
+    // (undocumented)
+    type Tenant = __Tenant;
+    // (undocumented)
+    type TenantApiKey = __TenantApiKey;
+    // (undocumented)
+    type TenantApiKeyAdminState = __TenantApiKeyAdminState;
+    // (undocumented)
+    type TenantApiKeyCreateParams = __TenantApiKeyCreateParams;
+    // (undocumented)
+    type TenantApiKeyCreator = __TenantApiKeyCreator;
+    // (undocumented)
+    type TenantApiKeyEffectiveStatus = __TenantApiKeyEffectiveStatus;
+    // (undocumented)
+    type TenantApiKeyEnv = __TenantApiKeyEnv;
+    // (undocumented)
+    type TenantApiKeyIntrospection = __TenantApiKeyIntrospection;
+    // (undocumented)
+    type TenantApiKeyIntrospectParams = __TenantApiKeyIntrospectParams;
+    // (undocumented)
+    type TenantApiKeyList = __TenantApiKeyList;
+    // (undocumented)
+    type TenantApiKeyManagementLane = __TenantApiKeyManagementLane;
+    // (undocumented)
+    type TenantApiKeyRevokeReason = __TenantApiKeyRevokeReason;
+    // (undocumented)
+    type TenantApiKeyRotateParams = __TenantApiKeyRotateParams;
+    // (undocumented)
+    type TenantApiKeysConfig = __TenantApiKeysConfig;
+    // (undocumented)
+    type TenantApiKeyState = __TenantApiKeyState;
+    // (undocumented)
+    type TenantApiKeyStatus = __TenantApiKeyStatus;
+    // (undocumented)
+    type TenantApiKeyWithSecret = __TenantApiKeyWithSecret;
+    // (undocumented)
+    type TenantCreatedEvent = __TenantCreatedEvent;
+    // (undocumented)
+    type TenantDeletedEvent = __TenantDeletedEvent;
+    // (undocumented)
+    type TenantEventData = __TenantEventData;
+    // (undocumented)
+    type TenantInvite = __TenantInvite;
+    // (undocumented)
+    type TenantInviteAcceptedEvent = __TenantInviteAcceptedEvent;
+    // (undocumented)
+    type TenantInviteAcceptedEventData = __TenantInviteAcceptedEventData;
+    // (undocumented)
+    type TenantInviteCreatedEvent = __TenantInviteCreatedEvent;
+    // (undocumented)
+    type TenantInviteCreatedEventData = __TenantInviteCreatedEventData;
+    // (undocumented)
+    type TenantInviteList = __TenantInviteList;
+    // (undocumented)
+    type TenantInviteRevokedEvent = __TenantInviteRevokedEvent;
+    // (undocumented)
+    type TenantInviteRevokedEventData = __TenantInviteRevokedEventData;
+    // (undocumented)
+    type TenantInviteStatus = __TenantInviteStatus;
+    // (undocumented)
+    type TenantList = __TenantList;
+    // (undocumented)
+    type TenantMemberAddedEvent = __TenantMemberAddedEvent;
+    // (undocumented)
+    type TenantMemberAddedEventData = __TenantMemberAddedEventData;
+    // (undocumented)
+    type TenantMemberRemovedEvent = __TenantMemberRemovedEvent;
+    // (undocumented)
+    type TenantMemberRemovedEventData = __TenantMemberRemovedEventData;
+    // (undocumented)
+    type TenantMemberRoleChangedEvent = __TenantMemberRoleChangedEvent;
+    // (undocumented)
+    type TenantMemberRoleChangedEventData = __TenantMemberRoleChangedEventData;
+    // (undocumented)
+    type TenantMembership = __TenantMembership;
+    // (undocumented)
+    type TenantMembershipForMe = __TenantMembershipForMe;
+    // (undocumented)
+    type TenantMembershipList = __TenantMembershipList;
+    // (undocumented)
+    type TenantStatus = __TenantStatus;
+    // (undocumented)
+    type TenantUpdatedEvent = __TenantUpdatedEvent;
+    // (undocumented)
+    type TokenType = __TokenType;
+    // (undocumented)
+    type TotpEnrollmentData = __TotpEnrollmentData;
+    // (undocumented)
+    type UnknownWebhookEvent = __UnknownWebhookEvent;
+    // (undocumented)
+    type UnverifiedAccountExpiryRun = __UnverifiedAccountExpiryRun;
+    // (undocumented)
+    type UnverifiedAccountExpiryRunParams = __UnverifiedAccountExpiryRunParams;
+    // (undocumented)
+    type UnverifiedAccountExpiryStatus = __UnverifiedAccountExpiryStatus;
+    // (undocumented)
+    type UnwrapWebhookEvent = __UnwrapWebhookEvent;
+    // (undocumented)
+    type UpdateStatusParams = __UpdateStatusParams;
+    // (undocumented)
+    type UserContactVerifiedEvent = __UserContactVerifiedEvent;
+    // (undocumented)
+    type UserContactVerifiedEventData = __UserContactVerifiedEventData;
+    // (undocumented)
+    type UserCreatedVia = __UserCreatedVia;
+    // (undocumented)
+    type UserCreateParams = __UserCreateParams;
+    // (undocumented)
+    type UserDeactivatedEvent = __UserDeactivatedEvent;
+    // (undocumented)
+    type UserDeletedEvent = __UserDeletedEvent;
+    // (undocumented)
+    type UserDeletedEventData = __UserDeletedEventData;
+    // (undocumented)
+    type UserDeletedReason = __UserDeletedReason;
+    // (undocumented)
+    type UserDeletedVia = __UserDeletedVia;
+    // (undocumented)
+    type UserEmailVerifiedEvent = __UserEmailVerifiedEvent;
+    // (undocumented)
+    type UserEmailVerifiedEventData = __UserEmailVerifiedEventData;
+    // (undocumented)
+    type UserEventData = __UserEventData;
+    // (undocumented)
+    type UserFactorCreateParams = __UserFactorCreateParams;
+    // (undocumented)
+    type UserListParams = __UserListParams;
+    // (undocumented)
+    type UserMfaEnrollmentRequiredEvent = __UserMfaEnrollmentRequiredEvent;
+    // (undocumented)
+    type UserMfaFactorDisabledEvent = __UserMfaFactorDisabledEvent;
+    // (undocumented)
+    type UserMfaFactorEnrolledEvent = __UserMfaFactorEnrolledEvent;
+    // (undocumented)
+    type UserMfaRecoveryCodeUsedEvent = __UserMfaRecoveryCodeUsedEvent;
+    // (undocumented)
+    type UserMfaReenrollmentRequiredEvent = __UserMfaReenrollmentRequiredEvent;
+    // (undocumented)
+    type UserMfaStepUpLockedEvent = __UserMfaStepUpLockedEvent;
+    // (undocumented)
+    type UserMfaStepUpSucceededEvent = __UserMfaStepUpSucceededEvent;
+    // (undocumented)
+    type UserPasswordResetCompletedEvent = __UserPasswordResetCompletedEvent;
+    // (undocumented)
+    type UserPasswordResetRequestedEvent = __UserPasswordResetRequestedEvent;
+    // (undocumented)
+    type UserPasswordResetRequestedEventData = __UserPasswordResetRequestedEventData;
+    // (undocumented)
+    type UserReinstatedEvent = __UserReinstatedEvent;
+    // (undocumented)
+    type UserRoleChangedEvent = __UserRoleChangedEvent;
+    // (undocumented)
+    type UserRoleChangedEventData = __UserRoleChangedEventData;
+    // (undocumented)
+    type UserSigninEvent = __UserSigninEvent;
+    // (undocumented)
+    type UserSigninEventData = __UserSigninEventData;
+    // (undocumented)
+    type UserSignupEvent = __UserSignupEvent;
+    // (undocumented)
+    type UserSignupEventData = __UserSignupEventData;
+    // (undocumented)
+    type UserSuspendedEvent = __UserSuspendedEvent;
+    // (undocumented)
+    type UserUpdateParams = __UserUpdateParams;
+    // (undocumented)
+    type UserUpdateRoleParams = __UserUpdateRoleParams;
+    // (undocumented)
+    type UserUpdateStatusParams = __UserUpdateStatusParams;
+    // (undocumented)
+    type Verify = __Verify;
+    // (undocumented)
+    type VerifyAuthorizeBatchParams = __VerifyAuthorizeBatchParams;
+    // (undocumented)
+    type VerifyAuthorizeParams = __VerifyAuthorizeParams;
+    // (undocumented)
+    type VerifyEmailParams = __VerifyEmailParams;
+    // (undocumented)
+    type VerifyPrincipal = __VerifyPrincipal;
+    // (undocumented)
+    type VerifyTokenParams = __VerifyTokenParams;
+    // (undocumented)
+    type WebauthnConfig = __WebauthnConfig;
+    // (undocumented)
+    type WebauthnConfigUpdateParams = __WebauthnConfigUpdateParams;
+    // (undocumented)
+    type WebauthnEnrollmentData = __WebauthnEnrollmentData;
+    // (undocumented)
+    type WebauthnOptions = __WebauthnOptions;
+    // (undocumented)
+    type WebhookAttemptTrigger = __WebhookAttemptTrigger;
+    // (undocumented)
+    type WebhookDeliveryAttempt = __WebhookDeliveryAttempt;
+    // (undocumented)
+    type WebhookEndpoint = __WebhookEndpoint;
+    // (undocumented)
+    type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
+    // (undocumented)
+    type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
+    // (undocumented)
+    type WebhookEndpointStatus = __WebhookEndpointStatus;
+    // (undocumented)
+    type WebhookEndpointTestParams = __WebhookEndpointTestParams;
+    // (undocumented)
+    type WebhookEndpointUpdateParams = __WebhookEndpointUpdateParams;
+    // (undocumented)
+    type WebhookEndpointWithSecret = __WebhookEndpointWithSecret;
+    // (undocumented)
+    type WebhookEvent = __WebhookEvent;
+    // (undocumented)
+    type WebhookEventDelivery = __WebhookEventDelivery;
+    // (undocumented)
+    type WebhookEventDetail = __WebhookEventDetail;
+    // (undocumented)
+    type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplayParams = __WebhookEventReplayParams;
+    // (undocumented)
+    type WebhookEventStatus = __WebhookEventStatus;
+    // (undocumented)
+    type WebhookEventType = __WebhookEventType;
+    // (undocumented)
+    type WebhookEventTypeInfo = __WebhookEventTypeInfo;
+    // (undocumented)
+    type WebhookPagination = __WebhookPagination;
+    // (undocumented)
+    type WebhookUnwrapParams = __WebhookUnwrapParams;
 }
+export { Auth }
+export default Auth;
 
 // @public
 export const AUTH_LEGACY_ISSUER = "heimdall";
@@ -132,218 +1221,2472 @@ export interface AuthClaims extends JWTPayload {
     sub: string;
 }
 
+export { AuthenticationError }
+
+// @public
+export type AuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required" | (string & {});
+
 // @public (undocumented)
-export interface AuthConfig extends PCClientConfig {
+export const AuthErrorCode: {
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_EXISTS", "ACCOUNT_NOT_FOUND", "ACCOUNT_SUSPENDED", "APEX_NOT_SUPPORTED", "APP_ARCHIVED", "APP_HAS_NO_WORKSPACE", "APP_NOT_FOUND", "APP_SUSPENDED", "AUTH_SETTINGS_IN_METADATA", "AVATAR_INVALID_TYPE", "AVATAR_MAGIC_MISMATCH", "AVATAR_NOT_FOUND", "AVATAR_TOO_LARGE", "BOT_PROTECTION_FAILED", "BOT_PROTECTION_REQUIRED", "BOT_PROTECTION_UNAVAILABLE", "CUSTOM_DOMAIN_EXISTS", "CUSTOM_DOMAIN_NOT_ACTIVE", "CUSTOM_DOMAIN_NOT_FOUND", "CUSTOM_DOMAIN_OAUTH_ONLY", "DNS_CONFLICTS", "ENVOI_APP_NOT_BOUND_TO_WORKSPACE", "ENVOI_NOT_ENABLED", "ENVOI_NOT_WIRED", "ENVOI_SENDER_NOT_CONFIGURED", "ENVOI_TEMPLATE_NOT_CONFIGURED", "FEATURE_NOT_ENABLED", "HOSTNAME_RESERVED", "HOSTNAME_TAKEN", "INSUFFICIENT_PERMISSIONS", "INVALID_FORMAT", "INVALID_HOSTNAME", "INVALID_IDENTIFIER", "INVALID_PROVIDER", "INVALID_ZONE", "MAIL_UNREACHABLE", "PAK_WORKSPACE_MISMATCH", "PASSWORD_BREACHED", "PASSWORD_TOO_COMMON", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "ROLE_IN_USE", "SENDER_ADDRESS_REQUIRED", "SESSION_EXPIRED", "SIGN_IN_TEST_INVALID", "SLUG_TAKEN", "SLUG_UUID_SHAPED", "TENANT_API_KEYS_APP_PROXY_ONLY", "TENANT_API_KEYS_FORBIDDEN", "TENANT_API_KEYS_NOT_ENABLED", "TENANT_API_KEYS_NO_SCOPES", "TENANT_API_KEYS_SCOPE_INVALID", "TENANT_API_KEYS_SUSPENDED", "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE", "TENANT_API_KEYS_UNKNOWN_ROLE", "TENANT_API_KEY_EXPIRY_INVALID", "TENANT_API_KEY_LIMIT", "TENANT_API_KEY_NOT_ACTIVE", "TENANT_API_KEY_NOT_FOUND", "TENANT_API_KEY_SCOPE_ABOVE_CEILING", "TENANT_API_KEY_SCOPE_NOT_GRANTABLE", "TENANT_CONTEXT_REQUIRED", "TENANT_MEMBERSHIP_REQUIRED", "TENANT_NOT_ACTIVE", "TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_REVOKED", "USERNAME_TAKEN", "account_exists_with_different_provider", "idempotency_secret_not_replayable", "link_required", "step_up_required"];
+};
+
+// @public @deprecated (undocumented)
+export const AuthHttpError: typeof APIError;
+
+// @public @deprecated (undocumented)
+export type AuthHttpError = APIError;
+
+// @public
+interface AuthOptions extends ClientOptions {
+    fetch?: typeof fetch;
     jwksTtlMs?: number;
 }
+export { AuthOptions as AuthConfig }
+export { AuthOptions }
 
-// @public
-export class AuthHttpError<TData = unknown> extends Error {
-    constructor(response: ResponseConfig<TData>);
-    // (undocumented)
-    readonly data: TData;
-    // (undocumented)
-    readonly status: number;
-    // (undocumented)
-    readonly statusText: string;
-}
+// @public @deprecated (undocumented)
+export type AuthorizeBatchBody = components["schemas"]["AuthorizeBatchBody"];
 
-// @public
-export type AuthorizeBatchBody = {
-    checks: AuthorizeBatchEntry[];
-    token?: string;
-};
+// @public @deprecated (undocumented)
+export type AuthorizeBody = components["schemas"]["AuthorizeBody"];
 
-// @public
-export type AuthorizeBody = {
-    permission?: string;
-    permissions?: string[];
-    token?: string;
-};
+export { BadRequestError }
 
-// @public
-export type ClientCredentialsDto = {
-    client_id: string;
-    client_secret: string;
-    grant_type: string;
-};
-
-// @public
-export type ConfirmEnrollmentResponseDto = {
-    factor: PublicFactorDto;
-    recovery_codes: string[];
-};
-
-// @public
-export type ConsumerAcceptInviteDto = {
-    code: string;
-    display_name?: string;
-    password: string;
-    username?: string;
-};
-
-// @public
-export type ConsumerLogoutDto = {
-    refresh_token: string;
-};
-
-// @public
-export type ConsumerRefreshDto = {
-    refresh_token: string;
-};
-
-// @public
-export type ConsumerRequestPasswordResetDto = {
-    email?: string;
-    phone?: string;
-};
-
-// @public
-export type ConsumerResetPasswordDto = {
-    code: string;
-    new_password: string;
-};
+// @public @deprecated (undocumented)
+export type ClientCredentialsDto = components["schemas"]["ClientCredentialsDto"];
 
 // @public (undocumented)
-export class ConsumerScope {
-    constructor(appSlug: string, internals: ConsumerScopeInternals, opts?: {
-        jwksTtlMs?: number;
-    });
+export type components = {
+    schemas: {
+        AcceptTenantInviteDto: {
+            code: string;
+        };
+        AcceptedTenantInviteResponseDto: {
+            membership_id: string;
+            role_id: string;
+            role_name: string | null;
+            tenant_id: string;
+        };
+        AccountContactDto: {
+            created_at: string;
+            id: string;
+            is_primary: boolean;
+            type: components["schemas"]["ContactType"];
+            value: string;
+            verified_at: string | null;
+        };
+        AccountContactListResponseDto: {
+            data: components["schemas"]["AccountContactDto"][];
+        };
+        AddContactDto: {
+            is_primary?: boolean;
+            type: "email" | "phone";
+            value: string;
+        };
+        AddMemberDto: {
+            account_id?: string;
+            display_name?: string;
+            email?: string;
+            role_name: string;
+            username?: string;
+        };
+        AddMemberResponseDto: {
+            account_id: string;
+            created_account: boolean;
+            membership: components["schemas"]["TenantMembershipResponseDto"];
+        };
+        AdminCreateUserDto: {
+            display_name?: string;
+            email: string;
+            password?: string;
+            role_name?: string;
+            username?: string;
+        };
+        AdminProvisionFactorResponseDto: {
+            enrollment: components["schemas"]["TotpEnrollmentDataDto"] | components["schemas"]["EmailEnrollmentDataDto"] | components["schemas"]["WebauthnEnrollmentDataDto"];
+            factor: components["schemas"]["PublicFactorDto"];
+            recovery_codes: string[];
+        };
+        AdminUpdateRoleDto: {
+            role_name: string;
+        };
+        AdminUpdateStatusDto: {
+            status: "active" | "suspended" | "deactivated";
+        };
+        AdminUpdateUserDto: {
+            display_name?: string;
+            email?: string;
+        };
+        ApiKeyListResponseDto: {
+            data: components["schemas"]["ApiKeySummaryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ApiKeyStatus: "active" | "expired" | "revoked";
+        ApiKeySummaryDto: {
+            created_at: string;
+            expires_at: string | null;
+            id: string;
+            key_prefix: string;
+            last_used_at: string | null;
+            name: string;
+            permissions: string[];
+            revoked_at: string | null;
+            revoked_by: string | null;
+            rotated_from: string | null;
+            status: components["schemas"]["ApiKeyStatus"];
+        };
+        AppEnvironment: "production" | "staging" | "development";
+        AppListResponseDto: {
+            data: components["schemas"]["AppResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AppMemberListResponseDto: {
+            data: components["schemas"]["AppMemberSummaryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AppMemberSummaryDto: {
+            account_id: string;
+            display_name: string | null;
+            id: string;
+            joined_at: string;
+            primary_email: string | null;
+            role_id: string;
+            role_name: string;
+            username: string;
+        };
+        AppMembershipResponseDto: {
+            account_id: string;
+            app_id: string;
+            id: string;
+            joined_at: string;
+            role_id: string;
+        };
+        AppNotificationSettingsResponseDto: {
+            app_id: string;
+            created_at: string;
+            default_sender_address: string | null;
+            effective_sender: components["schemas"]["EffectiveSenderDto"];
+            invite_template_name: string | null;
+            mfa_code_template_name: string | null;
+            notifications_via_envoi: boolean;
+            password_reset_template_name: string | null;
+            sender_mode: components["schemas"]["SenderSource"];
+            updated_at: string;
+            verification_template_name: string | null;
+            web_origin: string | null;
+            welcome_template_name: string | null;
+        };
+        AppPermissionCatalogEntryDto: {
+            action: string;
+            app_id: string | null;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            resource: string;
+        };
+        AppResponseDto: {
+            audit_retention_days: number;
+            created_at: string;
+            created_by: string;
+            display_name: string;
+            environment: components["schemas"]["AppEnvironment"];
+            id: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            slug: string;
+            status: components["schemas"]["AppStatus"];
+            updated_at: string;
+            webhook_attempt_retention_days: number;
+            workspace_id: string;
+        };
+        AppSlugChangedEvent: {
+            created_at: string;
+            data: components["schemas"]["AppSlugChangedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "app.slug_changed";
+        };
+        AppSlugChangedEventDataDto: {
+            alias_expires_at: string;
+            from: string;
+            to: string;
+        };
+        AppStatus: "active" | "suspended" | "archived";
+        AppWebhookAttemptPageDto: {
+            data: components["schemas"]["AppWebhookDeliveryAttemptDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AppWebhookConfigResponseDto: {
+            app_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            dead_letter_dropped_at: string | null;
+            dead_letter_dropped_count: number;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            event_types: string[];
+            id: string;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+        };
+        AppWebhookConfigWithSecretResponseDto: {
+            app_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            dead_letter_dropped_at: string | null;
+            dead_letter_dropped_count: number;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            event_types: string[];
+            id: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            updated_at: string;
+            url: string;
+        };
+        AppWebhookDeadLetterDto: {
+            app_id: string;
+            attempts: number;
+            event_id: string;
+            event_type: string;
+            failed_at: string;
+            id: string;
+            last_error: string | null;
+            last_status_code: number | null;
+            payload: Record<string, unknown>;
+            replay_count: number;
+            replayed_at: string | null;
+        };
+        AppWebhookDeadLetterPageDto: {
+            data: components["schemas"]["AppWebhookDeadLetterDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AppWebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            status_code: number | null;
+            url: string;
+        };
+        ApplyConflictDto: {
+            code: string;
+            host: string;
+            message: string;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            severity: components["schemas"]["DnsConflictSeverity"];
+            suggested_value?: string;
+        };
+        ApplyCountsDto: {
+            create: number;
+            failed: number;
+            skip: number;
+        };
+        ApplyCustomDomainDnsDto: {
+            dry_run: boolean;
+            provider: "cloudflare" | "digitalocean";
+            token: string;
+            zone?: string;
+        };
+        ApplyPlanAction: "create" | "skip";
+        ApplyPlanItemDto: {
+            action: components["schemas"]["ApplyPlanAction"];
+            conflicts: components["schemas"]["DnsConflictDto"][];
+            error: string | null;
+            existing: string[];
+            host: string;
+            name: string;
+            note: string | null;
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            result: components["schemas"]["ApplyPlanResult"] | null;
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+        };
+        ApplyPlanResult: "created" | "unchanged" | "failed";
+        AssignRoleDto: {
+            account_id: string;
+            role: string;
+        };
+        AuditLogEntryDto: {
+            action: string;
+            actor_id: string | null;
+            actor_type: string;
+            app_id: string;
+            created_at: string;
+            id: string;
+            ip: string | null;
+            metadata: {
+                [key: string]: unknown;
+            } | null;
+            resource: string | null;
+            resource_id: string | null;
+            tenant_id: string | null;
+        };
+        AuditLogListResponseDto: {
+            data: components["schemas"]["AuditLogEntryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AuditSinkAttemptKind: "batch" | "test";
+        AuditSinkResponseDto: {
+            app_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            enabled: boolean;
+            id: string;
+            last_attempt_at: string | null;
+            last_attempt_kind: components["schemas"]["AuditSinkAttemptKind"] | null;
+            last_attempt_ok: boolean | null;
+            last_attempt_status_code: number | null;
+            last_delivered_at: string | null;
+            last_error: string | null;
+            last_test_succeeded_at: string | null;
+            signing_secret_hint: string;
+            state: components["schemas"]["AuditSinkState"];
+            updated_at: string;
+            url: string;
+        };
+        AuditSinkState: "active" | "paused" | "auto_disabled";
+        AuditSinkTestResultDto: {
+            attempted_at: string;
+            delivered: boolean;
+            duration_ms: number;
+            error: string | null;
+            sink: components["schemas"]["AuditSinkResponseDto"];
+            status_code: number | null;
+        };
+        AuditSinkWithSecretResponseDto: {
+            app_id: string;
+            consecutive_failures: number;
+            created_at: string;
+            disabled_at: string | null;
+            disabled_reason: string | null;
+            enabled: boolean;
+            id: string;
+            last_attempt_at: string | null;
+            last_attempt_kind: components["schemas"]["AuditSinkAttemptKind"] | null;
+            last_attempt_ok: boolean | null;
+            last_attempt_status_code: number | null;
+            last_delivered_at: string | null;
+            last_error: string | null;
+            last_test_succeeded_at: string | null;
+            signing_secret: string;
+            signing_secret_hint: string;
+            state: components["schemas"]["AuditSinkState"];
+            updated_at: string;
+            url: string;
+        };
+        AuthConfigResponseDto: {
+            access_token_minutes: number;
+            allowed_redirect_origins: string[];
+            bot_protection: components["schemas"]["BotProtectionResponseDto"] | null;
+            enforce_app_permissions: boolean;
+            max_failed_login_attempts: number;
+            max_sessions: number | null;
+            mfa: components["schemas"]["MfaPolicy"];
+            mfa_grace_days: number;
+            oauth_link_policy: components["schemas"]["OAuthLinkPolicy"];
+            password_breach_check: components["schemas"]["PasswordBreachCheck"];
+            password_min_length: number;
+            password_require_number: boolean;
+            password_require_symbol: boolean;
+            password_require_uppercase: boolean;
+            session_duration_minutes: number;
+            signin_enabled: boolean;
+            signup_allowed_email_domains: string[];
+            signup_default_role: string;
+            signup_enabled: boolean;
+            signup_requires_pak: boolean;
+            unverified_account_ttl_days: number | null;
+        };
+        AuthErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required") | string;
+        AuthStatsInWindowDto: {
+            active_users_1d: number;
+            active_users_30d: number;
+            active_users_7d: number;
+            new_end_users: number;
+        };
+        AuthStatsMetric: "active_users";
+        AuthStatsSeriesDto: {
+            granularity: components["schemas"]["StatsGranularity"];
+            metric: components["schemas"]["AuthStatsMetric"];
+            points: components["schemas"]["StatsSeriesPointDto"][];
+        };
+        AuthStatsTotalsDto: {
+            apps: number;
+            end_users: number;
+        };
+        AuthWorkspaceStatsDto: {
+            generated_at: string;
+            in_window: components["schemas"]["AuthStatsInWindowDto"];
+            last_activity_at: string | null;
+            series: components["schemas"]["AuthStatsSeriesDto"];
+            totals: components["schemas"]["AuthStatsTotalsDto"];
+            window: components["schemas"]["StatsWindow"];
+        };
+        AuthorizeBatchBody: {
+            checks: components["schemas"]["AuthorizeBatchEntry"][];
+            token?: string;
+        };
+        AuthorizeBatchEntry: {
+            id?: string;
+            permission?: string;
+            permissions?: string[];
+        };
+        AuthorizeBatchResponseDto: {
+            results: components["schemas"]["AuthorizeBatchResultDto"][];
+        };
+        AuthorizeBatchResultDto: {
+            authorized: boolean;
+            id?: string;
+            missing_permissions: string[];
+        };
+        AuthorizeBody: {
+            permission?: string;
+            permissions?: string[];
+            token?: string;
+        };
+        AuthorizeResponseDto: {
+            authorized: boolean;
+            error?: string;
+            missing_permissions?: string[];
+        };
+        AvatarUrlResponseDto: {
+            avatar_url: string;
+        };
+        BotProtectionProvider: "turnstile" | "hcaptcha";
+        BotProtectionResponseDto: {
+            enabled: boolean;
+            expected_hostnames: string[];
+            provider: components["schemas"]["BotProtectionProvider"];
+            secret_last4: string | null;
+            secret_set: boolean;
+            site_key: string;
+        };
+        BulkAffectedUsersResponseDto: {
+            affected_users: number;
+        };
+        BulkDeleteDto: {
+            confirm_all_in_app?: boolean;
+            selection: components["schemas"]["BulkSelectionDto"];
+        };
+        BulkReplayResultDto: {
+            remaining: number;
+            replayed: number;
+            stopped_on: Record<string, unknown> | null;
+        };
+        BulkRevokeSessionsDto: {
+            selection: components["schemas"]["BulkSelectionDto"];
+        };
+        BulkSelectionDto: {
+            ids?: string[];
+            mode: "ids" | "filter";
+            provider?: string;
+            search?: string;
+            signal?: "unverified" | "failing_signin" | "no_mfa" | "locked" | "never_active";
+            status?: "active" | "suspended" | "deactivated";
+        };
+        BulkUpdateRoleDto: {
+            role_name: string;
+            selection: components["schemas"]["BulkSelectionDto"];
+        };
+        BulkUpdateStatusDto: {
+            selection: components["schemas"]["BulkSelectionDto"];
+            status: "active" | "suspended" | "deactivated";
+        };
+        CallbackBodyDto: Record<string, unknown>;
+        ChangePasswordDto: {
+            current_password: string;
+            new_password: string;
+        };
+        ClientCredentialsDto: {
+            client_id: string;
+            client_secret: string;
+            grant_type: string;
+        };
+        CloneAppDto: {
+            copy_tenants?: boolean;
+            display_name?: string;
+            environment: "production" | "staging" | "development";
+            slug: string;
+        };
+        CloneAppResponseDto: {
+            app: components["schemas"]["AppResponseDto"];
+            copied: {
+                [key: string]: unknown;
+            };
+            notes: string[];
+            providers_to_configure: string[];
+            webhook_signing_secret: string | null;
+        };
+        ConfirmEnrollmentDto: {
+            code?: string;
+            codes?: string[];
+            credential?: components["schemas"]["WebauthnCredentialDto"];
+        };
+        ConfirmEnrollmentResponseDto: {
+            factor: components["schemas"]["PublicFactorDto"];
+            recovery_codes: string[];
+        };
+        ConsumerAcceptInviteDto: {
+            code: string;
+            display_name?: string;
+            password: string;
+            username?: string;
+        };
+        ConsumerAcceptTenantInviteDto: {
+            code: string;
+            display_name?: string;
+            password: string;
+            username?: string;
+        };
+        ConsumerAddMemberResponseDto: {
+            account_id: string;
+            created_account: boolean;
+            membership: components["schemas"]["ConsumerTenantMembershipResponseDto"];
+        };
+        ConsumerAdminCreatedUserDto: {
+            created_at: string;
+            display_name: string | null;
+            email: string;
+            email_verified: boolean;
+            id: string;
+            password_warnings?: string[];
+            role: string | null;
+            status: string;
+            username: string;
+        };
+        ConsumerAdminEndUserDto: {
+            active_session_count: number;
+            created_at: string;
+            display_name: string | null;
+            email: string | null;
+            email_verified_at: string | null;
+            id: string;
+            joined_at: string | null;
+            last_used_at: string | null;
+            role: string | null;
+            status: string;
+            username: string;
+        };
+        ConsumerAdminEndUserListResponseDto: {
+            data: components["schemas"]["ConsumerAdminEndUserDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ConsumerAdminPermissionDto: {
+            action: string;
+            app_id: string | null;
+            created_at: string;
+            description: string | null;
+            id: string;
+            resource: string;
+        };
+        ConsumerAdminPermissionListEntryDto: {
+            action: string;
+            app_id: string | null;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            resource: string;
+        };
+        ConsumerAdminRoleAssignmentResponseDto: {
+            role_name: string;
+            user_id: string;
+        };
+        ConsumerCodeDispatchResponseDto: {
+            expires_at: string;
+        };
+        ConsumerCodeIssueResponseDto: {
+            code: string;
+            expires_at: string;
+        };
+        ConsumerLogoutDto: {
+            refresh_token: string;
+        };
+        ConsumerMfaChallengeFactorDto: {
+            email_masked?: string | null;
+            id: string;
+            label: string | null;
+            type: string;
+        };
+        ConsumerMfaChallengeResponseDto: {
+            expires_at: string;
+            factors: components["schemas"]["ConsumerMfaChallengeFactorDto"][];
+            mfa_required: boolean;
+            mfa_token: string;
+            result: "mfa_required";
+        };
+        ConsumerMfaEnrollDto: {
+            contact_id?: string;
+            label?: string;
+            mfa_token: string;
+            type: "totp" | "email";
+        };
+        ConsumerMfaEnrollVerifyDto: {
+            code?: string;
+            codes?: string[];
+            factor_id: string;
+            mfa_token: string;
+        };
+        ConsumerMfaEnrollVerifyResponseDto: {
+            access_token: string;
+            expires_in: number;
+            factor: {
+                [key: string]: unknown;
+            };
+            mfa_enrollment_due_at?: string;
+            password_warnings?: string[];
+            recovery_codes: string[];
+            refresh_token: string;
+            result: components["schemas"]["SignInResult"];
+            token_type: string;
+        };
+        ConsumerMfaEnrollmentRequiredResponseDto: {
+            expires_at: string;
+            mfa_enrollment_required: boolean;
+            mfa_token: string;
+            result: "mfa_enrollment_required";
+        };
+        ConsumerMfaRecoverDto: {
+            mfa_token: string;
+            recovery_code: string;
+        };
+        ConsumerMfaSendCodeDto: {
+            factor_id: string;
+            mfa_token: string;
+        };
+        ConsumerMfaSendCodeResponseDto: {
+            code_expires_at: string;
+            email_masked: string;
+        };
+        ConsumerMfaVerifyDto: {
+            code?: string;
+            credential?: {
+                [key: string]: unknown;
+            };
+            mfa_token: string;
+        };
+        ConsumerMfaWebauthnOptionsDto: {
+            mfa_token: string;
+        };
+        ConsumerPasskeyOptionsDto: {
+            tenant_id?: string;
+        };
+        ConsumerPasskeyVerifyDto: {
+            credential: {
+                [key: string]: unknown;
+            };
+        };
+        ConsumerRefreshDto: {
+            refresh_token: string;
+        };
+        ConsumerRequestPasswordResetDto: {
+            email?: string;
+            phone?: string;
+        };
+        ConsumerRequestVerificationDto: {
+            email?: string;
+            phone?: string;
+        };
+        ConsumerResetPasswordDto: {
+            code: string;
+            new_password: string;
+        };
+        ConsumerRoleListResponseDto: {
+            data: components["schemas"]["ConsumerRoleResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ConsumerRolePermissionEntryDto: {
+            action: string;
+            description: string | null;
+            id: string;
+            resource: string;
+        };
+        ConsumerRoleResponseDto: {
+            app_id: string;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            name: string;
+            updated_at: string;
+        };
+        ConsumerRoleWithPermissionsResponseDto: {
+            app_id: string;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            name: string;
+            permissions: components["schemas"]["ConsumerRolePermissionEntryDto"][];
+            updated_at: string;
+        };
+        ConsumerSendPasswordResetEmailDto: {
+            email: string;
+        };
+        ConsumerSendVerificationEmailDto: {
+            email: string;
+        };
+        ConsumerSigninDto: {
+            identifier: string;
+            password: string;
+            tenant_id?: string;
+        };
+        ConsumerSignupDto: {
+            bot_protection_token?: string;
+            display_name?: string;
+            email: string;
+            password: string;
+            username: string;
+        };
+        ConsumerSwitchTenantDto: {
+            tenant_id: string;
+        };
+        ConsumerTenantListResponseDto: {
+            data: components["schemas"]["ConsumerTenantResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ConsumerTenantMembershipListResponseDto: {
+            data: components["schemas"]["ConsumerTenantMembershipResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        ConsumerTenantMembershipResponseDto: {
+            account_id: string;
+            id: string;
+            invited_by: string | null;
+            joined_at: string;
+            role_id: string;
+            role_name: string;
+            tenant_id: string;
+        };
+        ConsumerTenantResponseDto: {
+            app_id: string;
+            created_at: string;
+            display_id: string;
+            display_name: string;
+            id: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            slug: string;
+            status: components["schemas"]["TenantStatus"];
+            updated_at: string;
+        };
+        ConsumerTokenResponseDto: {
+            access_token: string;
+            expires_in: number;
+            mfa_enrollment_due_at?: string;
+            password_warnings?: string[];
+            refresh_token: string;
+            result: "session";
+            token_type: string;
+        };
+        ConsumerVerifyDto: {
+            code: string;
+        };
+        ConsumerVerifyResponseDto: {
+            account_id: string;
+            contact_id: string;
+            type: string;
+            value: string;
+            verified_at: string;
+        };
+        ConsumerWebauthnOptionsResponseDto: {
+            public_key: {
+                [key: string]: unknown;
+            };
+        };
+        ContactType: "email" | "phone";
+        CreateApiKeyDto: {
+            expires_in_days?: 30 | 90 | 365 | null;
+            name: string;
+            permissions: string[];
+        };
+        CreateApiKeyResponseDto: {
+            created_at: string;
+            expires_at: string | null;
+            id: string;
+            key: string;
+            key_prefix: string;
+            name: string;
+            permissions: string[];
+        };
+        CreateAppDto: {
+            display_name: string;
+            environment?: "production" | "staging" | "development";
+            slug: string;
+            workspace_id: string;
+        };
+        CreateCustomDomainDto: {
+            hostname: string;
+        };
+        CreateEndUserInviteDto: {
+            email: string;
+            expires_in_hours?: number;
+            max_uses?: number;
+            name?: string;
+            role_name?: string;
+        };
+        CreateM2mClientDto: {
+            name: string;
+        };
+        CreatePermissionDto: {
+            action: string;
+            description?: string;
+            resource: string;
+        };
+        CreateRoleDto: {
+            description?: string;
+            name: string;
+        };
+        CreateSignInTestDto: {
+            custom_domain?: boolean;
+            method: "oauth" | "password" | "otp";
+            provider?: "google" | "github" | "apple";
+        };
+        CreateTenantApiKeyDto: {
+            expires_in_days?: 7 | 30 | 90 | 365;
+            name: string;
+            scopes: string[];
+        };
+        CreateTenantDto: {
+            display_name: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            slug?: string;
+        };
+        CreateTenantInviteDto: {
+            email: string;
+            expires_in_hours?: number;
+            max_uses?: number;
+            name?: string;
+            role_name: string;
+        };
+        CreateTenantInviteResponseDto: {
+            code: string;
+            created_at: string;
+            email: string;
+            expires_at: string;
+            id: string;
+            invited_by: string | null;
+            max_uses: number;
+            revoked_at: string | null;
+            role_id: string;
+            role_name: string | null;
+            status: components["schemas"]["TenantInviteStatus"];
+            tenant_id: string;
+            use_count: number;
+        };
+        CreateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed")[];
+            url: string;
+        };
+        CustomDomainApplyResultDto: {
+            applied: boolean;
+            conflicts: components["schemas"]["ApplyConflictDto"][];
+            counts: components["schemas"]["ApplyCountsDto"];
+            domain: components["schemas"]["CustomDomainDto"] | null;
+            domain_id: string;
+            dry_run: boolean;
+            hostname: string;
+            plan: components["schemas"]["ApplyPlanItemDto"][];
+            provider: components["schemas"]["DnsProvider"];
+            warnings: components["schemas"]["CustomDomainApplyWarning"][];
+            zone: string;
+        };
+        CustomDomainApplyWarning: "token_scope_broader_than_zone" | "partially_applied";
+        CustomDomainCallbackUrlsDto: {
+            apple: string;
+            github: string;
+            google: string;
+        };
+        CustomDomainDto: {
+            app_id: string;
+            apply_providers: components["schemas"]["DnsProvider"][];
+            callback_urls: components["schemas"]["CustomDomainCallbackUrlsDto"] | null;
+            created_at: string;
+            dns_provider: components["schemas"]["DnsProviderRefDto"] | null;
+            dns_zone: string | null;
+            edge_target: string;
+            failing_since: string | null;
+            hostname: string;
+            id: string;
+            last_checked_at: string | null;
+            records: components["schemas"]["CustomDomainRecordDto"][];
+            serving: boolean;
+            status: components["schemas"]["CustomDomainStatus"];
+            verified_at: string | null;
+        };
+        CustomDomainListDto: {
+            available: boolean;
+            data: components["schemas"]["CustomDomainDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        CustomDomainRecordDto: {
+            conflicts: components["schemas"]["DnsConflictDto"][];
+            host: string;
+            last_checked_at: string | null;
+            name: string;
+            observed: string[];
+            purpose: components["schemas"]["DnsRecordPurpose"];
+            state: components["schemas"]["DnsRecordState"];
+            ttl: number;
+            type: components["schemas"]["DnsRecordType"];
+            value: string;
+            verified_at: string | null;
+        };
+        CustomDomainStatus: "pending" | "active" | "failing";
+        DnsConflictDto: {
+            code: string;
+            message: string;
+            severity: components["schemas"]["DnsConflictSeverity"];
+            suggested_value?: string;
+        };
+        DnsConflictSeverity: "blocking" | "warning";
+        DnsProvider: "cloudflare" | "digitalocean";
+        DnsProviderRefDto: {
+            id: string;
+            name: string;
+        };
+        DnsRecordPurpose: "routing" | "ownership";
+        DnsRecordState: "not_found" | "propagating" | "verified" | "conflict" | "lookup_failed";
+        DnsRecordType: "CNAME" | "TXT";
+        EffectiveSenderDto: {
+            address: string | null;
+            domain_status: components["schemas"]["SenderDomainStatus"] | null;
+            source: components["schemas"]["SenderSource"];
+            verified: boolean | null;
+        };
+        EmailEnrollmentDataDto: {
+            code_expires_at?: string;
+            email_masked: string;
+            type: "email";
+        };
+        EndUserActionCountDto: {
+            action: string;
+            count: number;
+        };
+        EndUserActivityEntryDto: {
+            action: string;
+            created_at: string;
+            id: string;
+            ip: string | null;
+            resource: string;
+            resource_id: string | null;
+        };
+        EndUserDetailInsightsDto: {
+            action_counts: components["schemas"]["EndUserActionCountDto"][];
+            activity: components["schemas"]["EndUserActivityEntryDto"][];
+            activity_truncated: boolean;
+            factors: components["schemas"]["EndUserFactorEntryDto"][];
+            first_seen_at: string | null;
+            last_seen_at: string | null;
+            no_activity_recorded: boolean;
+            sessions: components["schemas"]["EndUserSessionEntryDto"][];
+            user_id: string;
+        };
+        EndUserFactorEntryDto: {
+            created_at: string;
+            disabled_at: string | null;
+            enabled_at: string | null;
+            id: string;
+            label: string | null;
+            type: string;
+        };
+        EndUserInsightsDto: {
+            mfa: components["schemas"]["InsightsMfaDto"];
+            password_reset: components["schemas"]["InsightsPasswordResetDto"];
+            sessions: components["schemas"]["InsightsSessionsDto"];
+            signin: components["schemas"]["InsightsSigninDto"];
+            users: components["schemas"]["InsightsUsersDto"];
+            verification: components["schemas"]["InsightsVerificationDto"];
+            window_days: number;
+        };
+        EndUserInviteListResponseDto: {
+            data: components["schemas"]["EndUserInviteResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        EndUserInviteResponseDto: {
+            code: string;
+            created_at: string;
+            email: string | null;
+            expires_at: string | null;
+            id: string;
+            max_uses: number | null;
+            revoked_at: string | null;
+            role_id: string;
+            role_name: string | null;
+            use_count: number;
+        };
+        EndUserListResponseDto: {
+            data: components["schemas"]["EndUserSummaryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        EndUserRoleAssignmentResponseDto: {
+            role_name: string;
+            user_id: string;
+        };
+        EndUserSessionEntryDto: {
+            auth_methods: string[];
+            created_at: string;
+            expires_at: string;
+            id: string;
+            ip: string | null;
+            last_used_at: string | null;
+            mfa_at: string | null;
+            revoked_at: string | null;
+            step_up_failed_attempts: number;
+            step_up_locked_until: string | null;
+            user_agent: string | null;
+        };
+        EndUserStatus: "active" | "suspended" | "deactivated";
+        EndUserSummaryDto: {
+            active_session_count: number;
+            auth_providers: string[];
+            created_at: string;
+            display_name: string | null;
+            email: string | null;
+            email_verified_at: string | null;
+            failed_signins: number;
+            id: string;
+            joined_at: string | null;
+            last_activity_at: string | null;
+            last_used_at: string | null;
+            mfa_factor_count: number;
+            role: string | null;
+            status: components["schemas"]["EndUserStatus"];
+            step_up_locked_until: string | null;
+            username: string;
+            verified_email_count: number;
+        };
+        EnforcedPermissionsResponseDto: {
+            data: string[];
+        };
+        EnrollmentType: "totp" | "email" | "webauthn";
+        ErrorParamDto: {
+            code: string;
+            message: string;
+            param: string;
+        };
+        ErrorResponseDto: {
+            code: components["schemas"]["AuthErrorCode"];
+            details?: {
+                [key: string]: unknown;
+            };
+            errors: components["schemas"]["ErrorParamDto"][];
+            message: string | string[];
+            request_id: string;
+            statusCode?: number;
+            status_code: number;
+        };
+        ExchangeRequestDto: {
+            code: string;
+        };
+        ExchangeResponseDto: {
+            access_token?: string;
+            expires_at?: string;
+            expires_in?: number;
+            mfa_enrollment_required?: components["schemas"]["MfaEnrollmentRequiredFlag"];
+            mfa_token?: string;
+            refresh_token?: string;
+            result: components["schemas"]["SignInResult"];
+            token_type?: components["schemas"]["TokenType"];
+        };
+        FactorListResponseDto: {
+            data: components["schemas"]["PublicFactorDto"][];
+        };
+        GrantableScopeDto: {
+            description?: string;
+            name: string;
+        };
+        IdpMfaEnrollmentRequiredResponseDto: {
+            expires_at: string;
+            mfa_enrollment_required: boolean;
+            mfa_token: string;
+            result: "mfa_enrollment_required";
+        };
+        IdpNativeSigninDto: {
+            id_token: string;
+            nonce: string;
+            user?: components["schemas"]["IdpNativeUserHintDto"];
+        };
+        IdpNativeUserHintDto: {
+            email?: string;
+            name?: string;
+        };
+        IdpTokenResponseDto: {
+            access_token: string;
+            expires_in: number;
+            mfa_enrollment_due_at?: string;
+            refresh_token: string;
+            result: "session";
+            token_type: components["schemas"]["TokenType"];
+        };
+        ImportJobErrorDto: {
+            error: string;
+            line: number;
+        };
+        ImportJobResponseDto: {
+            app_id: string;
+            created_at: string;
+            created_count: number;
+            error_message: string | null;
+            errors: components["schemas"]["ImportJobErrorDto"][];
+            failed_count: number;
+            finished_at: string | null;
+            id: string;
+            processed_rows: number;
+            started_at: string | null;
+            status: components["schemas"]["ImportJobStatus"];
+            total_rows: number;
+            updated_count: number;
+        };
+        ImportJobStatus: "queued" | "running" | "succeeded" | "failed";
+        InsightsMfaDto: {
+            adoption_rate: number | null;
+            by_type: {
+                [key: string]: number;
+            };
+            users_with_factor: number;
+        };
+        InsightsPasswordResetDto: {
+            completed: number;
+            requested: number;
+        };
+        InsightsSessionsDto: {
+            active: number;
+            with_mfa: number;
+        };
+        InsightsSigninDto: {
+            failed: number;
+            failure_rate: number | null;
+            success: number;
+        };
+        InsightsUsersDto: {
+            active_in_window: number;
+            new_in_window: number;
+            total: number;
+        };
+        InsightsVerificationDto: {
+            completed: number;
+            completion_rate: number | null;
+            requested: number;
+        };
+        IntrospectDto: {
+            token?: string;
+            token_type_hint?: string;
+        };
+        IntrospectResponseDto: {
+            active: boolean;
+            aid?: string;
+            client_id?: string;
+            exp?: number;
+            iat?: number;
+            iss?: string;
+            scope?: string;
+            scopes?: string[];
+            sub?: string;
+            type?: components["schemas"]["IntrospectedTokenType"];
+        };
+        IntrospectTenantApiKeyDto: {
+            key: string;
+        };
+        IntrospectedTokenType: "m2m" | "end_user";
+        IntrospectionCreatorDto: {
+            account_id: string;
+            tenant_role: string;
+        };
+        IssuedVerificationCodeResponseDto: {
+            code: string;
+            expires_at: string;
+        };
+        JwkDto: {
+            alg: string;
+            e: string;
+            kid: string;
+            kty: string;
+            n: string;
+            use: components["schemas"]["JwkUse"];
+        };
+        JwkUse: "sig";
+        JwksResponseDto: {
+            keys: components["schemas"]["JwkDto"][];
+        };
+        ListWebhookEndpointsResponseDto: {
+            data: components["schemas"]["WebhookEndpointDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        ListWebhookEventTypesResponseDto: {
+            data: components["schemas"]["WebhookEventTypeDto"][];
+        };
+        ListWebhookEventsResponseDto: {
+            data: components["schemas"]["WebhookEventDto"][];
+            pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        M2mClientCreateResponseDto: {
+            client_id: string;
+            client_secret: string;
+            created_at: string;
+            id: string;
+            name: string;
+        };
+        M2mClientDetailResponseDto: {
+            app_id: string;
+            client_id: string;
+            created_at: string;
+            id: string;
+            is_active: boolean;
+            last_used_at: string | null;
+            name: string;
+            scopes: components["schemas"]["M2mScopeEntryDto"][];
+        };
+        M2mClientListResponseDto: {
+            data: components["schemas"]["M2mClientSummaryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        M2mClientSummaryDto: {
+            app_id: string;
+            client_id: string;
+            created_at: string;
+            id: string;
+            is_active: boolean;
+            last_used_at: string | null;
+            name: string;
+        };
+        M2mRotateSecretResponseDto: {
+            client_id: string;
+            client_secret: string;
+        };
+        M2mScopeEntryDto: {
+            action: string;
+            resource: string;
+        };
+        MeActivityEntryDto: {
+            action: string;
+            actor_id: string | null;
+            app_id: string;
+            created_at: string;
+            details: {
+                [key: string]: unknown;
+            } | null;
+            id: string;
+            resource_id: string | null;
+            resource_type: string | null;
+        };
+        MeActivityResponseDto: {
+            data: components["schemas"]["MeActivityEntryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        MeContactDto: {
+            created_at: string;
+            id: string;
+            is_primary: boolean;
+            type: components["schemas"]["ContactType"];
+            value: string;
+            verified_at: string | null;
+        };
+        MeContactsResponseDto: {
+            data: components["schemas"]["MeContactDto"][];
+        };
+        MePermissionsResponseDto: {
+            org_role: string | null;
+            permissions: string[];
+            role: string | null;
+        };
+        MeProfileResponseDto: {
+            avatar_url: string | null;
+            created_at: string;
+            display_name: string | null;
+            email: string | null;
+            email_verified_at: string | null;
+            id: string;
+            joined_at: string;
+            role: string | null;
+            username: string;
+        };
+        MeSessionDto: {
+            created_at: string;
+            expires_at: string;
+            id: string;
+            ip: string | null;
+            is_current: boolean;
+            last_used_at: string | null;
+            user_agent: string | null;
+        };
+        MeSessionsResponseDto: {
+            data: components["schemas"]["MeSessionDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        MeUpdatedAccountResponseDto: {
+            app_id: string;
+            created_at: string;
+            display_name: string | null;
+            id: string;
+            locale: string | null;
+            metadata: {
+                [key: string]: unknown;
+            };
+            seq_id: string;
+            status: string;
+            time_zone: string | null;
+            updated_at: string;
+            username: string;
+        };
+        MfaEnrollmentRequiredEventDataDto: {
+            grace_until: string | null;
+            user_id: string;
+            username: string | null;
+        };
+        MfaEnrollmentRequiredFlag: true;
+        MfaFactorEventDataDto: {
+            account_id: string;
+            factor_id: string;
+            provisioned?: boolean;
+            type: string;
+        };
+        MfaPolicy: "optional" | "required";
+        MfaRecoveryCodeUsedEventDataDto: {
+            account_id: string;
+            remaining: number;
+        };
+        MfaStepUpLockedEventDataDto: {
+            account_id: string;
+            locked_until: string;
+            session_id: string;
+        };
+        MfaStepUpSucceededEventDataDto: {
+            account_id: string;
+            factor_id: string | null;
+            method: string;
+            session_id: string;
+        };
+        MyTenantsResponseDto: {
+            data: components["schemas"]["TenantMembershipForMeDto"][];
+        };
+        NotificationTestResponseDto: {
+            from: string | null;
+            message_id: string | null;
+            template_name: string;
+            to: string;
+        };
+        OAuthLinkPolicy: "auto" | "confirm" | "reject";
+        OAuthProvider: "google" | "github" | "apple";
+        OAuthTokenResponseDto: {
+            access_token: string;
+            expires_in: number;
+            scope: string;
+            token_type: string;
+        };
+        OpenIdConfigurationDto: {
+            grant_types_supported: string[];
+            heimdall_admin_users_endpoint: string;
+            heimdall_authorize_endpoint: string;
+            heimdall_verify_endpoint: string;
+            id_token_signing_alg_values_supported: string[];
+            introspection_endpoint: string;
+            issuer: string;
+            jwks_uri: string;
+            response_types_supported: string[];
+            subject_types_supported: string[];
+            token_endpoint: string;
+            token_endpoint_auth_methods_supported: string[];
+            userinfo_endpoint: string;
+        };
+        PaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+        PasswordBreachCheck: "off" | "warn" | "block";
+        PatchProviderConfigDto: {
+            config?: {
+                [key: string]: unknown;
+            };
+            enabled?: boolean;
+        };
+        PermissionDto: {
+            action: string;
+            app_id: string | null;
+            created_at: string;
+            description: string | null;
+            id: string;
+            resource: string;
+        };
+        PlatformTenantApiKeyDto: {
+            created_at: string;
+            created_by: components["schemas"]["TenantApiKeyCreatorDto"];
+            created_by_account_id: string;
+            display_id: string;
+            expires_at: string;
+            id: string;
+            key_prefix: string;
+            last4: string;
+            last_used_at: string | null;
+            name: string;
+            revoke_reason: components["schemas"]["TenantApiKeyRevokeReason"] | null;
+            revoked_at: string | null;
+            rotated_from: string | null;
+            scopes: string[];
+            status: components["schemas"]["TenantApiKeyAdminState"];
+            tenant_display_id: string;
+            tenant_id: string;
+        };
+        PlatformTenantApiKeyListResponseDto: {
+            data: components["schemas"]["PlatformTenantApiKeyDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        PlatformTenantApiKeysConfigDto: {
+            default_expiry_days?: 7 | 30 | 90 | 365;
+            enabled?: boolean;
+            grantable_scopes?: components["schemas"]["GrantableScopeDto"][];
+            manage_roles?: string[];
+            management_lane?: "direct" | "app_proxy_only";
+            max_expiry_days?: 7 | 30 | 90 | 365;
+            require_recent_mfa_minutes?: number | null;
+            suspended?: boolean;
+        };
+        PlatformUserStatsResponseDto: {
+            api_keys_active: number;
+            apps: number;
+            end_users: number;
+        };
+        ProviderBlockedReason: "no_redirect_origins" | "missing_credentials" | "credentials_rejected";
+        ProviderCheckDto: {
+            callback_url: string;
+            checked_at: string;
+            provider: string;
+            provider_error: string | null;
+            result: components["schemas"]["ProviderCheckResult"];
+        };
+        ProviderCheckResult: "credentials_valid" | "credentials_rejected" | "inconclusive";
+        ProviderDetailDto: {
+            config: {
+                [key: string]: unknown;
+            };
+            created_at: string;
+            enabled: boolean;
+            last_check_at: string | null;
+            last_check_error: string | null;
+            last_check_result: components["schemas"]["ProviderCheckResult"] | null;
+            provider: string;
+            updated_at: string;
+        };
+        ProviderListEntryDto: {
+            blocked_reasons: components["schemas"]["ProviderBlockedReason"][];
+            configured: boolean;
+            display_name: string;
+            enabled: boolean;
+            last_check_at: string | null;
+            last_check_error: string | null;
+            last_check_result: components["schemas"]["ProviderCheckResult"] | null;
+            provider: string;
+            status: components["schemas"]["ProviderStatus"];
+            updated_at?: string | null;
+        };
+        ProviderStatus: "ready" | "blocked" | "disabled" | "not_configured";
+        PublicFactorDto: {
+            created_at: string;
+            enabled: boolean;
+            enabled_at: string | null;
+            id: string;
+            label: string | null;
+            type: string;
+        };
+        PushTenantApiKeysConfigDto: {
+            default_expiry_days?: 7 | 30 | 90 | 365;
+            enabled?: boolean;
+            grantable_scopes?: components["schemas"]["GrantableScopeDto"][];
+            manage_roles?: string[];
+            management_lane?: "direct" | "app_proxy_only";
+            max_expiry_days?: 7 | 30 | 90 | 365;
+            require_recent_mfa_minutes?: number | null;
+        };
+        RecoveryCodesResponseDto: {
+            recovery_codes: string[];
+        };
+        ReplayResultDto: {
+            error: string | null;
+            status: "delivered" | "failed";
+            status_code: number | null;
+        };
+        ReplayWebhookEventResponseDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            event_id: string;
+        };
+        RequireMfaReenrollmentResponseDto: {
+            factors_disabled: number;
+        };
+        RoleListResponseDto: {
+            data: components["schemas"]["RoleResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        RolePermissionEntryDto: {
+            action: string;
+            description: string | null;
+            id: string;
+            resource: string;
+        };
+        RoleResponseDto: {
+            app_id: string;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            name: string;
+            updated_at: string;
+        };
+        RoleWithPermissionsResponseDto: {
+            app_id: string;
+            created_at: string;
+            description: string | null;
+            id: string;
+            is_system: boolean;
+            name: string;
+            permissions: components["schemas"]["RolePermissionEntryDto"][];
+            updated_at: string;
+        };
+        RotateApiKeyDto: {
+            grace_hours?: number;
+        };
+        RotateApiKeyResponseDto: {
+            created_at: string;
+            expires_at: string | null;
+            id: string;
+            key: string;
+            key_prefix: string;
+            name: string;
+            permissions: string[];
+            previous_key_expires_at: string;
+            rotated_from: string;
+        };
+        RotateTenantApiKeyDto: {
+            expires_in_days?: 7 | 30 | 90 | 365;
+            grace_hours?: number;
+        };
+        RotateWebhookSecretDto: {
+            grace_hours?: number;
+        };
+        RunUnverifiedAccountExpiryDto: {
+            dry_run?: boolean;
+            min_age_minutes?: number;
+        };
+        SendWebhookTestDto: {
+            event_type: "user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed";
+        };
+        SenderDomainStatus: "not_started" | "pending" | "partially_verified" | "verified" | "temporary_failure" | "failed" | "disabled" | "deleted" | "not_found";
+        SenderSource: "workspace" | "custom";
+        SetPermissionsDto: {
+            permissions: string[];
+        };
+        SetScopesDto: {
+            permissions: string[];
+        };
+        SetupRowDto: {
+            detail: string;
+            fix: components["schemas"]["SetupRowFixDto"] | null;
+            id: string;
+            state: components["schemas"]["SetupRowState"];
+            test: components["schemas"]["SetupRowTestDto"] | null;
+            title: string;
+        };
+        SetupRowFixDto: {
+            href: string;
+            label: string;
+        };
+        SetupRowState: "pass" | "attention" | "not_set" | "blocked";
+        SetupRowTestDto: {
+            action: string;
+            label: string;
+        };
+        SetupStatusDto: {
+            checked_at: string;
+            complete: boolean;
+            rows: components["schemas"]["SetupRowDto"][];
+        };
+        SignInResult: "session" | "mfa_required" | "mfa_enrollment_required";
+        SignInTestDto: {
+            app_id: string;
+            callback_host: string | null;
+            completed_at: string | null;
+            created_at: string;
+            email_delivery: components["schemas"]["SignInTestEmailDeliveryDto"] | null;
+            error: components["schemas"]["SignInTestErrorDto"] | null;
+            expires_at: string;
+            id: string;
+            identity: components["schemas"]["SignInTestIdentityDto"] | null;
+            method: components["schemas"]["SignInTestMethod"];
+            outcome: components["schemas"]["SignInTestOutcome"] | null;
+            provider: components["schemas"]["OAuthProvider"] | null;
+            start_url: string | null;
+            state: components["schemas"]["SignInTestState"];
+        };
+        SignInTestEmailDeliveryDto: {
+            notice: components["schemas"]["SignInTestEmailNoticeDto"] | null;
+            sent: boolean;
+        };
+        SignInTestEmailNoticeCode: "emails_off" | "email_sender_missing" | "email_template_missing" | "email_workspace_missing" | "email_unavailable" | "email_send_failed";
+        SignInTestEmailNoticeDto: {
+            code: components["schemas"]["SignInTestEmailNoticeCode"];
+            fix: string;
+            message: string;
+        };
+        SignInTestErrorDto: {
+            code: string;
+            fix: string;
+            message: string;
+        };
+        SignInTestIdentityDto: {
+            email: string | null;
+            provider: string;
+            subject: string | null;
+        };
+        SignInTestMethod: "oauth" | "password" | "otp";
+        SignInTestOutcome: "would_sign_in_existing" | "would_create";
+        SignInTestState: "pending" | "succeeded" | "failed";
+        StartEnrollmentDto: {
+            contact_id?: string;
+            label?: string;
+            type: "totp" | "email" | "webauthn";
+        };
+        StartEnrollmentResponseDto: {
+            enrollment: components["schemas"]["TotpEnrollmentDataDto"] | components["schemas"]["EmailEnrollmentDataDto"] | components["schemas"]["WebauthnEnrollmentDataDto"];
+            factor: components["schemas"]["PublicFactorDto"];
+        };
+        StatsGranularity: "day";
+        StatsSeriesPointDto: {
+            date: string;
+            value: number;
+        };
+        StatsWindow: "1d" | "7d" | "30d";
+        StepUpDto: {
+            code?: string;
+            credential?: components["schemas"]["WebauthnCredentialDto"];
+        };
+        StepUpResponseDto: {
+            amr: string[];
+            mfa_at: string;
+        };
+        StepUpSendCodeDto: {
+            factor_id?: string;
+        };
+        StepUpSendCodeResponseDto: {
+            code_expires_at: string;
+            email_masked: string;
+        };
+        TenantApiKeyAdminState: "active" | "expired" | "revoked" | "orphaned";
+        TenantApiKeyCreatorDto: {
+            account_id: string;
+            display_name: string | null;
+            email: string | null;
+            username: string | null;
+        };
+        TenantApiKeyDto: {
+            created_at: string;
+            created_by_account_id: string;
+            display_id: string;
+            expires_at: string;
+            id: string;
+            key_prefix: string;
+            last4: string;
+            last_used_at: string | null;
+            name: string;
+            revoke_reason: components["schemas"]["TenantApiKeyRevokeReason"] | null;
+            revoked_at: string | null;
+            rotated_from: string | null;
+            scopes: string[];
+            status: components["schemas"]["TenantApiKeyState"];
+            tenant_display_id: string;
+            tenant_id: string;
+        };
+        TenantApiKeyEffectiveStatus: "active" | "expired" | "revoked" | "orphaned" | "suspended";
+        TenantApiKeyEnv: "live" | "test";
+        TenantApiKeyExpiryDays: 7 | 30 | 90 | 365;
+        TenantApiKeyIntrospectionDto: {
+            active: boolean;
+            created_by?: components["schemas"]["IntrospectionCreatorDto"];
+            display_id?: string;
+            env?: components["schemas"]["TenantApiKeyEnv"];
+            expires_at?: string;
+            key_id?: string;
+            name?: string;
+            scopes?: string[];
+            tenant_display_id?: string;
+            tenant_id?: string;
+        };
+        TenantApiKeyListResponseDto: {
+            data: components["schemas"]["TenantApiKeyDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        TenantApiKeyManagementLane: "direct" | "app_proxy_only";
+        TenantApiKeyRevokeReason: "manual" | "rotated" | "member_removed" | "tenant_deleted";
+        TenantApiKeyState: "active" | "expired" | "revoked";
+        TenantApiKeyStatusDto: {
+            revoke_reason: components["schemas"]["TenantApiKeyRevokeReason"] | null;
+            status: components["schemas"]["TenantApiKeyEffectiveStatus"];
+        };
+        TenantApiKeyWithSecretDto: {
+            created_at: string;
+            created_by_account_id: string;
+            display_id: string;
+            expires_at: string;
+            id: string;
+            key: string;
+            key_prefix: string;
+            last4: string;
+            last_used_at: string | null;
+            name: string;
+            revoke_reason: components["schemas"]["TenantApiKeyRevokeReason"] | null;
+            revoked_at: string | null;
+            rotated_from: string | null;
+            scopes: string[];
+            status: components["schemas"]["TenantApiKeyState"];
+            tenant_display_id: string;
+            tenant_id: string;
+        };
+        TenantApiKeysConfigDto: {
+            default_expiry_days: components["schemas"]["TenantApiKeyExpiryDays"];
+            enabled: boolean;
+            grantable_scopes: components["schemas"]["GrantableScopeDto"][];
+            manage_roles: string[];
+            management_lane: components["schemas"]["TenantApiKeyManagementLane"];
+            max_expiry_days: components["schemas"]["TenantApiKeyExpiryDays"];
+            pushed_by_app_at: string | null;
+            require_recent_mfa_minutes: number | null;
+            suspended: boolean;
+        };
+        TenantCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.created";
+        };
+        TenantDeletedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.deleted";
+        };
+        TenantEventDataDto: {
+            display_name: string;
+            status: components["schemas"]["TenantStatus"];
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantInviteAcceptedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantInviteAcceptedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.invite.accepted";
+        };
+        TenantInviteAcceptedEventDataDto: {
+            account_id: string;
+            created_account: boolean;
+            email: string | null;
+            invite_id: string;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantInviteCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantInviteCreatedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.invite.created";
+        };
+        TenantInviteCreatedEventDataDto: {
+            email: string | null;
+            expires_at: string | null;
+            invite_id: string;
+            role_name: string | null;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantInviteListResponseDto: {
+            data: components["schemas"]["TenantInviteResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        TenantInviteResponseDto: {
+            created_at: string;
+            email: string;
+            expires_at: string;
+            id: string;
+            invited_by: string | null;
+            max_uses: number;
+            revoked_at: string | null;
+            role_id: string;
+            role_name: string | null;
+            status: components["schemas"]["TenantInviteStatus"];
+            tenant_id: string;
+            use_count: number;
+        };
+        TenantInviteRevokedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantInviteRevokedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.invite.revoked";
+        };
+        TenantInviteRevokedEventDataDto: {
+            email: string | null;
+            invite_id: string;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantInviteStatus: "pending" | "revoked" | "expired" | "used";
+        TenantListResponseDto: {
+            data: components["schemas"]["TenantResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        TenantMemberAddedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantMemberAddedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.member.added";
+        };
+        TenantMemberAddedEventDataDto: {
+            account_id: string;
+            created_account?: boolean;
+            role_name: string | null;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantMemberRemovedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantMemberRemovedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.member.removed";
+        };
+        TenantMemberRemovedEventDataDto: {
+            account_id: string;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantMemberRoleChangedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantMemberRoleChangedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.member.role_changed";
+        };
+        TenantMemberRoleChangedEventDataDto: {
+            account_id: string;
+            previous_role_name: string | null;
+            role_name: string | null;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantMembershipForMeDto: {
+            display_id: string;
+            display_name: string;
+            joined_at: string;
+            role_name: string;
+            tenant_id: string;
+            tenant_slug: string;
+        };
+        TenantMembershipListResponseDto: {
+            data: components["schemas"]["TenantMembershipResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        TenantMembershipResponseDto: {
+            account_id: string;
+            id: string;
+            invited_by: string | null;
+            joined_at: string;
+            role_id: string;
+            role_name: string;
+            tenant_id: string;
+        };
+        TenantResponseDto: {
+            app_id: string;
+            created_at: string;
+            display_id: string;
+            display_name: string;
+            id: string;
+            metadata: {
+                [key: string]: unknown;
+            };
+            slug: string;
+            status: components["schemas"]["TenantStatus"];
+            updated_at: string;
+        };
+        TenantStatus: "active" | "suspended" | "archived";
+        TenantUpdatedEvent: {
+            created_at: string;
+            data: components["schemas"]["TenantEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "tenant.updated";
+        };
+        TokenType: "Bearer";
+        TotpEnrollmentDataDto: {
+            algorithm: string;
+            digits: number;
+            otpauth_uri: string;
+            period: number;
+            qr_data_url: string;
+            secret: string;
+            type: "totp";
+        };
+        UnverifiedAccountExpiryRunDto: {
+            dry_run: boolean;
+            truncated: boolean;
+            ttl_days: number;
+            user_ids: string[];
+        };
+        UnverifiedAccountExpiryStatusDto: {
+            deleted_last_30_days: number;
+            ttl_days: number | null;
+        };
+        UpdateAppDto: {
+            audit_retention_days?: number;
+            display_name?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            slug?: string;
+            webhook_attempt_retention_days?: number;
+        };
+        UpdateAppNotificationSettingsDto: {
+            default_sender_address?: string | null;
+            invite_template_name?: string | null;
+            mfa_code_template_name?: string | null;
+            notifications_via_envoi?: boolean;
+            password_reset_template_name?: string | null;
+            sender_mode?: "workspace" | "custom";
+            verification_template_name?: string | null;
+            web_origin?: string | null;
+            welcome_template_name?: string | null;
+        };
+        UpdateAppStatusDto: {
+            status: "active" | "suspended" | "archived";
+        };
+        UpdateAuditSinkDto: {
+            enabled?: boolean;
+            url?: string;
+        };
+        UpdateAuthConfigDto: {
+            access_token_minutes?: number;
+            allowed_redirect_origins?: string[];
+            bot_protection?: components["schemas"]["UpdateBotProtectionDto"] | null;
+            enforce_app_permissions?: boolean;
+            max_failed_login_attempts?: number;
+            max_sessions?: number | null;
+            mfa?: "optional" | "required";
+            mfa_grace_days?: number;
+            oauth_link_policy?: "auto" | "confirm" | "reject";
+            password_breach_check?: "off" | "warn" | "block";
+            password_min_length?: number;
+            password_require_number?: boolean;
+            password_require_symbol?: boolean;
+            password_require_uppercase?: boolean;
+            session_duration_minutes?: number;
+            signin_enabled?: boolean;
+            signup_allowed_email_domains?: string[];
+            signup_default_role?: string;
+            signup_enabled?: boolean;
+            signup_requires_pak?: boolean;
+            unverified_account_ttl_days?: number | null;
+        };
+        UpdateBotProtectionDto: {
+            enabled?: boolean;
+            expected_hostnames?: string[] | null;
+            provider?: "turnstile" | "hcaptcha";
+            secret?: string | null;
+            site_key?: string;
+        };
+        UpdateEndUserDto: {
+            display_name?: string;
+            email?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
+        UpdateEndUserRoleDto: {
+            role_name: string;
+        };
+        UpdateEndUserStatusDto: {
+            status: "active" | "suspended" | "deactivated";
+        };
+        UpdateM2mClientDto: {
+            is_active?: boolean;
+        };
+        UpdateMeDto: {
+            display_name?: string;
+            username?: string;
+        };
+        UpdateMemberRoleDto: {
+            role_name: string;
+        };
+        UpdateRoleDto: {
+            description?: string;
+        };
+        UpdateTenantDto: {
+            display_name?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            slug?: string;
+            status?: "active" | "suspended" | "archived";
+        };
+        UpdateWebauthnConfigDto: {
+            enabled: boolean;
+            require_user_verification?: boolean;
+            rp_id: string;
+            rp_name?: string;
+        };
+        UpdateWebhookEndpointDto: {
+            description?: string | null;
+            enabled?: boolean;
+            event_types?: ("user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed")[];
+            url?: string;
+        };
+        UpsertAppWebhookDto: {
+            event_types: ("user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed")[];
+            url: string;
+        };
+        UpsertAuditSinkDto: {
+            url: string;
+        };
+        UpsertProviderConfigDto: {
+            config: {
+                [key: string]: unknown;
+            };
+            enabled?: boolean;
+        };
+        UserContactVerifiedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserContactVerifiedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.contact_verified";
+        };
+        UserContactVerifiedEventDataDto: {
+            contact_id: string;
+            type: components["schemas"]["ContactType"];
+            user_id: string;
+            value: string;
+            verified_at: string;
+        };
+        UserCreatedVia: "admin" | "invite" | "tenant_invite";
+        UserDeactivatedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.deactivated";
+        };
+        UserDeletedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserDeletedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.deleted";
+        };
+        UserDeletedEventDataDto: {
+            reason?: components["schemas"]["UserDeletedReason"];
+            user_id: string;
+            via?: components["schemas"]["UserDeletedVia"];
+        };
+        UserDeletedReason: "unverified_expired";
+        UserDeletedVia: "platform" | "platform_bulk" | "consumer_admin" | "self";
+        UserEmailVerifiedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserEmailVerifiedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.email_verified";
+        };
+        UserEmailVerifiedEventDataDto: {
+            email: string;
+            email_verified_at: string;
+            user_id: string;
+            via?: string;
+        };
+        UserEventDataDto: {
+            user_id: string;
+        };
+        UserMfaEnrollmentRequiredEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaEnrollmentRequiredEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.enrollment_required";
+        };
+        UserMfaFactorDisabledEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaFactorEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.factor_disabled";
+        };
+        UserMfaFactorEnrolledEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaFactorEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.factor_enrolled";
+        };
+        UserMfaRecoveryCodeUsedEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaRecoveryCodeUsedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.recovery_code_used";
+        };
+        UserMfaReenrollmentRequiredEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaEnrollmentRequiredEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.reenrollment_required";
+        };
+        UserMfaStepUpLockedEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaStepUpLockedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.step_up_locked";
+        };
+        UserMfaStepUpSucceededEvent: {
+            created_at: string;
+            data: components["schemas"]["MfaStepUpSucceededEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.mfa.step_up_succeeded";
+        };
+        UserPasswordResetCompletedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.password_reset.completed";
+        };
+        UserPasswordResetRequestedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserPasswordResetRequestedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.password_reset.requested";
+        };
+        UserPasswordResetRequestedEventDataDto: {
+            contact_type: components["schemas"]["ContactType"];
+            contact_value: string;
+            user_id: string;
+        };
+        UserReinstatedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.reinstated";
+        };
+        UserRoleChangedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserRoleChangedEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.role_changed";
+        };
+        UserRoleChangedEventDataDto: {
+            role: string | null;
+            user_id: string;
+        };
+        UserSigninEvent: {
+            created_at: string;
+            data: components["schemas"]["UserSigninEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.signin";
+        };
+        UserSigninEventDataDto: {
+            email?: string | null;
+            linked?: boolean;
+            mfa?: boolean;
+            provider?: string;
+            user_id: string;
+            username?: string | null;
+        };
+        UserSignupEvent: {
+            created_at: string;
+            data: components["schemas"]["UserSignupEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.signup";
+        };
+        UserSignupEventDataDto: {
+            created_via?: components["schemas"]["UserCreatedVia"];
+            email: string | null;
+            invite_id?: string;
+            provider?: string;
+            tenant_id?: string;
+            user_id: string;
+            username: string | null;
+        };
+        UserSuspendedEvent: {
+            created_at: string;
+            data: components["schemas"]["UserEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "user.suspended";
+        };
+        VerifyBody: {
+            token?: string;
+        };
+        VerifyPrincipalDto: {
+            aid: string;
+            permissions?: string[];
+            role?: string;
+            sub: string;
+            type: string;
+        };
+        VerifyResponseDto: {
+            error?: string;
+            principal?: components["schemas"]["VerifyPrincipalDto"];
+            valid: boolean;
+        };
+        WebauthnConfigResponseDto: {
+            ceremony_origins: string[];
+            credential_count: number;
+            enabled: boolean;
+            require_user_verification: boolean;
+            rp_id: string | null;
+            rp_name: string | null;
+        };
+        WebauthnCredentialDto: {
+            id: string;
+            response: {
+                [key: string]: unknown;
+            };
+        };
+        WebauthnEnrollmentDataDto: {
+            public_key: {
+                [key: string]: unknown;
+            };
+            type: "webauthn";
+        };
+        WebauthnOptionsResponseDto: {
+            public_key: {
+                [key: string]: unknown;
+            };
+        };
+        WebhookAttemptTrigger: "automatic" | "replay" | "test";
+        WebhookDeliveryAttemptDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            error_message: string | null;
+            event_id: string;
+            event_type: string;
+            id: string;
+            latency_ms: number | null;
+            response_body: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+            trigger: components["schemas"]["WebhookAttemptTrigger"];
+            url: string;
+        };
+        WebhookEndpointDisabledReason: "manual" | "failing";
+        WebhookEndpointDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEndpointStatus: "enabled" | "disabled" | "auto_disabled";
+        WebhookEndpointWithSecretDto: {
+            consecutive_failures: number;
+            created_at: string;
+            description: string | null;
+            disabled_at: string | null;
+            disabled_reason: components["schemas"]["WebhookEndpointDisabledReason"] | null;
+            enabled: boolean;
+            event_types: string[];
+            first_failure_at: string | null;
+            id: string;
+            legacy_signature: boolean;
+            prev_signing_secret_active: boolean;
+            prev_signing_secret_expires_at: string | null;
+            scope_id: string;
+            scope_type: string;
+            signing_secret: string;
+            signing_secret_hint: string;
+            status: components["schemas"]["WebhookEndpointStatus"];
+            updated_at: string;
+            url: string;
+        };
+        WebhookEventDeliveryDto: {
+            attempt_number: number;
+            attempted_at: string;
+            endpoint_id: string;
+            next_attempt_at: string | null;
+            status_code: number | null;
+            succeeded: boolean;
+        };
+        WebhookEventDetailDto: {
+            attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventDto: {
+            created_at: string;
+            deliveries: components["schemas"]["WebhookEventDeliveryDto"][];
+            id: string;
+            payload: {
+                [key: string]: unknown;
+            };
+            status: components["schemas"]["WebhookEventStatus"];
+            test: boolean;
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
+        WebhookEventType: "user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed";
+        WebhookEventTypeDto: {
+            category: string;
+            description: string;
+            example: {
+                [key: string]: unknown;
+            };
+            type: components["schemas"]["WebhookEventType"];
+        };
+        WebhookPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
+    };
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: {
+        RequestId: string;
+    };
+    pathItems: never;
+};
+
+export { ConfigurationError }
+
+// @public @deprecated (undocumented)
+export type ConfirmEnrollmentResponseDto = components["schemas"]["ConfirmEnrollmentResponseDto"];
+
+export { ConflictError }
+
+// @public @deprecated (undocumented)
+export type ConsumerAcceptInviteDto = components["schemas"]["ConsumerAcceptInviteDto"];
+
+// @public @deprecated (undocumented)
+export type ConsumerLogoutDto = components["schemas"]["ConsumerLogoutDto"];
+
+// @public @deprecated (undocumented)
+export type ConsumerRefreshDto = components["schemas"]["ConsumerRefreshDto"];
+
+// @public @deprecated (undocumented)
+export type ConsumerRequestPasswordResetDto = components["schemas"]["ConsumerRequestPasswordResetDto"];
+
+// @public @deprecated (undocumented)
+export type ConsumerResetPasswordDto = components["schemas"]["ConsumerResetPasswordDto"];
+
+// @public (undocumented)
+export class ConsumerScope extends AuthConsumer {
+    constructor(client: APIClient, bound: {
+        app_slug: string;
+    }, options?: ConsumerScopeOptions);
     readonly acceptedIssuers: readonly string[];
     readonly appSlug: string;
-    // (undocumented)
-    readonly auth: {
-        signin: (data: ConsumerSigninDto) => Promise<ConsumerAuthControllerSignin200>;
-        signup: (data: ConsumerSignupDto) => Promise<unknown>;
-        refresh: (data: ConsumerRefreshDto) => Promise<ConsumerTokenResponseDto>;
-        logout: (data: ConsumerLogoutDto) => Promise<any>;
-        requestReset: (data: ConsumerRequestPasswordResetDto) => Promise<ConsumerCodeIssueResponseDto>;
-        sendPasswordResetEmail: (data: ConsumerSendPasswordResetEmailDto) => Promise<ConsumerCodeDispatchResponseDto>;
-        resetPassword: (data: ConsumerResetPasswordDto) => Promise<any>;
-        requestVerification: (data: ConsumerRequestVerificationDto) => Promise<ConsumerCodeIssueResponseDto>;
-        sendVerificationEmail: (data: ConsumerSendVerificationEmailDto) => Promise<ConsumerCodeDispatchResponseDto>;
-        verify: (data: ConsumerVerifyDto) => Promise<ConsumerVerifyResponseDto>;
-        acceptInvite: (data: ConsumerAcceptInviteDto) => Promise<ConsumerAuthControllerAcceptInvite201>;
-        signinWithProvider: (args: {
-            provider: ConsumerIdpControllerNativeSignInPathParamsProviderEnumKey;
-            id_token: IdpNativeSigninDto["id_token"];
-            nonce: IdpNativeSigninDto["nonce"];
-            user?: IdpNativeSigninDto["user"];
-        }) => Promise<ConsumerIdpControllerNativeSignIn200>;
-    };
     readonly expectedAudience: string;
     readonly expectedIssuer: string;
     readonly jwks: JwksCache;
-    // (undocumented)
-    readonly me: {
-        getProfile: () => Promise<unknown>;
-        updateProfile: (data: UpdateMeDto) => Promise<unknown>;
-        listSessions: (params?: Record<string, string | number>) => Promise<unknown>;
-        revokeSession: (id: string) => Promise<void>;
-        getActivity: (params?: Record<string, string | number>) => Promise<unknown>;
-        deleteAccount: () => Promise<void>;
-    };
-    // (undocumented)
-    readonly oauth: {
-        clientCredentials: (data: ClientCredentialsDto) => Promise<OAuthTokenResponseDto>;
-    };
-    // (undocumented)
     readonly passkeys: {
         enroll: (opts?: PasskeyBrowserOptions & {
             label?: string;
-        }) => Promise<ConfirmEnrollmentResponseDto>;
+        }) => Promise<ConfirmEnrollment>;
         signIn: (opts?: PasskeyBrowserOptions & {
             mediation?: PasskeyMediation;
-            tenant_id?: ConsumerPasskeyOptionsDto["tenant_id"];
-        }) => Promise<ConsumerTokenResponseDto>;
+            tenant_id?: string;
+        }) => Promise<ConsumerToken>;
         completeMfaChallenge: (args: PasskeyBrowserOptions & {
             mfa_token: string;
             mediation?: PasskeyMediation;
-        }) => Promise<ConsumerTokenResponseDto>;
+        }) => Promise<ConsumerToken>;
         stepUp: (opts?: PasskeyBrowserOptions & {
             mediation?: PasskeyMediation;
-        }) => Promise<StepUpResponseDto>;
-    };
-    // (undocumented)
-    readonly verify: {
-        verify: (data: VerifyBody) => Promise<VerifyResponseDto>;
-        authorize: (data: AuthorizeBody) => Promise<AuthorizeResponseDto>;
-        authorizeBatch: (data: AuthorizeBatchBody) => Promise<AuthorizeBatchResponseDto>;
+        }) => Promise<StepUp>;
     };
     verifyToken(token: string, opts?: VerifyOptions): Promise<AuthClaims>;
 }
 
-// @public
-export type ConsumerSigninDto = {
-    identifier: string;
-    password: string;
-    tenant_id?: string;
-};
-
-// @public
-export type ConsumerSignupDto = {
-    bot_protection_token?: string;
-    display_name?: string;
-    email: string;
-    password: string;
-    username: string;
-};
-
-// @public
-export type ConsumerTokenResponseDto = {
-    access_token: string;
-    expires_in: number;
-    mfa_enrollment_due_at?: string;
-    password_warnings?: string[];
-    refresh_token: string;
-    result: SignInResult;
-    token_type: string;
-};
-
 // @public (undocumented)
-export type CreateApiKeyDto = {
-    expires_in_days?: CreateApiKeyDtoExpiresInDaysEnumKey | null;
-    name: string;
-    permissions: string[];
-};
+export interface ConsumerScopeOptions {
+    fetch?: typeof fetch;
+    jwks?: JwksCache;
+    jwksTtlMs?: number;
+}
 
-// @public (undocumented)
-export type CreateAppDto = {
-    display_name: string;
-    environment?: CreateAppDtoEnvironmentEnumKey;
-    slug: string;
-    workspace_id: string;
-};
+// @public @deprecated (undocumented)
+export type ConsumerSigninDto = components["schemas"]["ConsumerSigninDto"];
 
-// @public
-export type CreateEndUserInviteDto = {
-    email: string;
-    expires_in_hours?: number;
-    max_uses?: number;
-    name?: string;
-    role_name?: string;
-};
+// @public @deprecated (undocumented)
+export type ConsumerSignupDto = components["schemas"]["ConsumerSignupDto"];
 
-// @public
-export type CreateM2MClientDto = {
-    name: string;
-};
+// @public @deprecated (undocumented)
+export type ConsumerTokenResponseDto = components["schemas"]["ConsumerTokenResponseDto"];
+
+// @public @deprecated (undocumented)
+export type CreateApiKeyDto = components["schemas"]["CreateApiKeyDto"];
+
+// @public @deprecated (undocumented)
+export type CreateAppDto = components["schemas"]["CreateAppDto"];
+
+// @public @deprecated (undocumented)
+export type CreateEndUserInviteDto = components["schemas"]["CreateEndUserInviteDto"];
+
+// @public @deprecated (undocumented)
+export type CreateM2MClientDto = components["schemas"]["CreateM2mClientDto"];
 
 // @public
 export function createPasskeyCredential(publicKey: PasskeyPublicKeyOptions | Record<string, unknown>, opts?: PasskeyBrowserOptions): Promise<EncodedPasskeyCredential>;
 
-// @public
-export type CreatePermissionDto = {
-    action: string;
-    description?: string;
-    resource: string;
-};
+// @public @deprecated (undocumented)
+export type CreatePermissionDto = components["schemas"]["CreatePermissionDto"];
 
-// @public
-export type CreateRoleDto = {
-    description?: string;
-    name: string;
-};
+// @public @deprecated (undocumented)
+export type CreateRoleDto = components["schemas"]["CreateRoleDto"];
 
 // @public (undocumented)
 export function decodeOptions(publicKey: PasskeyPublicKeyOptions | Record<string, unknown>): PasskeyDecodedOptions;
@@ -365,19 +3708,8 @@ export interface EncodedPasskeyCredential {
     };
 }
 
-// @public
-export type EndUserInviteResponseDto = {
-    code: string;
-    created_at: string;
-    email: string | null;
-    expires_at: string | null;
-    id: string;
-    max_uses: number | null;
-    revoked_at: string | null;
-    role_id: string;
-    role_name: string | null;
-    use_count: number;
-};
+// @public @deprecated (undocumented)
+export type EndUserInviteResponseDto = components["schemas"]["EndUserInviteResponseDto"];
 
 // @public
 export function fromB64u(s: string): Uint8Array;
@@ -387,28 +3719,18 @@ export function getPasskeyCredential(publicKey: PasskeyPublicKeyOptions | Record
     mediation?: PasskeyMediation;
 }): Promise<EncodedPasskeyCredential>;
 
-// @public
-export type IdpNativeSigninDto = {
-    id_token: string;
-    nonce: string;
-    user?: IdpNativeUserHintDto;
-};
+export { IdempotencyKeyReuseError }
 
-// @public
-export type IdpNativeUserHintDto = {
-    email?: string;
-    name?: string;
-};
+// @public @deprecated (undocumented)
+export type IdpNativeSigninDto = components["schemas"]["IdpNativeSigninDto"];
 
-// @public
-export type IdpTokenResponseDto = {
-    access_token: string;
-    expires_in: number;
-    mfa_enrollment_due_at?: string;
-    refresh_token: string;
-    result: SignInResult;
-    token_type: TokenType;
-};
+// @public @deprecated (undocumented)
+export type IdpNativeUserHintDto = components["schemas"]["IdpNativeUserHintDto"];
+
+// @public @deprecated (undocumented)
+export type IdpTokenResponseDto = components["schemas"]["IdpTokenResponseDto"];
+
+export { InternalServerError }
 
 // @public
 export function isPasskeySupported(): boolean;
@@ -493,6 +3815,8 @@ export class JwtVerifyError extends Error {
     // (undocumented)
     readonly code: string;
 }
+
+export { NotFoundError }
 
 // @public (undocumented)
 export interface PasskeyBrowserOptions {
@@ -584,122 +3908,2725 @@ export interface PasskeyPublicKeyOptions {
     };
 }
 
+// @public (undocumented)
+export type paths = {
+    "/v1/apps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppController_listMyApps"];
+        put?: never;
+        post: operations["AppController_createApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppController_getApp"];
+        put?: never;
+        post?: never;
+        delete: operations["AppController_deleteApp"];
+        options?: never;
+        head?: never;
+        patch: operations["AppController_updateApp"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ApiKeyController_listApiKeys"];
+        put?: never;
+        post: operations["ApiKeyController_createApiKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ApiKeyController_deleteApiKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/api-keys/{key_id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ApiKeyController_rotateApiKey"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppAuditController_getAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-logs/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppAuditController_exportAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-sink": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppAuditSinkController_get"];
+        put: operations["AppAuditSinkController_upsert"];
+        post?: never;
+        delete: operations["AppAuditSinkController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["AppAuditSinkController_update"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-sink/rotate-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppAuditSinkController_rotateSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-sink/setup-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppAuditSinkController_setupStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/audit-sink/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppAuditSinkController_sendTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/auth-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthConfigController_getConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AuthConfigController_updateConfig"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/auth-config/providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthConfigProviderController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/auth-config/providers/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AuthConfigProviderController_get"];
+        put: operations["AuthConfigProviderController_upsert"];
+        post?: never;
+        delete: operations["AuthConfigProviderController_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["AuthConfigProviderController_patch"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/auth-config/providers/{provider}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthConfigProviderController_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/clone": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppController_cloneApp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/credentials": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["M2mController_listClients"];
+        put?: never;
+        post: operations["M2mController_createClient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/credentials/{client_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["M2mController_getClient"];
+        put?: never;
+        post?: never;
+        delete: operations["M2mController_deleteClient"];
+        options?: never;
+        head?: never;
+        patch: operations["M2mController_updateClient"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/credentials/{client_id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["M2mController_rotateSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/credentials/{client_id}/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["M2mController_setScopes"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/custom-domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CustomDomainController_list"];
+        put?: never;
+        post: operations["CustomDomainController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/custom-domains/{domain_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CustomDomainController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["CustomDomainController_remove"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/custom-domains/{domain_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CustomDomainController_apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/custom-domains/{domain_id}/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["CustomDomainController_check"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/custom-domains/{domain_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["CustomDomainController_export"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-user-insights": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserInsightsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-user-insights/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserInsightsController_getUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserController_listEndUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/bulk-delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_bulkDelete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/bulk-revoke-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_bulkRevokeSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/bulk-update-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_bulkUpdateRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/bulk-update-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_bulkUpdateStatus"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserController_exportEndUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_importEndUsers"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/import/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserController_importStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserInviteController_list"];
+        put?: never;
+        post: operations["EndUserInviteController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["EndUserInviteController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserController_getEndUser"];
+        put?: never;
+        post?: never;
+        delete: operations["EndUserController_deleteEndUser"];
+        options?: never;
+        head?: never;
+        patch: operations["EndUserController_updateEndUser"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["EndUserController_listContacts"];
+        put?: never;
+        post: operations["EndUserController_addContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/contacts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["EndUserController_deleteContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/contacts/{contact_id}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_promoteContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/contacts/{contact_id}/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_resendContactVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/mfa/require-reenrollment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_requireMfaReenrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_resendVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["EndUserController_updateRole"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/sessions/revoke-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EndUserController_revokeAllSessions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/end-users/{user_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["EndUserController_updateStatus"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppController_listMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/members/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AppController_removeMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/notification-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["NotificationSettingsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["NotificationSettingsController_update"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/notifications/{slot}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["NotificationTestController_sendTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PermissionController_listPermissions"];
+        put?: never;
+        post: operations["PermissionController_createPermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/permissions/enforcement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PermissionController_listEnforcedPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/permissions/{permission_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PermissionController_deletePermission"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoleController_listRoles"];
+        put?: never;
+        post: operations["RoleController_createRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/roles/assign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RoleController_assignRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/roles/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoleController_listPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/roles/{role_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RoleController_getRole"];
+        put?: never;
+        post?: never;
+        delete: operations["RoleController_deleteRole"];
+        options?: never;
+        head?: never;
+        patch: operations["RoleController_updateRole"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/roles/{role_name}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["RoleController_setPermissions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/setup-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SetupStatusController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/sign-in-tests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["SignInTestController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/sign-in-tests/{test_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["SignInTestController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["AppController_updateAppStatus"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenant-api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantApiKeysController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenant-api-keys/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantApiKeysController_getConfig"];
+        put: operations["PlatformTenantApiKeysController_putConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenant-api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformTenantApiKeysController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantsController_list"];
+        put?: never;
+        post: operations["PlatformTenantsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants/{tenant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["PlatformTenantsController_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["PlatformTenantsController_update"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants/{tenant_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantsController_listInvites"];
+        put?: never;
+        post: operations["PlatformTenantsController_createInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants/{tenant_id}/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformTenantsController_revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants/{tenant_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PlatformTenantsController_listMembers"];
+        put?: never;
+        post: operations["PlatformTenantsController_addMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/tenants/{tenant_id}/members/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PlatformTenantsController_removeMember"];
+        options?: never;
+        head?: never;
+        patch: operations["PlatformTenantsController_updateMemberRole"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/unverified-account-expiry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["UnverifiedAccountExpiryController_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/unverified-account-expiry/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["UnverifiedAccountExpiryController_run"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webauthn-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebauthnConfigController_get"];
+        put: operations["WebauthnConfigController_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppOutboundWebhookController_get"];
+        put: operations["AppOutboundWebhookController_upsert"];
+        post?: never;
+        delete: operations["AppOutboundWebhookController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppOutboundWebhookController_listAttempts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook/dead-letters": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppOutboundWebhookController_listDeadLetters"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook/dead-letters/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppOutboundWebhookController_replayAllDeadLetters"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook/dead-letters/{dead_letter_id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppOutboundWebhookController_replayDeadLetter"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhook/rotate-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppOutboundWebhookController_rotateSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/endpoints": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebhooksController_auth_app_listEndpoints"];
+        put?: never;
+        post: operations["WebhooksController_auth_app_createEndpoint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/endpoints/{endpoint_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebhooksController_auth_app_getEndpoint"];
+        put?: never;
+        post?: never;
+        delete: operations["WebhooksController_auth_app_deleteEndpoint"];
+        options?: never;
+        head?: never;
+        patch: operations["WebhooksController_auth_app_updateEndpoint"];
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/endpoints/{endpoint_id}/rotate-secret": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebhooksController_auth_app_rotateSecret"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/endpoints/{endpoint_id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebhooksController_auth_app_sendTest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/event-types": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebhooksController_auth_app_listEventTypes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebhooksController_auth_app_listEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WebhooksController_auth_app_getEvent"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/apps/{app_id}/webhooks/events/{event_id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WebhooksController_auth_app_replay"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stats/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StatsController_getMyStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkspaceStatsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/.well-known/jwks.json": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerJwksController_getJwks"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/.well-known/openid-configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerJwksController_getDiscovery"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminPermissionsController_listPermissions"];
+        put?: never;
+        post: operations["ConsumerAdminPermissionsController_createPermission"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/permissions/{permission_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerAdminPermissionsController_deletePermission"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminRolesController_listRoles"];
+        put?: never;
+        post: operations["ConsumerAdminRolesController_createRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/roles/{role_name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminRolesController_getRole"];
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerAdminRolesController_deleteRole"];
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerAdminRolesController_updateRole"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/roles/{role_name}/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["ConsumerAdminRolesController_setPermissions"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminController_listUsers"];
+        put?: never;
+        post: operations["ConsumerAdminController_createUser"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/users/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminController_getUser"];
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerAdminController_deleteUser"];
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerAdminController_updateUser"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/users/{user_id}/role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerAdminController_updateRole"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/admin/users/{user_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerAdminController_updateStatus"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/accept-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_acceptInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/accept-tenant-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_acceptTenantInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/me/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAuthController_listMyTenants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaEnroll"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/enroll/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaEnrollVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/recover": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaRecover"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/send-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaSendCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/mfa/webauthn/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_mfaWebauthnOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/oauth/exchange": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerIdpExchangeController_exchange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/oauth/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerIdpController_nativeSignIn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/oauth/{provider}/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerIdpWebController_authorize"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/oauth/{provider}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerIdpWebController_callbackGet"];
+        put?: never;
+        post: operations["ConsumerIdpWebController_callback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/passkey/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_passkeyOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/passkey/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_passkeyVerify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/request-password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_requestPasswordReset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/request-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_requestVerification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_resetPassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/send-password-reset-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_sendPasswordResetEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/send-verification-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_sendVerificationEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/signin": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_signin"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/signup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/switch-tenant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_switchTenant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/authorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerVerifyController_authorize"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/authorize/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerVerifyController_authorizeBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/avatars/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAvatarsController_redirect"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMeController_getProfile"];
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerMeController_deleteAccount"];
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerMeController_updateProfile"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMeController_getActivity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/avatar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMeController_setAvatar"];
+        delete: operations["ConsumerMeController_removeAvatar"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMeController_changePassword"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMeController_listContacts"];
+        put?: never;
+        post: operations["ConsumerMeController_addContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerMeController_deleteContact"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/contacts/{id}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMeController_promoteContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/factors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMfaController_list"];
+        put?: never;
+        post: operations["ConsumerMfaController_startEnrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/factors/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerMfaController_disable"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/factors/{id}/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMfaController_confirmEnrollment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/recovery-codes/regenerate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMfaController_regenerateRecoveryCodes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/step-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMfaController_stepUp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/step-up/send-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMfaController_stepUpSendCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/mfa/step-up/webauthn/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMfaController_stepUpWebauthnOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMeController_getPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerMeController_listSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerMeController_revokeSession"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/tenant-invites/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerMeController_acceptTenantInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/oauth/introspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerOAuthController_introspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/oauth/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerOAuthController_clientCredentials"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerTenantApiKeysController_list"];
+        put?: never;
+        post: operations["ConsumerTenantApiKeysController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppTenantApiKeysController_getConfig"];
+        put: operations["AppTenantApiKeysController_putConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys/introspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AppTenantApiKeysController_introspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerTenantApiKeysController_revoke"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys/{key_id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerTenantApiKeysController_rotate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenant-api-keys/{key_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AppTenantApiKeysController_status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerTenantsController_list"];
+        put?: never;
+        post: operations["ConsumerTenantsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants/{tenant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerTenantsController_get"];
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerTenantsController_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerTenantsController_update"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants/{tenant_id}/invites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerTenantsController_listInvites"];
+        put?: never;
+        post: operations["ConsumerTenantsController_createInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants/{tenant_id}/invites/{invite_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerTenantsController_revokeInvite"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants/{tenant_id}/members": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerTenantsController_listMembers"];
+        put?: never;
+        post: operations["ConsumerTenantsController_addMember"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/tenants/{tenant_id}/members/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerTenantsController_removeMember"];
+        options?: never;
+        head?: never;
+        patch: operations["ConsumerTenantsController_updateMemberRole"];
+        trace?: never;
+    };
+    "/{app_slug}/v1/users/{user_id}/factors": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAdminFactorsController_list"];
+        put?: never;
+        post: operations["ConsumerAdminFactorsController_provision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/users/{user_id}/factors/{factor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ConsumerAdminFactorsController_disable"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerVerifyController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+};
+
 export { PCAuth }
 
 export { PCClientConfig }
 
-// @public
-export type PublicFactorDto = {
-    created_at: string;
-    enabled: boolean;
-    enabled_at: string | null;
-    id: string;
-    label: string | null;
-    type: string;
-};
+export { PermissionDeniedError }
 
-// @public
-export type SetPermissionsDto = {
-    permissions: string[];
-};
+export { ProductCraftError }
 
-// @public
-export type SetScopesDto = {
-    permissions: string[];
-};
+// @public @deprecated (undocumented)
+export type PublicFactorDto = components["schemas"]["PublicFactorDto"];
 
-// @public
-export type StepUpResponseDto = {
-    amr: string[];
-    mfa_at: string;
-};
+export { RateLimitError }
+
+// @public @deprecated (undocumented)
+export type SetPermissionsDto = components["schemas"]["SetPermissionsDto"];
+
+// @public @deprecated (undocumented)
+export type SetScopesDto = components["schemas"]["SetScopesDto"];
+
+// @public @deprecated (undocumented)
+export type StepUpResponseDto = components["schemas"]["StepUpResponseDto"];
 
 // @public
 export function toB64u(buf: ArrayBuffer | ArrayBufferView): string;
 
-// @public
-export type UpdateAppDto = {
-    audit_retention_days?: number;
-    display_name?: string;
-    metadata?: {
-        [key: string]: any;
-    };
-    slug?: string;
-    webhook_attempt_retention_days?: number;
-};
+export { UnprocessableEntityError }
 
-// @public (undocumented)
-export type UpdateAppStatusDto = {
-    status: UpdateAppStatusDtoStatusEnumKey;
-};
+// @public @deprecated (undocumented)
+export type UpdateAppDto = components["schemas"]["UpdateAppDto"];
 
-// @public (undocumented)
-export type UpdateAuthConfigDto = {
-    access_token_minutes?: number;
-    allowed_redirect_origins?: string[];
-    bot_protection?: UpdateBotProtectionDto | null;
-    enforce_app_permissions?: boolean;
-    max_failed_login_attempts?: number;
-    max_sessions?: number | null;
-    mfa?: UpdateAuthConfigDtoMfaEnumKey;
-    mfa_grace_days?: number;
-    oauth_link_policy?: UpdateAuthConfigDtoOauthLinkPolicyEnumKey;
-    password_breach_check?: UpdateAuthConfigDtoPasswordBreachCheckEnumKey;
-    password_min_length?: number;
-    password_require_number?: boolean;
-    password_require_symbol?: boolean;
-    password_require_uppercase?: boolean;
-    session_duration_minutes?: number;
-    signin_enabled?: boolean;
-    signup_allowed_email_domains?: string[];
-    signup_default_role?: string;
-    signup_enabled?: boolean;
-    signup_requires_pak?: boolean;
-    unverified_account_ttl_days?: number | null;
-};
+// @public @deprecated (undocumented)
+export type UpdateAppStatusDto = components["schemas"]["UpdateAppStatusDto"];
 
-// @public
-export type UpdateEndUserDto = {
-    display_name?: string;
-    email?: string;
-    metadata?: {
-        [key: string]: any;
-    };
-};
+// @public @deprecated (undocumented)
+export type UpdateAuthConfigDto = components["schemas"]["UpdateAuthConfigDto"];
 
-// @public
-export type UpdateEndUserRoleDto = {
-    role_name: string;
-};
+// @public @deprecated (undocumented)
+export type UpdateEndUserDto = components["schemas"]["UpdateEndUserDto"];
 
-// @public (undocumented)
-export type UpdateEndUserStatusDto = {
-    status: UpdateEndUserStatusDtoStatusEnumKey;
-};
+// @public @deprecated (undocumented)
+export type UpdateEndUserRoleDto = components["schemas"]["UpdateEndUserRoleDto"];
 
-// @public
-export type UpdateM2MClientDto = {
-    is_active?: boolean;
-};
+// @public @deprecated (undocumented)
+export type UpdateEndUserStatusDto = components["schemas"]["UpdateEndUserStatusDto"];
 
-// @public
-export type UpdateMeDto = {
-    display_name?: string;
-    username?: string;
-};
+// @public @deprecated (undocumented)
+export type UpdateM2MClientDto = components["schemas"]["UpdateM2mClientDto"];
 
-// @public
-export type UpdateRoleDto = {
-    description?: string;
-};
+// @public @deprecated (undocumented)
+export type UpdateMeDto = components["schemas"]["UpdateMeDto"];
+
+// @public @deprecated (undocumented)
+export type UpdateRoleDto = components["schemas"]["UpdateRoleDto"];
 
 // @public
 export function verifyAuthToken(token: string, getKey: AuthGetKeyFn, opts?: VerifyOptions): Promise<AuthClaims>;
 
-// @public
-export type VerifyBody = {
-    token?: string;
-};
+// @public @deprecated (undocumented)
+export type VerifyBody = components["schemas"]["VerifyBody"];
 
 // @public (undocumented)
 export interface VerifyOptions {
@@ -712,13 +6639,10 @@ export interface VerifyOptions {
     requiredClaims?: string[];
 }
 
-// @public
-export type WebauthnCredentialDto = {
-    id: string;
-    response: {
-        [key: string]: any;
-    };
-};
+// @public @deprecated (undocumented)
+export type WebauthnCredentialDto = components["schemas"]["WebauthnCredentialDto"];
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 

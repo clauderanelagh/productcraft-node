@@ -323,7 +323,7 @@ interface CapturedRequest {
 function makeSequencedFetch(responses: unknown[]) {
   const calls: CapturedRequest[] = [];
   let i = 0;
-  const fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+  const fetch: typeof globalThis.fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : input.toString();
     const method = (init?.method ?? "GET").toUpperCase();
     const headers: Record<string, string> = {};
@@ -337,7 +337,7 @@ function makeSequencedFetch(responses: unknown[]) {
       status: 200,
       headers: { "content-type": "application/json" },
     });
-  }) as unknown as typeof fetch;
+  }) as unknown as typeof globalThis.fetch;
   return { fetch, calls };
 }
 

@@ -1,160 +1,33 @@
 /**
- * `@productcraft/auth` — typed SDK for the ProductCraft Auth API.
- *
- * Three caller contexts:
- *   1. Workspace-wide admin   → methods on the Auth instance itself
- *   2. App-scoped admin        → `auth.app(appId).{endUsers,roles,...}`
- *   3. Consumer-side (BFF)     → `auth.consumer(appSlug).{auth,me,...}`
- *
- * Plus JWT verification on consumer scopes:
- *   `auth.consumer(slug).verifyToken(jwt)`
+ * @productcraft/auth: `auth.admin.app(id)` (admin) and `auth.consumer(slug)` (end users).
+ * HTTP methods, types, errors and mocks are generated (scripts/gen-sdk.mjs); hand-written:
+ * jwt/, passkeys.ts, consumer.ts and base.ts.
  */
+import { APIError } from "@productcraft/core";
 
-import type { Client } from "@kubb/plugin-client/clients/fetch";
-import {
-  PC_AUTH_APP_ENV,
-  PC_BASE_URL,
-  readEnv,
-  resolveAuth,
-  type PCAuth,
-  type PCClientConfig,
-} from "@productcraft/core";
+export { Auth, Auth as default } from "./_generated/client.js";
+export * from "./_generated/errors.js";
+export type { paths, components } from "./_generated/paths.js";
+export type { AuthOptions, AuthOptions as AuthConfig } from "./base.js";
+export { ConsumerScope, AUTH_LEGACY_ISSUER, type ConsumerScopeOptions } from "./consumer.js";
+/** 0.x name of the `auth.admin.app(id)` scope class. */
+export { AuthApp as AppScope } from "./_generated/resources.js";
+export type { PCAuth, PCClientConfig } from "@productcraft/core";
 
-import { makeAuthHttpClient, AuthHttpError } from "./_http.js";
-import { AppScope } from "./scopes/app.js";
-import { ConsumerScope } from "./scopes/consumer.js";
+/** @deprecated 0.x name: every API error is an `APIError` (`instanceof AuthHttpError` still works). Removed in 2.0. */
+export const AuthHttpError = APIError;
+/** @deprecated 0.x name for `APIError`. Removed in 2.0. */
+export type AuthHttpError = APIError;
 
-// Workspace-level operations
-import { appControllerListMyApps } from "./_generated/clients/apps/appControllerListMyApps.js";
-import { appControllerCreateApp } from "./_generated/clients/apps/appControllerCreateApp.js";
-
-import { statsControllerGetMyStats } from "./_generated/clients/platformStats/statsControllerGetMyStats.js";
-
-// DTOs
-import type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
-import type { AppControllerListMyAppsQueryParams } from "./_generated/types/apps/AppControllerListMyApps.js";
-import type { StatsControllerGetMyStatsQueryParams } from "./_generated/types/platformStats/StatsControllerGetMyStats.js";
-
-export interface AuthConfig extends PCClientConfig {
-  /** Per-app JWKS cache lifetime in ms. Default 10 minutes. */
-  jwksTtlMs?: number;
-}
-
-export class Auth {
-  /** Admin client: explicit `auth`, else `PRODUCTCRAFT_API_KEY`. */
-  private readonly client: Client;
-  /**
-   * Consumer client: explicit `auth` only. Consumer routes act for an
-   * end user, so a workspace key from the environment must never leak
-   * onto them. Pass `auth` explicitly for PAK-only consumer routes
-   * (`signup_requires_pak`, tenants, code mint, factors).
-   */
-  private readonly consumerClient: Client;
-  private readonly baseUrl: string;
-  private readonly fetch: typeof fetch | undefined;
-  private readonly jwtConfig: { jwksTtlMs?: number };
-
-  constructor(config: AuthConfig = {}) {
-    this.baseUrl = config.baseUrl ?? PC_BASE_URL.auth;
-    this.fetch = config.fetch;
-    this.client = makeAuthHttpClient({
-      baseUrl: this.baseUrl,
-      auth: resolveAuth(config.auth),
-      fetch: this.fetch,
-    });
-    this.consumerClient = makeAuthHttpClient({
-      baseUrl: this.baseUrl,
-      auth: config.auth,
-      fetch: this.fetch,
-    });
-    this.jwtConfig = {
-      jwksTtlMs: config.jwksTtlMs,
-    };
-  }
-
-  /**
-   * Returns an `AppScope` bound to the given appId. All operations under
-   * `/v1/apps/{appId}/...` are exposed as resource namespaces on the
-   * returned object. Uses the explicit `auth`, else
-   * `PRODUCTCRAFT_API_KEY` from the environment.
-   */
-  app(appId: string): AppScope {
-    return new AppScope(appId, this.client);
-  }
-
-  /**
-   * Returns a `ConsumerScope` bound to the given appSlug. Exposes the
-   * `/{appSlug}/v1/...` surface (sign-in, sign-up, me, verify, oauth)
-   * and the JWT-verify helper for tokens issued by this app.
-   *
-   * `appSlug` defaults to `PRODUCTCRAFT_AUTH_APP` from the environment.
-   * No credential is ever read from the environment for consumer
-   * routes; only an explicit `auth` is sent.
-   */
-  consumer(appSlug?: string): ConsumerScope {
-    const slug = appSlug ?? readEnv(PC_AUTH_APP_ENV);
-    if (!slug) {
-      throw new Error(
-        `@productcraft/auth: consumer() needs an app slug. Pass one, or set ${PC_AUTH_APP_ENV}.`,
-      );
-    }
-    return new ConsumerScope(
-      slug,
-      { client: this.consumerClient, baseUrl: this.baseUrl, fetch: this.fetch },
-      this.jwtConfig,
-    );
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Workspace-wide apps surface
-  // (other admin operations are under `app(appId).*` once an app exists)
-  // ─────────────────────────────────────────────────────────────
-  readonly apps = {
-    /** List apps the caller's workspace can see. */
-    list: (params: Partial<AppControllerListMyAppsQueryParams> = {}) =>
-      appControllerListMyApps(
-        { params: params as AppControllerListMyAppsQueryParams },
-        { client: this.client },
-      ),
-
-    /** Create a new app under the caller's workspace. */
-    create: (data: CreateAppDto) =>
-      appControllerCreateApp({ data }, { client: this.client }),
-  };
-
-  // ─────────────────────────────────────────────────────────────
-  // Platform stats
-  //
-  // Workspace-level IdP admin (`/v1/idp/*`) was removed from the API
-  // when consumer-side OAuth moved to per-app `auth_config_provider`
-  // rows. Configure providers via the per-app auth-config endpoints
-  // (`app(appId).authConfig.*`) and consume them client-side through
-  // `consumer(slug).auth.signinWithProvider({ ... })`.
-  // ─────────────────────────────────────────────────────────────
-  readonly stats = {
-    /**
-     * Get the signed-in PlatformUser's aggregate counts. Pass
-     * `workspaceId` to scope to a single workspace; omit to total
-     * across every workspace the caller belongs to.
-     */
-    get: (params: Partial<StatsControllerGetMyStatsQueryParams> = {}) =>
-      statsControllerGetMyStats(
-        { params: params as StatsControllerGetMyStatsQueryParams },
-        { client: this.client },
-      ),
-  };
-}
-
-// ─── Re-exports ────────────────────────────────────────────────
-export { AppScope, ConsumerScope, AuthHttpError };
-export { AUTH_LEGACY_ISSUER } from "./scopes/consumer.js";
-export type { PCAuth, PCClientConfig };
+/** 0.x type names (`ConsumerSigninDto`, …), each a deprecated alias. */
+export type * from "./_generated/compat.js";
 
 export {
   JwksCache,
   type AuthClaims,
   type VerifyOptions,
   verifyAuthToken,
+  isRefreshToken,
   JwtVerifyError,
   JwtInvalidError,
   JwtExpiredError,
@@ -164,52 +37,8 @@ export {
   JwksKeyNotFoundError,
   JwksFetchError,
   JwtRefreshTokenError,
-  isRefreshToken,
 } from "./jwt/index.js";
 
-// Re-export the most commonly-used request/response DTOs so callers
-// can `import type { ConsumerSigninDto } from "@productcraft/auth"`.
-export type { ConsumerSigninDto } from "./_generated/types/ConsumerSigninDto.js";
-export type { ConsumerSignupDto } from "./_generated/types/ConsumerSignupDto.js";
-export type { ConsumerTokenResponseDto } from "./_generated/types/ConsumerTokenResponseDto.js";
-export type { ConsumerRefreshDto } from "./_generated/types/ConsumerRefreshDto.js";
-export type { ConsumerLogoutDto } from "./_generated/types/ConsumerLogoutDto.js";
-export type { ConsumerRequestPasswordResetDto } from "./_generated/types/ConsumerRequestPasswordResetDto.js";
-export type { ConsumerResetPasswordDto } from "./_generated/types/ConsumerResetPasswordDto.js";
-export type { UpdateMeDto } from "./_generated/types/UpdateMeDto.js";
-export type { VerifyBody } from "./_generated/types/VerifyBody.js";
-export type { AuthorizeBody } from "./_generated/types/AuthorizeBody.js";
-export type { AuthorizeBatchBody } from "./_generated/types/AuthorizeBatchBody.js";
-export type { ClientCredentialsDto } from "./_generated/types/ClientCredentialsDto.js";
-export type { CreateAppDto } from "./_generated/types/CreateAppDto.js";
-export type { UpdateAppDto } from "./_generated/types/UpdateAppDto.js";
-export type { UpdateAppStatusDto } from "./_generated/types/UpdateAppStatusDto.js";
-export type { UpdateAuthConfigDto } from "./_generated/types/UpdateAuthConfigDto.js";
-export type { CreateEndUserInviteDto } from "./_generated/types/CreateEndUserInviteDto.js";
-export type { ConsumerAcceptInviteDto } from "./_generated/types/ConsumerAcceptInviteDto.js";
-export type { EndUserInviteResponseDto } from "./_generated/types/EndUserInviteResponseDto.js";
-export type { UpdateEndUserDto } from "./_generated/types/UpdateEndUserDto.js";
-export type { UpdateEndUserRoleDto } from "./_generated/types/UpdateEndUserRoleDto.js";
-export type { UpdateEndUserStatusDto } from "./_generated/types/UpdateEndUserStatusDto.js";
-export type { CreateRoleDto } from "./_generated/types/CreateRoleDto.js";
-export type { UpdateRoleDto } from "./_generated/types/UpdateRoleDto.js";
-export type { AssignRoleDto } from "./_generated/types/AssignRoleDto.js";
-export type { SetPermissionsDto } from "./_generated/types/SetPermissionsDto.js";
-export type { CreatePermissionDto } from "./_generated/types/CreatePermissionDto.js";
-export type { CreateApiKeyDto } from "./_generated/types/CreateApiKeyDto.js";
-export type { CreateM2MClientDto } from "./_generated/types/CreateM2MClientDto.js";
-export type { UpdateM2MClientDto } from "./_generated/types/UpdateM2MClientDto.js";
-export type { SetScopesDto } from "./_generated/types/SetScopesDto.js";
-export type { IdpNativeSigninDto } from "./_generated/types/IdpNativeSigninDto.js";
-export type { IdpNativeUserHintDto } from "./_generated/types/IdpNativeUserHintDto.js";
-export type { IdpTokenResponseDto } from "./_generated/types/IdpTokenResponseDto.js";
-export type { ConfirmEnrollmentResponseDto } from "./_generated/types/ConfirmEnrollmentResponseDto.js";
-export type { StepUpResponseDto } from "./_generated/types/StepUpResponseDto.js";
-export type { PublicFactorDto } from "./_generated/types/PublicFactorDto.js";
-export type { WebauthnCredentialDto } from "./_generated/types/WebauthnCredentialDto.js";
-
-// Passkeys — encoding layer + browser bridge. Safe to import in Node;
-// only the ceremony calls need a browser.
 export {
   toB64u,
   fromB64u,
@@ -219,14 +48,12 @@ export {
   createPasskeyCredential,
   getPasskeyCredential,
   PasskeyError,
-} from "./passkeys.js";
-export type {
-  PasskeyPublicKeyOptions,
-  PasskeyDecodedOptions,
-  PasskeyCredentialLike,
-  EncodedPasskeyCredential,
-  PasskeyCredentialsContainer,
-  PasskeyMediation,
-  PasskeyErrorCode,
-  PasskeyBrowserOptions,
+  type PasskeyPublicKeyOptions,
+  type PasskeyDecodedOptions,
+  type PasskeyCredentialLike,
+  type EncodedPasskeyCredential,
+  type PasskeyCredentialsContainer,
+  type PasskeyMediation,
+  type PasskeyErrorCode,
+  type PasskeyBrowserOptions,
 } from "./passkeys.js";

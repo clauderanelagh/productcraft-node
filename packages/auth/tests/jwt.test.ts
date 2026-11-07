@@ -251,3 +251,27 @@ describe("verifyToken refuses refresh tokens", () => {
     expect(isRefreshToken(undefined)).toBe(false);
   });
 });
+
+describe("auth.verifyToken(jwt, { app }) (top level, 1.0)", () => {
+  it("verifies against the app's JWKS and fetches it once per app", async () => {
+    const rig = await setup();
+    const token = await signToken(rig.privateKey, { sub: "u1", iss: ISSUER, aud: AUDIENCE }, { exp: "5m" });
+    const claims = await rig.auth.verifyToken(token, { app: APP });
+    expect(claims.sub).toBe("u1");
+    await rig.auth.verifyToken(token, { app: APP });
+    await rig.auth.consumer(APP).verifyToken(token);
+    expect(rig.fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("pins the audience to the app it is given", async () => {
+    const rig = await setup();
+    const token = await signToken(rig.privateKey, { sub: "u1", iss: `${BASE}/other-app`, aud: "other-app" }, { exp: "5m" });
+    await expect(rig.auth.verifyToken(token, { app: APP })).rejects.toBeInstanceOf(JwtVerifyError);
+  });
+
+  it("refuses refresh tokens", async () => {
+    const rig = await setup();
+    const token = await signToken(rig.privateKey, { sub: "u1", iss: ISSUER, aud: AUDIENCE, token_use: "refresh" }, { exp: "5m" });
+    await expect(rig.auth.verifyToken(token, { app: APP })).rejects.toBeInstanceOf(JwtRefreshTokenError);
+  });
+});
