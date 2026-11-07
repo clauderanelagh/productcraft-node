@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/auth",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Customer auth for ProductCraft: apps, end users, roles, keys and config, plus sign-in, sessions, profile, MFA, passkeys and tenants for your app's users, and offline token verification. Resources, auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",

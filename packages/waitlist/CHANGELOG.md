@@ -1,5 +1,18 @@
 # @productcraft/rally
 
+## 2.1.0
+
+### Minor Changes
+
+- b5edeb1: Re-export `PaymentRequiredError` (402). Trawl's `jobs.create` documents `402 TRAWL_CREDITS_EXHAUSTED`, so its JSDoc and api.md error table now list it.
+
+  Noun model names from the spec: Trawl's stats are `Trawl.Stats`, `StatsTotals`, `StatsWindowTotals`, `StatsSeries` and `StatsSeriesPoint`; every product's webhook lists and replay are `WebhookEndpointList`, `WebhookEventList` and `WebhookEventReplay`. The former names (`TrawlWorkspaceStats`, `ListWebhookEndpoints`, `ReplayWebhookEvent`, …) stay as deprecated aliases. Examples name their results after the thing (`const webhookEndpoint`, `const stats`), not the response shape.
+
+### Patch Changes
+
+- Updated dependencies [b5edeb1]
+  - @productcraft/core@1.3.0
+
 ## 2.0.0
 
 ### Major Changes
