@@ -115,6 +115,33 @@ try {
     check(err instanceof BadRequestError && err.errors.length > 0, `400 is BadRequestError with errors[] (${err.errors?.map((e) => e.param).join(", ")})`);
   }
 
+  // App-social review (2026-11-07).
+  // rateLimit: Social sends the named -short/-long windows.
+  const { rateLimit } = await social.communities.list({ limit: 1 }).withResponse();
+  check(typeof rateLimit?.remaining === "number" && ["short", "long"].includes(rateLimit.window) && "short" in rateLimit.windows && "long" in rateLimit.windows, `withResponse().rateLimit parses the named windows (binding: ${rateLimit?.window}, ${rateLimit?.remaining} left)`);
+  // A malformed path id names the parameter.
+  try {
+    await c.posts.retrieve("not-a-uuid");
+    check(false, "bad path id throws");
+  } catch (err) {
+    check(err instanceof BadRequestError && err.code === "VALIDATION_ERROR" && err.errors?.[0]?.param === "post_id" && err.errors[0].code === "isUuid", `bad path id is VALIDATION_ERROR naming post_id (${err.code} ${JSON.stringify(err.errors)})`);
+  }
+  // A contentless post is refused (and a type error: see the @ts-expect-error in tests).
+  try {
+    await c.posts.create({});
+    check(false, "contentless post throws");
+  } catch (err) {
+    check(err instanceof BadRequestError, "posts.create({}) is refused");
+  }
+  // One canonical webhook path: community(id).webhooks; the workspace-scoped duplicate reaches the same rows.
+  const ep = await social.community(community.id).webhooks.endpoints.create({ url: "https://example.com/sdk-smoke-hook", event_types: ["post.created"], enabled: false });
+  try {
+    const viaDup = await social.communities.webhooks.endpoints.list(community.id);
+    check(viaDup.data.some((e) => e.id === ep.id), "deprecated communities.webhooks.endpoints still reaches the same endpoints");
+  } finally {
+    await social.community(community.id).webhooks.endpoints.delete(ep.id);
+  }
+
   await c.posts.delete(second.id);
   await c.posts.delete(post.id);
   try {

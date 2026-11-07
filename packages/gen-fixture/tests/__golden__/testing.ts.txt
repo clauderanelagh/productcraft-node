@@ -15,7 +15,7 @@ export { signWebhook } from "@productcraft/core";
 export type { SignWebhookParams, SignedWebhook } from "@productcraft/core";
 
 /** Every operation name, as `resource.method`. */
-export type OperationName = "entries.create" | "posts.comments.create" | "posts.create" | "posts.list" | "regions.list" | "settings.retrieve" | "settings.update" | "webhooks.endpoints.list" | "widgets.archive" | "widgets.bulkDelete" | "widgets.count" | "widgets.create" | "widgets.delete" | "widgets.erase" | "widgets.export" | "widgets.history" | "widgets.list" | "widgets.paint" | "widgets.parts.create" | "widgets.parts.delete" | "widgets.parts.list" | "widgets.retrieve" | "widgets.update" | "widgets.updateStatus";
+export type OperationName = "entries.create" | "posts.comments.create" | "posts.create" | "posts.delete" | "posts.list" | "regions.list" | "settings.retrieve" | "settings.update" | "webhooks.endpoints.list" | "widgets.archive" | "widgets.bulkDelete" | "widgets.count" | "widgets.create" | "widgets.delete" | "widgets.erase" | "widgets.export" | "widgets.history" | "widgets.list" | "widgets.paint" | "widgets.parts.create" | "widgets.parts.delete" | "widgets.parts.list" | "widgets.retrieve" | "widgets.timeline" | "widgets.update" | "widgets.updateStatus";
 
 interface Route { op: OperationName; method: string; pattern: RegExp; status: number; contentType: string | null; body: unknown }
 
@@ -69,6 +69,7 @@ const ROUTES: Route[] = [
     ],
     pagination: { next_cursor: null, has_more: false },
   } },
+  { op: "widgets.timeline", method: "GET", pattern: /^\/v1\/workspaces\/[^\/]+\/widgets\/[^\/]+\/timeline$/, status: 200, contentType: "application/json", body: [{ at: "2026-01-01T00:00:00.000Z", status: "draft" }] },
   { op: "posts.comments.create", method: "POST", pattern: /^\/v1\/communities\/[^\/]+\/posts\/[^\/]+\/comments$/, status: 201, contentType: "application/json", body: {
     id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
     post_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
@@ -129,6 +130,7 @@ const ROUTES: Route[] = [
     metadata: {},
     created_at: "2026-11-06T09:30:00.000Z",
   } },
+  { op: "posts.delete", method: "DELETE", pattern: /^\/v1\/communities\/[^\/]+\/posts\/[^\/]+$/, status: 204, contentType: null, body: null },
   { op: "entries.create", method: "POST", pattern: /^\/v1\/public\/[^\/]+\/[^\/]+\/entries$/, status: 201, contentType: "application/json", body: { id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", email: "ada@example.com", position: 42 } },
   { op: "widgets.paint", method: "POST", pattern: /^\/v1\/workspaces\/[^\/]+\/widgets\/[^\/]+\/paint\/[^\/]+$/, status: 200, contentType: "application/json", body: {
     id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",

@@ -16,12 +16,12 @@ await fixture.widgets.updateStatus(widget.id, { status: "active" });
 
 Full reference: [api.md](./api.md).
 
-- `fixture.community(…).posts`: `comments.create`, `create`, `list`
+- `fixture.community(…).posts`: `comments.create`, `create`, `delete`, `list`
 - `fixture.public(…).entries`: `create`
 - `fixture.regions`: `list`
 - `fixture.settings`: `retrieve`, `update`
 - `fixture.webhooks`: `endpoints.list`
-- `fixture.widgets`: `archive`, `bulkDelete`, `count`, `create`, `delete`, `erase`, `export`, `history`, `list`, `paint`, `parts.create`, `parts.delete`, `parts.list`, `retrieve`, `update`, `updateStatus`
+- `fixture.widgets`: `archive`, `bulkDelete`, `count`, `create`, `delete`, `erase`, `export`, `history`, `list`, `paint`, `parts.create`, `parts.delete`, `parts.list`, `retrieve`, `timeline`, `update`, `updateStatus`
 
 ## Pagination
 

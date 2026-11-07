@@ -212,6 +212,9 @@ export function buildModel(spec, config) {
           problems.push(`${w}: x-pc-sdk.paginated but the response is not { data: [], pagination }`);
         }
       }
+      if (x.deprecated !== undefined && (typeof x.deprecated !== "string" || !x.deprecated.trim())) {
+        problems.push(`${w}: x-pc-sdk.deprecated must be a note saying what to use instead`);
+      }
       let poll = null;
       if (x.poll) {
         const s = success.kind === "json" ? deref(success.schema) : undefined;
@@ -238,7 +241,9 @@ export function buildModel(spec, config) {
       ops.push({
         operationId: op.operationId, http: m.toUpperCase(), path, resource, segs, method, name, call: name,
         summary: op.summary ?? "", description: op.description && op.description !== op.summary ? op.description : "",
-        deprecated: !!op.deprecated, public: x.public === true, scope, bind, positional, query, body, idempotent,
+        deprecated: !!op.deprecated || typeof x.deprecated === "string", public: x.public === true,
+        // x-pc-sdk.deprecated (`@SdkDeprecated(note)`): the route stays, the SDK method is deprecated with this note.
+        deprecationNote: typeof x.deprecated === "string" ? x.deprecated : "", scope, bind, positional, query, body, idempotent,
         success, errors, paginated, poll, actor,
         credentials: credentialsOf(op, spec),
         paramsType: body || query.length ? `${stem}${pascal(method)}Params` : null,

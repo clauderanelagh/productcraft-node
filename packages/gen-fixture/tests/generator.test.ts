@@ -181,6 +181,28 @@ describe("golden output", () => {
     expect(manifest.WidgetController_get.poll).toEqual({ field: "status", terminal: ["active", "archived"], result: "metadata" });
   });
 
+  it("chains .as() in docs and examples only where the call fills actor_id; the per-op test always chains it", async () => {
+    const { files } = await generate("gen-fixture");
+    const api = files["packages/gen-fixture/api.md"] as string;
+    const section = (call: string) => api.slice(api.indexOf(`### \`${call}`), api.indexOf("### ", api.indexOf(`### \`${call}`) + 4));
+    expect(section("fixture.community(…).posts.create(")).toMatch(/fixture\.community\("[^"]+"\)\.as\("/);
+    expect(section("fixture.community(…).posts.delete(")).toMatch(/fixture\.community\("[^"]+"\)\.posts\.delete\(/);
+    expect(section("fixture.community(…).posts.delete(")).not.toContain(".as(");
+    expect(files["packages/gen-fixture/tests/_generated/operations.test.ts"]).toMatch(/fixture\.community\("community-id-1"\)\.as\("[^"]+"\)\.posts\.delete\(/);
+  });
+
+  it("x-pc-sdk.deprecated keeps the method, marked @deprecated with the note, on the method, its params type and in api.md", async () => {
+    const { files } = await generate("gen-fixture");
+    const res = files["packages/gen-fixture/src/_generated/resources.ts"] as string;
+    expect(res).toMatch(/@deprecated The same transitions as `widgets\.history`, which SDK code should use\. Kept for this major; removed from the SDK in the next one\.[\s\S]*?\n {2}timeline\(id: string/);
+    expect(files["packages/gen-fixture/api.md"]).toMatch(/widgets\/\{id\}\/timeline` → `[^`]+` · \*\*deprecated\*\*\n\n[^\n]*\n\n\*\*Deprecated:\*\* The same transitions as `widgets\.history`/);
+  });
+
+  it("x-pc-sdk.deprecated must be a note", async () => {
+    const p = await problems((s) => ((s.paths[`${W}/widgets/{id}/timeline`]!.get!["x-pc-sdk"] as Record<string, unknown>).deprecated = ""));
+    expect(p.join()).toMatch(/WidgetController_timeline\): x-pc-sdk.deprecated must be a note/);
+  });
+
   it("makes defaulted fields optional in requests and required in responses", async () => {
     const { files } = await generate("gen-fixture");
     const paths = files["packages/gen-fixture/src/_generated/paths.d.ts"] as string;

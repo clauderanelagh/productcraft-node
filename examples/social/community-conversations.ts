@@ -65,7 +65,7 @@ const social = new Social();
 
 // conversations.messages.reactions.delete: Remove the (actor, type) reaction. Idempotent — calling on a missing reaction returns the current counts.
 {
-  const directMessageReactionRemoved = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
+  const directMessageReactionRemoved = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").conversations.messages.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 }
 
 // conversations.messages.reactions.list: List the reactions on a direct message. Cursor-paginated, newest-first.

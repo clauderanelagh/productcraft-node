@@ -4108,6 +4108,71 @@
         "type": "object"
       },
       "CreatePostDto": {
+        "oneOf": [
+          {
+            "description": "A post with a title (a body and a url are optional).",
+            "properties": {
+              "title": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "title"
+            ],
+            "title": "Title",
+            "type": "object"
+          },
+          {
+            "description": "A post without a title, with a body (a url is optional).",
+            "properties": {
+              "body": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "title": {
+                "enum": [
+                  null
+                ],
+                "nullable": true,
+                "type": "string"
+              }
+            },
+            "required": [
+              "body"
+            ],
+            "title": "Body",
+            "type": "object"
+          },
+          {
+            "description": "A post with only a url.",
+            "properties": {
+              "body": {
+                "enum": [
+                  null
+                ],
+                "nullable": true,
+                "type": "string"
+              },
+              "title": {
+                "enum": [
+                  null
+                ],
+                "nullable": true,
+                "type": "string"
+              },
+              "url": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "url"
+            ],
+            "title": "URL",
+            "type": "object"
+          }
+        ],
         "properties": {
           "actor_id": {
             "description": "Social actor UUID who authors the post (returned from POST /actors).",
@@ -40569,7 +40634,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,
@@ -44299,7 +44364,7 @@
           },
           {
             "description": "EXCLUSIVE upper bound on `created_at` (ISO-8601), so adjacent windows tile without repeating the boundary row. Unparseable input is a 400.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": false,
@@ -46096,6 +46161,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "list",
           "paginated": true,
           "resource": "communities.webhooks.endpoints"
@@ -46350,6 +46416,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "create",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -46537,6 +46604,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "delete",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -46729,6 +46797,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "retrieve",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -46993,6 +47062,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "update",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -47241,6 +47311,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "rotateSecret",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -47489,6 +47560,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "test",
           "paginated": false,
           "resource": "communities.webhooks.endpoints"
@@ -47652,6 +47724,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "list",
           "paginated": false,
           "resource": "communities.webhooks.eventTypes"
@@ -47746,7 +47819,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,
@@ -47938,6 +48011,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "list",
           "paginated": true,
           "resource": "communities.webhooks.events"
@@ -48132,6 +48206,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "retrieve",
           "paginated": false,
           "resource": "communities.webhooks.events"
@@ -48383,6 +48458,7 @@
           "bind": [
             "workspace_id"
           ],
+          "deprecated": "The same call as on `/v1/communities/{community_id}/webhooks` (in the SDKs: `community(communityId).webhooks`), which SDK code should use. This route exists for signed-in console sessions.",
           "method": "replay",
           "paginated": false,
           "resource": "communities.webhooks.events"
@@ -50306,7 +50382,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,

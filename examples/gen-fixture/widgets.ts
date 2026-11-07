@@ -81,6 +81,11 @@ const fixture = new Fixture();
   const widget = await fixture.widgets.retrieve("wid_fixture_1");
 }
 
+// widgets.timeline: Status timeline of a widget (console route) (deprecated)
+{
+  const result = await fixture.widgets.timeline("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+}
+
 // widgets.update: Update a widget
 {
   const widget = await fixture.widgets.update("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { name: "Gadget 2" });

@@ -14,6 +14,11 @@ const fixture = new Fixture();
   const post = await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.create({ body: "Hello" });
 }
 
+// posts.delete: Delete a post
+{
+  await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").posts.delete("9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d");
+}
+
 // posts.list: List posts
 {
   for await (const post of fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list()) {

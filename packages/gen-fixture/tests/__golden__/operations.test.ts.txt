@@ -37,6 +37,18 @@ describe("generated operations (gen-fixture)", () => {
     expect(call.headers.has("authorization")).toBe(true);
     expect(call.body).toEqual({ body: "Hello", actor_id: "7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d" });
   });
+  it("posts.delete: DELETE /v1/communities/{community_id}/posts/{post_id}", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.community("community-id-1").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.delete("post-id-2");
+    expect(result).toBeUndefined();
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("posts.delete");
+    expect(call.method).toBe("DELETE");
+    expect(call.url.pathname).toBe("/v1/communities/community-id-1/posts/post-id-2");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.has("authorization")).toBe(true);
+  });
   it("posts.comments.create: POST /v1/communities/{community_id}/posts/{post_id}/comments", async () => {
     const { fetch, fixture } = setup();
     const result = await fixture.community("community-id-1").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.create("post-id-2", { body: "First!" });
@@ -273,6 +285,18 @@ describe("generated operations (gen-fixture)", () => {
     expect(call.headers.has("idempotency-key")).toBe(true);
     expect(call.headers.has("authorization")).toBe(true);
     expect(call.body).toEqual({ status: "draft" });
+  });
+  it("widgets.timeline: GET /v1/workspaces/{workspace_id}/widgets/{id}/timeline", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.widgets.timeline("id-1");
+    expect(result).toBeDefined();
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("widgets.timeline");
+    expect(call.method).toBe("GET");
+    expect(call.url.pathname).toBe("/v1/workspaces/9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b/widgets/id-1/timeline");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.has("authorization")).toBe(true);
   });
   it("widgets.parts.list: GET /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts", async () => {
     const { fetch, fixture } = setup();

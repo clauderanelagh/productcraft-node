@@ -1,7 +1,7 @@
 // Emits the checked-in docs (api.md, the README generated region, examples/)
 // and _generated/manifest.json (docs/sdk-standard.md section 8).
 
-import { buildTrees, callExample, errorClass } from "./emit-code.mjs";
+import { buildTrees, callExample, deprecationText, errorClass } from "./emit-code.mjs";
 import { anchorId, stableJson } from "./util.mjs";
 
 export const README_START = "<!-- generated:start (scripts/gen-sdk.mjs; edits between the markers are overwritten) -->";
@@ -56,6 +56,7 @@ export function emitApiMd(model, cfg) {
       L.push(`### \`${sig.call}\``, "");
       L.push(`\`${o.http} ${o.path}\` → \`${sig.ret}\`${o.deprecated ? " · **deprecated**" : ""}`, "");
       if (o.summary) L.push(o.summary + (o.summary.endsWith(".") ? "" : "."), "");
+      if (o.deprecationNote) L.push(`**Deprecated:** ${deprecationText(o)}`, "");
       if (o.description) L.push(o.description, "");
       const facts = [];
       if (o.paramsType) facts.push(`Params: \`${cfg.className}.${o.paramsType}\``);

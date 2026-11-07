@@ -741,7 +741,16 @@ export type components = {
             title?: string | null;
             url?: string | null;
             visibility?: "public" | "followers" | "close_friends" | "private";
-        };
+        } & ({
+            title: string;
+        } | {
+            body: string;
+            title?: null;
+        } | {
+            body?: null;
+            title?: null;
+            url: string;
+        });
         CreateReactionDto: {
             actor_id: string;
             type: string;
