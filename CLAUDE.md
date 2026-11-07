@@ -73,7 +73,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
 
 ## Versioning
 
-SemVer, **per package**, independent. Every published package is at 1.x or later since task 012 (2026-11-07). The `productcraft` umbrella picks up a patch bump whenever any of its surface deps bump (via `updateInternalDependencies: "patch"` in `.changeset/config.json`).
+SemVer, **per package**, independent. Every published package is at 1.x or later since task 012 (2026-11-07). The `productcraft` umbrella picks up a patch bump whenever any of its surface deps bump (via `updateInternalDependencies: "patch"` in `.changeset/config.json`). A package that only *peer*-depends on another (auth-passport on auth) is bumped only when the new version leaves its peer range (`onlyUpdatePeerDependentsWhenOutOfRange`): without it, changesets made auth-passport 2.0.0 out of auth 1.1.0 on 2026-11-07, with no code change.
 
 After 1.0 (`docs/sdk-standard.md` section 7):
 - **minor** for additive changes, including a spec refresh that only adds operations, optional fields or enum values (the common churn). `spec-refresh.yml` writes these as `minor` per changed surface.
