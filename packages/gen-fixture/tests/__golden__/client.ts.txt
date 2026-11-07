@@ -85,6 +85,7 @@ type __WidgetArchivedEvent = W.WidgetArchivedEvent;
 type __WidgetCreatedEvent = W.WidgetCreatedEvent;
 type __UnknownWebhookEvent = W.UnknownWebhookEvent;
 type __UnwrapWebhookEvent = W.UnwrapWebhookEvent;
+type __WebhookSignParams = W.WebhookSignParams;
 type __WebhookUnwrapParams = W.WebhookUnwrapParams;
 type __WebhookEventType = W.WebhookEventType;
 /** Public types: `Fixture.Comment`, `Fixture.PostListParams`, … */
@@ -130,6 +131,7 @@ export namespace Fixture {
   export type WidgetCreatedEvent = __WidgetCreatedEvent;
   export type UnknownWebhookEvent = __UnknownWebhookEvent;
   export type UnwrapWebhookEvent = __UnwrapWebhookEvent;
+  export type WebhookSignParams = __WebhookSignParams;
   export type WebhookUnwrapParams = __WebhookUnwrapParams;
   export type WebhookEventType = __WebhookEventType;
   export const WebhookEventType = W.WebhookEventType;

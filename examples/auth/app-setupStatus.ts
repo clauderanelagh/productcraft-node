@@ -6,7 +6,7 @@ const auth = new Auth();
 
 // setupStatus.retrieve: Get the setup checklist for an app: what works, what is missing, and where to fix it.
 {
-  const setupStatus = await auth.admin.app("app").setupStatus.retrieve();
+  const setupStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").setupStatus.retrieve();
 }
 
 export {};

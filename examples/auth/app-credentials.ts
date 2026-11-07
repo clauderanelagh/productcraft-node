@@ -6,40 +6,40 @@ const auth = new Auth();
 
 // credentials.create: Create a new M2M client
 {
-  const m2mClientCreate = await auth.admin.app("app").credentials.create({ name: "CI Pipeline" });
+  const m2mClientCreate = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.create({ name: "CI Pipeline" });
 }
 
 // credentials.delete: Delete an M2M client
 {
-  await auth.admin.app("app").credentials.delete("client");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.delete("m2m_a1b2c3d4e5f6");
 }
 
 // credentials.list: List M2M clients
 {
-  for await (const credential of auth.admin.app("app").credentials.list()) {
+  for await (const credential of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.list()) {
     console.log(credential);
   }
-  const page = await auth.admin.app("app").credentials.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.list({}, { timeout: 5_000 });
 }
 
 // credentials.retrieve: Get M2M client details
 {
-  const m2mClientDetail = await auth.admin.app("app").credentials.retrieve("client");
+  const m2mClientDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.retrieve("m2m_a1b2c3d4e5f6");
 }
 
 // credentials.rotate: Rotate M2M client secret
 {
-  const m2mRotateSecret = await auth.admin.app("app").credentials.rotate("client");
+  const m2mRotateSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.rotate("m2m_a1b2c3d4e5f6");
 }
 
 // credentials.update: Update M2M client status
 {
-  const m2mClientDetail = await auth.admin.app("app").credentials.update("client", { is_active: true });
+  const m2mClientDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.update("m2m_a1b2c3d4e5f6", { is_active: true });
 }
 
 // credentials.updateScopes: Set scopes for an M2M client
 {
-  const result = await auth.admin.app("app").credentials.updateScopes("client", { permissions: ["user.read", "app.read"] });
+  const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.updateScopes("m2m_a1b2c3d4e5f6", { permissions: ["user.read", "app.read"] });
 }
 
 export {};

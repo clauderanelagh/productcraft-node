@@ -6,7 +6,7 @@ const auth = new Auth();
 
 // notifications.test: Send me a test of one email.
 {
-  const notificationTest = await auth.admin.app("app").notifications.test("slot");
+  const notificationTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notifications.test("verification");
 }
 
 export {};

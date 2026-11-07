@@ -6,16 +6,16 @@ const auth = new Auth();
 
 // auditLogs.export: Stream this app's audit log as NDJSON or CSV, applying the same `?action=` / `?actor_id=` / `?since=` / `?until=` filters as the list. Newest first. Reading the export is itself audited as `audit.exported`.
 {
-  const response = await auth.admin.app("app").auditLogs.export();
+  const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.export();
   const text = await response.text();
 }
 
 // auditLogs.list: Append-only audit log for this app, newest first. Filter by `?action=`, `?actor_id=`, and/or the `?since=` / `?until=` date range. 20/page (max 100), cursor-paginated.
 {
-  for await (const auditLog of auth.admin.app("app").auditLogs.list()) {
+  for await (const auditLog of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.list()) {
     console.log(auditLog);
   }
-  const page = await auth.admin.app("app").auditLogs.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.list({}, { timeout: 5_000 });
 }
 
 export {};

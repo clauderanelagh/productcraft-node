@@ -6,7 +6,7 @@ const platform = new PlatformAuth();
 
 // oauth.connections.delete: Disconnect a client
 {
-  await platform.oauth.connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await platform.oauth.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // oauth.connections.list: List clients this human has connected
@@ -19,20 +19,20 @@ const platform = new PlatformAuth();
 
 // oauth.workspaces.connections.delete: Disconnect a client on behalf of the workspace
 {
-  await platform.oauth.workspaces.connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await platform.oauth.workspaces.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // oauth.workspaces.connections.list: List every client connected to a workspace
 {
-  for await (const connection of platform.oauth.workspaces.connections.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const connection of platform.oauth.workspaces.connections.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(connection);
   }
-  const page = await platform.oauth.workspaces.connections.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await platform.oauth.workspaces.connections.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // oauth.workspaces.connections.restore: Lift a workspace revocation so the member may reconnect
 {
-  await platform.oauth.workspaces.connections.restore("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await platform.oauth.workspaces.connections.restore("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

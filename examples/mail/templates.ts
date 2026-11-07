@@ -11,7 +11,7 @@ const mail = new Mail();
 
 // templates.delete: Delete a template, layout, or partial by name.
 {
-  await mail.templates.delete("name");
+  await mail.templates.delete("welcome");
 }
 
 // templates.lint: Lint a draft for deliverability red flags. Same render pipeline as /preview; returns a 0-100 score (higher is better) and a sorted list of findings (errors first). Self-developed heuristic linter, no external classifier — runs in-process.
@@ -34,22 +34,22 @@ const mail = new Mail();
 
 // templates.render: Render a saved template against a data payload. Returns subject + html + text without sending.
 {
-  const renderedMessage = await mail.templates.render("name", { data: { name: "Alice", order_id: "ord_123" } });
+  const renderedMessage = await mail.templates.render("welcome", { data: { name: "Alice", order_id: "ord_123" } });
 }
 
 // templates.retrieve: Get a template, layout, or partial by name.
 {
-  const template = await mail.templates.retrieve("name");
+  const template = await mail.templates.retrieve("welcome");
 }
 
 // templates.send: Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9_\-:]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
 {
-  const sendAccepted = await mail.templates.send("name", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
+  const sendAccepted = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
 }
 
 // templates.sendBatch: Send up to 100 messages with the same template in one request. Per-row partial-success: each row carries its own status (`accepted` | `rejected`).
 {
-  const sendBatchOpenApi = await mail.templates.sendBatch("name", {
+  const sendBatchOpenApi = await mail.templates.sendBatch("welcome", {
     messages: [
       {
         data: { code: "A1B2C3", name: "Alice" },
@@ -67,12 +67,12 @@ const mail = new Mail();
 
 // templates.testSend: Send a test rendering of the template to an arbitrary recipient. Bypasses the suppression list and the ordinary send limits (test sends have their own: 30 per hour per workspace); subject is auto-prefixed with [TEST]; missing variables render as [varname] placeholders.
 {
-  const sendAccepted = await mail.templates.testSend("name", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
+  const sendAccepted = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
 }
 
 // templates.variables.list: Variables auto-detected from the saved template body + subject (Handlebars expressions, dotted paths preserved, dedup'd in first-occurrence order).
 {
-  const templateVariables = await mail.templates.variables.list("name");
+  const templateVariables = await mail.templates.variables.list("welcome");
 }
 
 export {};

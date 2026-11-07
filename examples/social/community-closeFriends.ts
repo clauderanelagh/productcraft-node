@@ -6,12 +6,12 @@ const social = new Social();
 
 // closeFriends.create: Add a member to an actor's close-friends list.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.create({ member_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.create({ member_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 }
 
 // closeFriends.delete: Remove a member from an actor's close-friends list.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.delete("aaaaaaaa-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.delete("aaaaaaaa-0000-0000-0000-000000000001", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

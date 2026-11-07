@@ -11,12 +11,12 @@ const mail = new Mail();
 
 // broadcasts.cancel: Cancel a scheduled or sending broadcast
 {
-  const broadcast = await mail.broadcasts.cancel("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const broadcast = await mail.broadcasts.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // broadcasts.clickedLinks.list: Links clicked in a broadcast
 {
-  const clickedLinks = await mail.broadcasts.clickedLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const clickedLinks = await mail.broadcasts.clickedLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // broadcasts.create: Create a broadcast (draft)
@@ -26,12 +26,12 @@ const mail = new Mail();
 
 // broadcasts.delete: Delete a broadcast
 {
-  await mail.broadcasts.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.broadcasts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // broadcasts.duplicate: Duplicate a broadcast
 {
-  const broadcast = await mail.broadcasts.duplicate("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const broadcast = await mail.broadcasts.duplicate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // broadcasts.list: List broadcasts, newest first
@@ -44,20 +44,20 @@ const mail = new Mail();
 
 // broadcasts.recipients.list: List a broadcast's recipients
 {
-  for await (const recipient of mail.broadcasts.recipients.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const recipient of mail.broadcasts.recipients.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(recipient);
   }
-  const page = await mail.broadcasts.recipients.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await mail.broadcasts.recipients.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // broadcasts.retrieve: Get a broadcast
 {
-  const broadcast = await mail.broadcasts.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const broadcast = await mail.broadcasts.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // broadcasts.send: Send or schedule a broadcast
 {
-  const broadcast = await mail.broadcasts.send("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { scheduled_at: "2026-11-02T09:00:00Z" });
+  const broadcast = await mail.broadcasts.send("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { scheduled_at: "2026-11-02T09:00:00Z" });
 }
 
 // broadcasts.settings.retrieve: Get the broadcast settings
@@ -72,7 +72,7 @@ const mail = new Mail();
 
 // broadcasts.update: Update a draft broadcast
 {
-  const broadcast = await mail.broadcasts.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { from: "string" });
+  const broadcast = await mail.broadcasts.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { from: "string" });
 }
 
 export {};

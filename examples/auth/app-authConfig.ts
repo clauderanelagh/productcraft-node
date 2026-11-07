@@ -6,42 +6,42 @@ const auth = new Auth();
 
 // authConfig.providers.check: Check the saved provider credentials with the provider.
 {
-  const providerCheck = await auth.admin.app("app").authConfig.providers.check("provider");
+  const providerCheck = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.check("google");
 }
 
 // authConfig.providers.delete: Remove the config for an (app, provider). Existing identity rows (people who already signed in with this provider) stay; they just lose the ability to sign in again until config is re-uploaded.
 {
-  await auth.admin.app("app").authConfig.providers.delete("provider");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.delete("google");
 }
 
 // authConfig.providers.list: List federated sign-in providers Auth supports, with their setup status for this app.
 {
-  const result = await auth.admin.app("app").authConfig.providers.list();
+  const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.list();
 }
 
 // authConfig.providers.replace: Write or replace the config for an (app, provider). Validates the body via the provider impl's `parseConfig` before encrypting; malformed config 400s. Default `enabled=false`.
 {
-  const providerDetail = await auth.admin.app("app").authConfig.providers.replace("provider", { config: {} });
+  const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.replace("google", { config: {} });
 }
 
 // authConfig.providers.retrieve: Get the config for one (app, provider). Secrets are redacted — `private_key_present: true` is the only acknowledgement that a private key is on file.
 {
-  const providerDetail = await auth.admin.app("app").authConfig.providers.retrieve("provider");
+  const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.retrieve("google");
 }
 
 // authConfig.providers.update: Partially update the config for an (app, provider). Only top-level keys present in `config` are changed; omitted keys — secrets included — keep their stored values. The merged config is validated by the provider impl's `parseConfig`; 404 if the provider is not configured yet (create it with PUT).
 {
-  const providerDetail = await auth.admin.app("app").authConfig.providers.update("provider", { config: {} });
+  const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.update("google", { config: {} });
 }
 
 // authConfig.retrieve: Get the per-app auth config (signup, signin, password policy, sessions).
 {
-  const authConfig = await auth.admin.app("app").authConfig.retrieve();
+  const authConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.retrieve();
 }
 
 // authConfig.update: Update the per-app auth config. Only fields you pass are changed.
 {
-  const authConfig = await auth.admin.app("app").authConfig.update({ access_token_minutes: 60 });
+  const authConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.update({ access_token_minutes: 60 });
 }
 
 export {};

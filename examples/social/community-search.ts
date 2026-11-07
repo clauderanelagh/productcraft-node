@@ -6,21 +6,21 @@ const social = new Social();
 
 // search.actors.list: Search actors by display name, external_id (username), and bio.
 {
-  for await (const actor of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.actors.list({ q: "string" })) {
+  for await (const actor of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.actors.list({ q: "onboarding" })) {
     console.log(actor);
   }
 }
 
 // search.hashtags.list: Prefix-search hashtags for autocomplete.
 {
-  for await (const hashtag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.hashtags.list({ q: "string" })) {
+  for await (const hashtag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.hashtags.list({ q: "onboarding" })) {
     console.log(hashtag);
   }
 }
 
 // search.posts.list: Search post content (title + body) by full-text.
 {
-  for await (const post of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.posts.list({ q: "string" })) {
+  for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.posts.list({ q: "onboarding" })) {
     console.log(post);
   }
 }

@@ -6,14 +6,14 @@ const auth = new Auth();
 
 // oauth.introspect: Introspect the bearer access token (RFC 7662)
 {
-  const introspect = await auth.consumer("app").oauth.introspect({ token: "string" });
+  const introspect = await auth.consumer("my-app").oauth.introspect({ token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl" });
 }
 
 // oauth.token: Exchange client_credentials for an access token
 {
-  const oAuthToken = await auth.consumer("app").oauth.token({
+  const oAuthToken = await auth.consumer("my-app").oauth.token({
     client_id: "m2m_a1b2c3d4e5f6...",
-    client_secret: "string",
+    client_secret: "the-secret-returned-by-credentials-create",
     grant_type: "client_credentials",
   });
 }

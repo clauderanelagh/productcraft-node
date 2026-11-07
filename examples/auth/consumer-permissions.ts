@@ -6,17 +6,17 @@ const auth = new Auth();
 
 // permissions.create: Create a custom permission
 {
-  const consumerAdminPermission = await auth.consumer("app").permissions.create({ action: "read", resource: "project" });
+  const consumerAdminPermission = await auth.consumer("my-app").permissions.create({ action: "read", resource: "project" });
 }
 
 // permissions.delete: Delete a custom permission
 {
-  await auth.consumer("app").permissions.delete("permission_key");
+  await auth.consumer("my-app").permissions.delete("invoice.read");
 }
 
 // permissions.list: List all permissions visible to this app
 {
-  const result = await auth.consumer("app").permissions.list();
+  const result = await auth.consumer("my-app").permissions.list();
 }
 
 export {};

@@ -6,40 +6,40 @@ const auth = new Auth();
 
 // customDomains.apply: Set up the custom domain's DNS records in one step with a short-lived Cloudflare or DigitalOcean API token.
 {
-  const customDomainApplyResult = await auth.admin.app("app").customDomains.apply("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { dry_run: true, provider: "cloudflare", token: "cf-token-from-your-dashboard" });
+  const customDomainApplyResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.apply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { dry_run: true, provider: "cloudflare", token: "cf-token-from-your-dashboard" });
 }
 
 // customDomains.check: Check the custom domain's DNS records now.
 {
-  const customDomain = await auth.admin.app("app").customDomains.check("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.check("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // customDomains.create: Add a custom domain (such as auth.acme.com) for this app's sign-in.
 {
-  const customDomain = await auth.admin.app("app").customDomains.create({ hostname: "auth.acme.com" });
+  const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.create({ hostname: "auth.acme.com" });
 }
 
 // customDomains.delete: Remove the custom domain.
 {
-  await auth.admin.app("app").customDomains.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // customDomains.export: Download the custom domain's DNS records as a BIND zone fragment or a CSV.
 {
-  const response = await auth.admin.app("app").customDomains.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { format: "bind" });
+  const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { format: "bind" });
   const text = await response.text();
 }
 
 // customDomains.list: List the app's custom domains (at most one).
 {
-  for await (const customDomain of auth.admin.app("app").customDomains.list()) {
+  for await (const customDomain of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.list()) {
     console.log(customDomain);
   }
 }
 
 // customDomains.retrieve: Get a custom domain and the last check of its records.
 {
-  const customDomain = await auth.admin.app("app").customDomains.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

@@ -197,6 +197,16 @@ app.post("/webhooks", async (c) => {
 });
 ```
 
+Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, so a test needs no live delivery and no hand-rolled HMAC.
+
+```ts
+import { Social } from "@productcraft/social";
+const social = new Social({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });
+const { payload, headers } = await social.webhooks.sign({ payload: { id: "evt_test_1", type: "actor.updated", created_at: new Date().toISOString(), data: {} } });
+const event = await social.webhooks.unwrap({ payload, headers });
+console.log(event.type);
+```
+
 ## Raw responses
 
 Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`). `.withResponse()` adds the `Response` and parsed rate-limit headers.

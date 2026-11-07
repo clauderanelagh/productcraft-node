@@ -6,15 +6,15 @@ const social = new Social();
 
 // flags.create: File a moderation report against a post or comment. Idempotent per (reporter, target) while open.
 {
-  const createFlag = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.create({ target_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", target_kind: "post" });
+  const createFlag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.create({ target_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", target_kind: "post" });
 }
 
 // flags.list: List a reporter's own flags (task 017). Requires `actor_id` (the reporter) — the customer lane sees only that reporter's reports ("was my report reviewed?"), never other reporters' flags. Cursor-paginated newest-first.
 {
-  for await (const flag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list()) {
+  for await (const flag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list()) {
     console.log(flag);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list({}, { timeout: 5_000 });
 }
 
 export {};

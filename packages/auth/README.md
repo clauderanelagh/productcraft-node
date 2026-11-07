@@ -16,12 +16,33 @@ Node 20.3 or later (ESM and CommonJS), Bun, Deno and edge runtimes. Or install t
 
 | Scope | Who calls it | Credential |
 |---|---|---|
-| `auth.consumer(slug)`: sign-in, sign-up, refresh, `me`, MFA, passkeys, tenants | Your app's backend or browser, for its end users | None for the public routes; the end user's access token for `me.*`; a workspace key only for the PAK-gated routes (pass it explicitly) |
+| `auth.consumer(slug)`: sign-in, sign-up, refresh, `me`, MFA, passkeys, tenants | Your app's backend or browser, for its end users | Depends on the route (below) |
 | `auth.admin.app(appId)` (alias `auth.app(appId)`): end users, roles, keys, config, webhooks | Your backend or tooling | A workspace API key (`PRODUCTCRAFT_API_KEY`) or a platform session |
 
-`auth.consumer()` defaults its slug to `PRODUCTCRAFT_AUTH_APP` and never reads `PRODUCTCRAFT_API_KEY`: routes that act for an end user must not carry your workspace key by accident.
+`auth.consumer()` defaults its slug to `PRODUCTCRAFT_AUTH_APP` and never reads `PRODUCTCRAFT_API_KEY`: routes that act for an end user must not carry your workspace key by accident. Pass the credential a route needs explicitly. Each method's reference entry in [api.md](./api.md#credentials) names it, and a wrong one answers 401:
+
+| `auth.consumer(slug)` routes | Credential | How to pass it |
+|---|---|---|
+| `signin`, `refresh`, `verifyEmail`, `resetPassword`, `passkey.*`, `mfa.*`, `oauth.token`, `verify.*`, `wellKnown.*` | None | `auth.consumer(slug)` |
+| `me.*`, `switchTenant`, `tenantApiKeys` create/list/rotate/delete | The end user's access token | `new Auth({ auth: { type: "bearer", token: accessToken } }).consumer(slug)` |
+| `users.*`, `roles.*`, `permissions.*` (your backend managing the app's users) | An app API key (`hdk_live_…`, from `admin.app(id).apiKeys.create`), an M2M token, or an end user whose role holds the permission. **Not** a workspace key | `new Auth({ auth: { type: "bearer", token: process.env.AUTH_APP_API_KEY } }).consumer(slug)` |
+| `tenants.*`, `users.factors.*`, `tenantApiKeys.introspect`/`status`/`config`, `requestVerification`, `sendVerificationEmail`, `requestPasswordReset`, `sendPasswordResetEmail`, `signup` (when the app requires it) | A workspace API key | `new Auth({ auth: { type: "bearer", token: process.env.PRODUCTCRAFT_API_KEY } }).consumer(slug)` |
+
+**`consumer(slug).users` or `admin.app(id).endUsers`?** Both manage the same end users. Use `admin.app(id).endUsers` (and `.roles`, `.permissions`, `.tenants`) from your own tooling with your workspace API key: it covers more (search, export, import, bulk changes, sessions). Use `consumer(slug).users` from your product's backend when it should hold only an app-scoped credential (an app API key or M2M token), never your workspace key.
 
 ## Quick start
+
+A new app has sign-up turned off (`signup` answers 403 "Signup is disabled for this app"). Turn it on once, with your workspace API key:
+
+```ts
+import { Auth } from "@productcraft/auth";
+
+const auth = new Auth(); // reads PRODUCTCRAFT_API_KEY
+const created = await auth.apps.create({ slug: "my-app", display_name: "My App", workspace_id: "5d1e2f3a-4b5c-4d6e-8f9a-0b1c2d3e4f5a" });
+await auth.admin.app(created.id).authConfig.update({ signup_enabled: true });
+```
+
+Then sign end users up and in:
 
 ```ts
 import { Auth, AuthenticationError } from "@productcraft/auth";
@@ -216,6 +237,16 @@ app.post("/webhooks", async (c) => {
   console.log(event.type);
   return c.body(null, 204);
 });
+```
+
+Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, so a test needs no live delivery and no hand-rolled HMAC.
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });
+const { payload, headers } = await auth.webhooks.sign({ payload: { id: "evt_test_1", type: "app.slug_changed", created_at: new Date().toISOString(), data: {} } });
+const event = await auth.webhooks.unwrap({ payload, headers });
+console.log(event.type);
 ```
 
 ## Raw responses

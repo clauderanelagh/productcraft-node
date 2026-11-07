@@ -6,7 +6,7 @@ const waitlist = new Waitlist();
 
 // entries.create: Submit a new entry to a public waitlist
 {
-  const publicEntryCreated = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
+  const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
 }
 
 export {};

@@ -15,6 +15,8 @@ List regions.
 
 Every region the API runs in.
 
+- Credential: [`bearer`](#bearer)
+
 ```ts
 const result = await fixture.regions.list();
 ```
@@ -29,6 +31,8 @@ const result = await fixture.regions.list();
 
 Retrieve workspace settings.
 
+- Credential: [`bearer`](#bearer)
+
 ```ts
 const settings = await fixture.settings.retrieve();
 ```
@@ -42,6 +46,7 @@ const settings = await fixture.settings.retrieve();
 Replace workspace settings.
 
 - Params: `Fixture.SettingsUpdateParams`
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -59,6 +64,10 @@ const settings = await fixture.settings.update({ retention_days: 30 });
 
 Verifies the signature and returns `Fixture.UnwrapWebhookEvent`. Events: `widget.archived`, `widget.created`, plus `UnknownWebhookEvent` for types added later.
 
+### `fixture.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
+
 ## webhooks.endpoints
 
 ### `fixture.webhooks.endpoints.list(params?, options?)`
@@ -69,6 +78,7 @@ List webhook endpoints.
 
 - Params: `Fixture.WebhookEndpointListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
 
 ```ts
 for await (const endpoint of fixture.webhooks.endpoints.list()) {
@@ -89,6 +99,8 @@ Archive a widget.
 
 Use `updateStatus` instead.
 
+- Credential: [`bearer`](#bearer)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
@@ -107,6 +119,7 @@ Delete several widgets.
 
 - Params: `Fixture.WidgetBulkDeleteParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -126,6 +139,7 @@ const result = await fixture.widgets.bulkDelete({ ids: ["9b2f6c1e-0d6a-4a63-9a43
 Count widgets.
 
 - Params: `Fixture.WidgetCountParams`
+- Credential: [`bearer`](#bearer)
 
 ```ts
 const result = await fixture.widgets.count();
@@ -141,6 +155,7 @@ Create a widget.
 
 - Params: `Fixture.WidgetCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -159,6 +174,8 @@ const widget = await fixture.widgets.create({ name: "Gadget" });
 `DELETE /v1/workspaces/{workspace_id}/widgets/{id}` → `void`
 
 Delete a widget.
+
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -179,6 +196,7 @@ Erase widgets created before a date.
 Bulk, irreversible.
 
 - Params: `Fixture.WidgetEraseParams`
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -196,6 +214,8 @@ await fixture.widgets.erase({ before: "2026-01-01T00:00:00.000Z" });
 
 Export widgets as CSV.
 
+- Credential: [`bearer`](#bearer)
+
 ```ts
 const response = await fixture.widgets.export();
 const text = await response.text();
@@ -208,6 +228,8 @@ const text = await response.text();
 `GET /v1/workspaces/{workspace_id}/widgets/{id}/history` → `Fixture.WidgetHistoryResponse`
 
 Status history of a widget.
+
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -229,6 +251,7 @@ Newest first.
 
 - Params: `Fixture.WidgetListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -250,6 +273,7 @@ const page = await fixture.widgets.list({}, { timeout: 5_000 });
 
 Retrieve a widget.
 
+- Credential: [`bearer`](#bearer) or [`end_user_token`](#end_user_token)
 - Polling: `widgets.poll(…)` waits for `status` ∈ `active`, `archived`
 
 | Status | Error class | Codes | When |
@@ -257,7 +281,7 @@ Retrieve a widget.
 | 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
 
 ```ts
-const widget = await fixture.widgets.retrieve("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const widget = await fixture.widgets.retrieve("wid_fixture_1");
 ```
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-id)
@@ -270,6 +294,7 @@ Update a widget.
 
 - Params: `Fixture.WidgetUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -291,6 +316,7 @@ Change a widget's status.
 
 - Params: `Fixture.WidgetUpdateStatusParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -313,6 +339,7 @@ Add a part to a widget.
 
 - Params: `Fixture.WidgetPartCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -332,6 +359,8 @@ const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b
 
 Remove a part.
 
+- Credential: [`bearer`](#bearer)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
@@ -350,6 +379,7 @@ List a widget's parts.
 
 - Params: `Fixture.WidgetPartListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -374,6 +404,7 @@ Create a post.
 
 - Params: `Fixture.PostCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 - Fills `actor_id` from `.as(actorId)`
 
 | Status | Error class | Codes | When |
@@ -395,6 +426,7 @@ List posts.
 
 - Params: `Fixture.PostListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
 - Fills `actor_id` from `.as(actorId)`
 
 ```ts
@@ -416,6 +448,7 @@ Comment on a post.
 
 - Params: `Fixture.PostCommentCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
 - Fills `actor_id` from `.as(actorId)`
 
 | Status | Error class | Codes | When |
@@ -452,6 +485,18 @@ const entry = await fixture.public({ workspace: "acme", waitlist: "beta" }).entr
 ```
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-public-workspace-slug-waitlist-slug-entries)
+
+## Credentials
+
+Routes take different credentials; each method above says which. Every one is sent as `Authorization: Bearer`. A workspace API key is the client's `apiKey` (or `PRODUCTCRAFT_API_KEY`); pass any other as `new Fixture({ auth: { type: "bearer", token } })`. The wrong one answers 401.
+
+### `bearer`
+
+A workspace API key.
+
+### `end_user_token`
+
+An end user's access token.
 
 ## Error codes
 

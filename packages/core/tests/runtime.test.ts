@@ -268,6 +268,39 @@ describe("pagination", () => {
     await expect(make().list(spec).toArray({})).rejects.toBeInstanceOf(Error);
   });
 
+  // GET /v1/apps once ignored `cursor` and answered page one with the same
+  // next_cursor forever; `for await` must stop with an error, not spin.
+  it("stops with an error when the API repeats a cursor", async () => {
+    const stuck = () => ({ status: 200, body: { data: [{ id: "a" }], pagination: { next_cursor: "CUR1", has_more: true } } });
+    server.reply(stuck);
+    const ids: string[] = [];
+    const walk = async () => {
+      for await (const item of make().list<{ id: string }>(spec)) ids.push(item.id);
+    };
+    await expect(walk()).rejects.toThrow(/already used/);
+    expect(ids).toEqual(["a", "a"]);
+    // One request with the repeated cursor, then the error (no third fetch).
+    expect(server.requests.filter((r) => r.query.get("cursor") === "CUR1")).toHaveLength(1);
+
+    server.reply(stuck);
+    const page = await make().list<{ id: string }>(spec);
+    const second = await page.getNextPage();
+    expect(() => second.getNextPage()).toThrow(/already used/);
+  });
+
+  it("stops on a longer cycle and on a caller-supplied cursor coming back", async () => {
+    server.reply((r: { query: URLSearchParams }) => {
+      const next = r.query.get("cursor") === "B" ? "A" : "B";
+      return { status: 200, body: { data: [{ id: next }], pagination: { next_cursor: next, has_more: true } } };
+    });
+    const ids: string[] = [];
+    await expect((async () => {
+      for await (const item of make().list<{ id: string }>({ ...spec, query: { ...spec.query, cursor: "A" } })) ids.push(item.id);
+    })()).rejects.toThrow(/already used/);
+    // A → B, B → A (already sent): two pages, then the error.
+    expect(server.requests.map((r) => r.query.get("cursor")).slice(-2)).toEqual(["A", "B"]);
+  });
+
   it("getNextPage on the last page throws", async () => {
     server.reply({ status: 200, body: { data: [], pagination: { next_cursor: null, has_more: false } } });
     const page = await make().list(spec);

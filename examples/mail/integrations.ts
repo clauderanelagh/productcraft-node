@@ -6,7 +6,7 @@ const mail = new Mail();
 
 // integrations.delete: Disconnect an integration. Deletes the credential row.
 {
-  await mail.integrations.delete("provider");
+  await mail.integrations.delete("github");
 }
 
 // integrations.github.connect: Mint a GitHub OAuth state token and return the authorize URL.
@@ -16,7 +16,7 @@ const mail = new Mail();
 
 // integrations.github.repos.branches.list: List branches for the given repo.
 {
-  const result = await mail.integrations.github.repos.branches.list("owner", "repo");
+  const result = await mail.integrations.github.repos.branches.list("acme", "email-templates");
 }
 
 // integrations.github.repos.list: List repos visible to the connected GitHub account.
@@ -36,7 +36,7 @@ const mail = new Mail();
 
 // integrations.github.sync.retrieve: Poll a sync run's status.
 {
-  const syncStatus = await mail.integrations.github.sync.retrieve("sync");
+  const syncStatus = await mail.integrations.github.sync.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 }
 
 // integrations.list: List connected workspace integrations.
@@ -46,7 +46,7 @@ const mail = new Mail();
 
 // integrations.retrieve: Get a single integration detail with redacted credentials.
 {
-  const integrationDetail = await mail.integrations.retrieve("provider");
+  const integrationDetail = await mail.integrations.retrieve("github");
 }
 
 export {};

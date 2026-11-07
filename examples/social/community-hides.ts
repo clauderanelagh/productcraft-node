@@ -6,12 +6,12 @@ const social = new Social();
 
 // hides.create: Hide a post from the actor's feeds ("not interested"). Idempotent. A hard filter — the post drops out of home + discover for that actor only.
 {
-  const hideResult = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.create({ post_id: "bbbbbbbb-0000-0000-0000-000000000001" });
+  const hideResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.create({ post_id: "bbbbbbbb-0000-0000-0000-000000000001" });
 }
 
 // hides.delete: Un-hide a post. Idempotent — 204 either way.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.delete("src_actor", "post");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

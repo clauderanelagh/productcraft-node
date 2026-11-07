@@ -11,7 +11,7 @@ const mail = new Mail();
 
 // topics.delete: Delete a topic
 {
-  await mail.topics.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.topics.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // topics.list: List topics, newest first
@@ -24,12 +24,12 @@ const mail = new Mail();
 
 // topics.retrieve: Get a topic
 {
-  const topic = await mail.topics.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const topic = await mail.topics.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // topics.update: Update a topic
 {
-  const topic = await mail.topics.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "string" });
+  const topic = await mail.topics.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
 export {};

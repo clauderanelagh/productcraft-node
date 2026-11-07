@@ -21,7 +21,7 @@ export type { AuthErrorCode, AuthOptions } from "@productcraft/auth"; export typ
 export type { PlatformAuthErrorCode } from "@productcraft/platform-auth"; export type { SocialErrorCode } from "@productcraft/social";
 export type { TrawlErrorCode } from "@productcraft/trawl"; export type { WaitlistErrorCode } from "@productcraft/waitlist";
 export { APIConnectionError, APIError, APITimeoutError, APIUserAbortError, AuthenticationError, BadRequestError, ConfigurationError, ConflictError, IdempotencyKeyReuseError, InternalServerError, NotFoundError, PermissionDeniedError, ProductCraftError, RateLimitError, UnprocessableEntityError, WebhookVerificationError } from "@productcraft/core";
-export { PC_BASE_URL, verifyWebhook, type APIPromise, type ClientOptions, type Logger, type LogLevel, type Page, type PagePromise, type PCAuth, type PCClientConfig, type RequestOptions, type VerifyWebhookParams } from "@productcraft/core";
+export { PC_BASE_URL, signWebhook, verifyWebhook, type APIPromise, type ClientOptions, type Logger, type LogLevel, type Page, type PagePromise, type PCAuth, type PCClientConfig, type RequestOptions, type SignedWebhook, type SignWebhookParams, type VerifyWebhookParams } from "@productcraft/core";
 
 /** Per-product settings merged over the shared ones. Nested because a flat `auth` key would collide with the credential field. */
 export interface ProductCraftOverrides {

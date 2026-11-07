@@ -6,77 +6,84 @@ const auth = new Auth();
 
 // acceptInvite: Accept an EndUser invite by code
 {
-  const result = await auth.consumer("app").acceptInvite({ code: "inv_x7H2k3jLqXr", password: "CorrectHorseBatteryStaple" });
+  const result = await auth.consumer("my-app").acceptInvite({ code: "inv_x7H2k3jLqXr", password: "CorrectHorseBatteryStaple" });
 }
 
 // acceptTenantInvite: Accept a tenant invite by code
 {
-  const consumerToken = await auth.consumer("app").acceptTenantInvite({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU", password: "CorrectHorseBatteryStaple" });
+  const consumerToken = await auth.consumer("my-app").acceptTenantInvite({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU", password: "CorrectHorseBatteryStaple" });
 }
 
 // exchangeProviderCode: Exchange a `heimdall_code` (received on the web-flow callback redirect) for Auth access + refresh tokens. Single-use.
 {
-  const exchange = await auth.consumer("app").exchangeProviderCode({ code: "string" });
+  const exchange = await auth.consumer("my-app").exchangeProviderCode({ code: "hc_8f14e45fceea167a5a36dedd4bea2543" });
 }
 
 // logout: Revoke a refresh token
 {
-  await auth.consumer("app").logout({ refresh_token: "string" });
+  await auth.consumer("my-app").logout({
+    refresh_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJ0eXAiOiJyZWZyZXNoIn0.c2lnbmF0dXJl",
+  });
 }
 
 // refresh: Exchange a refresh token for a new access token
 {
-  const consumerToken = await auth.consumer("app").refresh({ refresh_token: "string" });
+  const consumerToken = await auth.consumer("my-app").refresh({
+    refresh_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJ0eXAiOiJyZWZyZXNoIn0.c2lnbmF0dXJl",
+  });
 }
 
 // requestPasswordReset: Mint a password-reset code (PAK-required)
 {
-  const consumerCodeIssue = await auth.consumer("app").requestPasswordReset({ email: "jane@example.com" });
+  const consumerCodeIssue = await auth.consumer("my-app").requestPasswordReset({ email: "jane@example.com" });
 }
 
 // requestVerification: Mint a contact-verification code (PAK-required)
 {
-  const consumerCodeIssue = await auth.consumer("app").requestVerification({ email: "jane@example.com" });
+  const consumerCodeIssue = await auth.consumer("my-app").requestVerification({ email: "jane@example.com" });
 }
 
 // resetPassword: Submit a reset code + new password
 {
-  await auth.consumer("app").resetPassword({ code: "123456", new_password: "string" });
+  await auth.consumer("my-app").resetPassword({ code: "123456", new_password: "a new long passphrase 42" });
 }
 
 // sendPasswordResetEmail: Mint + dispatch a password-reset email via Mail (PAK-required)
 {
-  const consumerCodeDispatch = await auth.consumer("app").sendPasswordResetEmail({ email: "jane@example.com" });
+  const consumerCodeDispatch = await auth.consumer("my-app").sendPasswordResetEmail({ email: "jane@example.com" });
 }
 
 // sendVerificationEmail: Mint + dispatch a verification email via Mail (PAK-required)
 {
-  const consumerCodeDispatch = await auth.consumer("app").sendVerificationEmail({ email: "jane@example.com" });
+  const consumerCodeDispatch = await auth.consumer("my-app").sendVerificationEmail({ email: "jane@example.com" });
 }
 
 // signin: Sign in an EndUser
 {
-  const result = await auth.consumer("app").signin({ identifier: "jane_doe", password: "string" });
+  const result = await auth.consumer("my-app").signin({ identifier: "jane_doe", password: "correct horse battery staple" });
 }
 
 // signinWithProvider: Sign in / sign up with a provider ID token (native flow)
 {
-  const result = await auth.consumer("app").signinWithProvider("provider", { id_token: "string", nonce: "string" });
+  const result = await auth.consumer("my-app").signinWithProvider("google", {
+    id_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl",
+    nonce: "n-0S6_WzA2Mj",
+  });
 }
 
 // signup: Sign up an EndUser
 {
-  const result = await auth.consumer("app").signup({ email: "jane@example.com", password: "CorrectHorseBatteryStaple", username: "john_doe" });
+  const result = await auth.consumer("my-app").signup({ email: "jane@example.com", password: "CorrectHorseBatteryStaple", username: "john_doe" });
 }
 
 // switchTenant: Switch the active tenant for this session
 {
-  const consumerToken = await auth.consumer("app").switchTenant({ tenant_id: "string" });
+  const consumerToken = await auth.consumer("my-app").switchTenant({ tenant_id: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 }
 
 // verifyEmail: Submit a verification code
 {
-  const consumerVerify = await auth.consumer("app").verifyEmail({ code: "123456" });
+  const consumerVerify = await auth.consumer("my-app").verifyEmail({ code: "123456" });
 }
 
 export {};

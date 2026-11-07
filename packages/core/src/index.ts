@@ -42,8 +42,11 @@ export {
 } from "./client.js";
 export {
   normalizeHeaders,
+  signWebhook,
   timingSafeEqual,
   verifyWebhook,
+  type SignedWebhook,
+  type SignWebhookParams,
   type VerifyWebhookParams,
   type WebhookHeaders,
   type WebhookPayload,

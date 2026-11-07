@@ -62,6 +62,7 @@ export function emitApiMd(model, cfg) {
       if (o.paginated) facts.push("Paginated: `for await` iterates every item; `await` gives one page");
       if (o.idempotent) facts.push("Idempotent: an `Idempotency-Key` is sent automatically and reused on retries");
       if (o.public) facts.push("Public: no API key, browser-safe");
+      if (o.credentials) facts.push(`Credential${o.credentials.optional ? " (optional)" : ""}: ${o.credentials.names.map((n) => `[\`${n}\`](#${n})`).join(" or ")}`);
       if (o.actor && o.scope?.actor) facts.push("Fills `actor_id` from `.as(actorId)`");
       if (o.poll) facts.push(`Polling: \`${o.resource}.poll(…)\` waits for \`${o.poll.field}\` ∈ ${o.poll.terminal.map((t) => `\`${t}\``).join(", ")}`);
       for (const f of facts) L.push(`- ${f}`);
@@ -77,6 +78,15 @@ export function emitApiMd(model, cfg) {
     if (node.unwrap) {
       L.push("### `" + cfg.clientVar + ".webhooks.unwrap({ payload, headers, secret? })`", "");
       L.push(`Verifies the signature and returns \`${cfg.className}.UnwrapWebhookEvent\`. Events: ${model.webhooks.map((h) => `\`${h.type}\``).join(", ")}, plus \`UnknownWebhookEvent\` for types added later.`, "");
+      L.push("### `" + cfg.clientVar + ".webhooks.sign({ payload, secret?, id?, timestamp? })`", "");
+      L.push("Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.", "");
+    }
+  }
+  if (model.securitySchemes) {
+    L.push("## Credentials", "", `Routes take different credentials; each method above says which. Every one is sent as \`Authorization: Bearer\`. A workspace API key is the client's \`apiKey\` (or \`PRODUCTCRAFT_API_KEY\`); pass any other as \`new ${cfg.className}({ auth: { type: "bearer", token } })\`. The wrong one answers 401.`, "");
+    for (const [name, scheme] of Object.entries(model.securitySchemes)) {
+      // GitHub and npm anchor the heading as `#<name>`, which each method's Credential line links to.
+      L.push(`### \`${name}\``, "", md(scheme.description ?? ""), "");
     }
   }
   if (model.errorCode) {
@@ -152,6 +162,9 @@ export function emitReadmeRegion(model, cfg) {
       'app.post("/webhooks", express.raw({ type: "application/json" }), async (req, res) => {', `  const event = await ${v}.webhooks.unwrap({ payload: req.body, headers: req.headers });`, "  console.log(event.type);", "  res.sendStatus(204);", "});", "```", "",
       "Hono:", "", "```ts", 'import { Hono } from "hono";', `import { ${C} } from "${pkg}";`, `const ${v} = new ${C}();`, "const app = new Hono();",
       'app.post("/webhooks", async (c) => {', `  const event = await ${v}.webhooks.unwrap({ payload: await c.req.text(), headers: c.req.raw.headers });`, "  console.log(event.type);", "  return c.body(null, 204);", "});", "```", "");
+    L.push("Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, so a test needs no live delivery and no hand-rolled HMAC.", "", "```ts", `import { ${C} } from "${pkg}";`, `const ${v} = new ${C}({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });`,
+      `const { payload, headers } = await ${v}.webhooks.sign({ payload: { id: "evt_test_1", type: ${JSON.stringify(t.type)}, created_at: new Date().toISOString(), data: {} } });`,
+      `const event = await ${v}.webhooks.unwrap({ payload, headers });`, "console.log(event.type);", "```", "");
   }
   if (firstRetrieve) {
     L.push("## Raw responses", "", "Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`). `.withResponse()` adds the `Response` and parsed rate-limit headers.", "", "```ts", ...ctor,

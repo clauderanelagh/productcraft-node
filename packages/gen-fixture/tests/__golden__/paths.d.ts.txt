@@ -829,7 +829,10 @@ export interface operations {
             path: {
                 /** @description Id of the workspace. */
                 workspace_id: string;
-                /** @description Widget id. */
+                /**
+                 * @description Widget id.
+                 * @example wid_fixture_1
+                 */
                 id: string;
             };
             cookie?: never;

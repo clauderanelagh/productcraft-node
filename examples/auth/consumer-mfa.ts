@@ -6,32 +6,41 @@ const auth = new Auth();
 
 // mfa.enroll: Begin MFA enrolment against an enrolment token
 {
-  const startEnrollment = await auth.consumer("app").mfa.enroll({ mfa_token: "string", type: "totp" });
+  const startEnrollment = await auth.consumer("my-app").mfa.enroll({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", type: "totp" });
 }
 
 // mfa.recover: Complete an MFA challenge with a recovery code
 {
-  const consumerToken = await auth.consumer("app").mfa.recover({ mfa_token: "string", recovery_code: "1a2b-3c4d-5e6f-7890" });
+  const consumerToken = await auth.consumer("my-app").mfa.recover({
+    mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+    recovery_code: "1a2b-3c4d-5e6f-7890",
+  });
 }
 
 // mfa.sendCode: Email a sign-in code for an email MFA factor
 {
-  const consumerMfaSendCode = await auth.consumer("app").mfa.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+  const consumerMfaSendCode = await auth.consumer("my-app").mfa.sendCode({
+    factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
+    mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+  });
 }
 
 // mfa.verify: Complete an MFA challenge with a TOTP or emailed code
 {
-  const consumerToken = await auth.consumer("app").mfa.verify({ mfa_token: "string" });
+  const consumerToken = await auth.consumer("my-app").mfa.verify({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 }
 
 // mfa.verifyEnrollment: Confirm the enrolled factor and receive the withheld session
 {
-  const consumerMfaEnrollVerify = await auth.consumer("app").mfa.verifyEnrollment({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+  const consumerMfaEnrollVerify = await auth.consumer("my-app").mfa.verifyEnrollment({
+    factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
+    mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+  });
 }
 
 // mfa.webauthn.options: Get passkey assertion options for an open MFA challenge
 {
-  const consumerWebauthnOptions = await auth.consumer("app").mfa.webauthn.options({ mfa_token: "string" });
+  const consumerWebauthnOptions = await auth.consumer("my-app").mfa.webauthn.options({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 }
 
 export {};

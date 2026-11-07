@@ -11,7 +11,7 @@ const mail = new Mail();
 
 // mailboxes.delete: Soft-delete a mailbox: its status becomes `disabled` and it stops accepting new mail; existing messages are kept until retention purges them, and `PATCH` with `status: active` restores it. A deleted mailbox no longer blocks deleting its domain, and deleting the domain erases it and its remaining mail.
 {
-  await mail.mailboxes.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.mailboxes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // mailboxes.list: List mailboxes in this workspace. 20 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true.
@@ -24,47 +24,47 @@ const mail = new Mail();
 
 // mailboxes.messages.attachments.retrieve: Stream a single attachment by its position. Gated by `mail.message.body.read`: an attachment is message content, and /:mid already names it without handing over the bytes.
 {
-  const response = await mail.mailboxes.messages.attachments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "position");
+  const response = await mail.mailboxes.messages.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
   const text = await response.text();
 }
 
 // mailboxes.messages.delete: Soft-delete a message
 {
-  await mail.mailboxes.messages.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await mail.mailboxes.messages.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // mailboxes.messages.list: List messages in a mailbox
 {
-  for await (const message of mail.mailboxes.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const message of mail.mailboxes.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(message);
   }
-  const page = await mail.mailboxes.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await mail.mailboxes.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // mailboxes.messages.raw: Stream the raw RFC5322 .eml for a message. Gated by `mail.message.body.read` (admin+ by default; not granted to plain members) — the outbound lane's /messages/:id/body action.
 {
-  const response = await mail.mailboxes.messages.raw("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const response = await mail.mailboxes.messages.raw("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
   const text = await response.text();
 }
 
 // mailboxes.messages.read: Mark a message as read
 {
-  await mail.mailboxes.messages.read("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await mail.mailboxes.messages.read("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // mailboxes.messages.retrieve: Get a single message (metadata + attachment manifest; `body_preview` is null without `mail.message.body.read`). Use /:mid/raw for content.
 {
-  const messageDetail = await mail.mailboxes.messages.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const messageDetail = await mail.mailboxes.messages.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // mailboxes.retrieve: Get one mailbox by id.
 {
-  const mailbox = await mail.mailboxes.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const mailbox = await mail.mailboxes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // mailboxes.update: Update mailbox display name, retention, or status. Status transitions are restricted (active ↔ suspended; archived is terminal).
 {
-  const mailbox = await mail.mailboxes.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { display_name: "string" });
+  const mailbox = await mail.mailboxes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "string" });
 }
 
 export {};

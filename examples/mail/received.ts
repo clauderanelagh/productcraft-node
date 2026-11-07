@@ -6,13 +6,13 @@ const mail = new Mail();
 
 // received.attachments.retrieve: Download one attachment of a received email
 {
-  const response = await mail.received.attachments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "position");
+  const response = await mail.received.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
   const text = await response.text();
 }
 
 // received.delete: Delete a received email
 {
-  await mail.received.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.received.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // received.export: Stream the filtered received email as CSV. Same filters as GET /received. Rate-limited 1 concurrent + 5/hour per workspace.
@@ -31,18 +31,18 @@ const mail = new Mail();
 
 // received.raw: Download the raw RFC 5322 message (.eml)
 {
-  const response = await mail.received.raw("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const response = await mail.received.raw("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
   const text = await response.text();
 }
 
 // received.read: Mark a received email as read
 {
-  await mail.received.read("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.received.read("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // received.retrieve: Get one received email
 {
-  const receivedEmailDetail = await mail.received.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const receivedEmailDetail = await mail.received.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

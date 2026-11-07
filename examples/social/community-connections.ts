@@ -6,12 +6,12 @@ const social = new Social();
 
 // connections.accept: Accept `src_actor_id`'s connection request as `dst_actor_id`: approves the follow request AND creates the reverse follow edge, so both directions exist afterwards. Convergent on retry — if the request was already consumed by a partially-completed accept (src already follows dst) the reverse edge is still ensured.
 {
-  const connectionResult = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.accept("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const connectionResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.accept("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // connections.create: Request a connection (mutual follow). Runs the standard follow path: a private destination yields `pending` (accept via the accept route); a public destination connects immediately — the reverse edge is created in the same call. Idempotent; refused on blocks (409) and self-connection (422) exactly like a follow.
 {
-  const connectionResult = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.create({
+  const connectionResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.create({
     dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002",
     src_actor_id: "aaaaaaaa-0000-0000-0000-000000000001",
   });
@@ -19,7 +19,7 @@ const social = new Social();
 
 // connections.delete: Sever a connection COMPLETELY: deletes the follow edges in both directions and withdraws any pending requests either way. There is no one-sided removal — this is the connections invariant. 204 whether or not anything existed.
 {
-  await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

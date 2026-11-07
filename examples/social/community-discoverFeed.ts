@@ -6,10 +6,10 @@ const social = new Social();
 
 // discoverFeed.list: Discover / explore feed (task 019). Ranked surface over every public post in the community — Instagram Explore / X "For You without follow constraint". Optional `actor_id` filters the viewer's blocks and applies a small self-boost; without one, the result is the global discovery slice.
 {
-  for await (const discoverFeed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list()) {
+  for await (const discoverFeed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list()) {
     console.log(discoverFeed);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list({}, { timeout: 5_000 });
 }
 
 export {};

@@ -144,6 +144,16 @@ app.post("/webhooks", async (c) => {
 });
 ```
 
+Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, so a test needs no live delivery and no hand-rolled HMAC.
+
+```ts
+import { Fixture } from "@productcraft/gen-fixture";
+const fixture = new Fixture({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });
+const { payload, headers } = await fixture.webhooks.sign({ payload: { id: "evt_test_1", type: "widget.archived", created_at: new Date().toISOString(), data: {} } });
+const event = await fixture.webhooks.unwrap({ payload, headers });
+console.log(event.type);
+```
+
 ## Raw responses
 
 Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`). `.withResponse()` adds the `Response` and parsed rate-limit headers.

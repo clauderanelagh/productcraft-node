@@ -15,7 +15,7 @@ const auth = new Auth();
 
 // apps.delete: Delete an app permanently
 {
-  await auth.apps.delete("app");
+  await auth.apps.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // apps.list: List apps in workspaces the caller is a member of. Pass `workspace_id` to scope the result to a single workspace — required from the per-workspace console page so cross-tenant memberships do not leak.
@@ -28,12 +28,12 @@ const auth = new Auth();
 
 // apps.retrieve: Get app details
 {
-  const app = await auth.apps.retrieve("app");
+  const app = await auth.apps.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // apps.update: Update app display name, slug, metadata, and retention settings
 {
-  const app = await auth.apps.update("app", { audit_retention_days: 365 });
+  const app = await auth.apps.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { audit_retention_days: 365 });
 }
 
 export {};

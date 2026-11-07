@@ -214,3 +214,70 @@ export async function verifyWebhook<T = unknown>(params: VerifyWebhookParams): P
     throw new WebhookVerificationError("Webhook payload is not valid JSON.", { cause });
   }
 }
+
+export interface SignWebhookParams {
+  /**
+   * The event to sign: a string or bytes are signed as-is; any other value is
+   * `JSON.stringify`-ed first (the returned `payload` is that exact string).
+   */
+  payload: WebhookPayload | Record<string, unknown> | unknown[];
+  /** The endpoint's signing secret (`whsec_…`, or a plain pre-Standard-Webhooks secret). */
+  secret: string;
+  /** `webhook-id`. Default: a random `msg_…` id. */
+  id?: string;
+  /** Unix seconds for `webhook-timestamp`. Default: now. */
+  timestamp?: number;
+}
+
+export interface SignedWebhook {
+  /** The exact body that was signed: send or verify this, byte for byte. */
+  payload: string;
+  /** `webhook-id`, `webhook-timestamp`, `webhook-signature` (and `content-type`). */
+  headers: Record<string, string>;
+}
+
+/**
+ * Sign a payload the way ProductCraft signs webhooks (Standard Webhooks,
+ * `v1,<base64 HMAC-SHA256>` over `<id>.<timestamp>.<body>`), for testing your
+ * handler without a live delivery. `verifyWebhook` and `webhooks.unwrap`
+ * accept the result.
+ *
+ * @example
+ * const { payload, headers } = await signWebhook({ payload: { id: "evt_1", type: "user.signup", data: {} }, secret });
+ * const event = await verifyWebhook({ payload, headers, secret });
+ */
+export async function signWebhook(params: SignWebhookParams): Promise<SignedWebhook> {
+  const { secret } = params;
+  if (typeof secret !== "string" || secret === "") throw new WebhookVerificationError("No webhook secret was given.");
+  const raw = params.payload;
+  const payload =
+    typeof raw === "string"
+      ? raw
+      : raw instanceof Uint8Array || raw instanceof ArrayBuffer
+        ? decoder.decode(raw)
+        : JSON.stringify(raw);
+  const id = params.id ?? `msg_${randomHex(16)}`;
+  const timestamp = Math.floor(params.timestamp ?? Date.now() / 1000);
+  const mac = await hmacSha256(standardKey(secret), encoder.encode(`${id}.${timestamp}.${payload}`));
+  return {
+    payload,
+    headers: {
+      "content-type": "application/json",
+      "webhook-id": id,
+      "webhook-timestamp": String(timestamp),
+      "webhook-signature": `v1,${bytesToBase64(mac)}`,
+    },
+  };
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
+function randomHex(bytes: number): string {
+  const buf = new Uint8Array(bytes);
+  globalThis.crypto.getRandomValues(buf);
+  return [...buf].map((b) => b.toString(16).padStart(2, "0")).join("");
+}

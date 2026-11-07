@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // webauthnConfig.retrieve: Get the per-app passkey (WebAuthn) relying-party settings.
 {
-  const webauthnConfig = await auth.admin.app("app").webauthnConfig.retrieve();
+  const webauthnConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webauthnConfig.retrieve();
 }
 
 // webauthnConfig.update: Set the per-app passkey (WebAuthn) relying-party settings.
 {
-  const webauthnConfig = await auth.admin.app("app").webauthnConfig.update({ enabled: true, rp_id: "example.com" });
+  const webauthnConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webauthnConfig.update({ enabled: true, rp_id: "example.com" });
 }
 
 export {};

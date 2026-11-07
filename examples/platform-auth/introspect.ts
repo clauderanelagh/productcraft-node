@@ -16,7 +16,7 @@ const platform = new PlatformAuth();
 
 // introspect.workspaces.retrieve: Introspect caller's membership + effective policy + enabled services in a workspace
 {
-  const introspectWorkspace = await platform.introspect.workspaces.retrieve("workspace");
+  const introspectWorkspace = await platform.introspect.workspaces.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

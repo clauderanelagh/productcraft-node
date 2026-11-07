@@ -6,37 +6,37 @@ const auth = new Auth();
 
 // auditSink.disconnect: Remove the audit sink. Shipping stops immediately; the audit log itself is untouched.
 {
-  await auth.admin.app("app").auditSink.disconnect();
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.disconnect();
 }
 
 // auditSink.replace: Create or replace the audit sink. Returns a freshly generated signing secret exactly once.
 {
-  const auditSinkWithSecret = await auth.admin.app("app").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
+  const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
 }
 
 // auditSink.retrieve: Current audit sink for this app, or 404 when none is configured. Never returns the signing secret — only its last-4 hint.
 {
-  const auditSink = await auth.admin.app("app").auditSink.retrieve();
+  const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.retrieve();
 }
 
 // auditSink.rotateSecret: Issue a new signing secret, returned exactly once.
 {
-  const auditSinkWithSecret = await auth.admin.app("app").auditSink.rotateSecret();
+  const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
 }
 
 // auditSink.setupStatus: Get the audit export checklist: destination, receiver test and delivery.
 {
-  const setupStatus = await auth.admin.app("app").auditSink.setupStatus();
+  const setupStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.setupStatus();
 }
 
 // auditSink.test: Send a test batch to the receiver now and report what it answered.
 {
-  const auditSinkTestResult = await auth.admin.app("app").auditSink.test();
+  const auditSinkTestResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.test();
 }
 
 // auditSink.update: Change the address or switch export on or off, keeping the signing secret.
 {
-  const auditSink = await auth.admin.app("app").auditSink.update({ enabled: true });
+  const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.update({ enabled: true });
 }
 
 export {};

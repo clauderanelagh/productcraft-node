@@ -520,6 +520,9 @@
         "security": [
           {
             "bearer": []
+          },
+          {
+            "end_user_token": []
           }
         ],
         "operationId": "WidgetController_get",
@@ -547,7 +550,8 @@
               "type": "string",
               "format": "uuid",
               "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
-            }
+            },
+            "example": "wid_fixture_1"
           }
         ],
         "responses": {
@@ -2543,7 +2547,14 @@
     "securitySchemes": {
       "bearer": {
         "type": "http",
-        "scheme": "bearer"
+        "scheme": "bearer",
+        "description": "A workspace API key."
+      },
+      "end_user_token": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "An end user's access token."
       }
     }
   }

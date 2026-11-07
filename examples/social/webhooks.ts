@@ -11,7 +11,7 @@ const social = new Social();
 
 // webhooks.endpoints.delete: Delete a webhook endpoint.
 {
-  await social.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await social.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.endpoints.list: List webhook endpoints, oldest first.
@@ -23,22 +23,22 @@ const social = new Social();
 
 // webhooks.endpoints.retrieve: Get one webhook endpoint (without its secret).
 {
-  const webhookEndpoint = await social.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const webhookEndpoint = await social.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await social.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+  const webhookEndpointWithSecret = await social.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
 {
-  const webhookDeliveryAttempt = await social.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "post.created" });
+  const webhookDeliveryAttempt = await social.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 }
 
 // webhooks.endpoints.update: Change a webhook endpoint: URL, description, events, on/off.
 {
-  const webhookEndpoint = await social.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+  const webhookEndpoint = await social.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 }
 
 // webhooks.events.list: List webhook events, newest first (kept for 30 days).
@@ -51,12 +51,12 @@ const social = new Social();
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await social.webhooks.events.replay("event");
+  const replayWebhookEvent = await social.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.
 {
-  const webhookEventDetail = await social.webhooks.events.retrieve("event");
+  const webhookEventDetail = await social.webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.

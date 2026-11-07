@@ -6,7 +6,7 @@ const platform = new PlatformAuth();
 
 // sessions.delete: Revoke one of the caller's own sessions. Takes effect immediately — the refresh token stops working straight away, not at the end of its window.
 {
-  const revokeSession = await platform.sessions.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const revokeSession = await platform.sessions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // sessions.list: List active sessions

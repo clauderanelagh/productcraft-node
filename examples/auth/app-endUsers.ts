@@ -6,129 +6,129 @@ const auth = new Auth();
 
 // endUsers.bulkDelete: Bulk-delete accounts across a selection.
 {
-  const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkDelete({ selection: { mode: "ids" } });
+  const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkDelete({ selection: { mode: "ids" } });
 }
 
 // endUsers.bulkRevokeSessions: Bulk-revoke sessions across a selection.
 {
-  const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkRevokeSessions({ selection: { mode: "ids" } });
+  const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkRevokeSessions({ selection: { mode: "ids" } });
 }
 
 // endUsers.bulkUpdateRole: Bulk-assign a role across a selection.
 {
-  const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkUpdateRole({ role_name: "string", selection: { mode: "ids" } });
+  const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkUpdateRole({ role_name: "member", selection: { mode: "ids" } });
 }
 
 // endUsers.bulkUpdateStatus: Bulk-update status across a selection.
 {
-  const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkUpdateStatus({ selection: { mode: "ids" }, status: "suspended" });
+  const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkUpdateStatus({ selection: { mode: "ids" }, status: "suspended" });
 }
 
 // endUsers.contacts.create: Add a contact for an end-user (unverified).
 {
-  const accountContact = await auth.admin.app("app").endUsers.contacts.create("user", { type: "email", value: "string" });
+  const accountContact = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "email", value: "ada@example.com" });
 }
 
 // endUsers.contacts.delete: Delete a contact from an end-user.
 {
-  await auth.admin.app("app").endUsers.contacts.delete("user", "contact");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.contacts.list: List an end-user's contacts.
 {
-  const accountContactList = await auth.admin.app("app").endUsers.contacts.list("user");
+  const accountContactList = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.contacts.promote: Promote a verified contact to primary.
 {
-  await auth.admin.app("app").endUsers.contacts.promote("user", "contact");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.promote("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.contacts.resendVerification: Reissue a verification code for a contact.
 {
-  const issuedVerificationCode = await auth.admin.app("app").endUsers.contacts.resendVerification("user", "contact");
+  const issuedVerificationCode = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.resendVerification("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.delete: Delete an end-user permanently.
 {
-  await auth.admin.app("app").endUsers.delete("user");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.export: Stream this app's end-user directory as NDJSON or CSV, applying the list's `?status=` / `?search=` / `?provider=` filters. Audited as `users.exported`.
 {
-  const response = await auth.admin.app("app").endUsers.export();
+  const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.export();
   const text = await response.text();
 }
 
 // endUsers.imports.create: Queue a bulk end-user import. Body is NDJSON — one JSON object per line. Returns 202 with a job id; poll `GET .../import/:jobId` for progress and the per-row error report.
 {
-  const importJob = await auth.admin.app("app").endUsers.imports.create();
+  const importJob = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.imports.create();
 }
 
 // endUsers.imports.retrieve: Import job status and per-row error report. Never returns the uploaded file.
 {
-  const importJob = await auth.admin.app("app").endUsers.imports.retrieve("job");
+  const importJob = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.imports.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.invites.create: Pre-allocate an EndUser invite. Dispatches an invitation email via the workspace's Mail sender.
 {
-  const endUserInvite = await auth.admin.app("app").endUsers.invites.create({ email: "alice@example.com" });
+  const endUserInvite = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.create({ email: "alice@example.com" });
 }
 
 // endUsers.invites.delete: Revoke an EndUser invite (soft-delete).
 {
-  await auth.admin.app("app").endUsers.invites.delete("invite");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.invites.list: List EndUser invites for this app, newest first. Filter by `?status=`.
 {
-  for await (const invite of auth.admin.app("app").endUsers.invites.list()) {
+  for await (const invite of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.list()) {
     console.log(invite);
   }
-  const page = await auth.admin.app("app").endUsers.invites.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.list({}, { timeout: 5_000 });
 }
 
 // endUsers.list: List end-users in this app (cursor-paginated).
 {
-  for await (const endUser of auth.admin.app("app").endUsers.list()) {
+  for await (const endUser of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.list()) {
     console.log(endUser);
   }
-  const page = await auth.admin.app("app").endUsers.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.list({}, { timeout: 5_000 });
 }
 
 // endUsers.mfa.requireReenrollment: Force an end-user back through MFA enrolment
 {
-  const requireMfaReenrollment = await auth.admin.app("app").endUsers.mfa.requireReenrollment("user");
+  const requireMfaReenrollment = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.mfa.requireReenrollment("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.resendVerification: Resend verification to the primary email contact.
 {
-  const issuedVerificationCode = await auth.admin.app("app").endUsers.resendVerification("user");
+  const issuedVerificationCode = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.resendVerification("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.retrieve: Get one end-user.
 {
-  const endUserSummary = await auth.admin.app("app").endUsers.retrieve("user");
+  const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.sessions.revokeAll: Revoke every active session for an end-user.
 {
-  await auth.admin.app("app").endUsers.sessions.revokeAll("user");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.sessions.revokeAll("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // endUsers.update: Update end-user display name, primary email, or metadata keys (merged).
 {
-  const endUserSummary = await auth.admin.app("app").endUsers.update("user", { display_name: "string" });
+  const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Ada Lovelace" });
 }
 
 // endUsers.updateRole: Assign an end-user a role.
 {
-  const endUserRoleAssignment = await auth.admin.app("app").endUsers.updateRole("user", { role_name: "admin" });
+  const endUserRoleAssignment = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.updateRole("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 }
 
 // endUsers.updateStatus: Change end-user status (active / suspended / deactivated).
 {
-  const endUserSummary = await auth.admin.app("app").endUsers.updateStatus("user", { status: "suspended" });
+  const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "suspended" });
 }
 
 export {};

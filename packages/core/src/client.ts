@@ -22,7 +22,14 @@ import {
 import { authMiddleware, PC_BASE_URL, readEnv, resolveAuth, type PCAuth } from "./legacy.js";
 import { Page, PagePromise, type PageResponse } from "./pagination.js";
 import { CORE_VERSION } from "./version.js";
-import { verifyWebhook, type WebhookHeaders, type WebhookPayload } from "./webhooks.js";
+import {
+  signWebhook,
+  verifyWebhook,
+  type SignedWebhook,
+  type SignWebhookParams,
+  type WebhookHeaders,
+  type WebhookPayload,
+} from "./webhooks.js";
 
 export type HTTPMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 export type LogLevel = "off" | "warn" | "debug";
@@ -280,15 +287,18 @@ export class APIClient {
 
   /** A paginated list call. `await` for one page, `for await` for every item. */
   list<Item>(spec: RequestSpec, options: RequestOptions = {}): PagePromise<Item> {
-    const at = (cursor?: string): PagePromise<Item> => {
+    // `used`: every cursor sent on the way to this page, so a repeated
+    // `next_cursor` (an API that ignores the cursor) stops the walk.
+    const at = (cursor: string | undefined, used: readonly string[]): PagePromise<Item> => {
       const pageSpec: RequestSpec = cursor === undefined ? spec : { ...spec, query: { ...spec.query, cursor } };
       return new PagePromise<Item>(this.#send(pageSpec, options), async (raw) => {
         const body = await this.#parseBody<PageResponse<Item>>(pageSpec, raw);
-        const page = new Page<Item>(body as PageResponse<Item>, (next) => at(next));
+        const page = new Page<Item>(body as PageResponse<Item>, (next) => at(next, [...used, next]), used);
         return attachLastResponse(page, this.#meta(raw));
       });
     };
-    return at();
+    const first = spec.query?.cursor;
+    return at(undefined, typeof first === "string" && first !== "" ? [first] : []);
   }
 
   /** Retrieve repeatedly until `config.field` reaches a terminal value. */
@@ -340,6 +350,21 @@ export class APIClient {
       );
     }
     return verifyWebhook<T>({ ...params, secret });
+  }
+
+  /** Sign a test payload with `params.secret`, else `webhookSecret`, else `envVar` (`webhooks.sign`). */
+  async signWebhook(
+    params: Omit<SignWebhookParams, "secret"> & { secret?: string },
+    envVar?: string,
+  ): Promise<SignedWebhook> {
+    const fallback = Array.isArray(this.webhookSecret) ? this.webhookSecret[0] : this.webhookSecret;
+    const secret = params.secret ?? (fallback as string | undefined) ?? (envVar ? readEnv(envVar) : undefined);
+    if (!secret) {
+      throw new ConfigurationError(
+        `No webhook secret: pass { secret }, set webhookSecret on the client${envVar ? ` or ${envVar}` : ""}.`,
+      );
+    }
+    return signWebhook({ ...params, secret });
   }
 
   #meta(raw: RawResult): LastResponse {
