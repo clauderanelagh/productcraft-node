@@ -19,16 +19,10 @@
  * out of the box — `jose.jwtVerify(token, scope.jwks.getKey, ...)` works.
  */
 
-import {
-  createRemoteJWKSet,
-  customFetch,
-  errors as joseErrors,
-  type CryptoKey,
-  type JWTHeaderParameters,
-  type FlattenedJWSInput,
-} from "jose";
+import { createRemoteJWKSet, customFetch, errors as joseErrors } from "jose";
 
 import { JwksFetchError, JwksKeyNotFoundError } from "./errors.js";
+import type { CryptoKey, FlattenedJWSInput, JWTHeaderParameters } from "./jose-types.js";
 
 export interface JwksCacheOptions {
   url: URL;

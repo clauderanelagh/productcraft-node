@@ -41,8 +41,10 @@ for (const dir of readdirSync(join(root, "packages"))) {
   if (!entry?.import || !entry?.require) continue;
   await check(`${pkg.name}: ESM and CJS builds load with the same exports`, async () => {
     const base = join(root, "packages", dir);
-    const esm = await import(pathToFileURL(join(base, entry.import)).href);
-    const cjs = require(join(base, entry.require));
+    // Nested conditions: { import: { types, default }, require: { types, default } }.
+    const target = (c) => (typeof c === "string" ? c : c.default);
+    const esm = await import(pathToFileURL(join(base, target(entry.import))).href);
+    const cjs = require(join(base, target(entry.require)));
     const names = (m) => Object.keys(m).filter((k) => k !== "default" && k !== "__esModule").sort();
     assert.ok(names(esm).length > 0, "ESM build exports nothing");
     assert.deepEqual(names(cjs), names(esm));

@@ -77,7 +77,8 @@ for (const dir of readdirSync(join(ROOT, "packages")).sort()) {
   if (!existsSync(pj)) continue;
   const pkg = JSON.parse(readFileSync(pj, "utf8"));
   for (const [sub, target] of Object.entries(pkg.exports ?? {})) {
-    const types = typeof target === "object" ? target.types : undefined;
+    // The ESM declarations: `import.types` (nested conditions), or a flat `types`.
+    const types = typeof target === "object" ? (target.import?.types ?? target.types) : undefined;
     if (!types) continue;
     const abs = join(ROOT, "packages", dir, types);
     if (!existsSync(abs)) {
