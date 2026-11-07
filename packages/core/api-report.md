@@ -117,6 +117,7 @@ export interface ClientOptions {
     apiKey?: string;
     auth?: PCAuth;
     baseUrl?: string;
+    credentialFromEnv?: boolean;
     dangerouslyAllowBrowser?: boolean;
     defaultHeaders?: Record<string, string>;
     fetch?: typeof fetch;

@@ -15,7 +15,7 @@ The products shipped stable in 004-008. This task publishes the rest as stable m
 
 ## Requirements
 
-- Changesets: `major` for auth, auth-passport, core and productcraft. Version Packages PR green and merged; every version confirmed on npm with `npm view` and the `latest` dist-tag.
+- Changesets: `major` for core and productcraft. Auth and auth-passport already have theirs (`.changeset/auth-1-0-generated.md`, from 009): until this task, the Version Packages PR carries auth 1.0.0 and is held red by the ci.yml step "Auth 1.x stays on `next` until tasks/012-stable-release.md is done" (it keys on this file existing; deleting it here lifts the gate). Earlier spec-refresh patches wait in that same PR. Version Packages PR green and merged; every version confirmed on npm with `npm view` and the `latest` dist-tag.
 - Clean-install ESM and CJS smoke of each published package from a scratch dir under `/mnt/HC_Volume_105482467/work/`, on Node 20 and 22.
 - Changeset texts link each migration guide.
 - Root README rewritten around the new surface with links to each package, `api.md` and `docs/sdk-standard.md` (absolute links; relative ones 404 on npmjs.com).

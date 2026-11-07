@@ -14,7 +14,7 @@ interface Captured {
 
 function fakeFetch(): { fetch: typeof fetch; calls: Captured[] } {
   const calls: Captured[] = [];
-  const fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+  const fetch: typeof globalThis.fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
     const url = input instanceof Request ? input.url : input.toString();
     const headers: Record<string, string> = {};
     new Headers(
@@ -23,7 +23,7 @@ function fakeFetch(): { fetch: typeof fetch; calls: Captured[] } {
     ).forEach((v, k) => (headers[k] = v));
     calls.push({ url, headers });
     return new Response("{}", { status: 200, headers: { "content-type": "application/json" } });
-  }) as unknown as typeof fetch;
+  }) as unknown as typeof globalThis.fetch;
   return { fetch, calls };
 }
 
@@ -122,5 +122,15 @@ describe("Auth env fallback", () => {
     await auth.apps.list();
     expect(ff.calls[0]!.headers.authorization).toBeUndefined();
     expect(String(consumerError)).toMatch(/app slug/);
+  });
+
+  it("1.0 names: consumer(slug).signin and admin.app(id) follow the same credential rules", async () => {
+    const ff = fakeFetch();
+    const auth = new Auth({ baseUrl: BASE, fetch: ff.fetch });
+    await auth.consumer("my-app").signin({ identifier: "alice", password: "pw" });
+    await auth.consumer("my-app").me.retrieve();
+    await auth.admin.app("app_1").endUsers.list();
+    expect(ff.calls.map((c) => c.url)).toEqual([`${BASE}/my-app/v1/auth/signin`, `${BASE}/my-app/v1/me`, `${BASE}/v1/apps/app_1/end-users`]);
+    expect(ff.calls.map((c) => c.headers.authorization)).toEqual([undefined, undefined, "Bearer pcft_live_env"]);
   });
 });

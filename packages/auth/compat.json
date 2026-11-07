@@ -1,0 +1,625 @@
+{
+  "$comment": "Frozen map from every public @productcraft/auth 0.6.x and 0.8.0 name to the operationId it calls (or the hand-written code that keeps it). scripts/gen-sdk.mjs generates a deprecated alias for each name the generator does not already produce, and _generated/compat.ts for the type names. The route snapshots of both published versions are in tests/compat/; tests/compat.test.ts checks every name. Delete in 2.0.",
+  "versions": [
+    "0.6.0",
+    "0.8.0"
+  ],
+  "methods": {
+    "root": {
+      "app": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "Auth.app (alias of admin.app)"
+      },
+      "apps.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_createApp"
+      },
+      "apps.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_listMyApps"
+      },
+      "consumer": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "AuthBase.consumer"
+      },
+      "stats.get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "StatsController_getMyStats"
+      }
+    },
+    "app": {
+      "apiKeys.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ApiKeyController_createApiKey"
+      },
+      "apiKeys.delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ApiKeyController_deleteApiKey"
+      },
+      "apiKeys.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ApiKeyController_listApiKeys"
+      },
+      "appId": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "generated scope getter (SURFACES expose)"
+      },
+      "auditLogs.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppAuditController_getAuditLogs"
+      },
+      "authConfig.get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AuthConfigController_getConfig"
+      },
+      "authConfig.update": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AuthConfigController_updateConfig"
+      },
+      "credentials.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_createClient"
+      },
+      "credentials.delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_deleteClient"
+      },
+      "credentials.get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_getClient"
+      },
+      "credentials.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_listClients"
+      },
+      "credentials.rotateSecret": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_rotateSecret"
+      },
+      "credentials.setScopes": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_setScopes"
+      },
+      "credentials.update": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "M2mController_updateClient"
+      },
+      "delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_deleteApp"
+      },
+      "endUsers.delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_deleteEndUser"
+      },
+      "endUsers.get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_getEndUser"
+      },
+      "endUsers.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_listEndUsers"
+      },
+      "endUsers.revokeAllSessions": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_revokeAllSessions"
+      },
+      "endUsers.update": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_updateEndUser"
+      },
+      "endUsers.updateRole": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_updateRole"
+      },
+      "endUsers.updateStatus": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserController_updateStatus"
+      },
+      "get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_getApp"
+      },
+      "invites.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserInviteController_create"
+      },
+      "invites.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserInviteController_list"
+      },
+      "invites.revoke": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "EndUserInviteController_revoke"
+      },
+      "members.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_listMembers"
+      },
+      "members.remove": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_removeMember"
+      },
+      "permissions.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "PermissionController_createPermission"
+      },
+      "permissions.delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "PermissionController_deletePermission"
+      },
+      "permissions.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "PermissionController_listPermissions"
+      },
+      "roles.assign": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_assignRole"
+      },
+      "roles.create": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_createRole"
+      },
+      "roles.delete": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_deleteRole"
+      },
+      "roles.get": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_getRole"
+      },
+      "roles.list": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_listRoles"
+      },
+      "roles.listPermissions": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_listPermissions"
+      },
+      "roles.setPermissions": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_setPermissions"
+      },
+      "roles.update": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "RoleController_updateRole"
+      },
+      "update": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_updateApp"
+      },
+      "updateStatus": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "AppController_updateAppStatus"
+      }
+    },
+    "consumer": {
+      "acceptedIssuers": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.acceptedIssuers"
+      },
+      "appSlug": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.appSlug"
+      },
+      "auth.acceptInvite": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_acceptInvite"
+      },
+      "auth.logout": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_logout"
+      },
+      "auth.refresh": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_refresh"
+      },
+      "auth.requestReset": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_requestPasswordReset"
+      },
+      "auth.requestVerification": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_requestVerification"
+      },
+      "auth.resetPassword": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_resetPassword"
+      },
+      "auth.sendPasswordResetEmail": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_sendPasswordResetEmail"
+      },
+      "auth.sendVerificationEmail": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_sendVerificationEmail"
+      },
+      "auth.signin": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_signin"
+      },
+      "auth.signinWithProvider": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerIdpController_nativeSignIn",
+        "args": "object"
+      },
+      "auth.signup": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_signup"
+      },
+      "auth.verify": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerAuthController_verify"
+      },
+      "expectedAudience": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.expectedAudience"
+      },
+      "expectedIssuer": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.expectedIssuer"
+      },
+      "jwks": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.jwks"
+      },
+      "me.deleteAccount": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_deleteAccount"
+      },
+      "me.getActivity": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_getActivity"
+      },
+      "me.getProfile": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_getProfile"
+      },
+      "me.listSessions": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_listSessions"
+      },
+      "me.revokeSession": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_revokeSession"
+      },
+      "me.updateProfile": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerMeController_updateProfile"
+      },
+      "oauth.clientCredentials": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerOAuthController_clientCredentials"
+      },
+      "passkeys.completeMfaChallenge": {
+        "since": [
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.passkeys"
+      },
+      "passkeys.enroll": {
+        "since": [
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.passkeys"
+      },
+      "passkeys.signIn": {
+        "since": [
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.passkeys"
+      },
+      "passkeys.stepUp": {
+        "since": [
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.passkeys"
+      },
+      "verify.authorize": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerVerifyController_authorize"
+      },
+      "verify.authorizeBatch": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerVerifyController_authorizeBatch"
+      },
+      "verify.verify": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "operationId": "ConsumerVerifyController_verify"
+      },
+      "verifyToken": {
+        "since": [
+          "0.6.0",
+          "0.8.0"
+        ],
+        "handwritten": "ConsumerScope.verifyToken"
+      }
+    }
+  },
+  "types": {
+    "AssignRoleDto": "AssignRoleDto",
+    "AuthorizeBatchBody": "AuthorizeBatchBody",
+    "AuthorizeBody": "AuthorizeBody",
+    "ClientCredentialsDto": "ClientCredentialsDto",
+    "ConfirmEnrollmentResponseDto": "ConfirmEnrollmentResponseDto",
+    "ConsumerAcceptInviteDto": "ConsumerAcceptInviteDto",
+    "ConsumerLogoutDto": "ConsumerLogoutDto",
+    "ConsumerRefreshDto": "ConsumerRefreshDto",
+    "ConsumerRequestPasswordResetDto": "ConsumerRequestPasswordResetDto",
+    "ConsumerResetPasswordDto": "ConsumerResetPasswordDto",
+    "ConsumerSigninDto": "ConsumerSigninDto",
+    "ConsumerSignupDto": "ConsumerSignupDto",
+    "ConsumerTokenResponseDto": "ConsumerTokenResponseDto",
+    "CreateApiKeyDto": "CreateApiKeyDto",
+    "CreateAppDto": "CreateAppDto",
+    "CreateEndUserInviteDto": "CreateEndUserInviteDto",
+    "CreateM2MClientDto": "CreateM2mClientDto",
+    "CreatePermissionDto": "CreatePermissionDto",
+    "CreateRoleDto": "CreateRoleDto",
+    "EndUserInviteResponseDto": "EndUserInviteResponseDto",
+    "IdpNativeSigninDto": "IdpNativeSigninDto",
+    "IdpNativeUserHintDto": "IdpNativeUserHintDto",
+    "IdpTokenResponseDto": "IdpTokenResponseDto",
+    "PublicFactorDto": "PublicFactorDto",
+    "SetPermissionsDto": "SetPermissionsDto",
+    "SetScopesDto": "SetScopesDto",
+    "StepUpResponseDto": "StepUpResponseDto",
+    "UpdateAppDto": "UpdateAppDto",
+    "UpdateAppStatusDto": "UpdateAppStatusDto",
+    "UpdateAuthConfigDto": "UpdateAuthConfigDto",
+    "UpdateEndUserDto": "UpdateEndUserDto",
+    "UpdateEndUserRoleDto": "UpdateEndUserRoleDto",
+    "UpdateEndUserStatusDto": "UpdateEndUserStatusDto",
+    "UpdateM2MClientDto": "UpdateM2mClientDto",
+    "UpdateMeDto": "UpdateMeDto",
+    "UpdateRoleDto": "UpdateRoleDto",
+    "VerifyBody": "VerifyBody",
+    "WebauthnCredentialDto": "WebauthnCredentialDto"
+  },
+  "exports": {
+    "AUTH_LEGACY_ISSUER": "kept",
+    "AppScope": "alias of the generated AuthApp class",
+    "Auth": "kept",
+    "AuthHttpError": "alias of APIError",
+    "ConsumerScope": "kept",
+    "JwksCache": "kept",
+    "JwksFetchError": "kept",
+    "JwksKeyNotFoundError": "kept",
+    "JwtAudienceMismatchError": "kept",
+    "JwtExpiredError": "kept",
+    "JwtInvalidError": "kept",
+    "JwtIssuerMismatchError": "kept",
+    "JwtNotYetValidError": "kept",
+    "JwtRefreshTokenError": "kept",
+    "JwtVerifyError": "kept",
+    "PasskeyError": "kept",
+    "createPasskeyCredential": "kept",
+    "decodeOptions": "kept",
+    "encodeCredential": "kept",
+    "fromB64u": "kept",
+    "getPasskeyCredential": "kept",
+    "isPasskeySupported": "kept",
+    "isRefreshToken": "kept",
+    "toB64u": "kept",
+    "verifyAuthToken": "kept"
+  }
+}

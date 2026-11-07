@@ -1,0 +1,470 @@
+{
+  "app": {
+    "apiKeys.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/api-keys"
+    },
+    "apiKeys.delete": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/api-keys/{0}"
+    },
+    "apiKeys.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/api-keys"
+    },
+    "appId": {
+      "kind": "property"
+    },
+    "auditLogs.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/audit-logs"
+    },
+    "authConfig.get": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/auth-config"
+    },
+    "authConfig.update": {
+      "arity": 1,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/auth-config"
+    },
+    "credentials.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/credentials"
+    },
+    "credentials.delete": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/credentials/{0}"
+    },
+    "credentials.get": {
+      "arity": 1,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/credentials/{0}"
+    },
+    "credentials.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/credentials"
+    },
+    "credentials.rotateSecret": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/credentials/{0}/rotate"
+    },
+    "credentials.setScopes": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PUT",
+      "path": "/v1/apps/{app_id}/credentials/{0}/scopes"
+    },
+    "credentials.update": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/credentials/{0}"
+    },
+    "delete": {
+      "arity": 0,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}"
+    },
+    "endUsers.delete": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/end-users/{0}"
+    },
+    "endUsers.get": {
+      "arity": 1,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/end-users/{0}"
+    },
+    "endUsers.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/end-users"
+    },
+    "endUsers.revokeAllSessions": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/end-users/{0}/sessions/revoke-all"
+    },
+    "endUsers.update": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/end-users/{0}"
+    },
+    "endUsers.updateRole": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/end-users/{0}/role"
+    },
+    "endUsers.updateStatus": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/end-users/{0}/status"
+    },
+    "get": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}"
+    },
+    "invites.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/end-users/invites"
+    },
+    "invites.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/end-users/invites"
+    },
+    "invites.revoke": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/end-users/invites/{0}"
+    },
+    "members.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/members"
+    },
+    "members.remove": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/members/{0}"
+    },
+    "permissions.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/permissions"
+    },
+    "permissions.delete": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/permissions/{0}"
+    },
+    "permissions.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/permissions"
+    },
+    "roles.assign": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/roles/assign"
+    },
+    "roles.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps/{app_id}/roles"
+    },
+    "roles.delete": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/v1/apps/{app_id}/roles/{0}"
+    },
+    "roles.get": {
+      "arity": 1,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/roles/{0}"
+    },
+    "roles.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/roles"
+    },
+    "roles.listPermissions": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps/{app_id}/roles/permissions"
+    },
+    "roles.setPermissions": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PUT",
+      "path": "/v1/apps/{app_id}/roles/{0}/permissions"
+    },
+    "roles.update": {
+      "arity": 2,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/roles/{0}"
+    },
+    "update": {
+      "arity": 1,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}"
+    },
+    "updateStatus": {
+      "arity": 1,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/v1/apps/{app_id}/status"
+    }
+  },
+  "consumer": {
+    "acceptedIssuers": {
+      "kind": "property"
+    },
+    "appSlug": {
+      "kind": "property"
+    },
+    "auth.acceptInvite": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/accept-invite"
+    },
+    "auth.logout": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/logout"
+    },
+    "auth.refresh": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/refresh"
+    },
+    "auth.requestReset": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/request-password-reset"
+    },
+    "auth.requestVerification": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/request-verification"
+    },
+    "auth.resetPassword": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/reset-password"
+    },
+    "auth.sendPasswordResetEmail": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/send-password-reset-email"
+    },
+    "auth.sendVerificationEmail": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/send-verification-email"
+    },
+    "auth.signin": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/signin"
+    },
+    "auth.signinWithProvider": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/oauth/google"
+    },
+    "auth.signup": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/signup"
+    },
+    "auth.verify": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/auth/verify"
+    },
+    "expectedAudience": {
+      "kind": "property"
+    },
+    "expectedIssuer": {
+      "kind": "property"
+    },
+    "jwks": {
+      "kind": "property"
+    },
+    "me.deleteAccount": {
+      "arity": 0,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/{app_slug}/v1/me"
+    },
+    "me.getActivity": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/{app_slug}/v1/me/activity"
+    },
+    "me.getProfile": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/{app_slug}/v1/me"
+    },
+    "me.listSessions": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/{app_slug}/v1/me/sessions"
+    },
+    "me.revokeSession": {
+      "arity": 1,
+      "kind": "call",
+      "method": "DELETE",
+      "path": "/{app_slug}/v1/me/sessions/{0}"
+    },
+    "me.updateProfile": {
+      "arity": 1,
+      "kind": "call",
+      "method": "PATCH",
+      "path": "/{app_slug}/v1/me"
+    },
+    "oauth.clientCredentials": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/oauth/token"
+    },
+    "passkeys.completeMfaChallenge": {
+      "arity": 1,
+      "kind": "function"
+    },
+    "passkeys.enroll": {
+      "arity": 0,
+      "kind": "function"
+    },
+    "passkeys.signIn": {
+      "arity": 0,
+      "kind": "function"
+    },
+    "passkeys.stepUp": {
+      "arity": 0,
+      "kind": "function"
+    },
+    "verify.authorize": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/authorize"
+    },
+    "verify.authorizeBatch": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/authorize/batch"
+    },
+    "verify.verify": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/{app_slug}/v1/verify"
+    },
+    "verifyToken": {
+      "arity": 1,
+      "kind": "function"
+    }
+  },
+  "exports": [
+    "AUTH_LEGACY_ISSUER",
+    "AppScope",
+    "Auth",
+    "AuthHttpError",
+    "ConsumerScope",
+    "JwksCache",
+    "JwksFetchError",
+    "JwksKeyNotFoundError",
+    "JwtAudienceMismatchError",
+    "JwtExpiredError",
+    "JwtInvalidError",
+    "JwtIssuerMismatchError",
+    "JwtNotYetValidError",
+    "JwtRefreshTokenError",
+    "JwtVerifyError",
+    "PasskeyError",
+    "createPasskeyCredential",
+    "decodeOptions",
+    "encodeCredential",
+    "fromB64u",
+    "getPasskeyCredential",
+    "isPasskeySupported",
+    "isRefreshToken",
+    "toB64u",
+    "verifyAuthToken"
+  ],
+  "root": {
+    "app": {
+      "kind": "scope"
+    },
+    "apps.create": {
+      "arity": 1,
+      "kind": "call",
+      "method": "POST",
+      "path": "/v1/apps"
+    },
+    "apps.list": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/apps"
+    },
+    "consumer": {
+      "kind": "scope"
+    },
+    "stats.get": {
+      "arity": 0,
+      "kind": "call",
+      "method": "GET",
+      "path": "/v1/stats/me"
+    }
+  },
+  "version": "0.8.0"
+}

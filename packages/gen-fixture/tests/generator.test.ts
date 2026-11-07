@@ -280,3 +280,99 @@ describe("failures name the operation and exit non-zero", () => {
     expect(p).toHaveLength(2);
   });
 });
+
+// Task 009 (Auth on the generator): methods on a scope's root, nested scope accessors with
+// aliases and exposed binds, hand-written member names, and generated 0.x compat aliases.
+describe("scope roots, accessors and compat aliases", () => {
+  const C = "/v1/communities/{community_id}";
+  const join = (s: Spec, x: Record<string, unknown> = { resource: "", method: "join", bind: ["community_id"] }) => {
+    s.paths[`${C}/join`] = {
+      post: {
+        operationId: "CommunityController_join",
+        summary: "Join the community",
+        parameters: [{ name: "community_id", in: "path", required: true, schema: { type: "string", format: "uuid" } }],
+        responses: { "204": { description: "Joined" } },
+        "x-pc-sdk": x,
+      },
+    };
+  };
+  // @ts-expect-error plain ESM script without type declarations
+  const surfaces = async () => (await import("../../../scripts/gen-sdk.mjs")).SURFACES as Record<string, Record<string, unknown>>;
+  async function withConfig<T>(patch: (cfg: Record<string, unknown>) => void, run: () => Promise<T>): Promise<T> {
+    const cfg = (await surfaces())["gen-fixture"]!;
+    const saved = structuredClone(cfg);
+    patch(cfg);
+    try {
+      return await run();
+    } finally {
+      for (const k of Object.keys(cfg)) delete cfg[k];
+      Object.assign(cfg, saved);
+    }
+  }
+
+  it("an empty resource puts the method on the scope's root", async () => {
+    const spec = fresh();
+    join(spec);
+    const { files } = await generate("gen-fixture", spec);
+    const res = files["packages/gen-fixture/src/_generated/resources.ts"] as string;
+    expect(res).toMatch(/export class FixtureCommunity extends APIResource \{[\s\S]*?\n {2}join\(options\?: RequestOptions\): APIPromise<void> \{/);
+    expect(files["packages/gen-fixture/api.md"]).toContain('fixture.community(…).join(options?)');
+    expect(files["packages/gen-fixture/tests/_generated/operations.test.ts"]).toContain('fixture.community("community-id-1").as("');
+  });
+
+  it("an empty resource outside a bound scope fails", async () => {
+    const p = await problems((s) => join(s, { resource: "", method: "join", bind: [] }));
+    expect(p.join()).toMatch(/CommunityController_join\): an empty x-pc-sdk resource is only valid inside a bound scope/);
+  });
+
+  it("a generated name that hand-written code owns on the scope fails (SURFACES members)", async () => {
+    const p = await withConfig(
+      (cfg) => (((cfg.scopes as Record<string, Record<string, unknown>>).community!.members = ["join", "jwks"])),
+      () => problems((s) => join(s)),
+    );
+    expect(p.join()).toMatch(/"join" is owned by hand-written code on community\(…\)/);
+  });
+
+  it("a nested accessor with an alias and an exposed bind (auth.admin.app(id), auth.app(id), .appId)", async () => {
+    const { files } = await withConfig(
+      (cfg) => Object.assign((cfg.scopes as Record<string, Record<string, unknown>>).community!, { accessor: "admin.community", aliases: ["group"], expose: { communityId: "community_id" } }),
+      () => generate("gen-fixture", fresh()),
+    );
+    const client = files["packages/gen-fixture/src/_generated/client.ts"] as string;
+    expect(client).toContain("get admin(): { community(communityId: string): FixtureCommunity } {");
+    expect(client).toContain("group(communityId: string): FixtureCommunity {");
+    expect(client).not.toMatch(/\n {2}community\(communityId: string\)/);
+    expect(files["packages/gen-fixture/src/_generated/resources.ts"]).toContain("get communityId(): string {");
+    expect(files["packages/gen-fixture/api.md"]).toContain("fixture.admin.community(…).posts.create(");
+  });
+
+  it("compat.json names become deprecated aliases that call the same route, across scopes", async () => {
+    const compat = {
+      methods: {
+        root: { "regions.list": { operationId: "RegionController_list" } },
+        community: {
+          "posts.list": { operationId: "PostController_list" },
+          "feed.publish": { operationId: "PostController_create" },
+          "comments.add": { operationId: "CommentController_create" },
+          "verifyToken": { handwritten: "CommunityScope.verifyToken" },
+        },
+      },
+      types: { OldPost: "Post" },
+    };
+    const { files } = await withConfig((cfg) => (cfg.compat = compat), () => generate("gen-fixture", fresh()));
+    const res = files["packages/gen-fixture/src/_generated/resources.ts"] as string;
+    // Same name in the same scope: nothing emitted. Others: an alias in its 0.x namespace.
+    expect(res).not.toContain("0.x name for `fixture.regions.list()`");
+    expect(res).toMatch(/@deprecated Use `fixture\.community\(…\)\.posts\.create\(\)`[\s\S]*?\n {2}publish\(params: T\.WithOptionalActor<T\.PostCreateParams>, options\?: RequestOptions\)[^\n]*\{\n {4}return this\._client\.request\(\{ method: "POST", path: "\/v1\/communities\/\{community_id\}\/posts", pathParams: \{ community_id: this\._b\.community_id \}/);
+    expect(res).toMatch(/\n {2}add\(postId: string, params/);
+    expect(res).toMatch(/@deprecated 0\.x namespace[^\n]*\n {2}get feed\(\)/);
+    expect(files["packages/gen-fixture/src/_generated/compat.ts"]).toContain('export type OldPost = components["schemas"]["Post"];');
+  });
+
+  it("compat failures: unknown operationId, a name the generator already uses elsewhere", async () => {
+    const bad = { methods: { community: { "posts.get": { operationId: "Nope" }, "posts.create": { operationId: "CommentController_create" } } } };
+    const p = await withConfig((cfg) => (cfg.compat = bad), () => problems(() => {}));
+    expect(p.join()).toMatch(/compat community:posts\.get: operationId Nope is not a generated operation/);
+    expect(p.join()).toMatch(/compat community:posts\.create: collides with a generated name/);
+  });
+});

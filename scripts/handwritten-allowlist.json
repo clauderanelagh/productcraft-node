@@ -2,18 +2,41 @@
   "$comment": "Hand-written files allowed under packages/*/src (docs/sdk-standard.md section 6). Everything else there must be generated (_generated/, gitignored). scripts/check-handwritten.mjs enforces this in CI. Entries with `until` go away in that task.",
   "maxIndexLines": 60,
   "allow": [
-    { "glob": "packages/core/src/**", "why": "The shared runtime: retries, errors, pagination, polling, webhooks verify." },
-    { "glob": "packages/*/src/index.ts", "why": "Per-package entry point: re-exports the generated client plus hand-written extras." },
-    { "glob": "packages/*/src/testing.ts", "why": "One-line re-export of the generated mocks for the /testing subpath." },
-    { "glob": "packages/auth/src/jwt/**", "why": "verifyToken: JWKS cache, issuer/audience pinning, refresh-token refusal, JWT errors." },
-    { "glob": "packages/auth/src/passkeys.ts", "why": "Browser WebAuthn ceremonies, not HTTP calls." },
-    { "glob": "packages/auth/src/_http.ts", "why": "0.x kubb transport.", "until": "009" },
-    { "glob": "packages/auth/src/scopes/**", "why": "0.x hand-written scope wrappers over kubb.", "until": "009" },
-    { "glob": "packages/auth-passport/src/**", "why": "Passport adapter; not an API surface." }
+    {
+      "glob": "packages/core/src/**",
+      "why": "The shared runtime: retries, errors, pagination, polling, webhooks verify."
+    },
+    {
+      "glob": "packages/*/src/index.ts",
+      "why": "Per-package entry point: re-exports the generated client plus hand-written extras."
+    },
+    {
+      "glob": "packages/*/src/testing.ts",
+      "why": "One-line re-export of the generated mocks for the /testing subpath."
+    },
+    {
+      "glob": "packages/auth/src/jwt/**",
+      "why": "verifyToken: JWKS cache, issuer/audience pinning, refresh-token refusal, JWT errors."
+    },
+    {
+      "glob": "packages/auth/src/passkeys.ts",
+      "why": "Browser WebAuthn ceremonies, not HTTP calls."
+    },
+    {
+      "glob": "packages/auth/src/consumer.ts",
+      "why": "The consumer scope's non-HTTP extras over the generated AuthConsumer: verifyToken, the JWKS cache, issuer/audience, passkey ceremonies."
+    },
+    {
+      "glob": "packages/auth/src/base.ts",
+      "why": "Base of the generated Auth class: consumer(slug) with its own credential rule and top-level verifyToken."
+    },
+    {
+      "glob": "packages/auth-passport/src/**",
+      "why": "Passport adapter; not an API surface."
+    }
   ],
   "indexLineExceptions": {
     "packages/core/src/index.ts": "The runtime's barrel, not a product shell.",
-    "packages/auth/src/index.ts": "0.x hand-written Auth class; 009 moves it onto the generator.",
     "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface.",
     "packages/umbrella/src/index.ts": "Composes the products; 010 rewrites it."
   }

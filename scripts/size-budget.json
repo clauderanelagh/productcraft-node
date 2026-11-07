@@ -22,5 +22,9 @@
   "@productcraft/social": {
     "measuredGzipBytes": 14251,
     "limitGzipBytes": 15677
+  },
+  "@productcraft/auth": {
+    "measuredGzipBytes": 24943,
+    "limitGzipBytes": 27438
   }
 }

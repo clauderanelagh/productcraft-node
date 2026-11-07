@@ -204,6 +204,8 @@ Platform-auth uses `{workspace_slug}` where products use `{workspace_id}`. That 
 
 Generated names must not use: `client`, `withResponse`, `asResponse`, `lastResponse`, `as`, `public`, `community`, `app`, `admin`, `consumer`, `verifyToken`, `poll`, `createAndPoll`, and `unwrap` inside a `webhooks` namespace. The generator and the audit fail on a clash.
 
+Per scope, a product's hand-written code may own more names (SURFACES `members` in `scripts/gen-sdk.mjs`); the generator fails when a generated resource or method on that scope's root uses one. Auth's consumer scope owns `verifyToken`, `jwks`, `passkeys`, `appSlug`, `expectedIssuer`, `expectedAudience` and `acceptedIssuers` (0.8 names), so its discovery routes are `consumer(slug).wellKnown.jwks()` and `wellKnown.openidConfiguration()` (users-api, monorepo #1120), as in Platform.
+
 ## 4. The shared runtime contract (`@productcraft/core`)
 
 Written by hand once. Every generated method calls `this._client.request(spec)`. Nothing per-endpoint lives here.
@@ -285,7 +287,7 @@ There is **no program-wide changesets pre mode**: pre mode applies to the whole 
 | `@productcraft/core` | 0.3.0 | 0.4.0, then 1.0.0 | 002; 012 | Nobody (`makeClient` kept, deprecated); engines move to Node 20.3 |
 | `@productcraft/trawl`, `mail`, `waitlist`, `platform-auth` | 0.2.0 / 0.2.0 / 0.2.0 / 0.1.0 | 1.0.0 | 004 to 007, each on its own | Nobody using `.client` (kept); the new surface is additive. 1.0 declares the surface stable. |
 | `@productcraft/social` | 1.0.0 | 1.1.0 | 008 | Nobody: resource methods are additive and `.client` is unchanged |
-| `@productcraft/auth` | 0.8.0 | 1.0.0 (previews as `next` snapshots) | 009 previews; 012 stable | Query and path casing; `consumer.auth.*` flattened (aliased); `AuthHttpError` becomes an alias of `APIError` |
+| `@productcraft/auth` | 0.9.0 | 1.0.0 (previews as `next` snapshots) | 009 previews; 012 stable | Query and path casing; `consumer.auth.*` flattened (aliased); `AuthHttpError` becomes an alias of `APIError` |
 | `@productcraft/auth-passport` | 0.3.0 | 1.0.0 | 012 | Peer range moves to auth ^1 |
 | `productcraft` | 0.3.0 | 0.4.0, then 1.0.0 | 010; 012 | `apiKey` shorthand added; `overrides` kept |
 
@@ -373,6 +375,20 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 - Zod input for Trawl typed results (`jobs.create({ schema: zodSchema })`): the generic `createAndPoll<T>` ships now; zod support would add a peer dependency.
 
 ## 13. Decision log
+
+2026-11-07, task 009 (Auth 1.0 on the pipeline, `next` snapshots) as built:
+
+- **One generator path.** kubb, `kubb.config.ts`, `src/scopes/` and `_http.ts` are gone; `scripts/codegen.sh` runs `gen-sdk.mjs` for every surface (its `openapi-typescript` loop is now empty). 214 operations generated (226 in the spec, 12 `x-pc-sdk: false`).
+- **Scope config grew three generic keys:** `accessor: "admin.app"` (a nested accessor, with `aliases: ["app"]` for `auth.app(id)`, which stays a plain alias, not deprecated), `expose` (a getter for a bound parameter, `app(id).appId`) and `members` (names hand-written code owns on a scope, checked like reserved words). An empty `resource` puts the method on the scope root (`consumer(slug).signin()`); the generator rejects it outside a bound scope.
+- **Hand-written extras attach by inheritance, not a config callback.** SURFACES `root: { module, base, options }` makes the generated `Auth` extend a hand-written `AuthBase` (`src/base.ts`, itself extending the generated `AuthResources`), which owns `consumer(slug)` (`accessor: false` on that scope) and the top-level `verifyToken`. `consumer(slug)` returns `ConsumerScope` (`src/consumer.ts`), a subclass of the generated `AuthConsumer` adding `verifyToken`, `jwks`, issuer/audience and the passkey ceremonies, which call generated methods.
+- **The consumer client never reads `PRODUCTCRAFT_API_KEY`**, as in 0.8: core gained `credentialFromEnv: false` (core minor) instead of Auth building its own transport.
+- **Compat aliases are generated into `resources.ts`, not a separate `compat.ts`:** TypeScript only adds members to a class in its own declaration. `compat.json` maps every 0.6.0 and 0.8.0 name (recorded from the published packages, `tests/compat/`) to an operationId or to hand-written code; the generator emits a `@deprecated` alias wherever the 1.0 name differs, in its 0.x namespace (`consumer(slug).auth.signin`, `app(id).invites.revoke`), crossing scopes where needed (`app(id).get()` calls `apps.retrieve` with the bound id). `_generated/compat.ts` holds the deprecated 0.x type names. `oauth.clientCredentials` is such an alias of `oauth.token`, not a separate hand-written helper. `compat.test.ts` calls every recorded name and compares method and path.
+- **`AuthHttpError` is `APIError`** (same object, so branded `instanceof` works across builds); its 0.x `data`/`statusText` fields are gone (`body`, `status`), listed in the migration guide.
+- **CJS on Node 20.3:** the CJS builds of auth and auth-passport bundle `jose` (tsup `noExternal`, CJS only); the ESM builds keep it external. `smoke-dist.mjs` asserts no `require("jose")` and verifies a real token through both builds; CI's dist-smoke matrix adds Node `20.3.0`.
+- **auth-passport** takes auth as a peer (`^1.0.0-0 || ^1`) so it shares the app's copy.
+- **Snapshots:** `release.yml` takes `workflow_dispatch` input `snapshot` (default `next`, `latest` refused) and runs `changeset version --snapshot` + `changeset publish --tag` in the runner only; `.changeset/config.json` sets `snapshot.useCalculatedVersion`, so previews are `1.0.0-next-<datetime>`. While the auth major is pending, every Version Packages PR bumps auth to 1.0.0; a ci.yml step holds such a PR red until `tasks/012-stable-release.md` is deleted, so `latest` cannot move early. Task 010's stable umbrella release has to work around that (noted in its file).
+- **Size:** the one-call consumer bundle (`auth.consumer(slug).signin()`) is 24.9 KB gzip, the largest product: the consumer scope class pulls its resource tree and `jose` (offline verification). Recorded as the baseline.
+- **Live smoke credential:** `scripts/live/auth.mjs` uses the standing testing-environment workspace key and keeps everything inside one throwaway `sdk-smoke-<ts>` app it creates and deletes (stale ones swept first).
 
 2026-11-06, task 008 (Social 1.1) as built:
 

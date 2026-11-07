@@ -50,6 +50,31 @@ for (const dir of readdirSync(join(root, "packages"))) {
   });
 }
 
+// 1b. Auth and auth-passport: the CJS builds carry their own jose (jose 6 is ESM-only and
+// `require(esm)` only exists from Node 20.19), and verify a real token through each build.
+for (const dir of ["auth", "auth-passport"]) {
+  await check(`@productcraft/${dir}: the CJS build never requires ESM-only jose`, () => {
+    const src = readFileSync(join(root, "packages", dir, "dist/index.cjs"), "utf8");
+    assert.ok(!/require\(["']jose["']\)/.test(src), "dist/index.cjs requires jose");
+  });
+}
+await check("@productcraft/auth: verifyToken through the ESM and CJS builds", async () => {
+  // jose is a dependency of packages/auth, not of the workspace root.
+  const joseDir = dirname(createRequire(join(root, "packages", "auth", "package.json")).resolve("jose/package.json"));
+  const jose = await import(pathToFileURL(join(joseDir, JSON.parse(readFileSync(join(joseDir, "package.json"), "utf8")).exports["."].default)).href);
+  const { privateKey, publicKey } = await jose.generateKeyPair("ES256", { extractable: true });
+  const jwk = { ...(await jose.exportJWK(publicKey)), kid: "k1", alg: "ES256", use: "sig" };
+  const base = "https://api.auth.example";
+  const token = await new jose.SignJWT({ sub: "u1" }).setProtectedHeader({ alg: "ES256", kid: "k1" }).setIssuer(`${base}/my-app`).setAudience("my-app").setExpirationTime("5m").sign(privateKey);
+  const fetch = async () => new Response(JSON.stringify({ keys: [jwk] }), { headers: { "content-type": "application/json" } });
+  const authDir = join(root, "packages", "auth");
+  for (const mod of [await import(pathToFileURL(join(authDir, "dist/index.js")).href), require(join(authDir, "dist/index.cjs"))]) {
+    const claims = await new mod.Auth({ baseUrl: base, fetch }).verifyToken(token, { app: "my-app" });
+    assert.equal(claims.sub, "u1");
+    assert.equal(mod.AuthHttpError, mod.APIError);
+  }
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);

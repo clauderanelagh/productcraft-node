@@ -25,6 +25,17 @@ name: Release
 on:
   push:
     branches: [main]
+  # Snapshot previews (task 009): publish the pending changesets as
+  # `<next version>-<tag>-<datetime>` under the dist-tag `<tag>`, leaving
+  # `latest` alone. It lives in THIS file because the npm trusted publisher
+  # is bound to the file name. Run: gh workflow run release.yml --ref main -f snapshot=next
+  workflow_dispatch:
+    inputs:
+      snapshot:
+        description: "dist-tag for a snapshot release of the pending changesets (e.g. next). Never latest."
+        required: true
+        type: string
+        default: next
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -75,6 +86,7 @@ jobs:
 
       - name: Create release PR or publish
         id: changesets
+        if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
           # `release` script builds packages then runs `changeset
@@ -96,8 +108,31 @@ jobs:
           # one-time setup on npmjs.com before its first publish from here.
           NPM_CONFIG_PROVENANCE: "true"
 
+      # Snapshot mode: version the pending changesets as prereleases in the
+      # runner's checkout only (nothing is committed or pushed), then publish
+      # exactly those under the requested dist-tag.
+      - name: Publish snapshot under a dist-tag
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ inputs.snapshot }}
+          NPM_CONFIG_PROVENANCE: "true"
+        run: |
+          if [[ ! "$TAG" =~ ^[a-z][a-z0-9-]*$ || "$TAG" == "latest" ]]; then
+            echo "::error::snapshot dist-tag must be lowercase and not 'latest' (got '$TAG')"; exit 1
+          fi
+          if ! ls .changeset/*.md 2>/dev/null | grep -qv README.md; then
+            echo "::error::no pending changesets to snapshot"; exit 1
+          fi
+          pnpm exec changeset version --snapshot "$TAG"
+          git --no-pager diff --stat -- 'packages/*/package.json'
+          pnpm run build
+          pnpm exec changeset publish --tag "$TAG" --no-git-tag
+          for p in packages/*/package.json; do
+            node -e 'const p=require("./"+process.argv[1]); if(!p.private && p.version.includes("-")) console.log(`${p.name}@${p.version}`)' "$p"
+          done
+
       - name: Run CI on the Version Packages branch (no App token)
-        if: steps.changesets.outputs.pullRequestNumber != '' && steps.app-token.outputs.token == ''
+        if: github.event_name == 'push' && steps.changesets.outputs.pullRequestNumber != '' && steps.app-token.outputs.token == ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

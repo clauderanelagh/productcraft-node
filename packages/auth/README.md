@@ -1,414 +1,259 @@
 # @productcraft/auth
 
-Typed Node.js SDK for the [ProductCraft Auth](https://productcraft.co) auth platform.
+Node.js / TypeScript client for **ProductCraft Auth**: sign-in, sign-up, sessions, profiles, MFA, passkeys and tenants for the end users of the apps you build, plus the admin API for those apps (end users, roles, permissions, API keys, M2M credentials, config, webhooks) and offline token verification.
 
-```bash
+Every HTTP method, type, error class and mock is generated from the production OpenAPI spec. Upgrading from 0.x? See the [1.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/auth-1.0.0.md): every 0.6 and 0.8 method name still works as a deprecated alias.
+
+## Install
+
+```sh
 npm install @productcraft/auth
 ```
 
-Server-side only. For React / Next.js apps, call this from your backend (BFF pattern) — the SDK ships an API key in headers.
+Node 20.3 or later (ESM and CommonJS), Bun, Deno and edge runtimes. Or install the umbrella package for every product: `npm install productcraft`.
+
+## Two scopes
+
+| Scope | Who calls it | Credential |
+|---|---|---|
+| `auth.consumer(slug)`: sign-in, sign-up, refresh, `me`, MFA, passkeys, tenants | Your app's backend or browser, for its end users | None for the public routes; the end user's access token for `me.*`; a workspace key only for the PAK-gated routes (pass it explicitly) |
+| `auth.admin.app(appId)` (alias `auth.app(appId)`): end users, roles, keys, config, webhooks | Your backend or tooling | A workspace API key (`PRODUCTCRAFT_API_KEY`) or a platform session |
+
+`auth.consumer()` defaults its slug to `PRODUCTCRAFT_AUTH_APP` and never reads `PRODUCTCRAFT_API_KEY`: routes that act for an end user must not carry your workspace key by accident.
 
 ## Quick start
 
 ```ts
-import { Auth } from "@productcraft/auth";
-
-// Reads PRODUCTCRAFT_API_KEY (and PRODUCTCRAFT_AUTH_APP) from the environment
-const auth = new Auth();
-```
-
-The SDK splits into three caller contexts.
-
-### 1. Workspace-wide admin
-
-```ts before
-// /v1/apps, /v1/stats/me
-const apps = await auth.apps.list();
-
-// Create requires display_name + workspace_id (not `name`).
-await auth.apps.create({
-  display_name: "My App",
-  slug: "my-app",
-  workspace_id: "<workspace-uuid>",
-});
-
-const stats = await auth.stats.get();
-```
-
-### 2. App-scoped admin — `auth.app(appId)`
-
-Pre-binds the appId path param so resource methods read like `app.endUsers.list()`.
-
-```ts before
-const app = auth.app("<app-uuid>");
-
-// EndUsers — profile updates only carry { display_name?, email? }.
-// Status / role transitions are separate calls.
-const users = await app.endUsers.list({ limit: "20", cursor: "..." });
-await app.endUsers.update(userId, { display_name: "Alice Smith" });
-await app.endUsers.updateStatus(userId, { status: "active" });
-await app.endUsers.revokeAllSessions(userId);
-
-// Roles — `CreateRoleDto` is { name, description? }. Permissions are
-// bound separately, after the role exists.
-await app.roles.create({ name: "admin", description: "Billing admin" });
-await app.roles.setPermissions("admin", { permissions: ["billing.read"] });
-await app.roles.assign({ userId, roleName: "admin" });
-await app.permissions.list();
-
-// API keys — permissions[] is required even if empty.
-await app.apiKeys.create({ name: "ci", permissions: [] });
-
-// M2M credentials
-const m2m = await app.credentials.create({ name: "backend-svc" });
-
-// Audit + invites + auth config (camelCase post-pipe)
-await app.auditLogs.list({ limit: "100" });
-await app.authConfig.update({ passwordMinLength: 12 });
-```
-
-### 3. Consumer-side (BFF) — `auth.consumer(appSlug)`
-
-For backend route handlers mediating auth between your SPA and Auth. Pre-binds the appSlug.
-
-```ts before
-const consumer = auth.consumer("my-app-slug");
-
-// Sign-in
-const { access_token, refresh_token } = await consumer.auth.signin({
-  identifier: "alice@example.com",
-  password: "...",
-});
-
-// Sign-up requires { email, password, username, display_name? } — not `identifier`.
-await consumer.auth.signup({
-  email: "alice@example.com",
-  password: "...",
-  username: "alice",
-});
-
-await consumer.auth.refresh({ refresh_token });
-await consumer.auth.logout({ refresh_token });
-
-// Forgot password. `sendPasswordResetEmail` mints the code AND emails it
-// via Mail — this is what you want for a normal reset flow.
-await consumer.auth.sendPasswordResetEmail({ email });
-await consumer.auth.resetPassword({ code, new_password: "..." });
-
-// Sign in with Apple (native iOS flow). See "Federated sign-in" below.
-await consumer.auth.signinWithProvider({
-  provider: "apple",
-  id_token: identityTokenFromAppleSdk,
-  nonce: rawNonceClientGenerated,
-  user: { name: "Alice Doe" }, // first sign-in only
-});
-
-// Me — for the signed-in EndUser (pass their token via auth config)
-await consumer.me.getProfile();
-await consumer.me.listSessions();
-await consumer.me.revokeSession(sessionId);
-
-// Verify (server-to-server permission checks)
-await consumer.verify.verify({ token });
-await consumer.verify.authorize({ token, permission: "billing.read" });
-
-// M2M (client_credentials grant)
-await consumer.oauth.clientCredentials({ clientId, clientSecret, scope });
-```
-
-> **Wire-shape note.** Auth's JSON wire is snake_case, and the SDK returns response objects as-is (e.g. `access_token`, `refresh_token`, `token_type`, `expires_in`). Request DTOs follow the same convention; some convenience fields (`identifier`, `password`, `nonce`) are unaffected, but anywhere the spec uses an underscore the SDK does too.
-
-### One-time codes: who sends the email?
-
-Verification and password-reset each come in two flavours. **Picking the wrong one is silent** — you get a `2xx` and no email is ever sent — so choose deliberately:
-
-| Method | Mints a code | Sends the email | Returns |
-| --- | --- | --- | --- |
-| `auth.requestVerification()` | ✅ | ❌ | `{ code, expires_at }` |
-| `auth.sendVerificationEmail()` | ✅ | ✅ via Mail | `{ expires_at }` |
-| `auth.requestReset()` | ✅ | ❌ | `{ code, expires_at }` |
-| `auth.sendPasswordResetEmail()` | ✅ | ✅ via Mail | `{ expires_at }` |
-
-**Use `send*` for a normal flow.** Mail delivers the code using your app's configured sender and template, and you never handle the plaintext code.
-
-**Use `request*` only when you are delivering the code yourself** — your own SMTP, an SMS provider, or consuming it in-process (e.g. provisioning a test account). If you call `request*` and drop the returned `code` on the floor, your users get nothing and nothing is logged anywhere, because no send was ever attempted.
-
-Each pair is gated by a *separate* PAK permission (`auth.user.verify.create` vs `auth.user.verify.send-email`, and likewise for `password-reset`), so a workspace can enable minting without enabling outbound mail.
-
-The `send*` methods fail loudly with a typed `412` when Mail isn't ready — `ENVOI_NOT_ENABLED`, `ENVOI_SENDER_NOT_CONFIGURED`, `ENVOI_TEMPLATE_NOT_CONFIGURED`, `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` — or `503 ENVOI_DISPATCH_FAILED`. If your endpoint returns a uniform response to prevent account enumeration, catch and **log** these rather than discarding them; a swallowed 412 is indistinguishable from the silent failure above.
-
-Both `request*` and `send*` return `{}` when the contact doesn't match (or is already verified / unverified as appropriate). That's the anti-enumeration contract, not an error — there is nothing to branch on.
-
-## Federated sign-in (Apple, Google)
-
-`consumer.auth.signinWithProvider` lets a BFF exchange a provider-issued identity token for an Auth `{ access_token, refresh_token }` pair. The endpoint creates the EndUser on first sign-in and returns the same account on subsequent ones — the SDK is a thin wrapper over Auth's `POST /{appSlug}/v1/auth/oauth/{provider}` which does the heavy lifting (Apple JWKS verification, issuer pinning, audience validation against the app's configured native client ids, server-side nonce replay protection, account creation / linking).
-
-```ts before
-import { Auth, AuthHttpError } from "@productcraft/auth";
+import { Auth, AuthenticationError } from "@productcraft/auth";
 
 const auth = new Auth();
-const consumer = auth.consumer("my-app-slug");
+const app = auth.consumer("my-app");
 
-const tokens = await consumer.auth.signinWithProvider({
-  provider: "apple",
-  // The value of `ASAuthorizationAppleIDCredential.identityToken` after
-  // UTF-8 decoding the data; pass through your BFF unchanged.
-  id_token: identityToken,
-  // Raw nonce the client generated and SHA-256-hashed into the
-  // authorize request. Auth recomputes sha256(nonce) and compares
-  // to the token's `nonce` claim.
-  nonce: rawNonce,
-  // Apple sends `{ name, email }` ONLY on the very first sign-in.
-  // Pass through on that call; omit on subsequent ones.
-  user: { name: "Alice Doe", email: "alice@example.com" },
-});
-```
+// Sign in an end user. `result` says whether MFA is still needed.
+const session = await app.signin({ identifier: "ada@example.com", password: "correct horse battery staple" });
+if (session.result === "session") {
+  // Verify the access token offline against the app's JWKS (cached per app).
+  const claims = await auth.verifyToken(session.access_token, { app: "my-app" });
+  console.log(claims.sub);
 
-### Account linking
+  // Calls as the signed-in user carry their access token.
+  const me = await new Auth({ auth: { type: "bearer", token: session.access_token } }).consumer("my-app").me.retrieve();
+  console.log(me.email, me.email_verified_at);
+}
 
-When the verified provider claim's `email` matches an existing EndUser's verified primary email, the app's `oauth_link_policy` decides the outcome:
-
-| Policy | Behavior |
-|---|---|
-| `auto` (default) | Silently link the provider identity to the existing account. Only when the provider claims `email_verified: true` AND the email is **not** an Apple private relay. |
-| `confirm` | Refuse with `409 link_required`. UI should sign the user in via their original method, then bind the provider identity through a follow-up flow. |
-| `reject` | Refuse with `409 account_exists_with_different_provider`. |
-
-Configure per-app via the auth-config endpoints (Auth-admin → "Auth config" → "OAuth link policy").
-
-### Apple private-relay emails
-
-Apple often returns `*@privaterelay.appleid.com` for users who hide their email. Auth persists it **as-is** on the EndUser's primary email contact — you don't need to translate it on your side. Private-relay addresses never participate in `auto`-link (they're nominally verified but not deliverable through channels you control).
-
-### First-sign-in name fields
-
-Apple only sends `givenName` / `familyName` on the very first sign-in. Pass them as a combined string through `user.name` on that call — Auth persists it to the EndUser's display name. Subsequent sign-ins should omit `user` entirely; Auth keeps whatever was stored on the first call.
-
-### Error handling
-
-```ts before
 try {
-  await consumer.auth.signinWithProvider({ provider: "apple", id_token, nonce });
+  await app.signin({ identifier: "ada@example.com", password: "wrong" });
 } catch (err) {
-  if (err instanceof AuthHttpError) {
-    // err.status: 401 = bad signature / issuer / audience / nonce / expired
-    //             409 = link_required | account_exists_with_different_provider
-    //             4xx/5xx = other surface errors
-    // err.data: parsed JSON body with `code` / `message` for the 409 family
-  }
-  throw err;
+  if (err instanceof AuthenticationError) console.log(err.code, err.requestId);
 }
 ```
 
-`AuthHttpError` is the same exception family every other surface method throws — one filter handles all of them.
-
-### Google (and future providers)
-
-The Auth API uses a single `POST /{appSlug}/v1/auth/oauth/{provider}` endpoint for every supported IdP — the `provider` URL segment selects the verifier. Once Google is enabled on Auth's side, the SDK call becomes:
-
-```ts before
-await consumer.auth.signinWithProvider({
-  provider: "google",
-  id_token: tokenFromGoogleSignInSdk,
-  nonce: rawNonce,
-});
-```
-
-No SDK upgrade required — the per-provider TS enum widens automatically with the next spec refresh.
-
-## Passkeys (WebAuthn)
-
-Passkeys are switched on per app in the console (relying-party id + the
-site origin in `allowed_redirect_origins`). Once they are, each ceremony
-is one call on `auth.consumer(appSlug).passkeys`. The helpers run
-**in the browser** — they drive `navigator.credentials` — but importing
-the package anywhere is safe; nothing touches a browser global until you
-call them.
-
-```ts before
-import { Auth, isPasskeySupported, PasskeyError } from "@productcraft/auth";
-
-if (!isPasskeySupported()) hidePasskeyButton(); // false in Node and in insecure contexts
-
-// Enrol — signed-in user adds a passkey as an MFA factor
-const me = new Auth({ auth: { type: "bearer", token: accessToken } }).consumer("acme");
-const { factor, recovery_codes } = await me.passkeys.enroll({ label: "MacBook" });
-// show recovery_codes once — they are not retrievable later
-
-// Passwordless sign-in — no password, no email; discoverable credential
-const anon = new Auth().consumer("acme");
-const session = await anon.passkeys.signIn({ mediation: "conditional" }); // amr: ["webauthn"]
-
-// MFA step of a password sign-in — when signin() answered { mfa_required, mfa_token, factors }
-const session2 = await anon.passkeys.completeMfaChallenge({ mfa_token: signin.mfa_token });
-
-// Step-up inside a live session
-const { amr, mfa_at } = await me.passkeys.stepUp();
-```
-
-Each helper does the options call → `navigator.credentials.create()` /
-`.get()` → verify call, with every buffer base64url-encoded in both
-directions and the `public_key` members renamed to the WebAuthn spec's
-camelCase (the Auth wire is snake_case). Browser-side failures reject
-with `PasskeyError` (`code`: `unsupported`, `cancelled`, `timeout`,
-`invalid_state`, `security`, `no_credential`, `unknown`; `cause` holds
-the DOM error); server-side failures stay `AuthHttpError`, so a 401 on
-a forged or replayed assertion is distinguishable from the user
-dismissing the prompt. Pass `signal: AbortSignal.timeout(ms)` to bound
-the prompt yourself.
-
-The encoding layer is exported for anyone who wants the pieces:
-`toB64u`, `fromB64u`, `decodeOptions`, `encodeCredential`, plus
-`createPasskeyCredential(public_key)` / `getPasskeyCredential(public_key)`
-which wrap `navigator.credentials` on their own.
-
-`signIn()` never sends an identifier: `/auth/passkey/options` takes none
-by design (it would be an account-existence oracle), so sign-in relies on
-a discoverable (resident) credential.
-
-## JWT verification
-
-Every Auth app publishes a JWKS at `/{appSlug}/v1/.well-known/jwks.json`. The SDK gives you a verified-claims helper and a jose-compatible JWKS resolver.
-
-### Token claim shape
-
-Auth EndUser access tokens carry, at minimum:
-
-| Claim | Example | Notes |
-|---|---|---|
-| `alg` (header) | `RS256` | Signing algorithm — RS256 from the per-app keystore. |
-| `kid` (header) | `rs256-<key-id>` | Selects the public key from the per-app JWKS. |
-| `iss` | `https://api.auth.productcraft.co/<appSlug>` | Per-app issuer URL. Available on the SDK as `scope.expectedIssuer`. |
-| `aud` | `<appSlug>` | The app slug (literal). Available as `scope.expectedAudience`. |
-| `sub` | `<account-uuid>` | The EndUser's account id — what your local user table should key on. |
-| `aid` | `<app-uuid>` | The Auth app uuid (matches `scope.appId` if you held it). |
-| `sid` | `<session-uuid>` | Session row id — useful for revoke-this-session ops. |
-| `role` | `member` | The EndUser's role in this app. |
-| `type` | `end_user` \| `m2m` | Distinguishes EndUser tokens from M2M (client_credentials) tokens. |
-| `amr` | `["pwd"]` \| `["oauth.apple"]` | Auth-method-reference array — how this session was established. |
-| `iat`, `exp` | unix seconds | Standard. |
-
-Tokens issued before the 2026-05-24 per-app-issuer migration carried `iss: "heimdall"` (no URL) and **no** `aud` claim. `scope.acceptedIssuers` includes both the new URL form and the legacy literal so existing tokens keep verifying through their TTL; `scope.verifyToken(token)` handles this automatically. If you wire `jose.jwtVerify` directly, pass `issuer: scope.acceptedIssuers` (an array) for the transition window, or `issuer: scope.expectedIssuer` once you're sure no legacy tokens are live.
-
-### One-line verify (the 80% case)
-
-```ts before
-import { Auth, JwtExpiredError } from "@productcraft/auth";
-
-const auth = new Auth();
-const scope = auth.consumer("my-app-slug");
-
-try {
-  const claims = await scope.verifyToken(token);
-  // claims.sub, claims.aid, claims.sid, claims.role, claims.amr, ...
-} catch (err) {
-  if (err instanceof JwtExpiredError) { /* trigger refresh */ }
-  throw err;
-}
-```
-
-Behind the scenes: JWKS fetched once, cached in-memory (10 min TTL by default), singleflighted so 100 concurrent verifies do 1 fetch, auto-refetched if a token's `kid` isn't in the cached JWKS (rotation handling). Issuer + audience are checked against `scope.acceptedIssuers` + `scope.expectedAudience` automatically.
-
-**Refresh tokens are refused.** A token carrying `token_use: "refresh"` (or the older `type: "refresh"`) throws `JwtRefreshTokenError` (code `ERR_JWT_REFRESH_TOKEN`) even when its signature, issuer and audience are valid: a refresh token is only good at the refresh endpoint, never as an access token. `createAuthJwtStrategy` from `@productcraft/auth-passport` refuses them too. If you call `jwtVerify` yourself (below), check `isRefreshToken(payload)` and reject.
-
-### Building blocks for `jose`, NestJS guards, Hono, etc.
-
-`scope.jwks.getKey` is a [jose-compatible](https://github.com/panva/jose) key resolver — pass it anywhere a `GetKeyFunction` is expected.
-
-```ts before
-import { jwtVerify } from "jose";
-
-const scope = auth.consumer("my-app-slug");
-const { payload } = await jwtVerify(token, scope.jwks.getKey, {
-  issuer: scope.expectedIssuer,        // "https://api.auth.productcraft.co/<appSlug>"
-  audience: scope.expectedAudience,    // "<appSlug>"
-  algorithms: ["RS256"],
-});
-```
-
-For the per-app boundary, the JWKS is the cryptographic gate (only the app's keystore can sign these), but pinning `iss` + `aud` rejects a token minted for a *different* app on the same platform before the signature ever gets checked — defence in depth at a higher layer.
-
-### Passport integration
-
-Use the companion package [`@productcraft/auth-passport`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth-passport):
-
-```bash
-npm install @productcraft/auth-passport passport-jwt
-```
-
-```ts before
-import passportJwt from "passport-jwt";
-import { createPassportSecretOrKeyProvider } from "@productcraft/auth-passport";
-
-const scope = auth.consumer("my-app-slug");
-new passportJwt.Strategy(
-  {
-    jwtFromRequest: passportJwt.ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKeyProvider: createPassportSecretOrKeyProvider(scope),
-    issuer: scope.expectedIssuer,        // per-app URL
-    audience: scope.expectedAudience,    // appSlug
-    algorithms: ["RS256"],
-  },
-  (payload, done) => done(null, payload),
-);
-```
-
-## Error handling
+## Admin
 
 ```ts
-import {
-  JwtVerifyError,           // base — catch this if you don't care which sub-kind
-  JwtInvalidError,
-  JwtExpiredError,
-  JwtNotYetValidError,
-  JwtIssuerMismatchError,
-  JwtAudienceMismatchError,
-  JwksKeyNotFoundError,
-  JwksFetchError,
-  AuthHttpError,         // any non-2xx HTTP response
-} from "@productcraft/auth";
+import { Auth } from "@productcraft/auth";
+
+// Reads PRODUCTCRAFT_API_KEY from the environment.
+const auth = new Auth();
+const admin = auth.admin.app("5d1e2f3a-4b5c-4d6e-8f9a-0b1c2d3e4f5a");
+
+for await (const user of admin.endUsers.list({ limit: 100 })) {
+  console.log(user.id, user.email);
+}
+const endpoint = await admin.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks/auth" });
+console.log(endpoint.signing_secret); // shown once
 ```
 
-## Credentials from the environment
+## Verifying tokens in your backend
 
-Server-side, omit `auth` and the client reads your workspace key from the environment:
+`auth.verifyToken(jwt, { app })` (or `auth.consumer(slug).verifyToken(jwt)`) checks the signature against the app's JWKS, the expiry, the per-app issuer (`https://api.auth.productcraft.co/<slug>`) and the audience (the slug), and refuses refresh tokens (`JwtRefreshTokenError`). Every failure is a `JwtVerifyError` subclass. For Passport, use [`@productcraft/auth-passport`](https://www.npmjs.com/package/@productcraft/auth-passport).
 
-```bash
-# .env
-PRODUCTCRAFT_API_KEY=pcft_live_...
-PRODUCTCRAFT_AUTH_APP=acme           # default slug for auth.consumer()
+## Passkeys (browser)
+
+`auth.consumer(slug).passkeys` runs whole WebAuthn ceremonies in one call each: `enroll()`, `signIn()`, `completeMfaChallenge({ mfa_token })` and `stepUp()`. They need a browser at call time; importing is safe anywhere.
+
+<!-- generated:start (scripts/gen-sdk.mjs; edits between the markers are overwritten) -->
+
+## Resources
+
+Full reference: [api.md](./api.md).
+
+- `auth.admin.app(…)`: `clone`, `updateStatus`
+- `auth.admin.app(…).apiKeys`: `create`, `delete`, `list`, `rotate`
+- `auth.admin.app(…).auditLogs`: `export`, `list`
+- `auth.admin.app(…).auditSink`: `disconnect`, `replace`, `retrieve`, `rotateSecret`, `setupStatus`, `test`, `update`
+- `auth.admin.app(…).authConfig`: `providers.check`, `providers.delete`, `providers.list`, `providers.replace`, `providers.retrieve`, `providers.update`, `retrieve`, `update`
+- `auth.admin.app(…).credentials`: `create`, `delete`, `list`, `retrieve`, `rotate`, `update`, `updateScopes`
+- `auth.admin.app(…).customDomains`: `apply`, `check`, `create`, `delete`, `export`, `list`, `retrieve`
+- `auth.admin.app(…).endUserInsights`: `retrieve`, `users.retrieve`
+- `auth.admin.app(…).endUsers`: `bulkDelete`, `bulkRevokeSessions`, `bulkUpdateRole`, `bulkUpdateStatus`, `contacts.create`, `contacts.delete`, `contacts.list`, `contacts.promote`, `contacts.resendVerification`, `delete`, `export`, `imports.create`, `imports.retrieve`, `invites.create`, `invites.delete`, `invites.list`, `list`, `mfa.requireReenrollment`, `resendVerification`, `retrieve`, `sessions.revokeAll`, `update`, `updateRole`, `updateStatus`
+- `auth.admin.app(…).members`: `delete`, `list`
+- `auth.admin.app(…).notificationSettings`: `retrieve`, `update`
+- `auth.admin.app(…).notifications`: `test`
+- `auth.admin.app(…).permissions`: `create`, `delete`, `enforcement.list`, `list`
+- `auth.admin.app(…).roles`: `assign`, `create`, `delete`, `list`, `permissions.list`, `retrieve`, `update`, `updatePermissions`
+- `auth.admin.app(…).setupStatus`: `retrieve`
+- `auth.admin.app(…).signInTests`: `create`, `retrieve`
+- `auth.admin.app(…).tenantApiKeys`: `config.retrieve`, `config.update`, `delete`, `list`
+- `auth.admin.app(…).tenants`: `create`, `delete`, `invites.create`, `invites.delete`, `invites.list`, `list`, `members.create`, `members.delete`, `members.list`, `members.update`, `retrieve`, `update`
+- `auth.admin.app(…).unverifiedAccountExpiry`: `retrieve`, `run`
+- `auth.admin.app(…).webauthnConfig`: `retrieve`, `update`
+- `auth.admin.app(…).webhooks`: `endpoints.create`, `endpoints.delete`, `endpoints.list`, `endpoints.retrieve`, `endpoints.rotateSecret`, `endpoints.test`, `endpoints.update`, `eventTypes.list`, `events.list`, `events.replay`, `events.retrieve`
+- `auth.apps`: `create`, `delete`, `list`, `retrieve`, `update`
+- `auth.consumer(…)`: `acceptInvite`, `acceptTenantInvite`, `exchangeProviderCode`, `logout`, `refresh`, `requestPasswordReset`, `requestVerification`, `resetPassword`, `sendPasswordResetEmail`, `sendVerificationEmail`, `signin`, `signinWithProvider`, `signup`, `switchTenant`, `verifyEmail`
+- `auth.consumer(…).me`: `activity.list`, `changePassword`, `contacts.create`, `contacts.delete`, `contacts.list`, `contacts.promote`, `deleteAccount`, `deleteAvatar`, `mfa.factors.create`, `mfa.factors.delete`, `mfa.factors.list`, `mfa.factors.verify`, `mfa.recoveryCodes.regenerate`, `mfa.stepUp.sendCode`, `mfa.stepUp.verify`, `mfa.stepUp.webauthn.options`, `permissions`, `retrieve`, `sessions.delete`, `sessions.list`, `tenantInvites.accept`, `tenants.list`, `update`, `uploadAvatar`
+- `auth.consumer(…).mfa`: `enroll`, `recover`, `sendCode`, `verify`, `verifyEnrollment`, `webauthn.options`
+- `auth.consumer(…).oauth`: `introspect`, `token`
+- `auth.consumer(…).passkey`: `options`, `verify`
+- `auth.consumer(…).permissions`: `create`, `delete`, `list`
+- `auth.consumer(…).roles`: `create`, `delete`, `list`, `retrieve`, `update`, `updatePermissions`
+- `auth.consumer(…).tenantApiKeys`: `config.retrieve`, `config.update`, `create`, `delete`, `introspect`, `list`, `rotate`, `status`
+- `auth.consumer(…).tenants`: `create`, `delete`, `invites.create`, `invites.delete`, `invites.list`, `list`, `members.create`, `members.delete`, `members.list`, `members.update`, `retrieve`, `update`
+- `auth.consumer(…).users`: `create`, `delete`, `factors.create`, `factors.delete`, `factors.list`, `list`, `retrieve`, `update`, `updateRole`, `updateStatus`
+- `auth.consumer(…).verify`: `authorize`, `authorizeBatch`, `token`
+- `auth.consumer(…).wellKnown`: `jwks`, `openidConfiguration`
+- `auth.stats`: `me`, `retrieve`
+
+## Pagination
+
+List methods return a `PagePromise`: `for await` walks every item across pages, `await` gives one page.
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+for await (const item of auth.apps.list({ limit: 50 })) console.log(item);
+const page = await auth.apps.list();
+if (page.hasNextPage()) await page.getNextPage();
+const all = await auth.apps.list().toArray({ maxItems: 500 });
 ```
 
-- An explicit `auth` always wins over the environment.
-- Hosts are never read from the environment. Override them in code with `baseUrl`.
-- This is a server-only fallback. Never put a key in `NEXT_PUBLIC_*` or any other variable a bundler inlines into browser code.
-- `auth.app(appId)` and the workspace methods (`apps`, `stats`) use the explicit `auth`, else `PRODUCTCRAFT_API_KEY`.
-- `auth.consumer()` takes its slug from `PRODUCTCRAFT_AUTH_APP` when you omit it, and **never** reads a credential from the environment: consumer routes act for an end user, so only an explicit `auth` is sent. PAK-only consumer routes (`signup_requires_pak` sign-ups, tenants, code mint, factors) therefore need `new Auth({ auth: { type: "apiKey", key: process.env.MY_APP_PAK! } })`.
+## Errors
 
-## Configuration
+Every failure is a class you can catch. `APIError` carries `status`, `code`, `message`, `errors[]`, `requestId` and `docUrl`.
 
-```ts before
-new Auth({
-  // Auth credential the SDK presents to Auth
-  // Omit to use PRODUCTCRAFT_API_KEY from the environment
-  auth: { type: "apiKey", key: "pcft_live_..." }
-      | { type: "bearer", token: "eyJ..." }
-      | { type: "cookie", value: "auth_token=..." },
-  // Override the prod base URL — useful for dev / staging
-  baseUrl: "https://api.auth.example.test",
-  // Custom fetch (undici with retry, mock in tests, ...)
-  fetch: customFetch,
-  // JWKS cache TTL — default 10 minutes
-  jwksTtlMs: 10 * 60 * 1000,
+```ts
+import { Auth, NotFoundError, RateLimitError, APIError } from "@productcraft/auth";
+const auth = new Auth();
+try {
+  await auth.apps.retrieve("00000000-0000-0000-0000-000000000000");
+} catch (err) {
+  if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
+  else if (err instanceof RateLimitError) console.log(err.retryAfter);
+  else if (err instanceof APIError) console.log(err.status, err.errors);
+  else throw err;
+}
+```
+
+## Retries and timeouts
+
+Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` are retried twice by default with exponential backoff and jitter, honouring `Retry-After` up to 60 s. A POST or PATCH without an idempotency key is never retried. Each attempt times out after 60 s, so the worst case with defaults is about 3 minutes; pass `signal: AbortSignal.timeout(ms)` for an overall deadline.
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ maxRetries: 3, timeout: 20_000 });
+await auth.apps.list({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
+```
+
+## Idempotency
+
+Writes that support it send an `Idempotency-Key` automatically and reuse it on every retry. Pass your own to make a retry across processes safe. If the API's idempotency store is unavailable it runs the request without it (fail-open), so a retry during that window can execute twice.
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const app = await auth.apps.create({
+  display_name: "Acme",
+  slug: "acme-app",
+  workspace_id: "835015dc-7bde-4a8a-b306-c066d4733b90",
+}, { idempotencyKey: "order-1234" });
+```
+
+## Webhooks
+
+`auth.webhooks.unwrap()` verifies the signature against the **raw** body and returns a typed `Auth.UnwrapWebhookEvent`. The secret comes from `{ secret }`, the client's `webhookSecret`, or `PRODUCTCRAFT_AUTH_WEBHOOK_SECRET`.
+
+Next.js route handler:
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth();
+export async function POST(req: Request) {
+  const event = await auth.webhooks.unwrap({ payload: await req.text(), headers: req.headers });
+  switch (event.type) {
+    case "app.slug_changed":
+      console.log(event.data);
+      break;
+    default:
+      break; // UnknownWebhookEvent: types added later
+  }
+  return new Response(null, { status: 204 });
+}
+```
+
+Express (keep the body raw):
+
+```ts
+import express from "express";
+import { Auth } from "@productcraft/auth";
+const auth = new Auth();
+const app = express();
+app.post("/webhooks", express.raw({ type: "application/json" }), async (req, res) => {
+  const event = await auth.webhooks.unwrap({ payload: req.body, headers: req.headers });
+  console.log(event.type);
+  res.sendStatus(204);
 });
 ```
 
-## How this SDK is built
+Hono:
 
-Generated from the live OpenAPI spec at `https://api.auth.productcraft.co/docs-json`. The 4,000+ lines of types + per-operation client functions in `src/_generated/` are produced by [kubb](https://kubb.dev/); the thin resource classes (~600 lines of `app.ts` / `consumer.ts`) wrap those into the namespace structure shown above.
+```ts
+import { Hono } from "hono";
+import { Auth } from "@productcraft/auth";
+const auth = new Auth();
+const app = new Hono();
+app.post("/webhooks", async (c) => {
+  const event = await auth.webhooks.unwrap({ payload: await c.req.text(), headers: c.req.raw.headers });
+  console.log(event.type);
+  return c.body(null, 204);
+});
+```
 
-When the spec changes, the nightly `spec-refresh` workflow re-runs codegen and opens a PR with the diff. Type-safe consumers get the latest API surface automatically.
+## Raw responses
 
-## License
+Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`). `.withResponse()` adds the `Response` and parsed rate-limit headers.
 
-[MIT](https://github.com/clauderanelagh/productcraft-node/blob/main/LICENSE).
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
+const obj = await auth.apps.retrieve(id);
+console.log(obj.lastResponse.requestId);
+const { data, response, requestId, rateLimit } = await auth.apps.retrieve(id).withResponse();
+console.log(data, response.status, requestId, rateLimit?.remaining);
+```
+
+## Testing
+
+`@productcraft/auth/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name.
+
+```ts
+import { Auth } from "@productcraft/auth";
+import { createMockFetch } from "@productcraft/auth/testing";
+const fetch = createMockFetch();
+const auth = new Auth({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });
+await auth.apps.list();
+console.log(fetch.calls.length);
+```
+
+## Escape hatch
+
+`.client` is the typed `openapi-fetch` client over the same credential and base URL (no retries). Use it for anything the resource methods do not cover.
+
+```ts
+import { Auth } from "@productcraft/auth";
+const auth = new Auth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
+const { data, error } = await auth.client.GET("/v1/apps");
+console.log(data, error);
+```
+
+<!-- generated:end -->

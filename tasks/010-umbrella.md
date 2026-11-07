@@ -12,6 +12,7 @@
 
 - `packages/umbrella/src/index.ts`; `docs/sdk-standard.md` 2.1.
 - `overrides` (nested per product) stays: the flat `auth` key collides with the credential field.
+- **Release conflict found in 009 (decide here):** main now carries `.changeset/auth-1-0-generated.md` (auth and auth-passport `major`, core `minor`), so every Version Packages PR bumps auth to 1.0.0, and ci.yml holds such a PR red until `tasks/012-stable-release.md` is gone. A stable `productcraft@0.4.0` "pinned to auth 0.8.x" therefore cannot go out through the normal Version Packages PR while the auth major is pending. Options: ship 0.4.0 as a `next` snapshot alongside auth (`gh workflow run release.yml --ref main -f snapshot=next`), or fold the umbrella's stable release into 012. Do not move or delete the auth changeset: a spec-refresh patch would then publish the 1.0 code as auth 0.9.x.
 
 ## Requirements
 

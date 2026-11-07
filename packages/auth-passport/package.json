@@ -22,7 +22,7 @@
     "node": ">=20.3"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
     "test": "vitest run"
   },
   "keywords": [
@@ -49,10 +49,13 @@
     "provenance": true
   },
   "dependencies": {
-    "@productcraft/auth": "workspace:^",
     "jose": "^6.2.3"
   },
   "peerDependencies": {
+    "@productcraft/auth": "^1.0.0-0 || ^1",
     "passport-jwt": "^4.0.0"
+  },
+  "devDependencies": {
+    "@productcraft/auth": "workspace:*"
   }
 }

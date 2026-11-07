@@ -37,11 +37,6 @@
   "homepage": "https://github.com/clauderanelagh/productcraft-node",
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
-    "@kubb/cli": "^4.37.8",
-    "@kubb/core": "^4.37.8",
-    "@kubb/plugin-client": "^4.37.8",
-    "@kubb/plugin-oas": "^4.37.8",
-    "@kubb/plugin-ts": "^4.37.8",
     "@microsoft/api-extractor": "7.59.4",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",

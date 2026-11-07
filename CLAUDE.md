@@ -6,7 +6,7 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 
 | npm package | dir | What it wraps |
 |---|---|---|
-| `@productcraft/core` | `packages/core` | Shared auth + transport (`PCAuth`, `makeClient`, `PC_BASE_URL`). Dep of every other package. |
+| `@productcraft/core` | `packages/core` | The shared runtime (`APIClient`, retries, errors, pagination, webhooks) plus the 0.x helpers (`PCAuth`, `makeClient`, `PC_BASE_URL`). Dep of every other package. |
 | `@productcraft/auth` | `packages/auth` | Auth Consumer + Admin API |
 | `@productcraft/mail` | `packages/mail` | Mail API (mail-api) |
 | `@productcraft/waitlist` | `packages/waitlist` | Waitlist API (waitlists) |
@@ -26,9 +26,9 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
 2. **Never hand-edit generated output**, checked-in or not. If a name or type is wrong, fix the API's `@nestjs/swagger` / `@SdkMethod` / `@SdkModel` annotations in the monorepo, deploy, then `pnpm run refresh-specs && pnpm run codegen`.
 3. **Specs are the contract.** Vendored under `Specs/<surface>.json`; `scripts/refresh-specs.sh` is the only thing that writes them.
 4. **Hand-written code is on an allowlist** (`scripts/handwritten-allowlist.json`, enforced by `scripts/check-handwritten.mjs`): `packages/core/src/**` (the shared runtime: `APIClient`, `APIPromise`, pagination, polling, retries, branded errors, `verifyWebhook`, plus the 0.x helpers in `legacy.ts`), each package's `src/index.ts` (at most 60 lines: re-exports of the generated client plus hand-written extras such as Auth's `verifyToken`), Auth's JWT and passkey code, auth-passport, and the umbrella. Product identity (class name, base URL, scope accessors such as `community(id)` and `public({ workspace, waitlist })`) lives in the `SURFACES` table at the top of `scripts/gen-sdk.mjs`, not in per-package code.
-5. **Migration in progress.** Only packages listed in `SURFACES` use the generator. Today that is `@productcraft/trawl` (1.0, task 004), `@productcraft/mail` (1.0, task 005), `@productcraft/waitlist` (1.0, task 006), `@productcraft/platform-auth` (1.0, task 007), `@productcraft/social` (1.1, task 008) and the private test fixture `packages/gen-fixture` (spec `packages/gen-fixture/fixture.openapi.json`); task 009 switches auth. Each switched package has a live smoke in `scripts/live/<p>.mjs` (testing-environment only) and a migration guide in `docs/migrations/`. Unswitched packages keep the old path in `scripts/codegen.sh` (kubb for auth until 009).
+5. **Every product is on the generator** (`SURFACES`): `@productcraft/trawl`, `mail`, `waitlist`, `platform-auth` (1.0), `social` (1.1) and `auth` (1.0 previews under `next`, task 009), plus the private test fixture `packages/gen-fixture` (spec `packages/gen-fixture/fixture.openapi.json`). kubb is gone. Each has a live smoke in `scripts/live/<p>.mjs` (testing-environment only) and a migration guide in `docs/migrations/`. Auth's hand-written parts: `src/base.ts` (the generated `Auth` extends it: `consumer(slug)`, top-level `verifyToken`), `src/consumer.ts` (`ConsumerScope` over the generated consumer scope: `verifyToken`, `jwks`, passkeys), `src/jwt/`, `src/passkeys.ts`, and the frozen 0.x name map `packages/auth/compat.json` (the generator emits the deprecated aliases from it; deleted in 2.0).
 
-`pnpm run codegen` is the single entry point. Core's contract suite runs against a local `node:http` mock server (`packages/core/tests/`); `scripts/smoke-dist.mjs` checks the built ESM + CJS dist (CI: Node 20, 22, 24) and `scripts/size-budget.mjs` the bundle budget.
+`pnpm run codegen` is the single entry point. Core's contract suite runs against a local `node:http` mock server (`packages/core/tests/`); `scripts/smoke-dist.mjs` checks the built ESM + CJS dist (CI: Node 20.3.0, 20, 22, 24) and `scripts/size-budget.mjs` the bundle budget.
 
 ## The SDK standard (2026-11)
 
@@ -65,6 +65,8 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
    2. If there are no pending changesets but `package.json` versions are ahead of npm → runs `pnpm run release` (build + `changeset publish`).
 
   **Publish auth — read this before touching release.yml.** Publishing is tokenless **npm trusted publishing (OIDC)**, bound to the workflow filename `release.yml` (restored 2026-10-23). Every published name has a trusted publisher for `clauderanelagh/productcraft-node` + `release.yml`; there is no `NPM_TOKEN`. A one-off workflow with a different filename cannot publish. `npm@11` is pinned deliberately — `npm@12` breaks provenance publishes with a missing-`sigstore` error.
+
+  **Snapshot previews (`next`):** `gh workflow run release.yml --ref main -f snapshot=next` versions the pending changesets as `<version>-next-<datetime>` in the runner and publishes them under the `next` dist-tag; `latest` does not move. While `.changeset/auth-1-0-generated.md` is pending, a Version Packages PR bumps auth to 1.0.0 and ci.yml holds it red until task 012 deletes `tasks/012-stable-release.md`: do not merge it before then.
 
   **First publish of a brand-new package name:** configure its trusted publisher on npmjs.com (owner `clauderanelagh`, repo `productcraft-node`, workflow `release.yml`) BEFORE merging the Version Packages PR, or the publish 404s. Confirm it actually landed on npm after release, don't assume.
 

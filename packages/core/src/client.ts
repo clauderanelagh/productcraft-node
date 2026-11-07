@@ -65,6 +65,11 @@ export interface ClientOptions {
   webhookSecret?: string | readonly string[];
   /** Platform-auth host used for the workspace lookup. */
   platformAuthBaseUrl?: string;
+  /**
+   * Read `PRODUCTCRAFT_API_KEY` when neither `auth` nor `apiKey` is passed. Default `true`.
+   * Auth's consumer scope sets `false`: routes acting for an end user never pick up a workspace key.
+   */
+  credentialFromEnv?: boolean;
 }
 
 /** Per-request options: always the last argument of an SDK method. */
@@ -228,7 +233,9 @@ export class APIClient {
   constructor(options: ClientOptions = {}, defaultBaseUrl: string, sdk?: SDKIdentity) {
     this.baseUrl = (options.baseUrl ?? defaultBaseUrl).replace(/\/+$/, "");
     Object.defineProperty(this, "auth", {
-      value: resolveAuth(options.auth ?? (options.apiKey ? { type: "apiKey", key: options.apiKey } : undefined)),
+      value: ((explicit: PCAuth | undefined) => (options.credentialFromEnv === false ? explicit : resolveAuth(explicit)))(
+        options.auth ?? (options.apiKey ? { type: "apiKey", key: options.apiKey } : undefined),
+      ),
       enumerable: false,
       writable: false,
     });

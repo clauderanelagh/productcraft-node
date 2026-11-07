@@ -1,7 +1,7 @@
 {
   "name": "@productcraft/auth",
   "version": "0.9.0",
-  "description": "Customer auth & EndUsers — sign-in flows, OTP, sessions for ProductCraft Auth. Generated from the production OpenAPI spec.",
+  "description": "Customer auth for ProductCraft: apps, end users, roles, keys and config, plus sign-in, sessions, profile, MFA, passkeys and tenants for your app's users, and offline token verification. Resources, auto-pagination, typed errors and retries with idempotency keys, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -11,19 +11,28 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "import": "./dist/testing.js",
+      "require": "./dist/testing.cjs"
+    },
+    "./manifest.json": "./manifest.json"
   },
   "files": [
     "dist/**",
+    "manifest.json",
+    "api.md",
     "README.md",
     "LICENSE"
   ],
+  "sideEffects": false,
   "engines": {
     "node": ">=20.3"
   },
   "scripts": {
-    "build": "tsup",
-    "test": "vitest run"
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
+    "test": "tsc -p tests/tsconfig.json && vitest run"
   },
   "keywords": [
     "productcraft",
@@ -47,6 +56,7 @@
   },
   "dependencies": {
     "@productcraft/core": "workspace:^",
-    "jose": "^6.2.3"
+    "jose": "^6.2.3",
+    "openapi-fetch": "^0.13.0"
   }
 }
