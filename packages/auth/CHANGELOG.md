@@ -1,4 +1,4 @@
-# @productcraft/heimdall
+# @productcraft/auth
 
 ## 1.4.0
 

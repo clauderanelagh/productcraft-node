@@ -1,4 +1,4 @@
-# @productcraft/envoi
+# @productcraft/mail
 
 ## 1.4.0
 

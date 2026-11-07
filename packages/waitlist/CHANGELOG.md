@@ -1,4 +1,4 @@
-# @productcraft/rally
+# @productcraft/waitlist
 
 ## 2.1.0
 
