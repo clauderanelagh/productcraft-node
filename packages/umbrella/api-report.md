@@ -4,19 +4,91 @@
 
 ```ts
 
+import { APIConnectionError } from '@productcraft/core';
+import { APIError } from '@productcraft/core';
+import { APIPromise } from '@productcraft/core';
+import { APITimeoutError } from '@productcraft/core';
+import { APIUserAbortError } from '@productcraft/core';
 import { Auth } from '@productcraft/auth';
+import { AuthenticationError } from '@productcraft/core';
+import { AuthErrorCode } from '@productcraft/auth';
+import { AuthOptions } from '@productcraft/auth';
+import { BadRequestError } from '@productcraft/core';
+import { ClientOptions } from '@productcraft/core';
+import { ConfigurationError } from '@productcraft/core';
+import { ConflictError } from '@productcraft/core';
+import { IdempotencyKeyReuseError } from '@productcraft/core';
+import { InternalServerError } from '@productcraft/core';
+import { Logger } from '@productcraft/core';
+import { LogLevel } from '@productcraft/core';
 import { Mail } from '@productcraft/mail';
+import { MailErrorCode } from '@productcraft/mail';
+import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
+import { PagePromise } from '@productcraft/core';
 import { PC_BASE_URL } from '@productcraft/core';
 import { PCAuth } from '@productcraft/core';
 import { PCClientConfig } from '@productcraft/core';
+import { PermissionDeniedError } from '@productcraft/core';
 import { PlatformAuth } from '@productcraft/platform-auth';
+import { PlatformAuthErrorCode } from '@productcraft/platform-auth';
+import { ProductCraftError } from '@productcraft/core';
+import { RateLimitError } from '@productcraft/core';
+import { RequestOptions } from '@productcraft/core';
 import { Social } from '@productcraft/social';
+import { SocialErrorCode } from '@productcraft/social';
 import { Trawl } from '@productcraft/trawl';
+import { TrawlErrorCode } from '@productcraft/trawl';
+import { UnprocessableEntityError } from '@productcraft/core';
+import { verifyWebhook } from '@productcraft/core';
+import { VerifyWebhookParams } from '@productcraft/core';
 import { Waitlist } from '@productcraft/waitlist';
+import { WaitlistErrorCode } from '@productcraft/waitlist';
+import { WebhookVerificationError } from '@productcraft/core';
+
+export { APIConnectionError }
+
+export { APIError }
+
+export { APIPromise }
+
+export { APITimeoutError }
+
+export { APIUserAbortError }
 
 export { Auth }
 
+export { AuthenticationError }
+
+export { AuthErrorCode }
+
+export { AuthOptions }
+
+export { BadRequestError }
+
+export { ClientOptions }
+
+export { ConfigurationError }
+
+export { ConflictError }
+
+export { IdempotencyKeyReuseError }
+
+export { InternalServerError }
+
+export { Logger }
+
+export { LogLevel }
+
 export { Mail }
+
+export { MailErrorCode }
+
+export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 export { PC_BASE_URL }
 
@@ -24,48 +96,78 @@ export { PCAuth }
 
 export { PCClientConfig }
 
+export { PermissionDeniedError }
+
 export { PlatformAuth }
 
-// @public
+export { PlatformAuthErrorCode }
+
+// @public (undocumented)
 export class ProductCraft {
-    constructor(config?: PCClientConfig & {
-        overrides?: ProductCraftOverrides;
-    });
+    constructor(options?: ProductCraftOptions);
     // (undocumented)
-    readonly auth: Auth;
+    get auth(): Auth;
     // (undocumented)
-    readonly mail: Mail;
+    get mail(): Mail;
     // (undocumented)
-    readonly platformAuth: PlatformAuth;
+    get platform(): PlatformAuth;
+    get platformAuth(): PlatformAuth;
     // (undocumented)
-    readonly social: Social;
+    get social(): Social;
     // (undocumented)
-    readonly trawl: Trawl;
+    get trawl(): Trawl;
     // (undocumented)
-    readonly waitlist: Waitlist;
+    get waitlist(): Waitlist;
+}
+
+export { ProductCraftError }
+
+// @public
+export interface ProductCraftOptions extends AuthOptions {
+    // (undocumented)
+    overrides?: ProductCraftOverrides;
 }
 
 // @public
 export interface ProductCraftOverrides {
     // (undocumented)
-    auth?: PCClientConfig;
+    auth?: AuthOptions;
     // (undocumented)
-    mail?: PCClientConfig;
+    mail?: ClientOptions;
     // (undocumented)
-    platformAuth?: PCClientConfig;
+    platform?: ClientOptions;
+    platformAuth?: ClientOptions;
     // (undocumented)
-    social?: PCClientConfig;
+    social?: ClientOptions;
     // (undocumented)
-    trawl?: PCClientConfig;
+    trawl?: ClientOptions;
     // (undocumented)
-    waitlist?: PCClientConfig;
+    waitlist?: ClientOptions;
 }
+
+export { RateLimitError }
+
+export { RequestOptions }
 
 export { Social }
 
+export { SocialErrorCode }
+
 export { Trawl }
 
+export { TrawlErrorCode }
+
+export { UnprocessableEntityError }
+
+export { verifyWebhook }
+
+export { VerifyWebhookParams }
+
 export { Waitlist }
+
+export { WaitlistErrorCode }
+
+export { WebhookVerificationError }
 
 // (No @packageDocumentation comment for this package)
 

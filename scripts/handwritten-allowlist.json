@@ -37,7 +37,6 @@
   ],
   "indexLineExceptions": {
     "packages/core/src/index.ts": "The runtime's barrel, not a product shell.",
-    "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface.",
-    "packages/umbrella/src/index.ts": "Composes the products; 010 rewrites it."
+    "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface."
   }
 }

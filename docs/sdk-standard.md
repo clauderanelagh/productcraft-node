@@ -289,7 +289,7 @@ There is **no program-wide changesets pre mode**: pre mode applies to the whole 
 | `@productcraft/social` | 1.0.0 | 1.1.0 | 008 | Nobody: resource methods are additive and `.client` is unchanged |
 | `@productcraft/auth` | 0.9.0 | 1.0.0 (previews as `next` snapshots) | 009 previews; 012 stable | Query and path casing; `consumer.auth.*` flattened (aliased); `AuthHttpError` becomes an alias of `APIError` |
 | `@productcraft/auth-passport` | 0.3.0 | 1.0.0 | 012 | Peer range moves to auth ^1 |
-| `productcraft` | 0.3.0 | 0.4.0, then 1.0.0 | 010; 012 | `apiKey` shorthand added; `overrides` kept |
+| `productcraft` | 0.3.0 | 0.4.0 as a `next` snapshot, then 1.0.0 | 010 (snapshot); 012 (stable) | `apiKey` shorthand added; `overrides` kept; `pc.platform` added (`pc.platformAuth` kept) |
 
 The engines change to Node 20.3 ships inside these releases (Node 18 and 20 are end-of-life; the changeset text says so).
 
@@ -376,6 +376,15 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 
 ## 13. Decision log
 
+2026-11-07, task 010 (umbrella `productcraft` 0.4) as built:
+
+- **No stable 0.4.0; it ships as a `next` snapshot and goes stable as 1.0.0 in 012.** The umbrella is built against the workspace `@productcraft/auth`, which is the 1.0 code. A stable 0.4.0 "pinned to auth 0.x" would ship 1.0-typed code over a 0.9 runtime, and the auth major's Version Packages PR is held red until 012 anyway. The `minor` changeset waits with the others; 012's `major` takes the umbrella straight to 1.0.0.
+- **Lazy products in 60 lines.** `ProductCraft` keeps the shared options and builds each product in a getter on first access (the same instance after that). A browser-guard `ConfigurationError` therefore surfaces on first access, not in the constructor. The umbrella's `index.ts` lost its line-limit exception.
+- **One workspace id.** The umbrella reads `PRODUCTCRAFT_WORKSPACE_ID` once at construction and passes it to every product. Without one, core's per-process key lookup cache is now kept on `Symbol.for("productcraft.workspaceCache")`, so products on different core copies still make one lookup (core patch).
+- **The credential is not pre-resolved from the environment** by the umbrella: Auth's consumer scope must keep never reading `PRODUCTCRAFT_API_KEY`, which an explicit key would defeat.
+- **`pc.platform`** matches the generated docs (`platform.apiKeys.self()`); `pc.platformAuth` is the same instance, kept without a deprecation. `overrides.platform` wins over `overrides.platformAuth`.
+- **Re-exports:** the six product classes (with their type namespaces), every error class, each `<Product>ErrorCode`, `verifyWebhook`, `PC_BASE_URL` and the runtime types (`ClientOptions`, `RequestOptions`, `APIPromise`, `Page`, `PagePromise`, `Logger`, `LogLevel`, `PCAuth`, `PCClientConfig`). Not `export *`: the products' `paths`/`components` would collide.
+
 2026-11-07, task 009 (Auth 1.0 on the pipeline, `next` snapshots) as built:
 
 - **One generator path.** kubb, `kubb.config.ts`, `src/scopes/` and `_http.ts` are gone; `scripts/codegen.sh` runs `gen-sdk.mjs` for every surface (its `openapi-typescript` loop is now empty). 214 operations generated (226 in the spec, 12 `x-pc-sdk: false`).
@@ -386,7 +395,7 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 - **`AuthHttpError` is `APIError`** (same object, so branded `instanceof` works across builds); its 0.x `data`/`statusText` fields are gone (`body`, `status`), listed in the migration guide.
 - **CJS on Node 20.3:** the CJS builds of auth and auth-passport bundle `jose` (tsup `noExternal`, CJS only); the ESM builds keep it external. `smoke-dist.mjs` asserts no `require("jose")` and verifies a real token through both builds; CI's dist-smoke matrix adds Node `20.3.0`.
 - **auth-passport** takes auth as a peer (`^1.0.0-0 || ^1`) so it shares the app's copy.
-- **Snapshots:** `release.yml` takes `workflow_dispatch` input `snapshot` (default `next`, `latest` refused) and runs `changeset version --snapshot` + `changeset publish --tag` in the runner only; `.changeset/config.json` sets `snapshot.useCalculatedVersion`, so previews are `1.0.0-next-<datetime>`. While the auth major is pending, every Version Packages PR bumps auth to 1.0.0; a ci.yml step holds such a PR red until `tasks/012-stable-release.md` is deleted, so `latest` cannot move early. Task 010's stable umbrella release has to work around that (noted in its file).
+- **Snapshots:** `release.yml` takes `workflow_dispatch` input `snapshot` (default `next`, `latest` refused) and runs `changeset version --snapshot` + `changeset publish --tag` in the runner only; `.changeset/config.json` sets `snapshot.useCalculatedVersion`, so previews are `1.0.0-next-<datetime>`. While the auth major is pending, every Version Packages PR bumps auth to 1.0.0; a ci.yml step holds such a PR red until `tasks/012-stable-release.md` is deleted, so `latest` cannot move early. Task 010 resolved the umbrella's release around that (decision log, 2026-11-07, task 010).
 - **Size:** the one-call consumer bundle (`auth.consumer(slug).signin()`) is 24.9 KB gzip, the largest product: the consumer scope class pulls its resource tree and `jose` (offline verification). Recorded as the baseline.
 - **Live smoke credential:** `scripts/live/auth.mjs` uses the standing testing-environment workspace key and keeps everything inside one throwaway `sdk-smoke-<ts>` app it creates and deletes (stale ones swept first).
 
