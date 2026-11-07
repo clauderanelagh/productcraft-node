@@ -302,7 +302,7 @@ The engines change to Node 20.3 ships inside these releases (Node 18 and 20 are 
   - Package names never change (the console's install line hard-codes them).
 - **After 1.0:** a spec refresh that only adds operations or optional fields is a minor. Spec-refresh labels a PR `breaking` when `oasdiff breaking` on `Specs/` or the API report diff (section 10) finds a break; `manifest.json` diffs alone miss type-level breaks.
 - **/v1 is additive-only:** response shapes under `/v1` only gain fields and enum values (the open enums in 3.4 absorb that). Written into the monorepo API conventions by monorepo/021. There is no `apiVersion` pin because there is nothing to pin to.
-- **Migration guides:** `docs/migrations/<package>-<from>-to-<to>.md`, written per major in the package's task, with a before/after table of every call shape in our own docs and consumers. Old-version blocks use a ` ```ts before ` fence, which the snippet check skips. Linked from the changeset text and the generated README.
+- **Migration guides:** `docs/migrations/<package>-<version>.md` (the version the major lands at, e.g. `auth-1.0.0.md`), written per major in the package's task, with a before/after table of every call shape in our own docs and consumers. Old-version blocks use a ` ```ts before ` fence, which the snippet check skips. Linked from the changeset text and the generated README.
 
 ## 8. Docs generation
 
