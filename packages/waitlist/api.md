@@ -186,7 +186,7 @@ One point per UTC day in [`since`, `until`), oldest first, zero-count days inclu
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-11-01T00:00:00Z" });
+const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-12-01T00:00:00Z" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-analytics-timeline)

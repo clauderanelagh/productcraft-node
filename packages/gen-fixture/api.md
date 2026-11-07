@@ -267,6 +267,26 @@ const page = await fixture.widgets.list({}, { timeout: 5_000 });
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets)
 
+### `fixture.widgets.paint(id, color, options?)`
+
+`POST /v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}` → `Fixture.Widget`
+
+Paint a widget.
+
+Repaints the widget in one of the catalogue colours.
+
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
+
+```ts
+const widget = await fixture.widgets.paint("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "red");
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-workspaces-workspace-id-widgets-id-paint-color)
+
 ### `fixture.widgets.retrieve(id, options?)`
 
 `GET /v1/workspaces/{workspace_id}/widgets/{id}` → `Fixture.Widget`

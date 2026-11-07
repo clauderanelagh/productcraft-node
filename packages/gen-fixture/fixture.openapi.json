@@ -1939,6 +1939,91 @@
           "public": true
         }
       }
+    },
+    "/v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}": {
+      "post": {
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "operationId": "WidgetController_paint",
+        "summary": "Paint a widget",
+        "description": "Repaints the widget in one of the catalogue colours.",
+        "tags": [
+          "widgets"
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "description": "Id of the workspace.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Widget id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6"
+            }
+          },
+          {
+            "name": "color",
+            "in": "path",
+            "required": true,
+            "description": "The colour to paint it.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "red",
+                "blue"
+              ],
+              "example": "red"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Painted.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such object in this workspace.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "widgets",
+          "method": "paint",
+          "bind": [
+            "workspace_id"
+          ],
+          "paginated": false
+        }
+      }
     }
   },
   "x-webhooks": {

@@ -19,6 +19,12 @@ export const errorClass = (status) => ERROR_CLASS[status] ?? (status >= 500 ? "I
  * schema's, else a placeholder of the right shape (a UUID for `*_id`, so a
  * copied example never sends a bare word where the API expects an id).
  */
+/** A positional path argument's TS type: its string enum as a union (`"welcome" | "approved"`), else `string`. */
+function argType(p, deref) {
+  const s = (deref ? deref(p.schema) : p.schema) ?? {};
+  return Array.isArray(s.enum) && s.enum.length > 0 && s.enum.every((v) => typeof v === "string") ? s.enum.map((v) => lit(v)).join(" | ") : "string";
+}
+
 export function pathValue(p, i, deref) {
   if (p.example !== undefined && p.example !== null) return String(p.example);
   const s = deref(p.schema) ?? {};
@@ -411,7 +417,7 @@ export function emitResources(model, cfg) {
       L.push(`  get ${k}(): ${kc} {`, `    return (this.#${k} ??= new ${kc}(this._client, this._b));`, "  }");
     }
     for (const o of [...node.ops].sort((a, b) => a.method.localeCompare(b.method))) {
-      const args = o.positional.map((p) => `${p.arg}: string`);
+      const args = o.positional.map((p) => `${p.arg}: ${argType(p, deref)}`);
       const ps = paramsSig(o);
       if (ps) args.push(ps);
       args.push("options?: RequestOptions");
@@ -561,7 +567,7 @@ function emitPoll(L, o, node, cfg, deref) {
   const shape = res ? `T.WithResult<${model}, ${lit(res)}, TResult>` : model;
   const rt = `Promise<T.WithLastResponse<${shape}>>`;
   const resultDoc = res ? ["", `@typeParam TResult - The shape you expect in \`${res}\`. It is a type assertion: the SDK does not validate it at runtime.`] : [];
-  const args = [...o.positional.map((p) => `${p.arg}: string`), "options?: PollOptions"];
+  const args = [...o.positional.map((p) => `${p.arg}: ${argType(p, deref)}`), "options?: PollOptions"];
   L.push(
     jsdoc([`Retrieve until \`${o.poll.field}\` is ${o.poll.terminal.map((t) => `\`${t}\``).join(", ")}.`, ...resultDoc, "", "@param options - `intervalMs` (default 2 000), `timeoutMs` (default 300 000, then `APITimeoutError`), `signal`, and request options.", "@example", "```ts", `const done = await ${cfg.clientVar}.${o.resource}.poll(${o.positional.map(() => '"…"').join(", ")});`, "```"], "  ").trimEnd(),
     `  poll${gen}(${args.join(", ")}): ${rt} {`,
@@ -574,7 +580,7 @@ function emitPoll(L, o, node, cfg, deref) {
   const createNames = new Set(create.positional.map((p) => p.name));
   const unmatched = o.positional.filter((p) => !createNames.has(p.name));
   if (unmatched.length !== 1) return;
-  const cargs = [...create.positional.map((p) => `${p.arg}: string`)];
+  const cargs = [...create.positional.map((p) => `${p.arg}: ${argType(p, deref)}`)];
   const ps = paramsSig(create);
   if (ps) cargs.push(ps);
   cargs.push("options?: PollOptions");
@@ -757,6 +763,24 @@ export function emitTesting(model, cfg) {
   routes.sort((a, b) => a.params - b.params || b.pattern.length - a.pattern.length || a.op.localeCompare(b.op));
   const L = [
     banner(cfg),
+    ...(model.webhooks.length
+      ? [
+          "/**",
+          " * Sign a test webhook the way ProductCraft signs deliveries (Standard Webhooks), for testing a",
+          ` * handler with \`${cfg.clientVar}.webhooks.unwrap()\` or any Standard Webhooks library. The same as`,
+          ` * \`${cfg.clientVar}.webhooks.sign()\`, without a client: pass the \`whsec_…\` secret yourself.`,
+          " *",
+          " * @example",
+          " * ```ts",
+          ` * const { payload, headers } = await signWebhook({ payload: { id: "evt_test_1", type: ${lit(model.webhooks[0].type)}, created_at: new Date().toISOString(), data: {} }, secret });`,
+          ` * const res = await fetch("http://localhost:3000/webhooks", { method: "POST", headers, body: payload });`,
+          " * ```",
+          " */",
+          `export { signWebhook } from "@productcraft/core";`,
+          `export type { SignWebhookParams, SignedWebhook } from "@productcraft/core";`,
+          "",
+        ]
+      : []),
     `/** Every operation name, as \`resource.method\`. */`,
     `export type OperationName = ${routes.map((r) => lit(r.op)).sort().join(" | ")};`,
     "",

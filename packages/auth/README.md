@@ -265,7 +265,7 @@ console.log(data, response.status, requestId, rateLimit?.remaining);
 
 ## Testing
 
-`@productcraft/auth/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name.
+`@productcraft/auth/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name. It also exports `signWebhook({ payload, secret })`, which signs a test event for your webhook handler (the same as `webhooks.sign()`, without a client).
 
 ```ts
 import { Auth } from "@productcraft/auth";

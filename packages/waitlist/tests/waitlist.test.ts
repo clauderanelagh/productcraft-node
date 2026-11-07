@@ -4,7 +4,7 @@
 import { createHmac } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ConfigurationError, NotFoundError, Waitlist, WebhookVerificationError } from "../src/index.js";
-import { createMockFetch } from "../src/testing.js";
+import { createMockFetch, signWebhook } from "../src/testing.js";
 
 const WORKSPACE_ID = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
 const LIST_ID = "3f0c2a1b-7d4e-4c5f-8a9b-0c1d2e3f4a5b";
@@ -127,6 +127,15 @@ describe("@productcraft/waitlist", () => {
     expect(old.type).toBe("entry.created");
 
     await expect(waitlist.webhooks.unwrap({ payload, headers: { "webhook-id": "msg_1", "webhook-timestamp": String(t), "webhook-signature": "v1,AAAA" } })).rejects.toBeInstanceOf(WebhookVerificationError);
+  });
+
+  it("signs a test event with signWebhook from /testing, no client and no hand-rolled HMAC", async () => {
+    const secret = "whsec_" + Buffer.from("k1").toString("base64");
+    const waitlist = new Waitlist({ apiKey: "pcft_test", workspaceId: WORKSPACE_ID, webhookSecret: secret });
+    const { payload, headers } = await signWebhook({ payload: { id: "evt_test_1", type: "entry.approved", created_at: new Date().toISOString(), data: {} }, secret });
+    const event = await waitlist.webhooks.unwrap({ payload, headers });
+    expect(event.type).toBe("entry.approved");
+    await expect(waitlist.webhooks.unwrap({ payload: payload + " ", headers })).rejects.toBeInstanceOf(WebhookVerificationError);
   });
 
   it("keeps .client typed by the same paths", async () => {

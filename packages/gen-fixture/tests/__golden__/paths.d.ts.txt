@@ -312,6 +312,26 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Paint a widget
+         * @description Repaints the widget in one of the catalogue colours.
+         */
+        post: operations["WidgetController_paint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 };
 export type webhooks = Record<string, never>;
 export type components = {
@@ -1514,6 +1534,42 @@ export interface operations {
             };
             /** @description Rate limited; see Retry-After. */
             429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    WidgetController_paint: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Id of the workspace. */
+                workspace_id: string;
+                /** @description Widget id. */
+                id: string;
+                /** @description The colour to paint it. */
+                color: "red" | "blue";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Painted. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WidgetResponseDto"];
+                };
+            };
+            /** @description No such object in this workspace. */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

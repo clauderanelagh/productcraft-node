@@ -21,7 +21,7 @@ Full reference: [api.md](./api.md).
 - `fixture.regions`: `list`
 - `fixture.settings`: `retrieve`, `update`
 - `fixture.webhooks`: `endpoints.list`
-- `fixture.widgets`: `archive`, `bulkDelete`, `count`, `create`, `delete`, `erase`, `export`, `history`, `list`, `parts.create`, `parts.delete`, `parts.list`, `retrieve`, `update`, `updateStatus`
+- `fixture.widgets`: `archive`, `bulkDelete`, `count`, `create`, `delete`, `erase`, `export`, `history`, `list`, `paint`, `parts.create`, `parts.delete`, `parts.list`, `retrieve`, `update`, `updateStatus`
 
 ## Pagination
 
@@ -170,7 +170,7 @@ console.log(data, response.status, requestId, rateLimit?.remaining);
 
 ## Testing
 
-`@productcraft/gen-fixture/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name.
+`@productcraft/gen-fixture/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name. It also exports `signWebhook({ payload, secret })`, which signs a test event for your webhook handler (the same as `webhooks.sign()`, without a client).
 
 ```ts
 import { Fixture } from "@productcraft/gen-fixture";

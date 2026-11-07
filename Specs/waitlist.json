@@ -259,16 +259,28 @@
       "BulkEntryErrorDto": {
         "properties": {
           "code": {
-            "description": "HTTP-style status code for the per-row failure.",
-            "type": "integer"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistErrorCode"
+              }
+            ],
+            "description": "Error code: the same `code` the single-entry call would have failed with (`NOT_FOUND`, `CONFLICT`, ...), so a row's error is handled like a thrown error.",
+            "example": "NOT_FOUND"
           },
           "message": {
             "description": "Why this row failed.",
+            "example": "Entry not found",
             "type": "string"
+          },
+          "status_code": {
+            "description": "HTTP status the single-entry call would have answered.",
+            "example": 404,
+            "type": "integer"
           }
         },
         "required": [
           "code",
+          "status_code",
           "message"
         ],
         "type": "object",
@@ -6566,7 +6578,7 @@
           },
           {
             "description": "ISO-8601 exclusive end",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": true,
@@ -6807,7 +6819,7 @@
           },
           {
             "description": "ISO-8601 exclusive upper bound on `created_at`. Must be after `since`. Malformed values are rejected with a 400.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": false,
@@ -7020,7 +7032,7 @@
                 }
               }
             },
-            "description": "`{ requested, succeeded, failed, results }`. Each row in `results` carries `{ id, status: \"ok\" | \"error\", error?: { code, message } }` so a partial failure (one bad id) doesn't fail the whole batch.",
+            "description": "`{ requested, succeeded, failed, results }`. Each row in `results` carries `{ id, status: \"ok\" | \"error\", error?: { code, status_code, message } }` so a partial failure (one bad id) doesn't fail the whole batch. `code` is the same error code the single-entry call would fail with (`NOT_FOUND`, `CONFLICT`, ...).",
             "headers": {
               "Idempotent-Replay": {
                 "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
@@ -11204,7 +11216,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,

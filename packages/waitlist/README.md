@@ -2,7 +2,7 @@
 
 Node.js / TypeScript client for **ProductCraft Waitlist**: waitlists with public signup forms, A/B and locale variants, referrals with position and leaderboard, an approval workflow with invite-to-app, CSV export, analytics and signed webhooks.
 
-Every method, type, error class and mock is generated from the production OpenAPI spec. Upgrading from 0.x? See the [1.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/waitlist-1.0.0.md).
+Every method, type, error class and mock is generated from the production OpenAPI spec. Upgrading from 1.x? See the [2.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/waitlist-2.0.0.md) (from 0.x: [1.0](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/waitlist-1.0.0.md)).
 
 ## Install
 
@@ -204,7 +204,7 @@ console.log(data, response.status, requestId, rateLimit?.remaining);
 
 ## Testing
 
-`@productcraft/waitlist/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name.
+`@productcraft/waitlist/testing` exports `createMockFetch()`, a `fetch` that answers every operation with its spec example. Override one operation by name. It also exports `signWebhook({ payload, secret })`, which signs a test event for your webhook handler (the same as `webhooks.sign()`, without a client).
 
 ```ts
 import { Waitlist } from "@productcraft/waitlist";

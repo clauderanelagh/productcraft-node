@@ -249,6 +249,18 @@ describe("generated operations (gen-fixture)", () => {
     expect(call.headers.has("idempotency-key")).toBe(false);
     expect(call.headers.has("authorization")).toBe(true);
   });
+  it("widgets.paint: POST /v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.widgets.paint("id-1", "color-2");
+    expect(result).toBeDefined();
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("widgets.paint");
+    expect(call.method).toBe("POST");
+    expect(call.url.pathname).toBe("/v1/workspaces/9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b/widgets/id-1/paint/color-2");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.has("authorization")).toBe(true);
+  });
   it("widgets.updateStatus: PATCH /v1/workspaces/{workspace_id}/widgets/{id}/status", async () => {
     const { fetch, fixture } = setup();
     const result = await fixture.widgets.updateStatus("id-1", { status: "draft" });
