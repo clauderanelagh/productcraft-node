@@ -296,6 +296,7 @@ export type ConsumerTokenResponseDto = {
     mfa_enrollment_due_at?: string;
     password_warnings?: string[];
     refresh_token: string;
+    result: SignInResult;
     token_type: string;
 };
 
@@ -399,13 +400,14 @@ export type IdpNativeUserHintDto = {
     name?: string;
 };
 
-// @public (undocumented)
+// @public
 export type IdpTokenResponseDto = {
     access_token: string;
     expires_in: number;
     mfa_enrollment_due_at?: string;
     refresh_token: string;
-    token_type: IdpTokenResponseDtoTokenTypeEnumKey;
+    result: SignInResult;
+    token_type: TokenType;
 };
 
 // @public
@@ -619,7 +621,9 @@ export function toB64u(buf: ArrayBuffer | ArrayBufferView): string;
 export type UpdateAppDto = {
     audit_retention_days?: number;
     display_name?: string;
-    metadata?: object;
+    metadata?: {
+        [key: string]: any;
+    };
     slug?: string;
     webhook_attempt_retention_days?: number;
 };

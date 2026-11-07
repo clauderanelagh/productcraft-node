@@ -143,7 +143,7 @@ Every operation in every public `/docs-json` carries:
 "x-pc-sdk": { "resource": "posts.comments", "method": "create", "bind": ["community_id"], "paginated": true }
 ```
 
-or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes. Optional keys: `poll` (on a retrieve op: `{ "field": "status", "terminal": ["completed", "failed", "cancelled"] }`, which generates `poll(id)` and, where a create exists, `createAndPoll`; an optional `"result": "<property>"` names a free-form object property of the response, and makes both helpers generic so `createAndPoll<T>` types that property as `T`) and `public: true` (no auth header, browser-safe).
+or `"x-pc-sdk": false` for routes that are not API calls (browser redirects, HTML pages, OAuth callbacks, avatar image GETs) and for deprecated legacy webhook routes. Optional keys: `poll` (on a retrieve op: `{ "field": "status", "terminal": ["completed", "failed", "cancelled"] }`, which generates `poll(id)` and, where a create exists, `createAndPoll`; an optional `"result": "<property>"` names a free-form object property of the response, and makes both helpers generic so `createAndPoll<T>` types that property as `T`) and `public: true` (no auth header, browser-safe). An empty `resource` (`"resource": ""`, `@SdkMethod('', 'signin')`) puts the method on the root of the bound scope where a resource would only stutter (`auth.consumer(slug).signin()`); it is only valid with a non-empty `bind` (users-api/096).
 
 Component schemas carry `x-pc-sdk-model: "Domain"` (derived by stripping `ResponseDto`/`Dto`, overridable with `@SdkModel`). It is the public type name; Nest class names never reach users.
 
