@@ -271,6 +271,12 @@ export function parseRateLimit(headers: Headers): RateLimitInfo | undefined;
 export function parseRetryAfterMs(headers: Headers, now: number): number | undefined;
 
 // @public
+export class PaymentRequiredError extends APIError {
+    // (undocumented)
+    static readonly brandName: string;
+}
+
+// @public
 export const PC_API_KEY_ENV = "PRODUCTCRAFT_API_KEY";
 
 // @public

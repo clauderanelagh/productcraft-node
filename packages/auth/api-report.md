@@ -22,6 +22,7 @@ import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
+import { PaymentRequiredError } from '@productcraft/core';
 import { PCAuth } from '@productcraft/core';
 import { PCClientConfig } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
@@ -745,9 +746,9 @@ namespace Auth {
     type JwkUse = __JwkUse;
     // (undocumented)
     type LastResponse = __LastResponse;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEndpoints = __ListWebhookEndpoints;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
     // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
@@ -887,7 +888,7 @@ namespace Auth {
     type RecoveryCodes = __RecoveryCodes;
     // (undocumented)
     type RefreshParams = __RefreshParams;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
     type RequestOptions = __RequestOptions;
@@ -1182,6 +1183,8 @@ namespace Auth {
     // (undocumented)
     type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
     // (undocumented)
+    type WebhookEndpointList = __WebhookEndpointList;
+    // (undocumented)
     type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
     // (undocumented)
     type WebhookEndpointStatus = __WebhookEndpointStatus;
@@ -1198,7 +1201,11 @@ namespace Auth {
     // (undocumented)
     type WebhookEventDetail = __WebhookEventDetail;
     // (undocumented)
+    type WebhookEventList = __WebhookEventList;
+    // (undocumented)
     type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplay = __WebhookEventReplay;
     // (undocumented)
     type WebhookEventReplayParams = __WebhookEventReplayParams;
     // (undocumented)
@@ -6595,6 +6602,8 @@ export type paths = {
         trace?: never;
     };
 };
+
+export { PaymentRequiredError }
 
 export { PCAuth }
 

@@ -14,7 +14,7 @@ const mail = new Mail();
 
 // webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
 {
-  const webhookEndpointWithSecret = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+  const webhookEndpoint = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 }
 
 // webhooks.endpoints.delete: Delete a webhook endpoint.
@@ -36,7 +36,7 @@ const mail = new Mail();
 
 // webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+  const webhookEndpoint = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
@@ -59,7 +59,7 @@ const mail = new Mail();
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const webhookEventReplay = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.

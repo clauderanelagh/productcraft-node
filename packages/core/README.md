@@ -27,7 +27,7 @@ try {
 |---|---|
 | `ProductCraftError` | Base of everything below |
 | `APIError` | Any non-2xx: `status`, `code`, `message`, `errors[]`, `details`, `docUrl`, `requestId`, `headers`, `body` |
-| `BadRequestError` 400, `AuthenticationError` 401, `PermissionDeniedError` 403, `NotFoundError` 404, `ConflictError` 409, `IdempotencyKeyReuseError` 409 `IDEMPOTENCY_KEY_REUSE`, `UnprocessableEntityError` 422, `RateLimitError` 429, `InternalServerError` 5xx | By status |
+| `BadRequestError` 400, `AuthenticationError` 401, `PaymentRequiredError` 402, `PermissionDeniedError` 403, `NotFoundError` 404, `ConflictError` 409, `IdempotencyKeyReuseError` 409 `IDEMPOTENCY_KEY_REUSE`, `UnprocessableEntityError` 422, `RateLimitError` 429, `InternalServerError` 5xx | By status |
 | `APIConnectionError`, `APITimeoutError` | No response, or an attempt (or a poll) ran out of time |
 | `APIUserAbortError` | Your `AbortSignal` fired |
 | `ConfigurationError` | The client cannot work as configured (no `workspaceId`, a key in a browser, no webhook secret) |

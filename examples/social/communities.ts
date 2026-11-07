@@ -137,7 +137,7 @@ const social = new Social();
 
 // communities.webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once. (deprecated)
 {
-  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
+  const webhookEndpoint = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
 }
 
 // communities.webhooks.endpoints.delete: Delete a webhook endpoint. (deprecated)
@@ -159,7 +159,7 @@ const social = new Social();
 
 // communities.webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once. (deprecated)
 {
-  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+  const webhookEndpoint = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // communities.webhooks.endpoints.test: Send a test event to this endpoint now and return the result. (deprecated)
@@ -182,7 +182,7 @@ const social = new Social();
 
 // communities.webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint. (deprecated)
 {
-  const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  const webhookEventReplay = await social.communities.webhooks.events.replay("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.webhooks.events.retrieve: Get one webhook event with every delivery attempt. (deprecated)

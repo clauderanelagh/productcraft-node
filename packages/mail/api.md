@@ -2044,7 +2044,7 @@ Get the cleartext body of an outbound message. Gated by `mail.message.body.read`
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const outboundMessageWithBody = await mail.messages.body("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+const outboundMessage = await mail.messages.body("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-id-body)
@@ -3349,7 +3349,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints)
@@ -3445,7 +3445,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -3559,7 +3559,7 @@ const page = await mail.webhooks.events.list({}, { timeout: 5_000 });
 
 ### `mail.webhooks.events.replay(eventId, params?, options?)`
 
-`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Mail.ReplayWebhookEvent`
+`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Mail.WebhookEventReplay`
 
 Send a logged event again, to its endpoints or to one endpoint.
 
@@ -3578,7 +3578,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEventReplay = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)

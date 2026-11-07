@@ -14,6 +14,7 @@ import {
   NotFoundError,
   Page,
   PagePromise,
+  PaymentRequiredError,
   PermissionDeniedError,
   RateLimitError,
   UnprocessableEntityError,
@@ -413,6 +414,7 @@ describe("error mapping", () => {
   const cases: [number, unknown][] = [
     [400, BadRequestError],
     [401, AuthenticationError],
+    [402, PaymentRequiredError],
     [403, PermissionDeniedError],
     [404, NotFoundError],
     [409, ConflictError],
@@ -649,20 +651,20 @@ describe("workspace id resolution", () => {
   const scoped: RequestSpec = { method: "GET", path: "/v1/workspaces/{workspace_id}/domains" };
   const selfOk = (r: { path: string }) =>
     r.path === "/v1/api-keys/self"
-      ? { status: 200, body: { key_id: "k", name: "n", workspace: { id: "ws-from-key", slug: "acme", name: "Acme" } } }
+      ? { status: 200, body: { key_id: "k", name: "n", workspace: { id: "9b2f6c1e-0000-4000-8000-00000000000b", slug: "acme", name: "Acme" } } }
       : { status: 200, body: { data: [] } };
 
   it("option, then per-request override", async () => {
     server.reply({ status: 200, body: {} });
-    await make().request(scoped, { workspaceId: "ws-override" });
-    expect(server.requests[0]?.path).toBe("/v1/workspaces/ws-override/domains");
+    await make().request(scoped, { workspaceId: "9b2f6c1e-0000-4000-8000-00000000000c" });
+    expect(server.requests[0]?.path).toBe("/v1/workspaces/9b2f6c1e-0000-4000-8000-00000000000c/domains");
   });
 
   it("reads PRODUCTCRAFT_WORKSPACE_ID", async () => {
-    vi.stubEnv("PRODUCTCRAFT_WORKSPACE_ID", "ws-env");
+    vi.stubEnv("PRODUCTCRAFT_WORKSPACE_ID", "9b2f6c1e-0000-4000-8000-00000000000e");
     server.reply({ status: 200, body: {} });
     await new APIClient({ apiKey: "k" }, server.url).request(scoped);
-    expect(server.requests[0]?.path).toBe("/v1/workspaces/ws-env/domains");
+    expect(server.requests[0]?.path).toBe("/v1/workspaces/9b2f6c1e-0000-4000-8000-00000000000e/domains");
   });
 
   it("looks the workspace up once per process for a workspace key, shared across clients", async () => {
@@ -674,7 +676,7 @@ describe("workspace id resolution", () => {
     const lookups = server.requests.filter((r) => r.path === "/v1/api-keys/self");
     expect(lookups).toHaveLength(1);
     expect(lookups[0]?.headers.authorization).toBe("Bearer pcft_lookup_once");
-    expect(server.requests.filter((r) => r.path === "/v1/workspaces/ws-from-key/domains")).toHaveLength(3);
+    expect(server.requests.filter((r) => r.path === "/v1/workspaces/9b2f6c1e-0000-4000-8000-00000000000b/domains")).toHaveLength(3);
   });
 
   it("a failed lookup throws ConfigurationError and is not cached", async () => {
@@ -686,7 +688,69 @@ describe("workspace id resolution", () => {
     expect(err.cause).toBeInstanceOf(PermissionDeniedError);
     server.reply(selfOk);
     await c.request(scoped);
-    expect(server.requests.map((r) => r.path)).toEqual(["/v1/api-keys/self", "/v1/workspaces/ws-from-key/domains"]);
+    expect(server.requests.map((r) => r.path)).toEqual(["/v1/api-keys/self", "/v1/workspaces/9b2f6c1e-0000-4000-8000-00000000000b/domains"]);
+  });
+
+  const SLUG_WS = "9b2f6c1e-0000-4000-8000-00000000005a";
+  const slugOk = (r: { path: string }) =>
+    r.path === "/v1/workspaces/testing-environment"
+      ? { status: 200, body: { id: SLUG_WS, is_member: true } }
+      : r.path === "/v1/api-keys/self"
+        ? { status: 200, body: { key_id: "k", name: "n", workspace: { id: SLUG_WS, slug: "testing-environment", name: "T" } } }
+        : { status: 200, body: { data: [] } };
+
+  it("a slug is resolved once on platform-auth with the bearer or cookie credential", async () => {
+    server.reply(slugOk);
+    for (const auth of [{ type: "bearer", token: "tok_slug" }, { type: "cookie", value: "ck_slug" }] as const) {
+      const c = new APIClient({ auth, workspaceId: "testing-environment", platformAuthBaseUrl: server.url }, server.url);
+      await Promise.all([c.request(scoped), c.request(scoped)]);
+    }
+    const lookups = server.requests.filter((r) => r.path === "/v1/workspaces/testing-environment");
+    expect(lookups.map((r) => r.headers.authorization ?? r.headers.cookie)).toEqual(["Bearer tok_slug", "auth_token=ck_slug"]);
+    expect(server.requests.filter((r) => r.path === `/v1/workspaces/${SLUG_WS}/domains`)).toHaveLength(4);
+  });
+
+  it("a per-request slug is resolved too; a UUID never triggers a lookup", async () => {
+    server.reply(slugOk);
+    const c = new APIClient({ auth: { type: "bearer", token: "t" }, platformAuthBaseUrl: server.url }, server.url);
+    await c.request(scoped, { workspaceId: "testing-environment" });
+    await c.request(scoped, { workspaceId: WS });
+    expect(server.requests.map((r) => r.path)).toEqual([
+      "/v1/workspaces/testing-environment",
+      `/v1/workspaces/${SLUG_WS}/domains`,
+      `/v1/workspaces/${WS}/domains`,
+    ]);
+  });
+
+  it("an API key accepts its own workspace's slug and refuses another", async () => {
+    server.reply(slugOk);
+    const ok = new APIClient({ apiKey: "pcft_slug_key", workspaceId: "testing-environment", platformAuthBaseUrl: server.url }, server.url);
+    await ok.request(scoped);
+    expect(server.requests.map((r) => r.path)).toEqual(["/v1/api-keys/self", `/v1/workspaces/${SLUG_WS}/domains`]);
+    const other = new APIClient({ apiKey: "pcft_slug_key", workspaceId: "acme-corp", platformAuthBaseUrl: server.url }, server.url);
+    const err = await other.request(scoped).catch((e) => e);
+    expect(err).toBeInstanceOf(ConfigurationError);
+    expect(err.message).toMatch(/"acme-corp" does not match this API key's workspace \("testing-environment"\)/);
+  });
+
+  it("an unknown slug is a ConfigurationError naming it, with the API error as cause, and is not cached", async () => {
+    server.reply((r) => (r.path.startsWith("/v1/workspaces/nope") && !r.path.endsWith("/domains") ? { status: 404, body: { code: "NOT_FOUND", message: "no" } } : { status: 200, body: {} }));
+    const c = new APIClient({ auth: { type: "bearer", token: "t" }, workspaceId: "nope", platformAuthBaseUrl: server.url }, server.url);
+    for (let i = 0; i < 2; i++) {
+      const err = await c.request(scoped).catch((e) => e);
+      expect(err).toBeInstanceOf(ConfigurationError);
+      expect(err.message).toMatch(/workspaceId "nope" is a slug.*404 \(no such workspace, or you are not a member\)/);
+      expect(err.cause).toBeInstanceOf(NotFoundError);
+    }
+    expect(server.requests).toHaveLength(2);
+  });
+
+  it("a value that is neither a UUID nor a slug fails before any request", async () => {
+    server.reply({ status: 200, body: {} });
+    const err = await make().request(scoped, { workspaceId: "Testing Environment" }).catch((e) => e);
+    expect(err).toBeInstanceOf(ConfigurationError);
+    expect(err.message).toMatch(/workspaceId must be a workspace UUID or slug; got "Testing Environment"\./);
+    expect(server.requests).toHaveLength(0);
   });
 
   it("bearer and cookie credentials never auto-resolve", async () => {

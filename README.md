@@ -84,7 +84,7 @@ try {
 - **Pagination.** `for await (const item of x.list())` walks every page; `.pages()` to walk pages yourself, `maxItems` to stop early. A single page keeps `next_cursor` and `has_more`.
 - **Retries and timeouts.** Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` retry with exponential backoff and jitter, honouring `Retry-After` (`maxRetries`, default 2). `timeout` is per attempt (default 60 s); every call takes an `AbortSignal`.
 - **Idempotency.** Writes that the API declares idempotent get an `Idempotency-Key` automatically, reused across retries; pass `idempotencyKey` to set your own.
-- **Errors by class.** `BadRequestError`, `AuthenticationError`, `PermissionDeniedError`, `NotFoundError`, `ConflictError`, `UnprocessableEntityError`, `RateLimitError`, `InternalServerError`, `APIConnectionError` and `APITimeoutError`, all carrying `status`, `code`, `requestId` and `docUrl`. `instanceof` works across products.
+- **Errors by class.** `BadRequestError`, `AuthenticationError`, `PaymentRequiredError`, `PermissionDeniedError`, `NotFoundError`, `ConflictError`, `UnprocessableEntityError`, `RateLimitError`, `InternalServerError`, `APIConnectionError` and `APITimeoutError`, all carrying `status`, `code`, `requestId` and `docUrl`. `instanceof` works across products.
 - **Per-request options.** `idempotencyKey`, `timeout`, `maxRetries`, `headers` and `signal` on every call.
 - **Raw responses.** Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`, `headers`); `.withResponse()` on any call adds the `Response` and the parsed rate-limit headers.
 - **Webhooks.** `x.webhooks.unwrap({ payload, headers })` verifies the Standard Webhooks signature and returns a typed event (Mail, Waitlist, Social, Trawl and Auth).

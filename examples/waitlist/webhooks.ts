@@ -6,7 +6,7 @@ const waitlist = new Waitlist();
 
 // webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
 {
-  const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+  const webhookEndpoint = await waitlist.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 }
 
 // webhooks.endpoints.delete: Delete a webhook endpoint.
@@ -28,7 +28,7 @@ const waitlist = new Waitlist();
 
 // webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+  const webhookEndpoint = await waitlist.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
@@ -51,7 +51,7 @@ const waitlist = new Waitlist();
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await waitlist.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  const webhookEventReplay = await waitlist.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.

@@ -22,6 +22,7 @@ import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
+import { PaymentRequiredError } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
@@ -729,6 +730,8 @@ export type paths = {
     };
 };
 
+export { PaymentRequiredError }
+
 export { PermissionDeniedError }
 
 export { PollOptions }
@@ -827,9 +830,9 @@ namespace Trawl {
     WebhookEventType: {
         values: readonly ["job.succeeded", "job.failed", "credits.low"];
     };
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEndpoints = __ListWebhookEndpoints;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
     // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
@@ -841,27 +844,37 @@ namespace Trawl {
     type PollOptions = __PollOptions;
     // (undocumented)
     type RateLimitInfo = __RateLimitInfo;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
     type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type Stats = __Stats;
     // (undocumented)
     type StatsGranularity = __StatsGranularity;
     // (undocumented)
     type StatsRetrieveParams = __StatsRetrieveParams;
     // (undocumented)
+    type StatsSeries = __StatsSeries;
+    // (undocumented)
+    type StatsSeriesPoint = __StatsSeriesPoint;
+    // (undocumented)
+    type StatsTotals = __StatsTotals;
+    // (undocumented)
     type StatsWindow = __StatsWindow;
     // (undocumented)
+    type StatsWindowTotals = __StatsWindowTotals;
+    // @deprecated (undocumented)
     type TrawlStatsInWindow = __TrawlStatsInWindow;
     // (undocumented)
     type TrawlStatsMetric = __TrawlStatsMetric;
-    // (undocumented)
+    // @deprecated (undocumented)
     type TrawlStatsSeries = __TrawlStatsSeries;
-    // (undocumented)
+    // @deprecated (undocumented)
     type TrawlStatsSeriesPoint = __TrawlStatsSeriesPoint;
-    // (undocumented)
+    // @deprecated (undocumented)
     type TrawlStatsTotals = __TrawlStatsTotals;
-    // (undocumented)
+    // @deprecated (undocumented)
     type TrawlWorkspaceStats = __TrawlWorkspaceStats;
     // (undocumented)
     type UnknownWebhookEvent = __UnknownWebhookEvent;
@@ -877,6 +890,8 @@ namespace Trawl {
     type WebhookEndpointCreateParams = __WebhookEndpointCreateParams;
     // (undocumented)
     type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
+    // (undocumented)
+    type WebhookEndpointList = __WebhookEndpointList;
     // (undocumented)
     type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
     // (undocumented)
@@ -894,7 +909,11 @@ namespace Trawl {
     // (undocumented)
     type WebhookEventDetail = __WebhookEventDetail;
     // (undocumented)
+    type WebhookEventList = __WebhookEventList;
+    // (undocumented)
     type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplay = __WebhookEventReplay;
     // (undocumented)
     type WebhookEventReplayParams = __WebhookEventReplayParams;
     // (undocumented)

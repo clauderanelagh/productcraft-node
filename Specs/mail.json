@@ -7762,7 +7762,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEndpoints"
+        "x-pc-sdk-model": "WebhookEndpointList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEndpoints"
+        ]
       },
       "ListWebhookEventTypesResponseDto": {
         "properties": {
@@ -7806,7 +7809,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEvents"
+        "x-pc-sdk-model": "WebhookEventList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEvents"
+        ]
       },
       "LookupDmarcDto": {
         "properties": {
@@ -10737,7 +10743,10 @@
           "attempts"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ReplayWebhookEvent"
+        "x-pc-sdk-model": "WebhookEventReplay",
+        "x-pc-sdk-model-aliases": [
+          "ReplayWebhookEvent"
+        ]
       },
       "ResolvedBrandTokensDto": {
         "properties": {
@@ -46833,7 +46842,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,

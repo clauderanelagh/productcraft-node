@@ -648,7 +648,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await waitlist.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints)
@@ -743,7 +743,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await waitlist.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -854,7 +854,7 @@ const page = await waitlist.webhooks.events.list({}, { timeout: 5_000 });
 
 ### `waitlist.webhooks.events.replay(eventId, params?, options?)`
 
-`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Waitlist.ReplayWebhookEvent`
+`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Waitlist.WebhookEventReplay`
 
 Send a logged event again, to its endpoints or to one endpoint.
 
@@ -873,7 +873,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await waitlist.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+const webhookEventReplay = await waitlist.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)

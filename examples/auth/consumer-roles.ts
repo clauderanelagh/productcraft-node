@@ -24,7 +24,7 @@ const auth = new Auth();
 
 // roles.retrieve: Read one role with its permission set
 {
-  const consumerRoleWithPermissions = await auth.consumer("my-app").roles.retrieve("admin");
+  const consumerRole = await auth.consumer("my-app").roles.retrieve("admin");
 }
 
 // roles.update: Update a role's description

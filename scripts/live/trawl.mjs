@@ -18,7 +18,7 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 const SDK = process.env.TRAWL_SDK ?? new URL("../../packages/trawl/dist/index.js", import.meta.url).href;
-const { Trawl, NotFoundError, BadRequestError } = await import(SDK.startsWith("/") ? pathToFileURL(SDK).href : SDK);
+const { Trawl, NotFoundError, BadRequestError, PaymentRequiredError, ConfigurationError } = await import(SDK.startsWith("/") ? pathToFileURL(SDK).href : SDK);
 const PLATFORM = "https://api.platform-auth.productcraft.co";
 const WORKSPACE = "testing-environment";
 const PREFIX = "sdk-smoke-";
@@ -128,7 +128,16 @@ try {
   const echoed = await trawl.jobs.retrieve(job.id, { headers: { "X-Request-Id": rid } });
   check(echoed.lastResponse.requestId === rid, "X-Request-Id sent by the caller is echoed back");
   const { requestId, rateLimit } = await trawl.jobs.retrieve(job.id).withResponse();
-  check(typeof requestId === "string" && requestId.length > 0, `withResponse() gives requestId (rateLimit ${rateLimit ? "parsed" : "absent"})`);
+  check(typeof requestId === "string" && requestId.length > 0, "withResponse() gives requestId");
+  check(typeof rateLimit?.remaining === "number" && typeof rateLimit?.limit === "number", `withResponse() parses the live rate-limit headers (${JSON.stringify(rateLimit && { limit: rateLimit.limit, remaining: rateLimit.remaining, window: rateLimit.window })})`);
+
+  // A bearer client given the workspace slug (what the console shows) resolves it to the UUID.
+  const bySlug = new Trawl({ auth: { type: "bearer", token }, workspaceId: WORKSPACE, fetch: throttled });
+  const credits = await bySlug.credits.retrieve();
+  check(typeof credits.balance_steps === "number", `workspaceId: "${WORKSPACE}" (a slug) works with a bearer token`);
+  const badSlug = await new Trawl({ auth: { type: "bearer", token }, workspaceId: `${PREFIX}no-such-ws`, fetch: throttled }).credits.retrieve().catch((e) => e);
+  check(badSlug instanceof ConfigurationError && /is a slug/.test(badSlug.message), `an unknown slug is a ConfigurationError naming it`);
+  check(typeof PaymentRequiredError === "function" && new PaymentRequiredError(402, {}, new Headers()).constructor.name === "PaymentRequiredError", "PaymentRequiredError is exported and keeps its class name");
 
   const cancelled = await trawl.jobs.cancel(job.id);
   check(cancelled.status === "cancelled", "jobs.cancel");

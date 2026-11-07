@@ -65,7 +65,7 @@ const auth = new Auth();
 
 // signinWithProvider: Sign in / sign up with a provider ID token (native flow)
 {
-  const result = await auth.consumer("my-app").signinWithProvider("google", {
+  const signin = await auth.consumer("my-app").signinWithProvider("google", {
     id_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl",
     nonce: "n-0S6_WzA2Mj",
   });

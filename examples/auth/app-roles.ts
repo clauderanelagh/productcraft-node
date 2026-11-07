@@ -34,7 +34,7 @@ const auth = new Auth();
 
 // roles.retrieve: Get role details with permissions
 {
-  const roleWithPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
+  const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
 }
 
 // roles.update: Update role name or description

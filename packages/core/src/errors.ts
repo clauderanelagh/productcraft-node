@@ -182,6 +182,8 @@ export class APIError extends ProductCraftError {
         return new BadRequestError(status, body, headers);
       case 401:
         return new AuthenticationError(status, body, headers);
+      case 402:
+        return new PaymentRequiredError(status, body, headers);
       case 403:
         return new PermissionDeniedError(status, body, headers);
       case 404:
@@ -205,6 +207,14 @@ export class BadRequestError extends APIError {
 }
 export class AuthenticationError extends APIError {
   static override readonly brandName: string = "AuthenticationError";
+}
+/**
+ * 402: the workspace is out of the balance the call spends, e.g. Trawl's
+ * `TRAWL_CREDITS_EXHAUSTED` when a job is created at zero credits. Not
+ * retried: it does not clear until credits are added.
+ */
+export class PaymentRequiredError extends APIError {
+  static override readonly brandName: string = "PaymentRequiredError";
 }
 export class PermissionDeniedError extends APIError {
   static override readonly brandName: string = "PermissionDeniedError";
@@ -255,4 +265,28 @@ export function parseRetryAfterMs(headers: Headers, now: number): number | undef
   const date = Date.parse(value);
   if (Number.isNaN(date)) return undefined;
   return Math.max(0, date - now);
+}
+
+// The bundler renames classes that reference themselves (`_APIError`); give
+// each its public name back so `err.constructor.name` reads right in logs.
+for (const ctor of [
+  ProductCraftError,
+  ConfigurationError,
+  WebhookVerificationError,
+  APIConnectionError,
+  APITimeoutError,
+  APIUserAbortError,
+  APIError,
+  BadRequestError,
+  AuthenticationError,
+  PaymentRequiredError,
+  PermissionDeniedError,
+  NotFoundError,
+  ConflictError,
+  IdempotencyKeyReuseError,
+  UnprocessableEntityError,
+  RateLimitError,
+  InternalServerError,
+]) {
+  Object.defineProperty(ctor, "name", { value: ctor.brandName, configurable: true });
 }
