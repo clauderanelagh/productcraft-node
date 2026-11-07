@@ -22,6 +22,7 @@ import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
+import { PaymentRequiredError } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
@@ -1936,6 +1937,8 @@ export type paths = {
         trace?: never;
     };
 };
+
+export { PaymentRequiredError }
 
 export { PermissionDeniedError }
 

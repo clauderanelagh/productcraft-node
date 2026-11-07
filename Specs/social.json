@@ -6849,7 +6849,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEndpoints"
+        "x-pc-sdk-model": "WebhookEndpointList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEndpoints"
+        ]
       },
       "ListWebhookEventTypesResponseDto": {
         "properties": {
@@ -6893,7 +6896,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEvents"
+        "x-pc-sdk-model": "WebhookEventList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEvents"
+        ]
       },
       "MarkAllReadDto": {
         "properties": {
@@ -9466,7 +9472,10 @@
           "attempts"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ReplayWebhookEvent"
+        "x-pc-sdk-model": "WebhookEventReplay",
+        "x-pc-sdk-model-aliases": [
+          "ReplayWebhookEvent"
+        ]
       },
       "RepostCreatedEvent": {
         "description": "A member reposted someone else's post.",

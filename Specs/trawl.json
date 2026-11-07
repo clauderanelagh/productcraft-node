@@ -823,7 +823,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEndpoints"
+        "x-pc-sdk-model": "WebhookEndpointList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEndpoints"
+        ]
       },
       "ListWebhookEventTypesResponseDto": {
         "properties": {
@@ -867,7 +870,10 @@
           "pagination"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEvents"
+        "x-pc-sdk-model": "WebhookEventList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEvents"
+        ]
       },
       "ReplayWebhookEventResponseDto": {
         "properties": {
@@ -889,7 +895,10 @@
           "attempts"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ReplayWebhookEvent"
+        "x-pc-sdk-model": "WebhookEventReplay",
+        "x-pc-sdk-model-aliases": [
+          "ReplayWebhookEvent"
+        ]
       },
       "RotateWebhookSecretDto": {
         "properties": {
@@ -1062,7 +1071,10 @@
           "steps_used"
         ],
         "type": "object",
-        "x-pc-sdk-model": "TrawlStatsInWindow"
+        "x-pc-sdk-model": "StatsWindowTotals",
+        "x-pc-sdk-model-aliases": [
+          "TrawlStatsInWindow"
+        ]
       },
       "TrawlStatsMetric": {
         "enum": [
@@ -1104,7 +1116,10 @@
           "points"
         ],
         "type": "object",
-        "x-pc-sdk-model": "TrawlStatsSeries"
+        "x-pc-sdk-model": "StatsSeries",
+        "x-pc-sdk-model-aliases": [
+          "TrawlStatsSeries"
+        ]
       },
       "TrawlStatsSeriesPointDto": {
         "properties": {
@@ -1125,7 +1140,10 @@
           "value"
         ],
         "type": "object",
-        "x-pc-sdk-model": "TrawlStatsSeriesPoint"
+        "x-pc-sdk-model": "StatsSeriesPoint",
+        "x-pc-sdk-model-aliases": [
+          "TrawlStatsSeriesPoint"
+        ]
       },
       "TrawlStatsTotalsDto": {
         "properties": {
@@ -1145,7 +1163,10 @@
           "balance_steps"
         ],
         "type": "object",
-        "x-pc-sdk-model": "TrawlStatsTotals"
+        "x-pc-sdk-model": "StatsTotals",
+        "x-pc-sdk-model-aliases": [
+          "TrawlStatsTotals"
+        ]
       },
       "TrawlWorkspaceStatsDto": {
         "properties": {
@@ -1205,7 +1226,10 @@
           "series"
         ],
         "type": "object",
-        "x-pc-sdk-model": "TrawlWorkspaceStats"
+        "x-pc-sdk-model": "Stats",
+        "x-pc-sdk-model-aliases": [
+          "TrawlWorkspaceStats"
+        ]
       },
       "UpdateWebhookDto": {
         "properties": {
@@ -2550,6 +2574,25 @@
             "x-pc-error-codes": [
               "BAD_REQUEST",
               "VALIDATION_ERROR"
+            ]
+          },
+          "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`TRAWL_CREDITS_EXHAUSTED`: the workspace has no Trawl credits left (`GET /credits` shows the balance). Add credits, then retry.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "PAYMENT_REQUIRED",
+              "TRAWL_CREDITS_EXHAUSTED"
             ]
           },
           "403": {
@@ -5060,7 +5103,7 @@
           },
           {
             "description": "Only events created before this instant.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "created_before",
             "required": false,

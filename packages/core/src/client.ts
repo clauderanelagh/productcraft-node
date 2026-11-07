@@ -413,26 +413,21 @@ export class APIClient {
 
   /**
    * Every workspace-scoped route takes the workspace UUID. A slug (what the
-   * console and platform URLs show) is looked up once per process: on
-   * platform-auth with the client's own credential for a bearer token or
-   * cookie, and checked against the key's own workspace for an API key.
+   * console shows) is looked up once per process: on platform-auth with the
+   * client's own bearer token or cookie, or checked against the key's own
+   * workspace for an API key.
    */
   async #workspaceUuid(value: string, fetchImpl: typeof fetch): Promise<string> {
     if (UUID_RE.test(value)) return value;
-    if (!SLUG_RE.test(value)) {
-      throw new ConfigurationError(
-        `workspaceId must be a workspace UUID or slug; got ${JSON.stringify(value)}. ` +
-          "Find both under Workspace > Settings in the console.",
-      );
-    }
     const auth = this.auth;
-    if (!auth) {
+    if (!SLUG_RE.test(value) || !auth) {
       throw new ConfigurationError(
-        `workspaceId ${JSON.stringify(value)} is a slug; pass the workspace UUID, or a credential the SDK can look the slug up with.`,
+        `workspaceId must be a workspace UUID or slug; got ${JSON.stringify(value)}` +
+          (auth ? "." : " (a slug also needs a credential to look it up)."),
       );
     }
     const credential = auth.type === "apiKey" ? auth.key : auth.type === "cookie" ? auth.value : auth.token;
-    const cacheKey = `${this.#platformAuthBaseUrl}\u0000slug\u0000${value}\u0000${credential}`;
+    const cacheKey = `${this.#platformAuthBaseUrl}\u0000${value}\u0000${credential}`;
     let pending = workspaceCache.get(cacheKey);
     if (!pending) {
       pending = this.#lookupSlug(value, auth, fetchImpl);
@@ -446,84 +441,50 @@ export class APIClient {
     const failed = `workspaceId ${JSON.stringify(slug)} is a slug, and resolving it to the workspace UUID failed`;
     if (auth.type === "apiKey") {
       // An API key belongs to one workspace: accept its slug, refuse any other.
-      const self = await this.#keySelf(auth.key, fetchImpl, failed);
-      if (self.slug === slug) return self.id;
-      throw new ConfigurationError(
-        `workspaceId ${JSON.stringify(slug)} does not match this API key's workspace` +
-          (typeof self.slug === "string" ? ` (${JSON.stringify(self.slug)}).` : "."),
-      );
+      const ws = await this.#keyWorkspace(auth.key, fetchImpl, failed);
+      if (ws.slug === slug) return ws.id;
+      throw new ConfigurationError(`workspaceId ${JSON.stringify(slug)} does not match this API key's workspace (${JSON.stringify(ws.slug)}).`);
     }
-    this.#log("debug", "resolving workspace slug", { path: "/v1/workspaces/{workspace_slug}" });
-    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": this.#userAgent };
-    if (auth.type === "cookie") headers.Cookie = `auth_token=${auth.value}`;
-    else headers.Authorization = `Bearer ${auth.token}`;
-    let res: Response;
-    try {
-      res = await fetchImpl(`${this.#platformAuthBaseUrl}/v1/workspaces/${encodeURIComponent(slug)}`, {
-        method: "GET",
-        headers,
-        signal: AbortSignal.timeout(WORKSPACE_LOOKUP_TIMEOUT_MS),
-      });
-    } catch (cause) {
-      throw new ConfigurationError(`${failed}.`, { cause });
-    }
-    if (!res.ok) {
-      const body = await readErrorBody(res);
-      throw new ConfigurationError(
-        `${failed} with ${res.status}${res.status === 404 ? " (no such workspace, or you are not a member)" : ""}.`,
-        { cause: APIError.generate(res.status, body, res.headers) },
-      );
-    }
-    const id = ((await res.json().catch(() => undefined)) as { id?: unknown } | undefined)?.id;
+    const header: Record<string, string> =
+      auth.type === "cookie" ? { Cookie: `auth_token=${auth.value}` } : { Authorization: `Bearer ${auth.token}` };
+    const body = await this.#platformGet(`/v1/workspaces/${encodeURIComponent(slug)}`, header, fetchImpl, failed);
+    const id = (body as { id?: unknown } | undefined)?.id;
     if (typeof id !== "string" || !UUID_RE.test(id)) throw new ConfigurationError(`${failed}: no workspace id came back.`);
     return id;
   }
 
-  async #keySelf(key: string, fetchImpl: typeof fetch, failed: string): Promise<{ id: string; slug: unknown }> {
+  async #keyWorkspace(key: string, fetchImpl: typeof fetch, failed: string): Promise<{ id: string; slug?: unknown }> {
+    const body = await this.#platformGet("/v1/api-keys/self", { Authorization: `Bearer ${key}` }, fetchImpl, failed);
+    const ws = (body as { workspace?: { id?: unknown; slug?: unknown } } | undefined)?.workspace;
+    if (typeof ws?.id !== "string" || ws.id === "") throw new ConfigurationError(`${failed}: the API key lookup returned no workspace id.`);
+    return ws as { id: string; slug?: unknown };
+  }
+
+  /** GET a platform-auth path; any failure is a `ConfigurationError` starting with `failed` (the API error as cause). */
+  async #platformGet(path: string, auth: Record<string, string>, fetchImpl: typeof fetch, failed: string): Promise<unknown> {
+    this.#log("debug", "resolving workspaceId", { path });
     let res: Response;
     try {
-      res = await fetchImpl(`${this.#platformAuthBaseUrl}/v1/api-keys/self`, {
+      res = await fetchImpl(`${this.#platformAuthBaseUrl}${path}`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${key}`, Accept: "application/json", "User-Agent": this.#userAgent },
+        headers: { ...auth, Accept: "application/json", "User-Agent": this.#userAgent },
         signal: AbortSignal.timeout(WORKSPACE_LOOKUP_TIMEOUT_MS),
       });
     } catch (cause) {
       throw new ConfigurationError(`${failed}.`, { cause });
     }
     if (!res.ok) {
-      const body = await readErrorBody(res);
-      throw new ConfigurationError(`${failed} with ${res.status}.`, { cause: APIError.generate(res.status, body, res.headers) });
+      const cause = APIError.generate(res.status, await readErrorBody(res), res.headers);
+      throw new ConfigurationError(
+        `${failed} with ${res.status}${res.status === 404 && path.startsWith("/v1/workspaces/") ? " (no such workspace, or you are not a member)" : ""}.`,
+        { cause },
+      );
     }
-    const ws = ((await res.json().catch(() => undefined)) as { workspace?: { id?: unknown; slug?: unknown } } | undefined)?.workspace;
-    if (typeof ws?.id !== "string" || ws.id === "") throw new ConfigurationError(`${failed}: the API key lookup returned no workspace id.`);
-    return { id: ws.id, slug: ws.slug };
+    return res.json().catch(() => undefined);
   }
 
   async #lookupWorkspace(key: string, fetchImpl: typeof fetch): Promise<string> {
-    this.#log("debug", "resolving workspaceId", { path: "/v1/api-keys/self" });
-    let res: Response;
-    try {
-      res = await fetchImpl(`${this.#platformAuthBaseUrl}/v1/api-keys/self`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${key}`, Accept: "application/json", "User-Agent": this.#userAgent },
-        signal: AbortSignal.timeout(WORKSPACE_LOOKUP_TIMEOUT_MS),
-      });
-    } catch (cause) {
-      throw new ConfigurationError("pass workspaceId: looking it up from the API key failed.", { cause });
-    }
-    if (!res.ok) {
-      const body = await readErrorBody(res);
-      throw new ConfigurationError(
-        `pass workspaceId: looking it up from the API key failed with ${res.status}.`,
-        { cause: APIError.generate(res.status, body, res.headers) },
-      );
-    }
-    const body = (await res.json().catch(() => undefined)) as { workspace?: { id?: unknown } } | undefined;
-    const id = body?.workspace?.id;
-    if (typeof id !== "string" || id === "") {
-      throw new ConfigurationError("pass workspaceId: the API key lookup returned no workspace id.");
-    }
-    return id;
+    return (await this.#keyWorkspace(key, fetchImpl, "pass workspaceId: looking it up from the API key failed")).id;
   }
 
   async #buildUrl(spec: RequestSpec, options: RequestOptions, fetchImpl: typeof fetch): Promise<string> {

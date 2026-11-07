@@ -5,8 +5,6 @@ const shared: Options = {
   sourcemap: true,
   splitting: false,
   treeshake: true,
-  // Keep class names: `err.constructor.name` is `APIError`, not esbuild's `_APIError`.
-  keepNames: true,
   target: "es2022",
   shims: true,
 };

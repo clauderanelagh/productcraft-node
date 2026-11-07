@@ -266,3 +266,27 @@ export function parseRetryAfterMs(headers: Headers, now: number): number | undef
   if (Number.isNaN(date)) return undefined;
   return Math.max(0, date - now);
 }
+
+// The bundler renames classes that reference themselves (`_APIError`); give
+// each its public name back so `err.constructor.name` reads right in logs.
+for (const ctor of [
+  ProductCraftError,
+  ConfigurationError,
+  WebhookVerificationError,
+  APIConnectionError,
+  APITimeoutError,
+  APIUserAbortError,
+  APIError,
+  BadRequestError,
+  AuthenticationError,
+  PaymentRequiredError,
+  PermissionDeniedError,
+  NotFoundError,
+  ConflictError,
+  IdempotencyKeyReuseError,
+  UnprocessableEntityError,
+  RateLimitError,
+  InternalServerError,
+]) {
+  Object.defineProperty(ctor, "name", { value: ctor.brandName, configurable: true });
+}

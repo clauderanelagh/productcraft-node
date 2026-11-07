@@ -51,7 +51,7 @@ const auth = new Auth();
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  const webhookEventReplay = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.

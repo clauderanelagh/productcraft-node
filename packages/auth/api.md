@@ -2927,7 +2927,7 @@ const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhoo
 
 ### `auth.admin.app(…).webhooks.events.replay(eventId, params?, options?)`
 
-`POST /v1/apps/{app_id}/webhooks/events/{event_id}/replay` → `Auth.ReplayWebhookEvent`
+`POST /v1/apps/{app_id}/webhooks/events/{event_id}/replay` → `Auth.WebhookEventReplay`
 
 Send a logged event again, to its endpoints or to one endpoint.
 
@@ -2947,7 +2947,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+const webhookEventReplay = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-events-event-id-replay)

@@ -1,30 +1,30 @@
 {
   "@productcraft/core": {
-    "measuredGzipBytes": 6768,
-    "limitGzipBytes": 7445
+    "measuredGzipBytes": 7850,
+    "limitGzipBytes": 8635
   },
   "@productcraft/trawl": {
-    "measuredGzipBytes": 9841,
-    "limitGzipBytes": 10826
+    "measuredGzipBytes": 10935,
+    "limitGzipBytes": 12029
   },
   "@productcraft/mail": {
-    "measuredGzipBytes": 13656,
-    "limitGzipBytes": 15022
+    "measuredGzipBytes": 14762,
+    "limitGzipBytes": 16239
   },
   "@productcraft/waitlist": {
-    "measuredGzipBytes": 10551,
-    "limitGzipBytes": 11607
+    "measuredGzipBytes": 11636,
+    "limitGzipBytes": 12800
   },
   "@productcraft/platform-auth": {
-    "measuredGzipBytes": 10939,
-    "limitGzipBytes": 12033
+    "measuredGzipBytes": 12003,
+    "limitGzipBytes": 13204
   },
   "@productcraft/social": {
-    "measuredGzipBytes": 14251,
-    "limitGzipBytes": 15677
+    "measuredGzipBytes": 15337,
+    "limitGzipBytes": 16871
   },
   "@productcraft/auth": {
-    "measuredGzipBytes": 24943,
-    "limitGzipBytes": 27438
+    "measuredGzipBytes": 26031,
+    "limitGzipBytes": 28635
   }
 }

@@ -6,7 +6,7 @@ const trawl = new Trawl();
 
 // stats.retrieve: Trawl stats for a workspace
 {
-  const trawlWorkspaceStats = await trawl.stats.retrieve();
+  const stats = await trawl.stats.retrieve();
 }
 
 export {};

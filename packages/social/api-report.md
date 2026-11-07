@@ -22,6 +22,7 @@ import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
+import { PaymentRequiredError } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
@@ -4579,6 +4580,8 @@ export type paths = {
     };
 };
 
+export { PaymentRequiredError }
+
 export { PermissionDeniedError }
 
 export { PollOptions }
@@ -5270,9 +5273,9 @@ namespace Social {
     type ListRetrieveParams = __ListRetrieveParams;
     // (undocumented)
     type ListUpdateParams = __ListUpdateParams;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEndpoints = __ListWebhookEndpoints;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
     // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
@@ -5466,7 +5469,7 @@ namespace Social {
     type RelationshipEntry = __RelationshipEntry;
     // (undocumented)
     type RelationshipList = __RelationshipList;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
     type RepostCreatedEvent = __RepostCreatedEvent;
@@ -5545,6 +5548,8 @@ namespace Social {
     // (undocumented)
     type WebhookEndpointDisabledReason = __WebhookEndpointDisabledReason;
     // (undocumented)
+    type WebhookEndpointList = __WebhookEndpointList;
+    // (undocumented)
     type WebhookEndpointRotateSecretParams = __WebhookEndpointRotateSecretParams;
     // (undocumented)
     type WebhookEndpointStatus = __WebhookEndpointStatus;
@@ -5561,7 +5566,11 @@ namespace Social {
     // (undocumented)
     type WebhookEventDetail = __WebhookEventDetail;
     // (undocumented)
+    type WebhookEventList = __WebhookEventList;
+    // (undocumented)
     type WebhookEventListParams = __WebhookEventListParams;
+    // (undocumented)
+    type WebhookEventReplay = __WebhookEventReplay;
     // (undocumented)
     type WebhookEventReplayParams = __WebhookEventReplayParams;
     // (undocumented)

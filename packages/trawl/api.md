@@ -63,6 +63,7 @@ Queues an extraction: an agent browses from `suggested_urls` (or searches when t
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid JSON Schema (must be a non-empty `type: object`). |
+| 402 | `PaymentRequiredError` | `PAYMENT_REQUIRED`, `TRAWL_CREDITS_EXHAUSTED` | `TRAWL_CREDITS_EXHAUSTED`: the workspace has no Trawl credits left (`GET /credits` shows the balance). Add credits, then retry. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `trawl.create`, or workspace has not enabled the `trawl` service. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_JOBS` | Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -126,7 +127,7 @@ const job = await trawl.jobs.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 
 ### `trawl.stats.retrieve(params?, options?)`
 
-`GET /v1/workspaces/{workspace_id}/stats` → `Trawl.TrawlWorkspaceStats`
+`GET /v1/workspaces/{workspace_id}/stats` → `Trawl.Stats`
 
 Trawl stats for a workspace.
 
@@ -146,7 +147,7 @@ Days are UTC. Counts only: no target URLs, descriptions or job results. Cached f
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const trawlWorkspaceStats = await trawl.stats.retrieve();
+const stats = await trawl.stats.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#get-v1-workspaces-workspace-id-stats)
@@ -390,7 +391,7 @@ const page = await trawl.webhooks.events.list({}, { timeout: 5_000 });
 
 ### `trawl.webhooks.events.replay(eventId, params?, options?)`
 
-`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Trawl.ReplayWebhookEvent`
+`POST /v1/workspaces/{workspace_id}/webhooks/events/{event_id}/replay` → `Trawl.WebhookEventReplay`
 
 Send a logged event again, to its endpoints or to one endpoint.
 
@@ -409,7 +410,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await trawl.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+const webhookEventReplay = await trawl.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)

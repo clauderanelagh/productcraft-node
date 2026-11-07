@@ -59,7 +59,7 @@ const mail = new Mail();
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const webhookEventReplay = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.

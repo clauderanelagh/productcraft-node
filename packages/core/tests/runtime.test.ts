@@ -749,7 +749,7 @@ describe("workspace id resolution", () => {
     server.reply({ status: 200, body: {} });
     const err = await make().request(scoped, { workspaceId: "Testing Environment" }).catch((e) => e);
     expect(err).toBeInstanceOf(ConfigurationError);
-    expect(err.message).toMatch(/workspaceId must be a workspace UUID or slug; got "Testing Environment"/);
+    expect(err.message).toMatch(/workspaceId must be a workspace UUID or slug; got "Testing Environment"\./);
     expect(server.requests).toHaveLength(0);
   });
 

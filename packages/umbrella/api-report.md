@@ -26,6 +26,7 @@ import { MailErrorCode } from '@productcraft/mail';
 import { NotFoundError } from '@productcraft/core';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
+import { PaymentRequiredError } from '@productcraft/core';
 import { PC_BASE_URL } from '@productcraft/core';
 import { PCAuth } from '@productcraft/core';
 import { PCClientConfig } from '@productcraft/core';
@@ -92,6 +93,8 @@ export { NotFoundError }
 export { Page }
 
 export { PagePromise }
+
+export { PaymentRequiredError }
 
 export { PC_BASE_URL }
 

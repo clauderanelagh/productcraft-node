@@ -33,7 +33,10 @@ describe("error branding", () => {
       .filter(([, v]) => typeof v === "function" && (v as { brandName?: string }).brandName)
       .map(([k, v]) => [k, (v as { brandName: string }).brandName]);
     expect(names.length).toBe(17);
-    for (const [exportName, brand] of names) expect(brand).toBe(exportName);
+    for (const [exportName, brand] of names) {
+      expect(brand).toBe(exportName);
+      expect((core as Record<string, { name: string }>)[exportName as string]!.name).toBe(exportName);
+    }
   });
 
   it("RateLimitError parses Retry-After in seconds", () => {
