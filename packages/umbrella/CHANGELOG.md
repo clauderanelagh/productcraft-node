@@ -1,5 +1,17 @@
 # productcraft
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [a689df7]
+- Updated dependencies [a689df7]
+  - @productcraft/waitlist@2.0.0
+  - @productcraft/auth@1.3.0
+  - @productcraft/mail@1.3.0
+  - @productcraft/social@1.4.0
+  - @productcraft/trawl@1.3.0
+
 ## 1.1.0
 
 ### Minor Changes
