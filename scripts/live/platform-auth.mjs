@@ -19,7 +19,7 @@ import { execFileSync } from "node:child_process";
 import { pathToFileURL } from "node:url";
 
 const SDK = process.env.PLATFORM_AUTH_SDK ?? new URL("../../packages/platform-auth/dist/index.js", import.meta.url).href;
-const { PlatformAuth, NotFoundError, BadRequestError } = await import(SDK.startsWith("/") ? pathToFileURL(SDK).href : SDK);
+const { PlatformAuth, NotFoundError, BadRequestError, PermissionDeniedError } = await import(SDK.startsWith("/") ? pathToFileURL(SDK).href : SDK);
 const WORKSPACE = "testing-environment";
 const PREFIX = "sdk-smoke-";
 const TAG = `${PREFIX}${Date.now()}`;
@@ -68,7 +68,7 @@ try {
 
   // Stale keys from killed runs: only active keys this script named.
   let swept = 0;
-  for await (const k of platform.workspaces.apiKeys.list(WORKSPACE, { include_revoked: "false", limit: 50 })) {
+  for await (const k of platform.workspaces.apiKeys.list(WORKSPACE, { include_revoked: false, limit: 50 })) {
     if (k.name.startsWith(PREFIX) && k.status === "active") {
       await platform.workspaces.apiKeys.delete(WORKSPACE, k.id);
       swept += 1;
@@ -96,6 +96,26 @@ try {
   check(intro.is_valid === true && intro.workspace_id === ws.id, "introspect.apiKey() resolves the key to the workspace");
   const { data: viaClient } = await asKey.client.POST("/v1/introspect/api-key");
   check(viaClient?.workspace_id === ws.id, ".client.POST('/v1/introspect/api-key') escape hatch still works");
+
+  // A workspace key on slug routes: its own workspace resolves (200), minting is
+  // refused with 403 (never a 500), and another workspace is 403 NOT_A_MEMBER.
+  // maxRetries 0: a regression to 5xx must show as one request, not three.
+  // `services` is behind the same workspace resolver that used to throw.
+  const services = await asKey.workspaces.services.list(WORKSPACE, { maxRetries: 0 });
+  check(Array.isArray(services.data) && services.data.length > 0, "a workspace key reads its own workspace's services by slug (was 500)");
+  for (const [what, call] of [
+    // The readonly preset holds no `workspace.apikey.read`: a policy 403, not a 500.
+    ["apiKeys.list with a readonly key", () => asKey.workspaces.apiKeys.list(WORKSPACE, { include_revoked: false, limit: 5 }, { maxRetries: 0 })],
+    ["apiKeys.create with a workspace key", () => asKey.workspaces.apiKeys.create(WORKSPACE, { name: `${TAG}-never`, preset: "readonly" }, { maxRetries: 0 })],
+    ["another workspace's slug", () => asKey.workspaces.apiKeys.list("sdk-smoke-no-such-workspace", {}, { maxRetries: 0 })],
+  ]) {
+    try {
+      await call();
+      check(false, `${what} is refused`);
+    } catch (err) {
+      check(err instanceof PermissionDeniedError && !!err.requestId, `${what} is PermissionDeniedError 403 (code ${err.code}, requestId ${err.requestId?.slice(0, 8)}…)`);
+    }
+  }
 
   // for await across pages (limit 1).
   const ids = [];

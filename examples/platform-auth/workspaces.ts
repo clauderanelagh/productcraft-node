@@ -6,7 +6,7 @@ const platform = new PlatformAuth();
 
 // workspaces.apiKeys.create: Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `mail-send`) or `policy_ids` (managed policies you wrote), never both. The plaintext `token` is returned ONCE — store it now, then call `GET /v1/api-keys/self` with it to check what it can do. The minter can grant at most their own effective permissions. Cookie/JWT only — PAKs cannot mint other PAKs. Send an `Idempotency-Key` to make a retry safe: a retry of a mint that succeeded mints nothing and answers `409 PAK_ALREADY_MINTED` with that key's `id` (the token itself is never cached).
 {
-  const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production social client" });
+  const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production mail", preset: "mail-send" });
 }
 
 // workspaces.apiKeys.delete: Revoke a PAK. Default behaviour: introspect returns null on the next upstream call; downstream services fail-closed within the 60s cache TTL window. Pass `?force=true` to additionally publish a Redis fan-out that evicts the matching cache entry across every PAK-consuming service immediately — use it when rotating a leaked PAK and the 60s window matters.
@@ -31,7 +31,7 @@ const platform = new PlatformAuth();
 
 // workspaces.apiKeys.preview: Describe the key a mint with this `preset` or these `policy_ids` would create, without creating anything: what it could do in plain sentences, and whether you may mint it. Read-only, so it takes no `Idempotency-Key`. Powers the review step of the console key wizard.
 {
-  const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
+  const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { preset: "readonly" });
 }
 
 // workspaces.apiKeys.retrieve: Get a single PAK by id.
@@ -46,12 +46,12 @@ const platform = new PlatformAuth();
 
 // workspaces.apiKeys.update: Update a PAK’s name or description (does not touch bindings).
 {
-  const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
+  const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Sends receipts from the checkout service." });
 }
 
 // workspaces.apiKeys.updateBindings: Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the merged union of statements.
 {
-  const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["string"] });
+  const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
 }
 
 // workspaces.auditFeed.list: Unified workspace audit feed (cursor-paginated)
@@ -211,7 +211,7 @@ const platform = new PlatformAuth();
 
 // workspaces.roles.update: Update a role or replace its permission set. Cookie/JWT only — role authoring is a human-admin surface.
 {
-  const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
+  const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Manages billing and reads invoices." });
 }
 
 // workspaces.services.disable: Disable a service (settings are retained)
@@ -236,7 +236,7 @@ const platform = new PlatformAuth();
 
 // workspaces.update: Update workspace display name, slug, or settings. Slug renames broadcast a `workspace.renamed` event so denormalised consumers (waitlist-api) sync.
 {
-  const workspace = await platform.workspaces.update("acme", { display_name: "string" });
+  const workspace = await platform.workspaces.update("acme", { display_name: "Acme Corp" });
 }
 
 export {};

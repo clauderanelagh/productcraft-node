@@ -4,7 +4,7 @@ import { PlatformAuth } from "@productcraft/platform-auth";
 
 const platform = new PlatformAuth();
 
-// introspect.apiKey: Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Downstream services use this with a 60s LRU cache and evaluate the policy via @repo/authz-nestjs evaluatePolicy().
+// introspect.apiKey: Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Call it with the key a request to your backend carried, cache the answer for up to 60 seconds, and allow an action only when the returned `policy` allows it on the resource.
 {
   const introspectApiKey = await platform.introspect.apiKey();
 }

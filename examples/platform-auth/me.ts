@@ -36,7 +36,7 @@ const platform = new PlatformAuth();
 
 // me.profile.update: Update the caller's profile. Currently only `displayName` is editable. An empty body is a no-op that returns the current profile. Cookie/JWT only — this is a human-self-service surface, not a PAK-mutation surface.
 {
-  const meProfile = await platform.me.profile.update({ display_name: "string" });
+  const meProfile = await platform.me.profile.update({ display_name: "Ada Lovelace" });
 }
 
 // me.retrieve: Read the caller's account profile.

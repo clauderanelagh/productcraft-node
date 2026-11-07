@@ -85,6 +85,9 @@ export const SURFACES = {
     baseUrlKey: "platformAuth",
     docsUrl: "https://productcraft.co/docs/platform",
     webhookSecretEnv: "PRODUCTCRAFT_PLATFORM_WEBHOOK_SECRET",
+    // README demos: listing members (any workspace key, even `readonly`, may) and creating a
+    // policy (session only, so the generator gives that example a session client).
+    readme: { list: "workspaces.members.list", create: "workspaces.policies.create" },
     scopes: {},
   },
   social: {
