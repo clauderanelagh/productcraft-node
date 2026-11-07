@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/core",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared transport, auth, and config primitives for the ProductCraft SDKs. Depended on by every per-surface package.",
   "type": "module",
   "main": "./dist/index.cjs",

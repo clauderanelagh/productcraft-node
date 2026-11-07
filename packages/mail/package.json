@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/mail",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Transactional email, templates, sending domains, contacts and broadcasts (ProductCraft Mail). Resources, auto-pagination, typed errors, retries with idempotency keys and webhook verification, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
