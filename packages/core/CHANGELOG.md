@@ -1,5 +1,11 @@
 # @productcraft/core
 
+## 1.1.0
+
+### Minor Changes
+
+- 5084e47: Pagination stops with a `ProductCraftError` when the API returns a `next_cursor` the walk already sent, instead of fetching the same page forever (`for await`, `.pages()`, `getNextPage()`). New `signWebhook()` (and `APIClient.signWebhook`) signs a test event the way ProductCraft signs deliveries (Standard Webhooks), so a handler test needs no hand-rolled HMAC.
+
 ## 1.0.1
 
 ### Patch Changes
