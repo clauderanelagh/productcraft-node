@@ -1381,7 +1381,10 @@
           "data"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEventTypes"
+        "x-pc-sdk-model": "WebhookEventTypeList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEventTypes"
+        ]
       },
       "ListWebhookEventsResponseDto": {
         "properties": {

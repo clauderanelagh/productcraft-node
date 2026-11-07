@@ -1,6 +1,6 @@
 // Emits packages/<surface>/src/_generated/*.ts and the generated per-op test.
 
-import openapiTS, { astToString } from "openapi-typescript";
+import openapiTS, { astToString, NEVER } from "openapi-typescript";
 import { applyResponseDefaults } from "./model.mjs";
 import { anchorId, camel, Code, jsdoc, pascal, placeholderUuid, sample, singular, stableJson, tsLiteral } from "./util.mjs";
 
@@ -110,9 +110,16 @@ export async function emitPaths(spec, cfg) {
     exportType: true,
     defaultNonNullable: false,
     alphabetize: false,
+    // `not: {}` (a property a `oneOf` branch forbids, Mail's html / template rule) is `never`,
+    // so `{ template, html }` does not type-check; openapi-typescript would say `unknown`.
+    transform: (schema) => (isForbidden(schema) ? NEVER : undefined),
   });
   return banner(cfg) + astToString(ast);
 }
+
+/** `{ not: {} }` (optionally with a description): nothing validates, so the property must be absent. */
+export const isForbidden = (s) =>
+  !!s && typeof s === "object" && !!s.not && typeof s.not === "object" && Object.keys(s.not).length === 0 && Object.keys(s).every((k) => k === "not" || k === "description");
 
 // ---------------------------------------------------------------------------
 // types.ts
@@ -161,7 +168,11 @@ export function emitTypes(model, cfg) {
   for (const m of model.models) {
     if (hookSchemas.has(m.schema)) continue;
     const doc = jsdoc([m.description], "");
-    L.push(`${doc}export type ${m.name} = Open<components["schemas"][${lit(m.schema)}]>;`);
+    // A named interface, so editors and the API report show `Mail.Domain`, not the expanded
+    // `Open<components["schemas"]["DomainDto"]>` alias (the schema's Nest name never reaches users).
+    if (m.interface) L.push(`${doc}export interface ${m.name} extends Open<components["schemas"][${lit(m.schema)}]> {}`);
+    else L.push(`${doc}export type ${m.name} = Open<components["schemas"][${lit(m.schema)}]>;`);
+    for (const a of m.aliases) L.push(`/** @deprecated Renamed to \`${m.name}\`. Kept for 1.x callers; removed in the next major. */`, `export type ${a} = ${m.name};`);
   }
   L.push("");
   for (const o of model.ops) {
@@ -180,7 +191,26 @@ export function emitTypes(model, cfg) {
       L.push(`/** Response of \`${o.name}\`. */`, `export type ${o.responseType} = Open<${okType(o)}>;`);
     }
   }
+  for (const a of model.compat?.aliases ?? []) {
+    for (const t of a.types ?? []) L.push(`/** @deprecated Renamed to \`${t.target}\` (\`${a.name}\` is now \`${a.target.name}\`). Kept for 1.x callers; removed in the next major. */`, `export type ${t.name} = ${t.target};`);
+  }
   return L.filter((l, i, a) => !(l === "" && a[i - 1] === "")).join("\n") + "\n";
+}
+
+// ---------------------------------------------------------------------------
+// runtime.ts
+
+/** The runtime's public types, re-exported (type-only) so callers never import @productcraft/core directly. */
+export const RUNTIME_TYPES = ["APIPromise", "ClientOptions", "LastResponse", "Page", "PagePromise", "PollOptions", "RateLimitInfo", "RequestOptions", "WithResponse"];
+
+export function emitRuntime(cfg) {
+  return [
+    banner(cfg),
+    "// `import type { Page, RequestOptions } from \"" + cfg.packageName + "\"`: @productcraft/core is only a transitive",
+    "// dependency of an app, and strict pnpm or Yarn PnP refuse to resolve an import of it.",
+    `export type { ${RUNTIME_TYPES.join(", ")} } from "@productcraft/core";`,
+    "",
+  ].join("\n");
 }
 
 // ---------------------------------------------------------------------------
@@ -489,7 +519,9 @@ function newCallPath(o, cfg) {
 function emitAlias(L, a, cfg) {
   const o = a.alias;
   const ps = paramsSig(o);
-  const lines = [`0.x name for \`${newCallPath(a.target, cfg)}\` (${o.http} ${o.path}).`, "", `@deprecated Use \`${newCallPath(a.target, cfg)}\`. Kept for 0.x callers; removed in 2.0.`];
+  const lines = a.renamed
+    ? [`Former name of \`${newCallPath(a.target, cfg)}\` (${o.http} ${o.path}).`, "", `@deprecated Renamed to \`${newCallPath(a.target, cfg)}\`. Kept for 1.x callers; removed in the next major.`]
+    : [`0.x name for \`${newCallPath(a.target, cfg)}\` (${o.http} ${o.path}).`, "", `@deprecated Use \`${newCallPath(a.target, cfg)}\`. Kept for 0.x callers; removed in 2.0.`];
   L.push(jsdoc(lines, "  ").trimEnd());
   if (a.args === "object") {
     // 0.x took the path parameters inside the params object.
@@ -571,7 +603,8 @@ export function emitClient(model, cfg) {
   const base = cfg.baseUrlKey ? `PC_BASE_URL.${cfg.baseUrlKey}` : lit(cfg.baseUrl);
   const L = [
     banner(cfg),
-    `import { APIClient, createOpenAPIClient${cfg.baseUrlKey ? ", PC_BASE_URL" : ""}, type ClientOptions, type PollOptions as CorePollOptions, type RequestOptions as CoreRequestOptions } from "@productcraft/core";`,
+    `import { APIClient, createOpenAPIClient${cfg.baseUrlKey ? ", PC_BASE_URL" : ""}, type ClientOptions, type ClientOptions as CoreClientOptions, type PollOptions as CorePollOptions, type RequestOptions as CoreRequestOptions } from "@productcraft/core";`,
+    `import type { APIPromise as CoreAPIPromise, LastResponse as CoreLastResponse, Page as CorePage, PagePromise as CorePagePromise, RateLimitInfo as CoreRateLimitInfo, WithResponse as CoreWithResponse } from "@productcraft/core";`,
     `import type { Client } from "openapi-fetch";`,
     `import type * as E from "./errors.js";`,
     `import type { paths } from "./paths.js";`,
@@ -650,16 +683,41 @@ export function emitClient(model, cfg) {
   const typeOnly = (n, src) => alias(n, `${src}.${n}`);
   alias("RequestOptions", "CoreRequestOptions");
   alias("PollOptions", "CorePollOptions");
+  alias("ClientOptions", "CoreClientOptions");
+  // The runtime's generic types, so a helper can be typed without importing @productcraft/core
+  // (only a transitive dependency: strict pnpm and Yarn PnP refuse that import).
+  for (const g of ["Page", "PagePromise", "APIPromise"]) {
+    aliases.push(`type __${g}<T> = Core${g}<T>;`);
+    ns.push(`  export type ${g}<T> = __${g}<T>;`);
+  }
+  for (const n of ["WithResponse"]) {
+    aliases.push(`type __${n}<T> = Core${n}<T>;`);
+    ns.push(`  export type ${n}<T> = __${n}<T>;`);
+  }
+  for (const n of ["RateLimitInfo", "LastResponse"]) alias(n, `Core${n}`);
   for (const e of model.enums) {
     alias(e.name, `T.${e.name}`);
     ns.push(`  export const ${e.name} = T.${e.name};`);
   }
   const hookSchemas = new Set(model.webhooks.map((h) => h.schema));
-  for (const m of model.models) if (!hookSchemas.has(m.schema)) typeOnly(m.name, "T");
+  for (const m of model.models) {
+    if (hookSchemas.has(m.schema)) continue;
+    typeOnly(m.name, "T");
+    for (const a of m.aliases) {
+      aliases.push(`type __${a} = T.${m.name};`);
+      ns.push(`  /** @deprecated Renamed to \`${cfg.className}.${m.name}\`. Kept for 1.x callers; removed in the next major. */`, `  export type ${a} = __${a};`);
+    }
+  }
   for (const o of model.ops) {
     if (o.paramsType) typeOnly(o.paramsType, "T");
     if (o.itemType && !model.models.some((m) => m.name === o.itemType)) typeOnly(o.itemType, "T");
     if (o.responseType && !model.models.some((m) => m.name === o.responseType)) typeOnly(o.responseType, "T");
+  }
+  for (const a of model.compat?.aliases ?? []) {
+    for (const t of a.types ?? []) {
+      aliases.push(`type __${t.name} = T.${t.target};`);
+      ns.push(`  /** @deprecated Renamed to \`${cfg.className}.${t.target}\`. Kept for 1.x callers; removed in the next major. */`, `  export type ${t.name} = __${t.name};`);
+    }
   }
   alias("ErrorCode", `E.${cfg.className}ErrorCode`);
   for (const h of model.webhooks) typeOnly(h.typeName, "W");

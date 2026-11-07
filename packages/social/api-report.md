@@ -20,21 +20,26 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -43,6 +48,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -1959,7 +1966,13 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -4559,9 +4572,15 @@ export type paths = {
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
+
+export { RateLimitInfo }
+
+export { RequestOptions }
 
 // @public
 class Social extends SocialResources {
@@ -4578,258 +4597,258 @@ namespace Social {
     type Actor = __Actor;
     // (undocumented)
     type ActorArchivedListParams = __ActorArchivedListParams;
+    // (undocumented)
+    type ActorAssetListParams = __ActorAssetListParams;
+    // (undocumented)
+    type ActorBatchParams = __ActorBatchParams;
+    // (undocumented)
+    type ActorBlockListParams = __ActorBlockListParams;
+    // (undocumented)
+    type ActorBookmarkListParams = __ActorBookmarkListParams;
+    // (undocumented)
+    type ActorByExternalBatchParams = __ActorByExternalBatchParams;
+    // (undocumented)
+    type ActorCloseFriendListParams = __ActorCloseFriendListParams;
+    // (undocumented)
+    type ActorComments = __ActorComments;
     const // (undocumented)
     ActorListVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type ActorAssetListParams = __ActorAssetListParams;
+    type ActorCounters = __ActorCounters;
     const // (undocumented)
     ActorStatus: {
         values: readonly ["active", "suspended", "deleted"];
     };
     // (undocumented)
-    type ActorBatchParams = __ActorBatchParams;
+    type ActorCreateParams = __ActorCreateParams;
     const // (undocumented)
     AssetKind: {
         values: readonly ["image", "video"];
     };
     // (undocumented)
-    type ActorBlockListParams = __ActorBlockListParams;
+    type ActorDismissedSuggestionListParams = __ActorDismissedSuggestionListParams;
     const // (undocumented)
     AssetRenditionName: {
         values: readonly ["original", "medium", "thumb", "video", "poster"];
     };
     // (undocumented)
-    type ActorBookmarkListParams = __ActorBookmarkListParams;
+    type ActorDraftListParams = __ActorDraftListParams;
     const // (undocumented)
     AssetStatus: {
         values: readonly ["uploading", "processing", "ready", "failed"];
     };
     // (undocumented)
-    type ActorByExternalBatchParams = __ActorByExternalBatchParams;
+    type ActorFeedListParams = __ActorFeedListParams;
     const // (undocumented)
     AssetUploadMethod: {
         values: readonly ["PUT"];
     };
     // (undocumented)
-    type ActorCloseFriendListParams = __ActorCloseFriendListParams;
+    type ActorFollowerListParams = __ActorFollowerListParams;
     const // (undocumented)
     BlockedTermAction: {
         values: readonly ["hide", "pending_approval"];
     };
     // (undocumented)
-    type ActorComments = __ActorComments;
+    type ActorFollowerPoint = __ActorFollowerPoint;
     const // (undocumented)
     CollectionKind: {
         values: readonly ["bookmark", "highlight"];
     };
     // (undocumented)
-    type ActorCounters = __ActorCounters;
+    type ActorFollowingListParams = __ActorFollowingListParams;
     const // (undocumented)
     CollectionVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type ActorCreateParams = __ActorCreateParams;
+    type ActorFollowRequestListParams = __ActorFollowRequestListParams;
     const // (undocumented)
     CommentPolicy: {
         values: readonly ["everyone", "followers", "mentioned", "off"];
     };
     // (undocumented)
-    type ActorDismissedSuggestionListParams = __ActorDismissedSuggestionListParams;
+    type ActorHashtagFollowCreateParams = __ActorHashtagFollowCreateParams;
     const // (undocumented)
     CommentStatus: {
         values: readonly ["published", "hidden", "removed", "pending_approval"];
     };
     // (undocumented)
-    type ActorDraftListParams = __ActorDraftListParams;
+    type ActorHashtagFollowListParams = __ActorHashtagFollowListParams;
     const // (undocumented)
     CommentVisibility: {
         values: readonly ["public", "author_only"];
     };
     // (undocumented)
-    type ActorFeedListParams = __ActorFeedListParams;
+    type ActorHideListParams = __ActorHideListParams;
     const // (undocumented)
     CommunityStatus: {
         values: readonly ["active", "suspended", "archived"];
     };
     // (undocumented)
-    type ActorFollowerListParams = __ActorFollowerListParams;
+    type ActorHighlightListParams = __ActorHighlightListParams;
     const // (undocumented)
     ConnectionStatus: {
         values: readonly ["pending", "connected"];
     };
     // (undocumented)
-    type ActorFollowerPoint = __ActorFollowerPoint;
+    type ActorInsights = __ActorInsights;
     const // (undocumented)
     ConversationKind: {
         values: readonly ["direct", "group"];
     };
     // (undocumented)
-    type ActorFollowingListParams = __ActorFollowingListParams;
+    type ActorInsightsParams = __ActorInsightsParams;
     const // (undocumented)
     ConversationRole: {
         values: readonly ["member", "admin"];
     };
     // (undocumented)
-    type ActorFollowRequestListParams = __ActorFollowRequestListParams;
+    type ActorList = __ActorList;
     const // (undocumented)
     DirectMessageKind: {
         values: readonly ["text", "image", "video", "audio", "system"];
     };
     // (undocumented)
-    type ActorHashtagFollowCreateParams = __ActorHashtagFollowCreateParams;
+    type ActorListList = __ActorListList;
     const // (undocumented)
     EdgeKind: {
         values: readonly ["follow", "mute", "block", "restrict"];
     };
     // (undocumented)
-    type ActorHashtagFollowListParams = __ActorHashtagFollowListParams;
+    type ActorListMember = __ActorListMember;
     const // (undocumented)
     FlagStatus: {
         values: readonly ["open", "dismissed", "actioned"];
     };
     // (undocumented)
-    type ActorHideListParams = __ActorHideListParams;
+    type ActorListMemberList = __ActorListMemberList;
     const // (undocumented)
     FollowStatus: {
         values: readonly ["followed", "pending"];
     };
     // (undocumented)
-    type ActorHighlightListParams = __ActorHighlightListParams;
+    type ActorListParams = __ActorListParams;
     const // (undocumented)
     MentionSource: {
         values: readonly ["post", "comment"];
     };
     // (undocumented)
-    type ActorInsights = __ActorInsights;
+    type ActorListVisibility = __ActorListVisibility;
     const // (undocumented)
     ModerationActionType: {
         values: readonly ["hide", "remove", "warn", "ban", "dismiss", "unhide", "restore"];
     };
     // (undocumented)
-    type ActorInsightsParams = __ActorInsightsParams;
+    type ActorMentionListParams = __ActorMentionListParams;
     const // (undocumented)
     ModerationTargetKind: {
         values: readonly ["post", "comment", "actor", "direct_message"];
     };
     // (undocumented)
-    type ActorList = __ActorList;
+    type ActorMutedTermCreateParams = __ActorMutedTermCreateParams;
     const // (undocumented)
     MutedTermAction: {
         values: readonly ["mute", "pending_approval"];
     };
     // (undocumented)
-    type ActorListList = __ActorListList;
+    type ActorMutedTermListParams = __ActorMutedTermListParams;
     const // (undocumented)
     MutedTermScope: {
         values: readonly ["feed", "dm", "mention", "all"];
     };
     // (undocumented)
-    type ActorListMember = __ActorListMember;
+    type ActorMuteListParams = __ActorMuteListParams;
     const // (undocumented)
     NotificationKind: {
         values: readonly ["follow", "reaction", "comment_on_post", "reply_to_comment", "mention", "vote", "repost", "quote_post", "dm_new_message", "dm_added_to_group", "dm_role_changed", "dm_reaction", "tag", "follow_request", "follow_request_approved"];
     };
     // (undocumented)
-    type ActorListMemberList = __ActorListMemberList;
+    type ActorNotificationListParams = __ActorNotificationListParams;
     const // (undocumented)
     NotificationTargetKind: {
         values: readonly ["actor", "post", "comment", "direct_message"];
     };
     // (undocumented)
-    type ActorListParams = __ActorListParams;
+    type ActorNotificationMarkAllReadParams = __ActorNotificationMarkAllReadParams;
     const // (undocumented)
     PostStatus: {
         values: readonly ["published", "hidden", "removed", "draft", "scheduled", "archived"];
     };
     // (undocumented)
-    type ActorListVisibility = __ActorListVisibility;
+    type ActorNotificationPrefUpdateParams = __ActorNotificationPrefUpdateParams;
     const // (undocumented)
     PostTagState: {
         values: readonly ["pending", "approved", "removed"];
     };
     // (undocumented)
-    type ActorMentionListParams = __ActorMentionListParams;
+    type ActorNotificationUpdateParams = __ActorNotificationUpdateParams;
     const // (undocumented)
     PostVisibility: {
         values: readonly ["public", "followers", "close_friends", "private"];
     };
     // (undocumented)
-    type ActorMutedTermCreateParams = __ActorMutedTermCreateParams;
+    type ActorPage = __ActorPage;
     const // (undocumented)
     ReactionTargetType: {
         values: readonly ["post", "comment"];
     };
     // (undocumented)
-    type ActorMutedTermListParams = __ActorMutedTermListParams;
+    type ActorPostStateParams = __ActorPostStateParams;
     const // (undocumented)
     SocialStatsMetric: {
         values: readonly ["active_members"];
     };
     // (undocumented)
-    type ActorMuteListParams = __ActorMuteListParams;
+    type ActorReactionEntry = __ActorReactionEntry;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type ActorNotificationListParams = __ActorNotificationListParams;
+    type ActorReactions = __ActorReactions;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type ActorNotificationMarkAllReadParams = __ActorNotificationMarkAllReadParams;
+    type ActorRelationshipListParams = __ActorRelationshipListParams;
     const // (undocumented)
     SuggestionReason: {
         values: readonly ["followed_by_friends", "top_in_community"];
     };
     // (undocumented)
-    type ActorNotificationPrefUpdateParams = __ActorNotificationPrefUpdateParams;
+    type ActorRestrictListParams = __ActorRestrictListParams;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type ActorNotificationUpdateParams = __ActorNotificationUpdateParams;
+    type ActorsByExternalBatch = __ActorsByExternalBatch;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type ActorPage = __ActorPage;
+    type ActorScheduledPostListParams = __ActorScheduledPostListParams;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type ActorPostStateParams = __ActorPostStateParams;
+    type ActorSearch = __ActorSearch;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type ActorReactionEntry = __ActorReactionEntry;
+    type ActorSearchHit = __ActorSearchHit;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["post.created", "post.updated", "post.deleted", "post.reaction.created", "repost.created", "comment.created", "comment.updated", "comment.deleted", "comment.reaction.created", "edge.follow.created", "edge.follow.deleted", "edge.follow.requested", "edge.follow.request_approved", "flag.created", "flag.updated", "moderation.action.applied", "actor.updated", "dm.message.created", "tag.created", "asset.ready", "asset.failed"];
     };
-    // (undocumented)
-    type ActorReactions = __ActorReactions;
-    // (undocumented)
-    type ActorRelationshipListParams = __ActorRelationshipListParams;
-    // (undocumented)
-    type ActorRestrictListParams = __ActorRestrictListParams;
-    // (undocumented)
-    type ActorsByExternalBatch = __ActorsByExternalBatch;
-    // (undocumented)
-    type ActorScheduledPostListParams = __ActorScheduledPostListParams;
-    // (undocumented)
-    type ActorSearch = __ActorSearch;
-    // (undocumented)
-    type ActorSearchHit = __ActorSearchHit;
     // (undocumented)
     type ActorStatus = __ActorStatus;
     // (undocumented)
@@ -4846,6 +4865,8 @@ namespace Social {
     type ActorUpdateParams = __ActorUpdateParams;
     // (undocumented)
     type AddCommentReaction = __AddCommentReaction;
+    // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
     // (undocumented)
     type Asset = __Asset;
     // (undocumented)
@@ -4902,6 +4923,8 @@ namespace Social {
     type BookmarkList = __BookmarkList;
     // (undocumented)
     type BookmarkToggle = __BookmarkToggle;
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
     // (undocumented)
     type CloseFriendCreateParams = __CloseFriendCreateParams;
     // (undocumented)
@@ -5219,6 +5242,8 @@ namespace Social {
     // (undocumented)
     type InsightsDailyBucket = __InsightsDailyBucket;
     // (undocumented)
+    type LastResponse = __LastResponse;
+    // (undocumented)
     type ListCreateParams = __ListCreateParams;
     // (undocumented)
     type ListDeleteParams = __ListDeleteParams;
@@ -5240,7 +5265,7 @@ namespace Social {
     type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
     type MarkAllReadResponse = __MarkAllReadResponse;
@@ -5290,6 +5315,10 @@ namespace Social {
     type OutboundEdge = __OutboundEdge;
     // (undocumented)
     type OutboundEdgeList = __OutboundEdgeList;
+    // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
     // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
@@ -5415,6 +5444,8 @@ namespace Social {
     // (undocumented)
     type PostVoterListParams = __PostVoterListParams;
     // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
+    // (undocumented)
     type Reaction = __Reaction;
     // (undocumented)
     type ReactionCounts = __ReactionCounts;
@@ -5531,11 +5562,15 @@ namespace Social {
     // (undocumented)
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
+    type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)
     type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
 }
 export { Social }
 export default Social;
@@ -5551,6 +5586,8 @@ export const SocialErrorCode: {
 export { UnprocessableEntityError }
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

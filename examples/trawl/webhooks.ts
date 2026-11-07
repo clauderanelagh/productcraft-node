@@ -61,7 +61,7 @@ const trawl = new Trawl();
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await trawl.webhooks.eventTypes.list();
+  const webhookEventTypeList = await trawl.webhooks.eventTypes.list();
 }
 
 export {};

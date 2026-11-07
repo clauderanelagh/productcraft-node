@@ -341,7 +341,7 @@ const webhookEndpoint = await trawl.webhooks.endpoints.update("3f0c3c1e-8a2b-4c5
 
 ### `trawl.webhooks.eventTypes.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Trawl.ListWebhookEventTypes`
+`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Trawl.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -354,7 +354,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await trawl.webhooks.eventTypes.list();
+const webhookEventTypeList = await trawl.webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#get-v1-workspaces-workspace-id-webhooks-event-types)

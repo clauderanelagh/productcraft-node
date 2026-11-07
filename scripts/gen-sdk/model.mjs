@@ -127,8 +127,13 @@ export function buildModel(spec, config) {
         .filter((n) => !bind.includes(n))
         .map((n) => {
           const p = pathParams.find((q) => q.name === n) ?? { name: n };
-          return { name: n, arg: camel(n), description: p.description, schema: p.schema ?? { type: "string" }, example: p.example };
+          // x-pc-sdk.args (`@SdkArgs`) names an argument whose parameter name says too little (`mid` -> `messageId`).
+          const arg = x.args?.[n] ?? camel(n);
+          if (!/^[a-z][A-Za-z0-9]*$/.test(arg)) problems.push(`${w}: x-pc-sdk.args.${n} "${arg}" is not a camelCase name`);
+          return { name: n, arg, description: p.description, schema: p.schema ?? { type: "string" }, example: p.example };
         });
+      for (const a of Object.keys(x.args ?? {})) if (!templateNames.includes(a) || bind.includes(a)) problems.push(`${w}: x-pc-sdk.args names "${a}", which is not a positional path parameter`);
+      if (new Set(positional.map((p) => p.arg)).size !== positional.length) problems.push(`${w}: two positional arguments share a name`);
       // Section 3.2: an id-less DELETE has no default; "delete" must name one object.
       if (method === "delete" && positional.length === 0) {
         problems.push(`${w}: DELETE without an id cannot be "delete"; name it with @SdkMethod (e.g. "erase")`);
@@ -243,6 +248,8 @@ export function buildModel(spec, config) {
         requiredNames: [...((body?.json || body?.multipart) && body.required ? body.requiredProps : []), ...query.filter((q) => q.required).map((q) => q.name)],
         hasRequiredParams: (body?.required && (body.multipart ? body.requiredProps.length > 0 : !body.json || !body.isObject || hasRequired(deref(body.schema)))) || query.some((q) => q.required),
         stem,
+        // x-pc-sdk.aliases: former names in this scope, kept as deprecated alias methods.
+        aliases: Array.isArray(x.aliases) ? [...x.aliases] : [],
       });
     }
   }
@@ -281,7 +288,9 @@ export function buildModel(spec, config) {
     if (Array.isArray(s.enum) && s.enum.every((v) => typeof v === "string")) {
       enums.push({ name: s["x-pc-sdk-model"] ?? name, schema: name, values: [...s.enum], description: s.description });
     } else if (s["x-pc-sdk-model"]) {
-      models.push({ name: s["x-pc-sdk-model"], schema: name, description: s.description });
+      // x-pc-sdk-model-aliases: names the type had in published SDKs, kept as deprecated aliases.
+      const aliases = Array.isArray(s["x-pc-sdk-model-aliases"]) ? [...s["x-pc-sdk-model-aliases"]].sort() : [];
+      models.push({ name: s["x-pc-sdk-model"], schema: name, description: s.description, aliases, interface: interfaceable(s) });
     }
   }
 
@@ -303,8 +312,9 @@ export function buildModel(spec, config) {
     else typeNames.set(n, what);
   };
   // Names the generator itself emits into every product namespace.
-  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "WithResult", "RequestOptions", "PollOptions", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams", "WebhookSignParams"]) claim(n, "a generator helper type");
+  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "WithResult", "RequestOptions", "PollOptions", "ClientOptions", "Page", "PagePromise", "APIPromise", "WithResponse", "RateLimitInfo", "LastResponse", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams", "WebhookSignParams"]) claim(n, "a generator helper type");
   for (const mdl of models) claim(mdl.name, `model ${mdl.schema}`);
+  for (const mdl of models) for (const a of mdl.aliases) claim(a, `former name of model ${mdl.name}`);
   for (const e of enums) claim(e.name, `enum ${e.schema}`);
   for (const o of ops) {
     if (o.paramsType) claim(o.paramsType, `params of ${o.name}`);
@@ -331,6 +341,9 @@ export function buildModel(spec, config) {
   if (!apiEventTypes && webhooks.length) claim("WebhookEventType", "the generated webhook event-type union");
 
   const compat = resolveCompat(config.compat, ops, scopes, problems, resourceSet);
+  const renamed = renamedAliases(ops, problems, resourceSet, compat.aliases);
+  for (const a of renamed) for (const t of a.types) claim(t.name, `former type name of ${a.target.name}`);
+  compat.aliases.push(...renamed);
 
   if (problems.length) throw new GenError(problems);
   return { apiEventTypes, ops, scopes, models, enums, errorCode, webhooks, deref, compat, securitySchemes: namedSchemes(spec) };
@@ -383,6 +396,47 @@ function resolveCompat(compat, ops, scopes, problems, resourceSet) {
   }
   const types = Object.entries(compat.types ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([name, schema]) => ({ name, schema }));
   return { aliases, types };
+}
+
+/**
+ * Renamed methods (x-pc-sdk.aliases, `@SdkMethod(…, { was })`): each former name becomes a
+ * deprecated alias in the same scope that calls the renamed operation, so the rename is a minor.
+ */
+function renamedAliases(ops, problems, resourceSet, existing) {
+  const out = [];
+  const taken = new Set(existing.map((a) => `${a.scope?.name ?? ""}:${a.name}`));
+  for (const op of ops) {
+    for (const name of op.aliases) {
+      const where = `${op.scope?.name ?? ""}:${name}`;
+      const segs = name.split(".");
+      const method = segs.pop();
+      if (!segs.length || !/^[a-z][A-Za-z0-9]*(\.[a-z][A-Za-z0-9]*)*$/.test(name)) {
+        problems.push(`${op.http} ${op.path} (${op.operationId}): x-pc-sdk.aliases entry "${name}" must be a dotted resource.method`);
+        continue;
+      }
+      if (taken.has(where) || resourceSet.has(where) || ops.some((o) => (o.scope?.name ?? null) === (op.scope?.name ?? null) && o.call === name)) {
+        problems.push(`${op.http} ${op.path} (${op.operationId}): alias ${name} collides with a generated name`);
+        continue;
+      }
+      taken.add(where);
+      // The former name's generated type names (`Mail.MessageTimelineParams`) stay too, as deprecated aliases.
+      const stem = typeStem(segs.join("."));
+      const types = [];
+      if (op.paramsType) types.push({ name: `${stem}${pascal(method)}Params`, target: op.paramsType });
+      if (op.responseType && /Response$/.test(op.responseType)) types.push({ name: `${stem}${pascal(method)}Response`, target: op.responseType });
+      if (op.itemType && /Item$/.test(op.itemType)) types.push({ name: `${stem}${pascal(method)}Item`, target: op.itemType });
+      out.push({ scope: op.scope, segs, method, name, target: op, args: "positional", alias: op, renamed: true, types: types.filter((t) => t.name !== t.target) });
+    }
+  }
+  return out;
+}
+
+/** A model schema TypeScript can declare as an `interface … extends` (a plain object, no composition or null). */
+function interfaceable(s) {
+  if (s.nullable || s.oneOf || s.anyOf || s.allOf || s.not) return false;
+  const type = Array.isArray(s.type) ? s.type : [s.type];
+  if (type.includes("null")) return false;
+  return (s.type === "object" || (s.type === undefined && s.properties)) && !!s.properties && Object.keys(s.properties).length > 0;
 }
 
 function hasRequired(schema) {

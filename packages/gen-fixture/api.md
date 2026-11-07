@@ -348,12 +348,12 @@ Add a part to a widget.
 | 409 | `ConflictError` | `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency conflict. |
 
 ```ts
-const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt" });
+const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt", sku: "B-100" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-workspaces-workspace-id-widgets-widget-id-parts)
 
-### `fixture.widgets.parts.delete(widgetId, partId, options?)`
+### `fixture.widgets.parts.delete(widgetId, partNumber, options?)`
 
 `DELETE /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}` → `void`
 

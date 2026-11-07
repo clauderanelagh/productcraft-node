@@ -28,7 +28,7 @@
       "resource": "widgets.parts",
       "scope": null,
       "signature": "fixture.widgets.parts.create(widgetId, params, options?): Fixture.Part",
-      "snippet": "const part = await fixture.widgets.parts.create(\"5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6\", { label: \"Bolt\" });"
+      "snippet": "const part = await fixture.widgets.parts.create(\"5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6\", { label: \"Bolt\", sku: \"B-100\" });"
     },
     "PartController_list": {
       "actor": null,
@@ -57,7 +57,7 @@
       "public": false,
       "resource": "widgets.parts",
       "scope": null,
-      "signature": "fixture.widgets.parts.delete(widgetId, partId, options?): void",
+      "signature": "fixture.widgets.parts.delete(widgetId, partNumber, options?): void",
       "snippet": "await fixture.widgets.parts.delete(\"5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6\", \"2c4e6a8b-1d3f-4a5c-9e7b-0f2d4c6a8e1b\");"
     },
     "PostController_create": {

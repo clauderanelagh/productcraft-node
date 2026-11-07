@@ -44,12 +44,12 @@ const mail = new Mail();
 
 // templates.send: Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9_\-:]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
 {
-  const sendAccepted = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
+  const result = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
 }
 
 // templates.sendBatch: Send up to 100 messages with the same template in one request. Per-row partial-success: each row carries its own status (`accepted` | `rejected`).
 {
-  const sendBatchOpenApi = await mail.templates.sendBatch("welcome", {
+  const result = await mail.templates.sendBatch("welcome", {
     messages: [
       {
         data: { code: "A1B2C3", name: "Alice" },
@@ -62,12 +62,12 @@ const mail = new Mail();
 
 // templates.tags.list: Distinct tag list across all templates in this workspace (for autocomplete)
 {
-  const listTemplateTags = await mail.templates.tags.list();
+  const templateTagList = await mail.templates.tags.list();
 }
 
 // templates.testSend: Send a test rendering of the template to an arbitrary recipient. Bypasses the suppression list and the ordinary send limits (test sends have their own: 30 per hour per workspace); subject is auto-prefixed with [TEST]; missing variables render as [varname] placeholders.
 {
-  const sendAccepted = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
+  const result = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
 }
 
 // templates.variables.list: Variables auto-detected from the saved template body + subject (Handlebars expressions, dotted paths preserved, dedup'd in first-occurrence order).

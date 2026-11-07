@@ -11,7 +11,7 @@ const mail = new Mail();
 
 // messages.erase: RTBF: delete every message log row for `recipient` (case-insensitive). Returns the deleted-row count.
 {
-  const deleteByRecipient = await mail.messages.erase({ recipient: "ada@example.com" });
+  const result = await mail.messages.erase({ recipient: "ada@example.com" });
 }
 
 // messages.export: Stream the filtered message log as CSV. Same filters as GET /messages. Body columns are intentionally omitted; bodies remain gated by `mail.message.body.read`. Rate-limited 1 concurrent + 5/hour per workspace.
@@ -41,11 +41,6 @@ const mail = new Mail();
 // messages.settings.update: Update this workspace's outbound-message settings. Gated on `mail.message.delete` — same privilege bar as RTBF, since both touch the PII boundary.
 {
   const outboundMessageSettings = await mail.messages.settings.update({ redact_bodies: true });
-}
-
-// messages.timeline: Day-bucketed inbound message volume for a workspace
-{
-  const messageTimeline = await mail.messages.timeline({ granularity: "day", since: "2026-04-01T00:00:00Z", until: "2026-05-01T00:00:00Z" });
 }
 
 export {};

@@ -102,6 +102,10 @@ try {
   const { data: domainsPage, requestId: listRequestId } = await mail.domains.list().withResponse();
   const domain = domainsPage.data.find((d) => d.status === "active" && d.capabilities?.sending === "enabled");
   check(typeof listRequestId === "string" && listRequestId.length > 0, "domains.list().withResponse() gives requestId");
+  // rateLimit parses the named windows the API sends (X-RateLimit-*-short / -long).
+  const { rateLimit } = await mail.emails.list({ limit: 1 }).withResponse();
+  check(typeof rateLimit?.remaining === "number" && typeof rateLimit?.limit === "number" && !!rateLimit?.windows?.short && !!rateLimit?.windows?.long,
+    `withResponse().rateLimit is set (window ${rateLimit?.window}, ${rateLimit?.remaining}/${rateLimit?.limit} left)`);
   if (!domain) throw new Error("testing-environment has no active sending domain (sdk-live.productcraft.co is the standing one)");
   const polled = await mail.domains.poll(domain.id, { intervalMs: 2_000, timeoutMs: 20_000 });
   check(polled.status === "active", `domains.poll resolves at a terminal status (${polled.status})`);
@@ -148,6 +152,22 @@ try {
     if (tplSeen.length >= 2) break;
   }
   check(tplSeen.length === 2, "templates.list({ limit: 1 }) walks two pages");
+
+  // received.timeline (inbound volume), and its deprecated 1.x name messages.timeline.
+  const until = new Date().toISOString().slice(0, 10) + "T00:00:00Z";
+  const fromDay = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10) + "T00:00:00Z";
+  const tl = await mail.received.timeline({ granularity: "day", since: fromDay, until });
+  const tlOld = await mail.messages.timeline({ granularity: "day", since: fromDay, until });
+  check(JSON.stringify(tl) === JSON.stringify(tlOld) && typeof tl === "object", "received.timeline and the deprecated messages.timeline return the same series");
+
+  // A send with no content is a type error now; at runtime the API still refuses it.
+  try {
+    // @ts-expect-error -- deliberately invalid: no html, text or template
+    await mail.emails.send({ from, to: TO });
+    check(false, "contentless send throws");
+  } catch (err) {
+    check(err instanceof BadRequestError && err.code === "EMAIL_CONTENT_CONFLICT", `contentless send is BadRequestError ${err.code}`);
+  }
 
   // messages.export resolves to the raw Response (CSV).
   const since = new Date(Date.now() - 10 * 60_000).toISOString();

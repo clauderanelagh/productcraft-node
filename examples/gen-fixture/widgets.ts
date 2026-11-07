@@ -55,7 +55,7 @@ const fixture = new Fixture();
 
 // widgets.parts.create: Add a part to a widget
 {
-  const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt" });
+  const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt", sku: "B-100" });
 }
 
 // widgets.parts.delete: Remove a part

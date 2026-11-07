@@ -402,7 +402,23 @@ export type components = {
             label: string;
             /** @default 1 */
             quantity?: number;
-        };
+            /**
+             * @description Stock-keeping unit.
+             * @example B-100
+             */
+            sku?: string;
+            /**
+             * @description A catalogue entry instead of a SKU.
+             * @example cat_42
+             */
+            catalog_ref?: string;
+        } & ({
+            sku: string;
+            catalog_ref?: never;
+        } | {
+            catalog_ref: string;
+            sku?: never;
+        });
         PartResponseDto: {
             /**
              * Format: uuid

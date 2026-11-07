@@ -20,6 +20,7 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PCAuth } from '@productcraft/core';
 import { PCClientConfig } from '@productcraft/core';
@@ -27,16 +28,20 @@ import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -118,352 +123,354 @@ namespace Auth {
     type AcceptInviteParams = __AcceptInviteParams;
     // (undocumented)
     type AcceptInviteResponse = __AcceptInviteResponse;
+    // (undocumented)
+    type AcceptTenantInviteParams = __AcceptTenantInviteParams;
+    // (undocumented)
+    type AccountContact = __AccountContact;
+    // (undocumented)
+    type AccountContactList = __AccountContactList;
+    // (undocumented)
+    type AddMember = __AddMember;
+    // (undocumented)
+    type AdminProvisionFactor = __AdminProvisionFactor;
+    // (undocumented)
+    type ApiKeyCreateParams = __ApiKeyCreateParams;
+    // (undocumented)
+    type ApiKeyList = __ApiKeyList;
     const // (undocumented)
     ApiKeyStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type AcceptTenantInviteParams = __AcceptTenantInviteParams;
+    type ApiKeyListParams = __ApiKeyListParams;
     const // (undocumented)
     AppEnvironment: {
         values: readonly ["production", "staging", "development"];
     };
     // (undocumented)
-    type AccountContact = __AccountContact;
+    type ApiKeyRotateParams = __ApiKeyRotateParams;
     const // (undocumented)
     AppStatus: {
         values: readonly ["active", "suspended", "archived"];
     };
     // (undocumented)
-    type AccountContactList = __AccountContactList;
+    type ApiKeyStatus = __ApiKeyStatus;
     const // (undocumented)
     ApplyPlanAction: {
         values: readonly ["create", "skip"];
     };
     // (undocumented)
-    type AddMember = __AddMember;
+    type ApiKeySummary = __ApiKeySummary;
     const // (undocumented)
     ApplyPlanResult: {
         values: readonly ["created", "unchanged", "failed"];
     };
     // (undocumented)
-    type AdminProvisionFactor = __AdminProvisionFactor;
+    type APIPromise<T> = __APIPromise<T>;
     const // (undocumented)
     AuditSinkAttemptKind: {
         values: readonly ["batch", "test"];
     };
     // (undocumented)
-    type ApiKeyCreateParams = __ApiKeyCreateParams;
+    type App = __App;
     const // (undocumented)
     AuditSinkState: {
         values: readonly ["active", "paused", "auto_disabled"];
     };
     // (undocumented)
-    type ApiKeyList = __ApiKeyList;
+    type AppCreateParams = __AppCreateParams;
     const // (undocumented)
     AuthStatsMetric: {
         values: readonly ["active_users"];
     };
     // (undocumented)
-    type ApiKeyListParams = __ApiKeyListParams;
+    type AppEnvironment = __AppEnvironment;
     const // (undocumented)
     BotProtectionProvider: {
         values: readonly ["turnstile", "hcaptcha"];
     };
     // (undocumented)
-    type ApiKeyRotateParams = __ApiKeyRotateParams;
+    type AppList = __AppList;
     const // (undocumented)
     ContactType: {
         values: readonly ["email", "phone"];
     };
     // (undocumented)
-    type ApiKeyStatus = __ApiKeyStatus;
+    type AppListParams = __AppListParams;
     const // (undocumented)
     CustomDomainApplyWarning: {
         values: readonly ["token_scope_broader_than_zone", "partially_applied"];
     };
     // (undocumented)
-    type ApiKeySummary = __ApiKeySummary;
+    type ApplyConflict = __ApplyConflict;
     const // (undocumented)
     CustomDomainStatus: {
         values: readonly ["pending", "active", "failing"];
     };
     // (undocumented)
-    type App = __App;
+    type ApplyCounts = __ApplyCounts;
     const // (undocumented)
     DnsConflictSeverity: {
         values: readonly ["blocking", "warning"];
     };
     // (undocumented)
-    type AppCreateParams = __AppCreateParams;
+    type ApplyPlanAction = __ApplyPlanAction;
     const // (undocumented)
     DnsProvider: {
         values: readonly ["cloudflare", "digitalocean"];
     };
     // (undocumented)
-    type AppEnvironment = __AppEnvironment;
+    type ApplyPlanItem = __ApplyPlanItem;
     const // (undocumented)
     DnsRecordPurpose: {
         values: readonly ["routing", "ownership"];
     };
     // (undocumented)
-    type AppList = __AppList;
+    type ApplyPlanResult = __ApplyPlanResult;
     const // (undocumented)
     DnsRecordState: {
         values: readonly ["not_found", "propagating", "verified", "conflict", "lookup_failed"];
     };
     // (undocumented)
-    type AppListParams = __AppListParams;
+    type AppMemberList = __AppMemberList;
     const // (undocumented)
     DnsRecordType: {
         values: readonly ["CNAME", "TXT"];
     };
     // (undocumented)
-    type ApplyConflict = __ApplyConflict;
+    type AppMembership = __AppMembership;
     const // (undocumented)
     EndUserStatus: {
         values: readonly ["active", "suspended", "deactivated"];
     };
     // (undocumented)
-    type ApplyCounts = __ApplyCounts;
+    type AppMemberSummary = __AppMemberSummary;
     const // (undocumented)
     EnrollmentType: {
         values: readonly ["totp", "email", "webauthn"];
     };
     // (undocumented)
-    type ApplyPlanAction = __ApplyPlanAction;
+    type AppNotificationSettings = __AppNotificationSettings;
     const // (undocumented)
     ImportJobStatus: {
         values: readonly ["queued", "running", "succeeded", "failed"];
     };
     // (undocumented)
-    type ApplyPlanItem = __ApplyPlanItem;
+    type AppPermissionCatalogEntry = __AppPermissionCatalogEntry;
     const // (undocumented)
     IntrospectedTokenType: {
         values: readonly ["m2m", "end_user"];
     };
     // (undocumented)
-    type ApplyPlanResult = __ApplyPlanResult;
+    type AppScopedPermissionCreateParams = __AppScopedPermissionCreateParams;
     const // (undocumented)
     JwkUse: {
         values: readonly ["sig"];
     };
     // (undocumented)
-    type AppMemberList = __AppMemberList;
+    type AppScopedPermissionListResponse = __AppScopedPermissionListResponse;
     const // (undocumented)
     MfaPolicy: {
         values: readonly ["optional", "required"];
     };
     // (undocumented)
-    type AppMembership = __AppMembership;
+    type AppScopedRoleCreateParams = __AppScopedRoleCreateParams;
     const // (undocumented)
     OAuthLinkPolicy: {
         values: readonly ["auto", "confirm", "reject"];
     };
     // (undocumented)
-    type AppMemberSummary = __AppMemberSummary;
+    type AppScopedRoleListParams = __AppScopedRoleListParams;
     const // (undocumented)
     OAuthProvider: {
         values: readonly ["google", "github", "apple"];
     };
     // (undocumented)
-    type AppNotificationSettings = __AppNotificationSettings;
+    type AppScopedRoleUpdateParams = __AppScopedRoleUpdateParams;
     const // (undocumented)
     PasswordBreachCheck: {
         values: readonly ["off", "warn", "block"];
     };
     // (undocumented)
-    type AppPermissionCatalogEntry = __AppPermissionCatalogEntry;
+    type AppScopedRoleUpdatePermissionsParams = __AppScopedRoleUpdatePermissionsParams;
     const // (undocumented)
     ProviderBlockedReason: {
         values: readonly ["no_redirect_origins", "missing_credentials", "credentials_rejected"];
     };
     // (undocumented)
-    type AppScopedPermissionCreateParams = __AppScopedPermissionCreateParams;
+    type AppScopedRoleUpdatePermissionsResponse = __AppScopedRoleUpdatePermissionsResponse;
     const // (undocumented)
     ProviderCheckResult: {
         values: readonly ["credentials_valid", "credentials_rejected", "inconclusive"];
     };
     // (undocumented)
-    type AppScopedPermissionListResponse = __AppScopedPermissionListResponse;
+    type AppScopedTenantApiKeyConfigUpdateParams = __AppScopedTenantApiKeyConfigUpdateParams;
     const // (undocumented)
     ProviderStatus: {
         values: readonly ["ready", "blocked", "disabled", "not_configured"];
     };
     // (undocumented)
-    type AppScopedRoleCreateParams = __AppScopedRoleCreateParams;
+    type AppScopedTenantApiKeyListParams = __AppScopedTenantApiKeyListParams;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type AppScopedRoleListParams = __AppScopedRoleListParams;
+    type AppScopedTenantCreateParams = __AppScopedTenantCreateParams;
     const // (undocumented)
     SenderSource: {
         values: readonly ["workspace", "custom"];
     };
     // (undocumented)
-    type AppScopedRoleUpdateParams = __AppScopedRoleUpdateParams;
+    type AppScopedTenantInviteCreateParams = __AppScopedTenantInviteCreateParams;
     const // (undocumented)
     SetupRowState: {
         values: readonly ["pass", "attention", "not_set", "blocked"];
     };
     // (undocumented)
-    type AppScopedRoleUpdatePermissionsParams = __AppScopedRoleUpdatePermissionsParams;
+    type AppScopedTenantInviteListParams = __AppScopedTenantInviteListParams;
     const // (undocumented)
     SignInResult: {
         values: readonly ["session", "mfa_required", "mfa_enrollment_required"];
     };
     // (undocumented)
-    type AppScopedRoleUpdatePermissionsResponse = __AppScopedRoleUpdatePermissionsResponse;
+    type AppScopedTenantListParams = __AppScopedTenantListParams;
     const // (undocumented)
     SignInTestEmailNoticeCode: {
         values: readonly ["emails_off", "email_sender_missing", "email_template_missing", "email_workspace_missing", "email_unavailable", "email_send_failed"];
     };
     // (undocumented)
-    type AppScopedTenantApiKeyConfigUpdateParams = __AppScopedTenantApiKeyConfigUpdateParams;
+    type AppScopedTenantMemberCreateParams = __AppScopedTenantMemberCreateParams;
     const // (undocumented)
     SignInTestMethod: {
         values: readonly ["oauth", "password", "otp"];
     };
     // (undocumented)
-    type AppScopedTenantApiKeyListParams = __AppScopedTenantApiKeyListParams;
+    type AppScopedTenantMemberListParams = __AppScopedTenantMemberListParams;
     const // (undocumented)
     SignInTestOutcome: {
         values: readonly ["would_sign_in_existing", "would_create"];
     };
     // (undocumented)
-    type AppScopedTenantCreateParams = __AppScopedTenantCreateParams;
+    type AppScopedTenantMemberUpdateParams = __AppScopedTenantMemberUpdateParams;
     const // (undocumented)
     SignInTestState: {
         values: readonly ["pending", "succeeded", "failed"];
     };
     // (undocumented)
-    type AppScopedTenantInviteCreateParams = __AppScopedTenantInviteCreateParams;
+    type AppScopedTenantUpdateParams = __AppScopedTenantUpdateParams;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type AppScopedTenantInviteListParams = __AppScopedTenantInviteListParams;
+    type AppSlugChangedEvent = __AppSlugChangedEvent;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type AppScopedTenantListParams = __AppScopedTenantListParams;
+    type AppSlugChangedEventData = __AppSlugChangedEventData;
     const // (undocumented)
     TenantApiKeyAdminState: {
         values: readonly ["active", "expired", "revoked", "orphaned"];
     };
     // (undocumented)
-    type AppScopedTenantMemberCreateParams = __AppScopedTenantMemberCreateParams;
+    type AppStatus = __AppStatus;
     const // (undocumented)
     TenantApiKeyEffectiveStatus: {
         values: readonly ["active", "expired", "revoked", "orphaned", "suspended"];
     };
     // (undocumented)
-    type AppScopedTenantMemberListParams = __AppScopedTenantMemberListParams;
+    type AppUpdateParams = __AppUpdateParams;
     const // (undocumented)
     TenantApiKeyEnv: {
         values: readonly ["live", "test"];
     };
     // (undocumented)
-    type AppScopedTenantMemberUpdateParams = __AppScopedTenantMemberUpdateParams;
+    type AuditLogEntry = __AuditLogEntry;
     const // (undocumented)
     TenantApiKeyManagementLane: {
         values: readonly ["direct", "app_proxy_only"];
     };
     // (undocumented)
-    type AppScopedTenantUpdateParams = __AppScopedTenantUpdateParams;
+    type AuditLogExportParams = __AuditLogExportParams;
     const // (undocumented)
     TenantApiKeyRevokeReason: {
         values: readonly ["manual", "rotated", "member_removed", "tenant_deleted"];
     };
     // (undocumented)
-    type AppSlugChangedEvent = __AppSlugChangedEvent;
+    type AuditLogList = __AuditLogList;
     const // (undocumented)
     TenantApiKeyState: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type AppSlugChangedEventData = __AppSlugChangedEventData;
+    type AuditLogListParams = __AuditLogListParams;
     const // (undocumented)
     TenantInviteStatus: {
         values: readonly ["pending", "revoked", "expired", "used"];
     };
     // (undocumented)
-    type AppStatus = __AppStatus;
+    type AuditSink = __AuditSink;
     const // (undocumented)
     TenantStatus: {
         values: readonly ["active", "suspended", "archived"];
     };
     // (undocumented)
-    type AppUpdateParams = __AppUpdateParams;
+    type AuditSinkAttemptKind = __AuditSinkAttemptKind;
     const // (undocumented)
     TokenType: {
         values: readonly ["Bearer"];
     };
     // (undocumented)
-    type AuditLogEntry = __AuditLogEntry;
+    type AuditSinkReplaceParams = __AuditSinkReplaceParams;
     const // (undocumented)
     UserCreatedVia: {
         values: readonly ["admin", "invite", "tenant_invite"];
     };
     // (undocumented)
-    type AuditLogExportParams = __AuditLogExportParams;
+    type AuditSinkState = __AuditSinkState;
     const // (undocumented)
     UserDeletedReason: {
         values: readonly ["unverified_expired"];
     };
     // (undocumented)
-    type AuditLogList = __AuditLogList;
+    type AuditSinkTestResult = __AuditSinkTestResult;
     const // (undocumented)
     UserDeletedVia: {
         values: readonly ["platform", "platform_bulk", "consumer_admin", "self"];
     };
     // (undocumented)
-    type AuditLogListParams = __AuditLogListParams;
+    type AuditSinkUpdateParams = __AuditSinkUpdateParams;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type AuditSink = __AuditSink;
+    type AuditSinkWithSecret = __AuditSinkWithSecret;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type AuditSinkAttemptKind = __AuditSinkAttemptKind;
+    type AuthConfig = __AuthConfig;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type AuditSinkReplaceParams = __AuditSinkReplaceParams;
+    type AuthConfigProviderListResponse = __AuthConfigProviderListResponse;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type AuditSinkState = __AuditSinkState;
+    type AuthConfigProviderReplaceParams = __AuthConfigProviderReplaceParams;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["user.signup", "user.signin", "user.suspended", "user.deactivated", "user.reinstated", "user.role_changed", "user.deleted", "user.contact_verified", "user.email_verified", "user.password_reset.requested", "user.password_reset.completed", "user.mfa.factor_enrolled", "user.mfa.factor_disabled", "user.mfa.recovery_code_used", "user.mfa.step_up_succeeded", "user.mfa.step_up_locked", "user.mfa.enrollment_required", "user.mfa.reenrollment_required", "tenant.created", "tenant.updated", "tenant.deleted", "tenant.member.added", "tenant.member.removed", "tenant.member.role_changed", "tenant.invite.created", "tenant.invite.accepted", "tenant.invite.revoked", "app.slug_changed"];
     };
-    // (undocumented)
-    type AuditSinkTestResult = __AuditSinkTestResult;
-    // (undocumented)
-    type AuditSinkUpdateParams = __AuditSinkUpdateParams;
-    // (undocumented)
-    type AuditSinkWithSecret = __AuditSinkWithSecret;
-    // (undocumented)
-    type AuthConfig = __AuthConfig;
-    // (undocumented)
-    type AuthConfigProviderListResponse = __AuthConfigProviderListResponse;
-    // (undocumented)
-    type AuthConfigProviderReplaceParams = __AuthConfigProviderReplaceParams;
     // (undocumented)
     type AuthConfigProviderUpdateParams = __AuthConfigProviderUpdateParams;
     // (undocumented)
@@ -492,6 +499,8 @@ namespace Auth {
     type BotProtectionProvider = __BotProtectionProvider;
     // (undocumented)
     type BulkAffectedUsers = __BulkAffectedUsers;
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
     // (undocumented)
     type CloneApp = __CloneApp;
     // (undocumented)
@@ -735,10 +744,12 @@ namespace Auth {
     // (undocumented)
     type JwkUse = __JwkUse;
     // (undocumented)
+    type LastResponse = __LastResponse;
+    // (undocumented)
     type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
     type LogoutParams = __LogoutParams;
@@ -835,6 +846,10 @@ namespace Auth {
     // (undocumented)
     type OpenIdConfiguration = __OpenIdConfiguration;
     // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
+    // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
     type PasskeyOptionsParams = __PasskeyOptionsParams;
@@ -866,6 +881,8 @@ namespace Auth {
     type ProviderStatus = __ProviderStatus;
     // (undocumented)
     type PublicFactor = __PublicFactor;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type RecoveryCodes = __RecoveryCodes;
     // (undocumented)
@@ -1191,11 +1208,15 @@ namespace Auth {
     // (undocumented)
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
+    type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)
     type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
 }
 export { Auth }
 export default Auth;
@@ -1254,6 +1275,8 @@ export { BadRequestError }
 
 // @public @deprecated (undocumented)
 export type ClientCredentialsDto = components["schemas"]["ClientCredentialsDto"];
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -3815,7 +3838,13 @@ export class JwtVerifyError extends Error {
     readonly code: string;
 }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export interface PasskeyBrowserOptions {
@@ -6573,12 +6602,18 @@ export { PCClientConfig }
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 // @public @deprecated (undocumented)
 export type PublicFactorDto = components["schemas"]["PublicFactorDto"];
 
 export { RateLimitError }
+
+export { RateLimitInfo }
+
+export { RequestOptions }
 
 // @public @deprecated (undocumented)
 export type SetPermissionsDto = components["schemas"]["SetPermissionsDto"];
@@ -6642,6 +6677,8 @@ export interface VerifyOptions {
 export type WebauthnCredentialDto = components["schemas"]["WebauthnCredentialDto"];
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

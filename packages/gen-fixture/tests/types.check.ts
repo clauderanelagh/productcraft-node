@@ -24,11 +24,32 @@ export async function rules(): Promise<void> {
   // Defaults: optional in requests (color, quantity, retention_days) ...
   await fixture.widgets.create(params);
   await fixture.settings.update({});
-  await fixture.widgets.parts.create("w", { label: "Bolt" });
+  await fixture.widgets.parts.create("w", { label: "Bolt", sku: "B-100" });
   // ... and required in responses.
   const settings = await fixture.settings.retrieve();
   const days: number = settings.retention_days;
   void days;
+
+  // A request oneOf (Mail's html / text / template rule) is a union: one of them, not none, not both.
+  await fixture.widgets.parts.create("w", { label: "Bolt", catalog_ref: "cat_42" });
+  // @ts-expect-error neither a sku nor a catalogue entry
+  await fixture.widgets.parts.create("w", { label: "Bolt" });
+  // @ts-expect-error a sku and a catalogue entry
+  await fixture.widgets.parts.create("w", { label: "Bolt", sku: "B-100", catalog_ref: "cat_42" });
+
+  // Renames keep the former names as deprecated aliases: the model, the method and its types.
+  assert<Equal<Fixture.Area, Fixture.Region>>(true);
+  const tally = await fixture.widgets.tally();
+  void tally;
+  assert<Equal<Fixture.WidgetTallyParams, Fixture.WidgetCountParams>>(true);
+  // x-pc-sdk.args names a positional argument.
+  await fixture.widgets.parts.delete("w", "p");
+
+  // The runtime's types come from the product package (core is only a transitive dependency).
+  const regionPage: Fixture.Page<Fixture.Region> | undefined = undefined;
+  void regionPage;
+  const opts: Fixture.RequestOptions = { maxRetries: 0 };
+  void opts;
 
   // Response enums are open: a value added later is not a type error.
   const widget = await fixture.widgets.retrieve("id");

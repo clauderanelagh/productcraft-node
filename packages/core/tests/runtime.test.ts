@@ -503,7 +503,39 @@ describe("responses", () => {
     expect(data.ok).toBe(true);
     expect(response.status).toBe(200);
     expect(requestId).toBe("req_9");
-    expect(rateLimit).toEqual({ limit: 100, remaining: 99, reset: 30 });
+    expect(rateLimit).toMatchObject({ limit: 100, remaining: 99, reset: 30, window: "" });
+  });
+
+  it("rateLimit reads the named windows ProductCraft APIs send and picks the binding one", async () => {
+    // The live mail-api shape (Nest named throttlers): one-second `short`, one-minute `long`.
+    server.reply({
+      status: 200,
+      headers: {
+        "x-ratelimit-limit-short": "20",
+        "x-ratelimit-remaining-short": "19",
+        "x-ratelimit-reset-short": "1",
+        "x-ratelimit-limit-long": "600",
+        "x-ratelimit-remaining-long": "597",
+        "x-ratelimit-reset-long": "54",
+      },
+      body: { ok: true },
+    });
+    const { rateLimit } = await make().request<{ ok: boolean }>(get()).withResponse();
+    expect(rateLimit).toEqual({
+      limit: 20,
+      remaining: 19,
+      reset: 1,
+      window: "short",
+      windows: { long: { limit: 600, remaining: 597, reset: 54 }, short: { limit: 20, remaining: 19, reset: 1 } },
+    });
+  });
+
+  it("rateLimit: the window with fewer left binds, a tie goes to the later reset, no headers is undefined", async () => {
+    const { parseRateLimit } = await import("../src/api-promise.js");
+    const h = (o: Record<string, string>) => new Headers(o);
+    expect(parseRateLimit(h({ "x-ratelimit-remaining-short": "19", "x-ratelimit-remaining-long": "3", "x-ratelimit-limit-long": "600" }))).toMatchObject({ window: "long", remaining: 3, limit: 600 });
+    expect(parseRateLimit(h({ "x-ratelimit-remaining-short": "5", "x-ratelimit-reset-short": "1", "x-ratelimit-remaining-long": "5", "x-ratelimit-reset-long": "40" }))?.window).toBe("long");
+    expect(parseRateLimit(h({ "content-type": "application/json", "x-ratelimit-remaining-short": "n/a" }))).toBeUndefined();
   });
 
   it("asResponse gives the unread Response", async () => {

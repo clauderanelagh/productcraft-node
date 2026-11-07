@@ -657,7 +657,7 @@ const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c
 
 ### `social.communities.webhooks.eventTypes.list(communityId, options?)`
 
-`GET /v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/event-types` → `Social.ListWebhookEventTypes`
+`GET /v1/workspaces/{workspace_id}/communities/{community_id}/webhooks/event-types` → `Social.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -671,7 +671,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await social.communities.webhooks.eventTypes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+const webhookEventTypeList = await social.communities.webhooks.eventTypes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-webhooks-event-types)
@@ -975,7 +975,7 @@ const webhookEndpoint = await social.webhooks.endpoints.update("3f0c3c1e-8a2b-4c
 
 ### `social.webhooks.eventTypes.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Social.ListWebhookEventTypes`
+`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Social.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -989,7 +989,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await social.webhooks.eventTypes.list();
+const webhookEventTypeList = await social.webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-webhooks-event-types)
@@ -4818,7 +4818,7 @@ const webhookEndpoint = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d
 
 ### `social.community(…).webhooks.eventTypes.list(options?)`
 
-`GET /v1/communities/{community_id}/webhooks/event-types` → `Social.ListWebhookEventTypes`
+`GET /v1/communities/{community_id}/webhooks/event-types` → `Social.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -4832,7 +4832,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.eventTypes.list();
+const webhookEventTypeList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-webhooks-event-types)

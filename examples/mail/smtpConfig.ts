@@ -6,7 +6,7 @@ const mail = new Mail();
 
 // smtpConfig.list: List every SMTP config in the workspace (default + per-domain overrides)
 {
-  const listSmtpConfigs = await mail.smtpConfig.list();
+  const smtpConfigList = await mail.smtpConfig.list();
 }
 
 // smtpConfig.reset: Revert the workspace to ProductCraft Mail's own sending

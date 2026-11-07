@@ -168,7 +168,8 @@ describe("golden output", () => {
     expect(sig("WidgetController_export")).toBe("fixture.widgets.export(options?): Response");
     expect(sig("WidgetController_setStatus")).toBe("fixture.widgets.updateStatus(id, params, options?): Fixture.Widget");
     expect(sig("WidgetController_erase")).toBe("fixture.widgets.erase(params, options?): void");
-    expect(sig("PartController_remove")).toBe("fixture.widgets.parts.delete(widgetId, partId, options?): void");
+    // x-pc-sdk.args names the second argument.
+    expect(sig("PartController_remove")).toBe("fixture.widgets.parts.delete(widgetId, partNumber, options?): void");
     expect(sig("PostController_create")).toBe("fixture.community(…).posts.create(params, options?): Fixture.Post");
     expect(sig("PublicEntryController_create")).toBe("fixture.public({ … }).entries.create(params, options?): Fixture.Entry");
     expect(sig("RegionController_list")).toBe("fixture.regions.list(options?): Fixture.RegionListResponse");

@@ -69,7 +69,7 @@ const mail = new Mail();
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await mail.webhooks.eventTypes.list();
+  const webhookEventTypeList = await mail.webhooks.eventTypes.list();
 }
 
 export {};

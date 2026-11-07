@@ -168,7 +168,7 @@ export class WidgetsPartsResource extends APIResource {
    * @see https://productcraft.co/docs/fixture/api-reference#post-v1-workspaces-workspace-id-widgets-widget-id-parts
    * @example
    * ```ts
-   * const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt" });
+   * const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt", sku: "B-100" });
    * ```
    */
   create(widgetId: string, params: T.WidgetPartCreateParams, options?: RequestOptions): APIPromise<T.WithLastResponse<T.Part>> {
@@ -181,7 +181,7 @@ export class WidgetsPartsResource extends APIResource {
    * - `bearer`: A workspace API key.
    *
    * @param widgetId - Widget id.
-   * @param partId - Part id.
+   * @param partNumber - Part id.
    * @param options - Per-request options.
    * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
    * @see DELETE /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}
@@ -191,8 +191,8 @@ export class WidgetsPartsResource extends APIResource {
    * await fixture.widgets.parts.delete("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "2c4e6a8b-1d3f-4a5c-9e7b-0f2d4c6a8e1b");
    * ```
    */
-  delete(widgetId: string, partId: string, options?: RequestOptions): APIPromise<void> {
-    return this._client.request({ method: "DELETE", path: "/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}", pathParams: { widget_id: widgetId, part_id: partId } }, options);
+  delete(widgetId: string, partNumber: string, options?: RequestOptions): APIPromise<void> {
+    return this._client.request({ method: "DELETE", path: "/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}", pathParams: { widget_id: widgetId, part_id: partNumber } }, options);
   }
   /**
    * List a widget's parts
@@ -499,6 +499,14 @@ export class WidgetsResource extends APIResource {
    */
   updateStatus(id: string, params: T.WidgetUpdateStatusParams, options?: RequestOptions): APIPromise<T.WithLastResponse<T.Widget>> {
     return this._client.request({ method: "PATCH", path: "/v1/workspaces/{workspace_id}/widgets/{id}/status", pathParams: { id }, body: params, idempotent: true }, options);
+  }
+  /**
+   * Former name of `fixture.widgets.count()` (GET /v1/workspaces/{workspace_id}/widgets/count).
+   *
+   * @deprecated Renamed to `fixture.widgets.count()`. Kept for 1.x callers; removed in the next major.
+   */
+  tally(params?: T.WidgetCountParams, options?: RequestOptions): APIPromise<T.WithLastResponse<T.WidgetCountResponse>> {
+    return this._client.request({ method: "GET", path: "/v1/workspaces/{workspace_id}/widgets/count", query: params }, options);
   }
 }
 

@@ -61,7 +61,7 @@ const social = new Social();
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await social.webhooks.eventTypes.list();
+  const webhookEventTypeList = await social.webhooks.eventTypes.list();
 }
 
 export {};

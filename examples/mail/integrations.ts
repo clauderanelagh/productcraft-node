@@ -41,7 +41,7 @@ const mail = new Mail();
 
 // integrations.list: List connected workspace integrations.
 {
-  const listIntegrations = await mail.integrations.list();
+  const integrationList = await mail.integrations.list();
 }
 
 // integrations.retrieve: Get a single integration detail with redacted credentials.

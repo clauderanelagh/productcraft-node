@@ -464,7 +464,10 @@
           "bind": [
             "workspace_id"
           ],
-          "paginated": false
+          "paginated": false,
+          "aliases": [
+            "widgets.tally"
+          ]
         }
       }
     },
@@ -1318,7 +1321,10 @@
           "bind": [
             "workspace_id"
           ],
-          "paginated": false
+          "paginated": false,
+          "args": {
+            "part_id": "partNumber"
+          }
         }
       }
     },
@@ -2185,8 +2191,48 @@
             "type": "integer",
             "minimum": 1,
             "default": 1
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock-keeping unit.",
+            "example": "B-100"
+          },
+          "catalog_ref": {
+            "type": "string",
+            "description": "A catalogue entry instead of a SKU.",
+            "example": "cat_42"
           }
-        }
+        },
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "sku": {
+                "type": "string"
+              },
+              "catalog_ref": {
+                "not": {}
+              }
+            },
+            "required": [
+              "sku"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "catalog_ref": {
+                "type": "string"
+              },
+              "sku": {
+                "not": {}
+              }
+            },
+            "required": [
+              "catalog_ref"
+            ]
+          }
+        ]
       },
       "PartResponseDto": {
         "type": "object",
@@ -2322,7 +2368,10 @@
             "type": "string",
             "example": "Frankfurt"
           }
-        }
+        },
+        "x-pc-sdk-model-aliases": [
+          "Area"
+        ]
       },
       "CreatePostDto": {
         "type": "object",

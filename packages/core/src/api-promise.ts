@@ -10,12 +10,27 @@ export interface LastResponse {
   headers: Headers;
 }
 
-/** Parsed `X-RateLimit-*` headers. Fields are `undefined` when the header is absent. */
-export interface RateLimitInfo {
+/** One rate-limit window: `X-RateLimit-{Limit,Remaining,Reset}` with the same suffix. */
+export interface RateLimitWindow {
   limit: number | undefined;
   remaining: number | undefined;
   /** As sent by the server (seconds until reset, or a unix timestamp, per API). */
   reset: number | undefined;
+}
+
+/**
+ * Parsed `X-RateLimit-*` headers. Fields are `undefined` when the header is absent.
+ *
+ * ProductCraft APIs limit per window and name each one in the header
+ * (`X-RateLimit-Remaining-short` for the one-second window, `-long` for the
+ * one-minute window). The top-level fields are the binding window: the one
+ * with the fewest requests left (on a tie, the one that resets last).
+ * `windows` has every window by name; an unsuffixed header is window `""`.
+ */
+export interface RateLimitInfo extends RateLimitWindow {
+  /** The binding window's name (`"short"`, `"long"`), `""` for unsuffixed headers. */
+  window: string;
+  windows: Record<string, RateLimitWindow>;
 }
 
 export interface WithResponse<T> {
@@ -37,12 +52,34 @@ function num(v: string | null): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+const RATE_LIMIT_HEADER = /^x-ratelimit-(limit|remaining|reset)(?:-(.+))?$/;
+
 export function parseRateLimit(headers: Headers): RateLimitInfo | undefined {
-  const limit = num(headers.get("x-ratelimit-limit"));
-  const remaining = num(headers.get("x-ratelimit-remaining"));
-  const reset = num(headers.get("x-ratelimit-reset"));
-  if (limit === undefined && remaining === undefined && reset === undefined) return undefined;
-  return { limit, remaining, reset };
+  const windows: Record<string, RateLimitWindow> = {};
+  headers.forEach((value, key) => {
+    const m = RATE_LIMIT_HEADER.exec(key.toLowerCase());
+    if (!m) return;
+    const v = num(value);
+    if (v === undefined) return;
+    const name = m[2] ?? "";
+    const w = (windows[name] ??= { limit: undefined, remaining: undefined, reset: undefined });
+    w[m[1] as keyof RateLimitWindow] = v;
+  });
+  // The binding window: fewest remaining, then the later reset (it holds the caller back longer).
+  let best: [string, RateLimitWindow] | undefined;
+  for (const entry of Object.entries(windows).sort(([a], [b]) => a.localeCompare(b))) {
+    const [, w] = entry;
+    if (!best) {
+      best = entry;
+      continue;
+    }
+    const b = best[1];
+    const wr = w.remaining ?? Infinity;
+    const br = b.remaining ?? Infinity;
+    if (wr < br || (wr === br && (w.reset ?? 0) > (b.reset ?? 0))) best = entry;
+  }
+  if (!best) return undefined;
+  return { ...best[1], window: best[0], windows };
 }
 
 /** Attach `lastResponse` to an object without it showing up in `JSON.stringify`, spreads or `Object.keys`. */

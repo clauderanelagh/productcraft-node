@@ -20,21 +20,26 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -43,6 +48,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -715,7 +722,13 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -1267,9 +1280,15 @@ export type paths = {
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
+
+export { RateLimitInfo }
+
+export { RequestOptions }
 
 export { UnprocessableEntityError }
 
@@ -1291,136 +1310,142 @@ namespace Waitlist {
     type AnalyticsTimelinePoint = __AnalyticsTimelinePoint;
     // (undocumented)
     type AnalyticsTopReferral = __AnalyticsTopReferral;
+    // (undocumented)
+    type AnalyticsTopReferrer = __AnalyticsTopReferrer;
+    // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
+    // (undocumented)
+    type BulkEntryActionResult = __BulkEntryActionResult;
+    // (undocumented)
+    type BulkEntryActionType = __BulkEntryActionType;
+    // (undocumented)
+    type BulkEntryError = __BulkEntryError;
+    // (undocumented)
+    type BulkEntryResult = __BulkEntryResult;
+    // (undocumented)
+    type BulkEntryResultStatus = __BulkEntryResultStatus;
     const // (undocumented)
     BulkEntryActionType: {
         values: readonly ["approve", "reject", "invite-to-app"];
     };
     // (undocumented)
-    type AnalyticsTopReferrer = __AnalyticsTopReferrer;
+    type ClientOptions = __ClientOptions;
     const // (undocumented)
     BulkEntryResultStatus: {
         values: readonly ["ok", "error"];
     };
     // (undocumented)
-    type BulkEntryActionResult = __BulkEntryActionResult;
+    type CustomField = __CustomField;
     const // (undocumented)
     EmailSetupMissing: {
         values: readonly ["not_enabled", "no_sender_domain", "sender_domain_unverified", "no_sender_address", "no_template"];
     };
     // (undocumented)
-    type BulkEntryActionType = __BulkEntryActionType;
+    type EffectiveSender = __EffectiveSender;
     const // (undocumented)
     EmailSetupState: {
         values: readonly ["ready", "incomplete", "off"];
     };
     // (undocumented)
-    type BulkEntryError = __BulkEntryError;
+    type EmailSetup = __EmailSetup;
     const // (undocumented)
     EntryDecision: {
         values: readonly ["approved", "rejected"];
     };
     // (undocumented)
-    type BulkEntryResult = __BulkEntryResult;
+    type EmailSetupMissing = __EmailSetupMissing;
     const // (undocumented)
     EntryStatus: {
         values: readonly ["pending", "approved", "rejected"];
     };
     // (undocumented)
-    type BulkEntryResultStatus = __BulkEntryResultStatus;
+    type EmailSetupState = __EmailSetupState;
     const // (undocumented)
     PublicEntryStatus: {
         values: readonly ["pending", "approved"];
     };
     // (undocumented)
-    type CustomField = __CustomField;
+    type Entry = __Entry;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type EffectiveSender = __EffectiveSender;
+    type EntryApprovedEvent = __EntryApprovedEvent;
     const // (undocumented)
     SenderMode: {
         values: readonly ["workspace", "custom"];
     };
     // (undocumented)
-    type EmailSetup = __EmailSetup;
+    type EntryCount = __EntryCount;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type EmailSetupMissing = __EmailSetupMissing;
+    type EntryCreatedEvent = __EntryCreatedEvent;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type EmailSetupState = __EmailSetupState;
+    type EntryCreateParams = __EntryCreateParams;
     const // (undocumented)
     TemplateSlot: {
         values: readonly ["welcome", "approved", "rejected"];
     };
     // (undocumented)
-    type Entry = __Entry;
+    type EntryDecision = __EntryDecision;
     const // (undocumented)
     VariantKind: {
         values: readonly ["ab", "locale"];
     };
     // (undocumented)
-    type EntryApprovedEvent = __EntryApprovedEvent;
+    type EntryEventData = __EntryEventData;
     const // (undocumented)
     WaitlistStatsMetric: {
         values: readonly ["signups"];
     };
     // (undocumented)
-    type EntryCount = __EntryCount;
+    type EntryInvite = __EntryInvite;
     const // (undocumented)
     WaitlistStatus: {
         values: readonly ["draft", "active", "paused", "closed"];
     };
     // (undocumented)
-    type EntryCreatedEvent = __EntryCreatedEvent;
+    type EntryList = __EntryList;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type EntryCreateParams = __EntryCreateParams;
+    type EntryListPagination = __EntryListPagination;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type EntryDecision = __EntryDecision;
+    type EntryRejectedEvent = __EntryRejectedEvent;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type EntryEventData = __EntryEventData;
+    type EntryStatus = __EntryStatus;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type EntryInvite = __EntryInvite;
+    type ErrorCode = __ErrorCode;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["entry.created", "entry.approved", "entry.rejected"];
     };
     // (undocumented)
-    type EntryList = __EntryList;
-    // (undocumented)
-    type EntryListPagination = __EntryListPagination;
-    // (undocumented)
-    type EntryRejectedEvent = __EntryRejectedEvent;
-    // (undocumented)
-    type EntryStatus = __EntryStatus;
-    // (undocumented)
-    type ErrorCode = __ErrorCode;
-    // (undocumented)
     type InfoRetrieveParams = __InfoRetrieveParams;
+    // (undocumented)
+    type LastResponse = __LastResponse;
     // (undocumented)
     type LeaderboardListParams = __LeaderboardListParams;
     // (undocumented)
@@ -1459,10 +1484,14 @@ namespace Waitlist {
     type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
     type NotificationTest = __NotificationTest;
+    // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
     // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
@@ -1481,6 +1510,8 @@ namespace Waitlist {
     type PublicWaitlistInfo = __PublicWaitlistInfo;
     // (undocumented)
     type PublicWaitlistVariant = __PublicWaitlistVariant;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type ReferralRewardMilestone = __ReferralRewardMilestone;
     // (undocumented)
@@ -1580,11 +1611,15 @@ namespace Waitlist {
     // (undocumented)
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
+    type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)
     type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
 }
 export { Waitlist }
 export default Waitlist;
@@ -1598,6 +1633,8 @@ export const WaitlistErrorCode: {
 };
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

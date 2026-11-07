@@ -6,8 +6,15 @@ const mail = new Mail();
 
 // emails.batch: Send up to 100 emails in one request
 {
-  const sendBatchOpenApi = await mail.emails.batch({
-    emails: [{ from: "Acme <hello@mail.acme.com>", to: ["success@simulator.amazonses.com"] }],
+  const result = await mail.emails.batch({
+    emails: [
+      {
+        from: "Acme <hello@mail.acme.com>",
+        html: "<p>Your order has shipped.</p>",
+        subject: "Your order has shipped",
+        to: ["success@simulator.amazonses.com"],
+      },
+    ],
   });
 }
 
@@ -31,7 +38,12 @@ const mail = new Mail();
 
 // emails.send: Send an email
 {
-  const sendEmail = await mail.emails.send({ from: "Acme <hello@mail.acme.com>", to: ["success@simulator.amazonses.com"] });
+  const result = await mail.emails.send({
+    from: "Acme <hello@mail.acme.com>",
+    html: "<p>Your order has shipped.</p>",
+    subject: "Your order has shipped",
+    to: ["success@simulator.amazonses.com"],
+  });
 }
 
 export {};

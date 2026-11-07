@@ -2103,7 +2103,10 @@
           "deleted"
         ],
         "type": "object",
-        "x-pc-sdk-model": "DeleteByRecipient"
+        "x-pc-sdk-model": "MessageEraseResponse",
+        "x-pc-sdk-model-aliases": [
+          "DeleteByRecipient"
+        ]
       },
       "DeliverabilityBlockSignalDto": {
         "properties": {
@@ -7473,7 +7476,10 @@
           "data"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListIntegrations"
+        "x-pc-sdk-model": "IntegrationList",
+        "x-pc-sdk-model-aliases": [
+          "ListIntegrations"
+        ]
       },
       "ListMailboxesResponseDto": {
         "properties": {
@@ -7629,7 +7635,10 @@
           "data"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListSmtpConfigs"
+        "x-pc-sdk-model": "SmtpConfigList",
+        "x-pc-sdk-model-aliases": [
+          "ListSmtpConfigs"
+        ]
       },
       "ListSuppressionResponseDto": {
         "properties": {
@@ -7665,7 +7674,10 @@
           "data"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListTemplateTags"
+        "x-pc-sdk-model": "TemplateTagList",
+        "x-pc-sdk-model-aliases": [
+          "ListTemplateTags"
+        ]
       },
       "ListTemplatesResponseDto": {
         "properties": {
@@ -7766,7 +7778,10 @@
           "data"
         ],
         "type": "object",
-        "x-pc-sdk-model": "ListWebhookEventTypes"
+        "x-pc-sdk-model": "WebhookEventTypeList",
+        "x-pc-sdk-model-aliases": [
+          "ListWebhookEventTypes"
+        ]
       },
       "ListWebhookEventsResponseDto": {
         "properties": {
@@ -11130,7 +11145,10 @@
           "email_id"
         ],
         "type": "object",
-        "x-pc-sdk-model": "SendAccepted"
+        "x-pc-sdk-model": "TemplateSendResponse",
+        "x-pc-sdk-model-aliases": [
+          "SendAccepted"
+        ]
       },
       "SendBatchDto": {
         "properties": {
@@ -11167,7 +11185,10 @@
           "summary"
         ],
         "type": "object",
-        "x-pc-sdk-model": "SendBatchOpenApi"
+        "x-pc-sdk-model": "EmailBatchResponse",
+        "x-pc-sdk-model-aliases": [
+          "SendBatchOpenApi"
+        ]
       },
       "SendBatchRowDto": {
         "properties": {
@@ -11423,6 +11444,70 @@
         "type": "object"
       },
       "SendEmailBatchRowDto": {
+        "oneOf": [
+          {
+            "description": "Your own HTML (a `text` part is optional; without one it is derived from the HTML), with a `subject`.",
+            "properties": {
+              "html": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "template": {
+                "not": {}
+              }
+            },
+            "required": [
+              "html",
+              "subject"
+            ],
+            "title": "HTML",
+            "type": "object"
+          },
+          {
+            "description": "Plain text only, with a `subject`.",
+            "properties": {
+              "html": {
+                "not": {}
+              },
+              "subject": {
+                "type": "string"
+              },
+              "template": {
+                "not": {}
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "subject"
+            ],
+            "title": "Text",
+            "type": "object"
+          },
+          {
+            "description": "A saved template; `subject` is optional and overrides the template's.",
+            "properties": {
+              "html": {
+                "not": {}
+              },
+              "template": {
+                "$ref": "#/components/schemas/EmailTemplateRefDto"
+              },
+              "text": {
+                "not": {}
+              }
+            },
+            "required": [
+              "template"
+            ],
+            "title": "Template",
+            "type": "object"
+          }
+        ],
         "properties": {
           "bcc": {
             "description": "Bcc recipients: one address or an array. Each gets the message; no header names them.",
@@ -11575,6 +11660,70 @@
         "type": "object"
       },
       "SendEmailDto": {
+        "oneOf": [
+          {
+            "description": "Your own HTML (a `text` part is optional; without one it is derived from the HTML), with a `subject`.",
+            "properties": {
+              "html": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "template": {
+                "not": {}
+              }
+            },
+            "required": [
+              "html",
+              "subject"
+            ],
+            "title": "HTML",
+            "type": "object"
+          },
+          {
+            "description": "Plain text only, with a `subject`.",
+            "properties": {
+              "html": {
+                "not": {}
+              },
+              "subject": {
+                "type": "string"
+              },
+              "template": {
+                "not": {}
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "text",
+              "subject"
+            ],
+            "title": "Text",
+            "type": "object"
+          },
+          {
+            "description": "A saved template; `subject` is optional and overrides the template's.",
+            "properties": {
+              "html": {
+                "not": {}
+              },
+              "template": {
+                "$ref": "#/components/schemas/EmailTemplateRefDto"
+              },
+              "text": {
+                "not": {}
+              }
+            },
+            "required": [
+              "template"
+            ],
+            "title": "Template",
+            "type": "object"
+          }
+        ],
         "properties": {
           "bcc": {
             "description": "Bcc recipients: one address or an array. Each gets the message; no header names them.",
@@ -11733,7 +11882,10 @@
           "id"
         ],
         "type": "object",
-        "x-pc-sdk-model": "SendEmail"
+        "x-pc-sdk-model": "EmailSendResponse",
+        "x-pc-sdk-model-aliases": [
+          "SendEmail"
+        ]
       },
       "SendTemplateDto": {
         "properties": {
@@ -31243,6 +31395,9 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -31428,6 +31583,10 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId",
+            "mid": "messageId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -31618,6 +31777,10 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId",
+            "mid": "messageId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -31821,6 +31984,10 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId",
+            "mid": "messageId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -32014,6 +32181,10 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId",
+            "mid": "messageId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -32199,6 +32370,10 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "args": {
+            "id": "mailboxId",
+            "mid": "messageId"
+          },
           "bind": [
             "workspace_id"
           ],
@@ -33640,12 +33815,15 @@
           "messages"
         ],
         "x-pc-sdk": {
+          "aliases": [
+            "messages.timeline"
+          ],
           "bind": [
             "workspace_id"
           ],
           "method": "timeline",
           "paginated": false,
-          "resource": "messages"
+          "resource": "received"
         }
       }
     },
@@ -47326,7 +47504,7 @@
       "name": "mailboxes"
     },
     {
-      "description": "Messages delivered to a mailbox (raw MIME, attachments, read state), and the daily timeline of sent mail.",
+      "description": "Messages delivered to a mailbox (raw MIME, attachments, read state), and the daily timeline of received mail.",
       "name": "messages"
     },
     {

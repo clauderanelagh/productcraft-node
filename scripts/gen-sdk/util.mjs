@@ -112,6 +112,15 @@ export function sample(schema, deref, mode = "response", depth = 0, seen = new S
     const objects = parts.filter(isObj);
     return objects.length ? Object.assign({}, ...objects) : null;
   }
+  // An object that lists its properties and adds `oneOf` only for which of them go together
+  // (Mail's html / text / template): sample the object with the first branch's required fields,
+  // from the object's own (exampled) property schemas, so the example satisfies the rule.
+  if (schema.properties && (schema.oneOf || schema.anyOf)) {
+    const branch = (schema.oneOf ?? schema.anyOf).find((b) => b && b.type !== "null") ?? {};
+    const required = [...new Set([...(schema.required ?? []), ...(deref(branch)?.required ?? [])])];
+    const { oneOf: _o, anyOf: _a, ...rest } = schema;
+    return sample({ ...rest, required }, deref, mode, depth, seen);
+  }
   for (const k of ["oneOf", "anyOf"]) {
     if (schema[k]) {
       const first = schema[k].find((s) => s.type !== "null") ?? schema[k][0];
