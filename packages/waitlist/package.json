@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/waitlist",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Waitlists, public signup forms, variants, referrals and leaderboards (ProductCraft Waitlist). Resources, auto-pagination, typed errors, retries with idempotency keys and webhook verification, generated from the production OpenAPI spec.",
   "type": "module",
   "main": "./dist/index.cjs",
