@@ -12,6 +12,15 @@ export async function acceptance(): Promise<void> {
   for await (const e of waitlist.lists.entries.list(wl.id)) console.log(e.email);
   await waitlist.lists.delete(wl.id);
 
+  await waitlist.settings.notifications.test("welcome");
+  // @ts-expect-error slot is the enum of notification slots
+  void waitlist.settings.notifications.test("nope");
+  const bulk = await waitlist.lists.entries.bulk(wl.id, { ids: [wl.id], action: "approve" });
+  for (const row of bulk.results) {
+    // Row errors carry the same string code a thrown error does.
+    if (row.error?.code === "NOT_FOUND") void row.error.status_code;
+    assert<Equal<NonNullable<typeof row.error>["status_code"], number>>(true);
+  }
   await waitlist.lists.updateStatus(wl.id, { status: "active" });
   // @ts-expect-error status is a literal union
   void waitlist.lists.updateStatus(wl.id, { status: "nope" });

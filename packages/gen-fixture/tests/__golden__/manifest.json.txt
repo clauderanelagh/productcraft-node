@@ -307,6 +307,21 @@
       "signature": "fixture.widgets.list(params?, options?): PagePromise<Fixture.Widget>",
       "snippet": "for await (const widget of fixture.widgets.list()) {\n  console.log(widget);\n}\nconst page = await fixture.widgets.list({}, { timeout: 5_000 });"
     },
+    "WidgetController_paint": {
+      "actor": null,
+      "deprecated": false,
+      "http": "POST /v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}",
+      "idempotent": false,
+      "method": "paint",
+      "paginated": false,
+      "params": null,
+      "poll": null,
+      "public": false,
+      "resource": "widgets",
+      "scope": null,
+      "signature": "fixture.widgets.paint(id, color, options?): Fixture.Widget",
+      "snippet": "const widget = await fixture.widgets.paint(\"5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6\", \"red\");"
+    },
     "WidgetController_remove": {
       "actor": null,
       "deprecated": false,

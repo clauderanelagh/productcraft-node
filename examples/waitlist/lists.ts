@@ -11,7 +11,7 @@ const waitlist = new Waitlist();
 
 // lists.analytics.timeline: Daily sign-up timeline
 {
-  const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-11-01T00:00:00Z" });
+  const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-12-01T00:00:00Z" });
 }
 
 // lists.create: Create a waitlist (workspace-scoped)

@@ -21,6 +21,11 @@ export async function rules(): Promise<void> {
   const bad: Fixture.WidgetCreateParams = { name: "x", color: "green" };
   void bad;
 
+  // An enum path argument is its union, not string.
+  await fixture.widgets.paint("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "red");
+  // @ts-expect-error "green" is not a colour the path accepts
+  void fixture.widgets.paint("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "green");
+
   // Defaults: optional in requests (color, quantity, retention_days) ...
   await fixture.widgets.create(params);
   await fixture.settings.update({});

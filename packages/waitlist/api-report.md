@@ -89,8 +89,9 @@ export type components = {
         };
         BulkEntryActionType: "approve" | "reject" | "invite-to-app";
         BulkEntryErrorDto: {
-            code: number;
+            code: components["schemas"]["WaitlistErrorCode"];
             message: string;
+            status_code: number;
         };
         BulkEntryResultDto: {
             error?: components["schemas"]["BulkEntryErrorDto"];

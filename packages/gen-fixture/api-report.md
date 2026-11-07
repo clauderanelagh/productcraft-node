@@ -614,6 +614,22 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["WidgetController_paint"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 };
 
 export { PermissionDeniedError }

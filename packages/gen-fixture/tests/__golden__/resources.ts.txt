@@ -409,6 +409,28 @@ export class WidgetsResource extends APIResource {
     return this._client.list({ method: "GET", path: "/v1/workspaces/{workspace_id}/widgets", query: params }, options);
   }
   /**
+   * Paint a widget
+   *
+   * Repaints the widget in one of the catalogue colours.
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
+   * @param id - Widget id.
+   * @param color - The colour to paint it.
+   * @param options - Per-request options.
+   * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
+   * @see POST /v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}
+   * @see https://productcraft.co/docs/fixture/api-reference#post-v1-workspaces-workspace-id-widgets-id-paint-color
+   * @example
+   * ```ts
+   * const widget = await fixture.widgets.paint("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "red");
+   * ```
+   */
+  paint(id: string, color: "red" | "blue", options?: RequestOptions): APIPromise<T.WithLastResponse<T.Widget>> {
+    return this._client.request({ method: "POST", path: "/v1/workspaces/{workspace_id}/widgets/{id}/paint/{color}", pathParams: { id, color } }, options);
+  }
+  /**
    * Retrieve a widget
    *
    * Credential: one of `bearer`, `end_user_token`.

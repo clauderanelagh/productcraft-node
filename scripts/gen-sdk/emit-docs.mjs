@@ -171,7 +171,7 @@ export function emitReadmeRegion(model, cfg) {
       `const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";`, `const obj = await ${v}.${firstRetrieve.resource}.retrieve(id);`, "console.log(obj.lastResponse.requestId);",
       `const { data, response, requestId, rateLimit } = await ${v}.${firstRetrieve.resource}.retrieve(id).withResponse();`, "console.log(data, response.status, requestId, rateLimit?.remaining);", "```", "");
   }
-  L.push("## Testing", "", `\`${pkg}/testing\` exports \`createMockFetch()\`, a \`fetch\` that answers every operation with its spec example. Override one operation by name.`, "", "```ts",
+  L.push("## Testing", "", `\`${pkg}/testing\` exports \`createMockFetch()\`, a \`fetch\` that answers every operation with its spec example. Override one operation by name.${model.webhooks.length ? " It also exports \`signWebhook({ payload, secret })\`, which signs a test event for your webhook handler (the same as \`webhooks.sign()\`, without a client)." : ""}`, "", "```ts",
     `import { ${C} } from "${pkg}";`, `import { createMockFetch } from "${pkg}/testing";`, "const fetch = createMockFetch();",
     `const ${v} = new ${C}({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });`,
     firstList ? `await ${v}.${firstList.resource}.${firstList.method}();` : "", "console.log(fetch.calls.length);", "```", "");

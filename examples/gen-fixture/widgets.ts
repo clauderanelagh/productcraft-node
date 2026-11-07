@@ -53,6 +53,11 @@ const fixture = new Fixture();
   const page = await fixture.widgets.list({}, { timeout: 5_000 });
 }
 
+// widgets.paint: Paint a widget
+{
+  const widget = await fixture.widgets.paint("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "red");
+}
+
 // widgets.parts.create: Add a part to a widget
 {
   const part = await fixture.widgets.parts.create("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { label: "Bolt", sku: "B-100" });
