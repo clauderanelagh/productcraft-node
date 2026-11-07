@@ -14,8 +14,9 @@
 import type { Client } from "@kubb/plugin-client/clients/fetch";
 
 import { consumerAuthControllerSignin } from "../_generated/clients/consumerAuth/consumerAuthControllerSignin.js";
-// consumerAuthControllerSignup is bypassed (kubb requires a `headers.authorization`
-// arg that conflicts with our HTTP client's auth-middleware injection).
+// consumerAuthControllerSignup is called through callDirect (kept from 0.8:
+// the generated client no longer needs a header stub since users-api/096,
+// but the typed signup lands with the generated surface in task 009).
 import { consumerAuthControllerRefresh } from "../_generated/clients/consumerAuth/consumerAuthControllerRefresh.js";
 import { consumerAuthControllerLogout } from "../_generated/clients/consumerAuth/consumerAuthControllerLogout.js";
 import { consumerAuthControllerRequestPasswordReset } from "../_generated/clients/consumerAuth/consumerAuthControllerRequestPasswordReset.js";
@@ -243,15 +244,14 @@ export class ConsumerScope {
      *
      * PAK-required with `auth.user.password-reset.create`: caller must
      * instantiate `Auth` with
-     * `auth: { type: "apiKey", key: "pcft_live_..." }`. The
-     * kubb-generated `headers.authorization` slot is a stub — the
-     * HTTP client's auth middleware overrides whatever's passed.
+     * `auth: { type: "apiKey", key: "pcft_live_..." }`; the HTTP
+     * client's auth middleware sends it.
      */
     requestReset: (
       data: ConsumerRequestPasswordResetDto,
     ): Promise<ConsumerCodeIssueResponseDto> =>
       consumerAuthControllerRequestPasswordReset(
-        { appSlug: this.appSlug, data, headers: { authorization: "" } },
+        { appSlug: this.appSlug, data },
         { client: this.client },
       ) as Promise<ConsumerCodeIssueResponseDto>,
 
@@ -279,7 +279,6 @@ export class ConsumerScope {
         {
           appSlug: this.appSlug,
           data,
-          headers: { authorization: "" },
         },
         { client: this.client },
       ) as Promise<ConsumerCodeDispatchResponseDto>,
@@ -298,9 +297,8 @@ export class ConsumerScope {
      *
      * PAK-required: caller must instantiate `Auth` with
      * `auth: { type: "apiKey", key: "pcft_live_..." }` carrying
-     * `auth.user.verify.create` narrowed to this app's URN. The
-     * kubb-generated `headers.authorization` slot is a stub — the
-     * HTTP client's auth middleware overrides whatever's passed.
+     * `auth.user.verify.create` narrowed to this app's URN; the HTTP
+     * client's auth middleware sends it.
      */
     requestVerification: (
       data: ConsumerRequestVerificationDto,
@@ -309,7 +307,6 @@ export class ConsumerScope {
         {
           appSlug: this.appSlug,
           data,
-          headers: { authorization: "" },
         },
         { client: this.client },
       ) as Promise<ConsumerCodeIssueResponseDto>,
@@ -333,7 +330,6 @@ export class ConsumerScope {
         {
           appSlug: this.appSlug,
           data,
-          headers: { authorization: "" },
         },
         { client: this.client },
       ) as Promise<ConsumerCodeDispatchResponseDto>,
@@ -452,27 +448,25 @@ export class ConsumerScope {
   // ─────────────────────────────────────────────────────────────
   readonly verify = {
     /**
-     * The kubb-generated client makes `headers.authorization` a required
-     * arg because the server controllers accept the bearer as a fallback
-     * to `body.token`. We stub an empty string here — the HTTP client's
-     * auth middleware overrides whatever's passed with the configured
-     * credential (`PCAuth.apiKey` / `bearer` / `cookie`).
+     * The token under test goes in `data.token`. The server also accepts
+     * it as a bearer; the HTTP client's auth middleware sends the
+     * configured credential (`PCAuth.apiKey` / `bearer` / `cookie`).
      */
     verify: (data: VerifyBody) =>
       consumerVerifyControllerVerify(
-        { appSlug: this.appSlug, data, headers: { authorization: "" } },
+        { appSlug: this.appSlug, data },
         { client: this.client },
       ),
 
     authorize: (data: AuthorizeBody) =>
       consumerVerifyControllerAuthorize(
-        { appSlug: this.appSlug, data, headers: { authorization: "" } },
+        { appSlug: this.appSlug, data },
         { client: this.client },
       ),
 
     authorizeBatch: (data: AuthorizeBatchBody) =>
       consumerVerifyControllerAuthorizeBatch(
-        { appSlug: this.appSlug, data, headers: { authorization: "" } },
+        { appSlug: this.appSlug, data },
         { client: this.client },
       ),
   };
