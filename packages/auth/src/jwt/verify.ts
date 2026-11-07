@@ -7,7 +7,8 @@
  *   - Translation of jose errors into our typed error hierarchy
  */
 
-import { jwtVerify, type JWTPayload } from "jose";
+import { jwtVerify } from "jose";
+import type { JWTPayload } from "./jose-types.js";
 
 import {
   JwtAudienceMismatchError,

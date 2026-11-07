@@ -13,5 +13,8 @@ export default defineConfig([
   { ...shared, format: ["esm"], dts: true },
   // jose 6 is ESM-only: `require()` of it fails below Node 20.19 (no require(esm)),
   // and the package supports Node 20.3+. The CJS build carries its own copy.
-  { ...shared, format: ["cjs"], noExternal: ["jose"] },
+  // Its own .d.cts is what `require` consumers on node16/nodenext resolve (the ESM
+  // .d.ts there is TS1479); the public types must never import jose's ESM-only
+  // declarations (src/jwt/jose-types.ts in @productcraft/auth).
+  { ...shared, format: ["cjs"], dts: true, noExternal: ["jose"] },
 ]);

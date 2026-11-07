@@ -53,6 +53,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
 | Hand-written allowlist | `node scripts/check-handwritten.mjs` | generate the file, or add it to the allowlist with a reason |
 | Generator goldens, failure cases, per-op test, type rules | `pnpm --filter @productcraft/gen-fixture run test` | `vitest run -u` after an intended change |
 | Snippets | `node scripts/check-snippets.mjs` (after build) | fix the block; old-version shapes go in ` ```ts before ` fences |
+| Type resolution (CJS `.d.cts`, node10 `/testing`) | `node scripts/check-types-resolution.mjs` (after build) | nested `import`/`require` `types` in `exports`, `typesVersions` for subpaths, no ESM-only dependency types in public declarations |
 | Public API reports | `node scripts/api-report.mjs` (after build) | review, then `pnpm run api-report` and commit `packages/*/api-report.md` |
 
 ## CI workflows

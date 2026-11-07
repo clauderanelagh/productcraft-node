@@ -59,6 +59,8 @@ jobs:
         run: node scripts/smoke-dist.mjs
       - name: Packed files (manifest.json, api.md, /testing in every generated package)
         run: node scripts/check-pack.mjs
+      - name: Type resolution of the packed tarballs (attw + node16 .cts, nodenext, node10 consumers)
+        run: node scripts/check-types-resolution.mjs
       - name: Built .d.ts typecheck with skipLibCheck off, public types not any
         run: node scripts/check-dts.mjs
       - name: Size budget (esbuild one-call bundle, gzip)
