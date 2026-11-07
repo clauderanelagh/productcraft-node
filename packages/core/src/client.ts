@@ -207,8 +207,11 @@ export function createOpenAPIClient<TPaths extends object>(api: APIClient): Clie
   return client;
 }
 
-// One shared lookup per (platform host, key) per process.
-const workspaceCache = new Map<string, Promise<string>>();
+// One shared lookup per (platform host, key) per process, kept on a global symbol so
+// duplicate copies of core (two product packages on different core versions) share it too.
+const workspaceCache: Map<string, Promise<string>> = ((globalThis as Record<symbol, unknown>)[
+  Symbol.for("productcraft.workspaceCache")
+] ??= new Map<string, Promise<string>>()) as Map<string, Promise<string>>;
 
 /** Clears the per-process workspace lookup cache. For tests. */
 export function _resetWorkspaceCache(): void {
