@@ -5,7 +5,6 @@
 ```ts
 
 import { ConsumerScope } from '@productcraft/auth';
-import { KeyObject } from 'node:crypto';
 
 // @public
 export type AuthVerifyCallback = (payload: Record<string, unknown>, done: (err: unknown, user?: unknown, info?: unknown) => void) => void;
@@ -29,6 +28,9 @@ export interface PassportJwtStrategyCtor {
     // (undocumented)
     new (options: Record<string, unknown>, verify: AuthVerifyCallback): any;
 }
+
+// @public
+export type PassportSecretOrKeyProvider = (request: unknown, rawJwtToken: string, done: (err: any, secretOrKey?: string | Buffer) => void) => void;
 
 // (No @packageDocumentation comment for this package)
 

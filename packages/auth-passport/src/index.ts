@@ -53,13 +53,15 @@ import { isRefreshToken, type ConsumerScope } from "@productcraft/auth";
 
 /**
  * passport-jwt's `secretOrKeyProvider` callback signature. We don't
- * depend on passport-jwt's types directly (to keep it a soft dep),
- * so this is the same shape as `SecretOrKeyProvider` in their typings.
+ * depend on passport-jwt's types directly (to keep it a soft dep), so
+ * this is the same shape as `SecretOrKeyProvider` in `@types/passport-jwt`
+ * and passes to `new Strategy({ secretOrKeyProvider })` without a cast.
  */
-type PassportSecretOrKeyProvider = (
+export type PassportSecretOrKeyProvider = (
   request: unknown,
   rawJwtToken: string,
-  done: (err: unknown, secretOrKey?: string | Buffer | KeyObject) => void,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  done: (err: any, secretOrKey?: string | Buffer) => void,
 ) => void;
 
 /**
@@ -89,7 +91,11 @@ export function createPassportSecretOrKeyProvider(
           // `KeyObject`. `KeyObject.from(cryptoKey)` was added in
           // Node 16.6 and is the right adapter.
           const keyObject = KeyObject.from(cryptoKey);
-          done(null, keyObject);
+          // passport-jwt's types say `string | Buffer`, but it hands the
+          // key straight to `jsonwebtoken.verify`, whose `Secret` type
+          // includes `KeyObject`. The cast keeps the public signature
+          // assignable to passport-jwt's `SecretOrKeyProvider`.
+          done(null, keyObject as unknown as Buffer);
         } catch (err) {
           done(err);
         }
