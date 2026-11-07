@@ -8,6 +8,8 @@ npm install productcraft
 
 Node 20.3 or later, Bun, Deno and edge runtimes.
 
+Upgrading from 0.3? See the [1.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/productcraft-1.0.0.md).
+
 ## When to use this
 
 Install **`productcraft`** when one backend calls more than one ProductCraft product (for example it signs users in with Auth *and* sends email with Mail). Install a per-product package when you only need one; the classes are identical:

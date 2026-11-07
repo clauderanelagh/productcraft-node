@@ -4,4 +4,4 @@ This dir holds pending version bumps. The release workflow opens a "Version Pack
 
 Run `pnpm changeset` to add a new entry interactively.
 
-For spec-refresh PRs the entry is generated automatically by `scripts/changeset-from-spec-diff.sh` — see `.github/workflows/spec-refresh.yml`.
+For spec-refresh PRs the entry is generated automatically (a `minor` per changed surface) by `.github/workflows/spec-refresh.yml`.

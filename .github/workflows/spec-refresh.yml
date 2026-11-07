@@ -69,6 +69,8 @@ jobs:
         run: |
           set -euo pipefail
           changed=()
+          # Every package is 1.x (task 012): a spec refresh is a minor; a break
+          # (labelled below) is raised to major by hand, with a migration guide.
           for spec in Specs/*.json; do
             surface="$(basename "$spec" .json)"
             if ! git diff --quiet -- "$spec"; then
@@ -76,7 +78,7 @@ jobs:
               changed+=("$surface")
               cat > ".changeset/auto-spec-refresh-${surface}-${GITHUB_RUN_ID}.md" <<MD
           ---
-          "@productcraft/${surface}": patch
+          "@productcraft/${surface}": minor
           ---
 
           Refresh ${surface} OpenAPI types from production.
@@ -145,7 +147,7 @@ jobs:
 
             Merge only on green CI.
 
-            ${{ steps.breaking.outputs.breaking == 'true' && '**Breaking changes detected** (label `breaking`): check the semver bump before merging.' || 'No breaking change found by oasdiff or the API reports.' }}
+            ${{ steps.breaking.outputs.breaking == 'true' && '**Breaking changes detected** (label `breaking`): raise the changeset to `major` and add `docs/migrations/<package>-<version>.md` before merging.' || 'No breaking change found by oasdiff or the API reports.' }}
 
             ${{ steps.breaking.outputs.report }}
 

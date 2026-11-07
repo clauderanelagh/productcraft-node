@@ -46,16 +46,6 @@ jobs:
         run: node scripts/gen-sdk.mjs --check
       - name: Hand-written allowlist
         run: node scripts/check-handwritten.mjs
-      # Auth 1.x previews ship as `next` snapshots (release.yml dispatch); the stable
-      # 1.0.0 is task 012's call. A Version Packages PR that would publish a stable
-      # auth 1.x as `latest` before then fails here instead of being merged.
-      - name: Auth 1.x stays on `next` until tasks/012-stable-release.md is done
-        run: |
-          v=$(node -p 'require("./packages/auth/package.json").version')
-          if [[ "$v" =~ ^[1-9][0-9]*\.[0-9]+\.[0-9]+$ && -f tasks/012-stable-release.md ]]; then
-            echo "::error::@productcraft/auth $v would publish as latest, but task 012 (stable release) is still open. Hold this Version Packages PR (snapshots: gh workflow run release.yml -f snapshot=next)."
-            exit 1
-          fi
       - run: pnpm run lint
       - run: pnpm run build
       # Includes the generator's golden + failure tests and the generated

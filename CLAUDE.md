@@ -26,7 +26,7 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
 2. **Never hand-edit generated output**, checked-in or not. If a name or type is wrong, fix the API's `@nestjs/swagger` / `@SdkMethod` / `@SdkModel` annotations in the monorepo, deploy, then `pnpm run refresh-specs && pnpm run codegen`.
 3. **Specs are the contract.** Vendored under `Specs/<surface>.json`; `scripts/refresh-specs.sh` is the only thing that writes them.
 4. **Hand-written code is on an allowlist** (`scripts/handwritten-allowlist.json`, enforced by `scripts/check-handwritten.mjs`): `packages/core/src/**` (the shared runtime: `APIClient`, `APIPromise`, pagination, polling, retries, branded errors, `verifyWebhook`, plus the 0.x helpers in `legacy.ts`), each package's `src/index.ts` (at most 60 lines: re-exports of the generated client plus hand-written extras such as Auth's `verifyToken`), Auth's JWT and passkey code, auth-passport, and the umbrella. Product identity (class name, base URL, scope accessors such as `community(id)` and `public({ workspace, waitlist })`) lives in the `SURFACES` table at the top of `scripts/gen-sdk.mjs`, not in per-package code.
-5. **Every product is on the generator** (`SURFACES`): `@productcraft/trawl`, `mail`, `waitlist`, `platform-auth` (1.0), `social` (1.1) and `auth` (1.0 previews under `next`, task 009), plus the private test fixture `packages/gen-fixture` (spec `packages/gen-fixture/fixture.openapi.json`). kubb is gone. Each has a live smoke in `scripts/live/<p>.mjs` (testing-environment only) and a migration guide in `docs/migrations/`. Auth's hand-written parts: `src/base.ts` (the generated `Auth` extends it: `consumer(slug)`, top-level `verifyToken`), `src/consumer.ts` (`ConsumerScope` over the generated consumer scope: `verifyToken`, `jwks`, passkeys), `src/jwt/`, `src/passkeys.ts`, and the frozen 0.x name map `packages/auth/compat.json` (the generator emits the deprecated aliases from it; deleted in 2.0).
+5. **Every product is on the generator** (`SURFACES`): `@productcraft/trawl`, `mail`, `waitlist`, `platform-auth` (1.0), `social` (1.1) and `auth` (1.0), plus the private test fixture `packages/gen-fixture` (spec `packages/gen-fixture/fixture.openapi.json`). kubb is gone. Each has a live smoke in `scripts/live/<p>.mjs` (testing-environment only) and a migration guide in `docs/migrations/`. Auth's hand-written parts: `src/base.ts` (the generated `Auth` extends it: `consumer(slug)`, top-level `verifyToken`), `src/consumer.ts` (`ConsumerScope` over the generated consumer scope: `verifyToken`, `jwks`, passkeys), `src/jwt/`, `src/passkeys.ts`, and the frozen 0.x name map `packages/auth/compat.json` (the generator emits the deprecated aliases from it; deleted in 2.0).
 
 `pnpm run codegen` is the single entry point. Core's contract suite runs against a local `node:http` mock server (`packages/core/tests/`); `scripts/smoke-dist.mjs` checks the built ESM + CJS dist (CI: Node 20.3.0, 20, 22, 24) and `scripts/size-budget.mjs` the bundle budget.
 
@@ -66,17 +66,19 @@ The SDKs are supposed to need **as little ongoing dev effort as possible**. Noth
 
   **Publish auth — read this before touching release.yml.** Publishing is tokenless **npm trusted publishing (OIDC)**, bound to the workflow filename `release.yml` (restored 2026-10-23). Every published name has a trusted publisher for `clauderanelagh/productcraft-node` + `release.yml`; there is no `NPM_TOKEN`. A one-off workflow with a different filename cannot publish. `npm@11` is pinned deliberately — `npm@12` breaks provenance publishes with a missing-`sigstore` error.
 
-  **Snapshot previews (`next`):** `gh workflow run release.yml --ref main -f snapshot=next` versions the pending changesets as `<version>-next-<datetime>` in the runner and publishes them under the `next` dist-tag; `latest` does not move. While `.changeset/auth-1-0-generated.md` is pending, a Version Packages PR bumps auth to 1.0.0 and ci.yml holds it red until task 012 deletes `tasks/012-stable-release.md`: do not merge it before then.
+  **Snapshot previews (`next`):** `gh workflow run release.yml --ref main -f snapshot=next` versions the pending changesets as `<version>-next-<datetime>` in the runner and publishes them under the `next` dist-tag; `latest` does not move. Use it to preview a major before it ships stable.
 
   **First publish of a brand-new package name:** configure its trusted publisher on npmjs.com (owner `clauderanelagh`, repo `productcraft-node`, workflow `release.yml`) BEFORE merging the Version Packages PR, or the publish 404s. Confirm it actually landed on npm after release, don't assume.
 
 ## Versioning
 
-SemVer, **per package**, independent. The `productcraft` umbrella picks up a patch bump whenever any of its surface deps bump (via `updateInternalDependencies: "patch"` in `.changeset/config.json`).
+SemVer, **per package**, independent. Every published package is at 1.x or later since task 012 (2026-11-07). The `productcraft` umbrella picks up a patch bump whenever any of its surface deps bump (via `updateInternalDependencies: "patch"` in `.changeset/config.json`).
 
-Pre-1.0 (`v0.x.y`):
-- `0.x.0` minor bumps for additive surface changes.
-- `0.x.y` patch bumps for spec-refresh PRs (the common churn).
+After 1.0 (`docs/sdk-standard.md` section 7):
+- **minor** for additive changes, including a spec refresh that only adds operations, optional fields or enum values (the common churn). `spec-refresh.yml` writes these as `minor` per changed surface.
+- **major** when `oasdiff breaking` on `Specs/` or a lost line in a package's `api-report.md` flags a break. `spec-refresh.yml` labels such a PR `breaking`: change its changeset to `major` and write `docs/migrations/<package>-<version>.md` (before/after for every call shape our docs and consumers use, old shapes in ` ```ts before ` fences) linked from the changeset text and the package README, before merging.
+- **patch** for fixes that change no public type or call shape.
+- Auth's deprecated 0.x aliases (`packages/auth/compat.json`) and `.client` on every product stay for all of 1.x; removing them is a 2.0.
 
 The SDK version is **not** lock-stepped to the platform API version.
 
