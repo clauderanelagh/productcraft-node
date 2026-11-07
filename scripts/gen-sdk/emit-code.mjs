@@ -59,15 +59,21 @@ export function exampleParams(o, deref, { full = false } = {}) {
   return out;
 }
 
-/** The scope prefix of a call: `.community("…").as("…")` or `.public({ … })`. */
-export function scopeExpr(o, deref, given = undefined) {
+/**
+ * The scope prefix of a call: `.community("…").as("…")` or `.public({ … })`.
+ * `.as(actorId)` is chained only where the call fills `actor_id` from it (docs and
+ * examples teach exactly when it is needed); `alwaysAs` keeps it on every call of an
+ * actor scope (the per-op test, which checks that a bound actor is not sent where
+ * the operation declares no `actor_id`).
+ */
+export function scopeExpr(o, deref, given = undefined, { alwaysAs = false } = {}) {
   if (!o.scope) return "";
   const vals = given ?? Object.fromEntries(o.scope.bind.map((b, i) => [b, pathValue({ name: b, schema: o.pathParamSchemas?.[b] ?? { type: "string" }, example: o.pathParamExamples?.[b] }, i + 4, deref)]));
   let expr;
   const acc = o.scope.accessor || o.scope.name;
   if (o.scope.args === "positional") expr = `.${acc}(${o.scope.bind.map((b) => lit(vals[b])).join(", ")})`;
   else expr = `.${acc}({ ${Object.entries(o.scope.args).map(([k, b]) => `${k}: ${lit(vals[b])}`).join(", ")} })`;
-  if (o.scope.actor) expr += `.as(${lit(placeholderUuid(3))})`;
+  if (o.scope.actor && (o.actor || alwaysAs)) expr += `.as(${lit(placeholderUuid(3))})`;
   return expr;
 }
 
@@ -188,7 +194,7 @@ export function emitTypes(model, cfg) {
       if (o.body?.json) parts.push(bodyType(o));
       else if (o.body?.multipart) parts.push(formType(o));
       else if (o.body) parts.push("{ body: NonNullable<RequestInit[\"body\"]> }");
-      L.push(`/** Params for \`${o.name}\` (${o.http} ${o.path}). */`, `export type ${o.paramsType} = ${parts.join(" & ")};`);
+      L.push(`/** Params for \`${o.name}\` (${o.http} ${o.path}).${o.deprecated ? ` @deprecated ${deprecationText(o)}` : ""} */`, `export type ${o.paramsType} = ${parts.join(" & ")};`);
     }
     if (o.itemType && !model.models.some((m) => m.name === o.itemType)) {
       L.push(`/** One item of \`${o.name}\`. */`, `export type ${o.itemType} = Open<${okType(o)}["data"][number]>;`);
@@ -361,6 +367,12 @@ function specLiteral(o, argNames = {}) {
   return `{ ${parts.join(", ")} }`;
 }
 
+/** The `@deprecated` text: an SDK-only note (`x-pc-sdk.deprecated`) says it leaves in the next major. */
+export function deprecationText(o) {
+  if (o.deprecationNote) return `${o.deprecationNote} Kept for this major; removed from the SDK in the next one.`;
+  return o.description || "Deprecated in the API.";
+}
+
 function methodDoc(o, cfg, deref) {
   const lines = [o.summary || `${o.http} ${o.path}`];
   if (o.description) lines.push("", o.description);
@@ -370,7 +382,7 @@ function methodDoc(o, cfg, deref) {
     for (const n of names) if (descriptions[n]) lines.push(`- \`${n}\`: ${descriptions[n]}`);
   }
   lines.push("");
-  if (o.deprecated) lines.push(`@deprecated ${o.description || "Deprecated in the API."}`);
+  if (o.deprecated) lines.push(`@deprecated ${deprecationText(o)}`);
   for (const p of o.positional) lines.push(`@param ${p.arg} - ${p.description ?? `\`{${p.name}}\``}`);
   if (o.paramsType) lines.push(`@param params - \`${cfg.className}.${o.paramsType}\`${o.idempotent ? "" : ""}.`);
   lines.push(`@param options - Per-request options${o.idempotent ? " (an Idempotency-Key is sent automatically; override with `idempotencyKey`)" : ""}.`);
@@ -887,7 +899,7 @@ export function emitOpsTest(model, cfg) {
     const params = exampleParams(o, deref, { full: true });
     const args = o.positional.map((p) => lit(values[p.name]));
     if (params) args.push(tsLiteral(params, "    "));
-    const call = `${v}${scopeExpr(o, deref, values)}.${o.call}(${args.join(", ")})`;
+    const call = `${v}${scopeExpr(o, deref, values, { alwaysAs: true })}.${o.call}(${args.join(", ")})`;
     const query = [];
     const bodyExpect = {};
     for (const [k, val] of Object.entries(params ?? {})) {

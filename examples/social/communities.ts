@@ -135,44 +135,44 @@ const social = new Social();
   const community = await social.communities.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
-// communities.webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
+// communities.webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once. (deprecated)
 {
   const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
 }
 
-// communities.webhooks.endpoints.delete: Delete a webhook endpoint.
+// communities.webhooks.endpoints.delete: Delete a webhook endpoint. (deprecated)
 {
   await social.communities.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
-// communities.webhooks.endpoints.list: List webhook endpoints, oldest first.
+// communities.webhooks.endpoints.list: List webhook endpoints, oldest first. (deprecated)
 {
   for await (const endpoint of social.communities.webhooks.endpoints.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(endpoint);
   }
 }
 
-// communities.webhooks.endpoints.retrieve: Get one webhook endpoint (without its secret).
+// communities.webhooks.endpoints.retrieve: Get one webhook endpoint (without its secret). (deprecated)
 {
   const webhookEndpoint = await social.communities.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
-// communities.webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
+// communities.webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once. (deprecated)
 {
   const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
-// communities.webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
+// communities.webhooks.endpoints.test: Send a test event to this endpoint now and return the result. (deprecated)
 {
   const webhookDeliveryAttempt = await social.communities.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 }
 
-// communities.webhooks.endpoints.update: Change a webhook endpoint: URL, description, events, on/off.
+// communities.webhooks.endpoints.update: Change a webhook endpoint: URL, description, events, on/off. (deprecated)
 {
   const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 }
 
-// communities.webhooks.events.list: List webhook events, newest first (kept for 30 days).
+// communities.webhooks.events.list: List webhook events, newest first (kept for 30 days). (deprecated)
 {
   for await (const event of social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(event);
@@ -180,17 +180,17 @@ const social = new Social();
   const page = await social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
-// communities.webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
+// communities.webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint. (deprecated)
 {
   const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
-// communities.webhooks.events.retrieve: Get one webhook event with every delivery attempt.
+// communities.webhooks.events.retrieve: Get one webhook event with every delivery attempt. (deprecated)
 {
   const webhookEventDetail = await social.communities.webhooks.events.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
-// communities.webhooks.eventTypes.list: List the events an endpoint can subscribe to.
+// communities.webhooks.eventTypes.list: List the events an endpoint can subscribe to. (deprecated)
 {
   const webhookEventTypeList = await social.communities.webhooks.eventTypes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }

@@ -307,6 +307,8 @@ namespace Fixture {
     // @deprecated (undocumented)
     type WidgetTallyResponse = __WidgetTallyResponse;
     // (undocumented)
+    type WidgetTimelineResponse = __WidgetTimelineResponse;
+    // (undocumented)
     type WidgetUpdateParams = __WidgetUpdateParams;
     // (undocumented)
     type WidgetUpdateStatusParams = __WidgetUpdateStatusParams;
@@ -625,6 +627,38 @@ export type paths = {
         put?: never;
         post: operations["WidgetController_paint"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/widgets/{id}/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WidgetController_timeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/communities/{community_id}/posts/{post_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["PostController_delete"];
         options?: never;
         head?: never;
         patch?: never;

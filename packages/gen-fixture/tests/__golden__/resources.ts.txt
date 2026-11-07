@@ -480,6 +480,26 @@ export class WidgetsResource extends APIResource {
     );
   }
   /**
+   * Status timeline of a widget (console route)
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
+   * @deprecated The same transitions as `widgets.history`, which SDK code should use. Kept for this major; removed from the SDK in the next one.
+   * @param id - Widget id.
+   * @param options - Per-request options.
+   * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
+   * @see GET /v1/workspaces/{workspace_id}/widgets/{id}/timeline
+   * @see https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-id-timeline
+   * @example
+   * ```ts
+   * const result = await fixture.widgets.timeline("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+   * ```
+   */
+  timeline(id: string, options?: RequestOptions): APIPromise<T.WithLastResponse<T.WidgetTimelineResponse>> {
+    return this._client.request({ method: "GET", path: "/v1/workspaces/{workspace_id}/widgets/{id}/timeline", pathParams: { id } }, options);
+  }
+  /**
    * Update a widget
    *
    * Credential: `bearer`.
@@ -602,6 +622,25 @@ export class CommunityPostsResource extends APIResource {
    */
   create(params: T.WithOptionalActor<T.PostCreateParams>, options?: RequestOptions): APIPromise<T.WithLastResponse<T.Post>> {
     return this._client.request({ method: "POST", path: "/v1/communities/{community_id}/posts", pathParams: { community_id: this._b.community_id }, body: fillActor(params, this._b), idempotent: true }, options);
+  }
+  /**
+   * Delete a post
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
+   * @param postId - Post id.
+   * @param options - Per-request options.
+   * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
+   * @see DELETE /v1/communities/{community_id}/posts/{post_id}
+   * @see https://productcraft.co/docs/fixture/api-reference#delete-v1-communities-community-id-posts-post-id
+   * @example
+   * ```ts
+   * await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").posts.delete("9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d");
+   * ```
+   */
+  delete(postId: string, options?: RequestOptions): APIPromise<void> {
+    return this._client.request({ method: "DELETE", path: "/v1/communities/{community_id}/posts/{post_id}", pathParams: { community_id: this._b.community_id, post_id: postId } }, options);
   }
   /**
    * List posts

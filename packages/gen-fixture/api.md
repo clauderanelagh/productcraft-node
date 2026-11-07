@@ -306,6 +306,26 @@ const widget = await fixture.widgets.retrieve("wid_fixture_1");
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-id)
 
+### `fixture.widgets.timeline(id, options?)`
+
+`GET /v1/workspaces/{workspace_id}/widgets/{id}/timeline` → `Fixture.WidgetTimelineResponse` · **deprecated**
+
+Status timeline of a widget (console route).
+
+**Deprecated:** The same transitions as `widgets.history`, which SDK code should use. Kept for this major; removed from the SDK in the next one.
+
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
+
+```ts
+const result = await fixture.widgets.timeline("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-id-timeline)
+
 ### `fixture.widgets.update(id, params?, options?)`
 
 `PATCH /v1/workspaces/{workspace_id}/widgets/{id}` → `Fixture.Widget`
@@ -437,6 +457,24 @@ const post = await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as(
 ```
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-communities-community-id-posts)
+
+### `fixture.community(…).posts.delete(postId, options?)`
+
+`DELETE /v1/communities/{community_id}/posts/{post_id}` → `void`
+
+Delete a post.
+
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND` | No such object in this workspace. |
+
+```ts
+await fixture.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").posts.delete("9a8b7c6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d");
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#delete-v1-communities-community-id-posts-post-id)
 
 ### `fixture.community(…).posts.list(params?, options?)`
 

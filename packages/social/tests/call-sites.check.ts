@@ -11,6 +11,13 @@ const assert = <T extends true>(_: T): void => undefined;
 export async function acceptance(): Promise<void> {
   const c = social.community(communityId).as(actorId);
   const post = await c.posts.create({ body: "hello from the SDK smoke" });
+  // A post needs a title, body or url (the spec's oneOf): a contentless one does not compile.
+  // @ts-expect-error no title, body or url
+  void c.posts.create({});
+  // @ts-expect-error assets alone are not content
+  void c.posts.create({ kind: "image", visibility: "public" });
+  void c.posts.create({ url: "https://example.com/a.png" });
+  void c.posts.create({ title: "t", body: "b", url: "https://example.com" });
   await c.posts.comments.create(post.id, { body: "first" });
   const firstPage = await c.posts.list({ limit: 1 });
   void firstPage.data;

@@ -6,7 +6,7 @@ const social = new Social();
 
 // assets.complete: Finalize a presigned-PUT video upload. Verifies the stored object (existence, size, container magic bytes) and enqueues the transcode. Replaying on a finalized asset returns its current status without re-enqueueing.
 {
-  const uploadAsset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.complete("eeeeeeee-0000-0000-0000-000000000001");
+  const uploadAsset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").assets.complete("eeeeeeee-0000-0000-0000-000000000001");
 }
 
 // assets.create: Upload media. Images (multipart): processed synchronously, returns ready. Videos (JSON, kind:'video' + declared content_type/byte_size): returns an `uploading` asset with a presigned PUT — upload the bytes, then POST /assets/:id/complete.
@@ -16,12 +16,12 @@ const social = new Social();
 
 // assets.delete: Delete an asset — removes every stored rendition object, then the row.
 {
-  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").assets.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // assets.retrieve: Fetch one asset with freshly-minted presigned rendition URLs.
 {
-  const asset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  const asset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").assets.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

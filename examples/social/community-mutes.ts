@@ -11,7 +11,7 @@ const social = new Social();
 
 // mutes.delete: Unmute. Idempotent — 204 either way.
 {
-  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").mutes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

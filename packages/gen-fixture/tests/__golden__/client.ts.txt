@@ -87,6 +87,7 @@ type __WidgetCountResponse = T.WidgetCountResponse;
 type __WidgetUpdateParams = T.WidgetUpdateParams;
 type __WidgetHistoryResponse = T.WidgetHistoryResponse;
 type __WidgetUpdateStatusParams = T.WidgetUpdateStatusParams;
+type __WidgetTimelineResponse = T.WidgetTimelineResponse;
 type __WidgetPartListParams = T.WidgetPartListParams;
 type __WidgetPartCreateParams = T.WidgetPartCreateParams;
 type __WidgetTallyParams = T.WidgetCountParams;
@@ -144,6 +145,7 @@ export namespace Fixture {
   export type WidgetUpdateParams = __WidgetUpdateParams;
   export type WidgetHistoryResponse = __WidgetHistoryResponse;
   export type WidgetUpdateStatusParams = __WidgetUpdateStatusParams;
+  export type WidgetTimelineResponse = __WidgetTimelineResponse;
   export type WidgetPartListParams = __WidgetPartListParams;
   export type WidgetPartCreateParams = __WidgetPartCreateParams;
   /** @deprecated Renamed to `Fixture.WidgetCountParams`. Kept for 1.x callers; removed in the next major. */

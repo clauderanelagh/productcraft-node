@@ -74,6 +74,8 @@ export type WidgetUpdateParams = NonNullable<paths["/v1/workspaces/{workspace_id
 export type WidgetHistoryResponse = Open<paths["/v1/workspaces/{workspace_id}/widgets/{id}/history"]["get"]["responses"][200]["content"]["application/json"]>;
 /** Params for `widgets.updateStatus` (PATCH /v1/workspaces/{workspace_id}/widgets/{id}/status). */
 export type WidgetUpdateStatusParams = NonNullable<paths["/v1/workspaces/{workspace_id}/widgets/{id}/status"]["patch"]["requestBody"]>["content"]["application/json"];
+/** Response of `widgets.timeline`. */
+export type WidgetTimelineResponse = Open<paths["/v1/workspaces/{workspace_id}/widgets/{id}/timeline"]["get"]["responses"][200]["content"]["application/json"]>;
 /** Params for `widgets.parts.list` (GET /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts). */
 export type WidgetPartListParams = NonNullable<paths["/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts"]["get"]["parameters"]["query"]>;
 /** Params for `widgets.parts.create` (POST /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts). */

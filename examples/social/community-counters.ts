@@ -6,7 +6,7 @@ const social = new Social();
 
 // counters.list: Batch counters (max 100 actors per call) — render a member list with follower badges from ONE call instead of one per actor. Unknown actor_ids come back in `missing[]` instead of failing the read.
 {
-  const batchCounters = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").counters.list({ actor_ids: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f,0b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d" });
+  const batchCounters = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").counters.list({ actor_ids: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f,0b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d" });
 }
 
 export {};
