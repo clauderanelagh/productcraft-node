@@ -9,4 +9,4 @@ Open backlog for the Node SDK workspace. Same conventions as `monorepo/tasks/`:
 
 ## Current program
 
-The Stripe-grade SDK program (2026-11). The standard and the full cross-repo build order are in [`docs/sdk-standard.md`](../docs/sdk-standard.md), section 11, which interleaves these tasks with the monorepo spec tasks (`monorepo/tasks/{monorepo,trawl-api,mail-api,waitlist-api,platform-auth-api,social-api,users-api,console,productcraft-co}/`). Each product task depends on its API's spec task being deployed; 001-003 do not wait for them. There is no 011 (folded into 003, 004 and 012).
+None open. The Stripe-grade SDK program (2026-11) is complete: task 012 shipped the last stable releases on 2026-11-07. The standard and the full cross-repo build order are in [`docs/sdk-standard.md`](../docs/sdk-standard.md), section 11, which interleaves these tasks with the monorepo spec tasks (`monorepo/tasks/{monorepo,trawl-api,mail-api,waitlist-api,platform-auth-api,social-api,users-api,console,productcraft-co}/`). Each product task depends on its API's spec task being deployed; 001-003 do not wait for them. There is no 011 (folded into 003, 004 and 012).

@@ -1,6 +1,6 @@
 # The ProductCraft Node SDK standard
 
-Status: adopted 2026-11-05, revised 2026-11-06 after two design reviews (section 13 records what changed and what was rejected). Owner: the SDK maintainer (`clauderanelagh`). This document is the contract every `@productcraft/*` package is built to. The ordered work that gets us there lives in `tasks/` (this repo) and in `tasks/<app>/` in the monorepo; section 11 lists it.
+Status: program complete (2026-11-07): every package is on the generator and at a stable 1.x. Adopted 2026-11-05, revised 2026-11-06 after two design reviews (section 13 records what changed and what was rejected). Owner: the SDK maintainer (`clauderanelagh`). This document is the contract every `@productcraft/*` package is built to. The ordered work that gets us there lives in `tasks/` (this repo) and in `tasks/<app>/` in the monorepo; section 11 lists it.
 
 ## 1. Why this exists
 
