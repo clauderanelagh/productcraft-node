@@ -7,6 +7,7 @@ import { APIError } from "@productcraft/core";
 
 export { Auth, Auth as default } from "./_generated/client.js";
 export * from "./_generated/errors.js";
+export type * from "./_generated/runtime.js";
 export type { paths, components } from "./_generated/paths.js";
 export type { AuthOptions, AuthOptions as AuthConfig } from "./base.js";
 export { ConsumerScope, AUTH_LEGACY_ISSUER, type ConsumerScopeOptions } from "./consumer.js";

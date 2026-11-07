@@ -112,7 +112,7 @@ const mail = new Mail();
 
 // domains.testSend: Send a built-in test email from this domain, no template needed.
 {
-  const sendAccepted = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
+  const result = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
 }
 
 // domains.update: Update domain settings: capabilities, DNS provider hint, custom MAIL FROM subdomain, DMARC recommendation.

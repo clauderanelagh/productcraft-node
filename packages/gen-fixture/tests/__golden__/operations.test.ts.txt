@@ -276,7 +276,7 @@ describe("generated operations (gen-fixture)", () => {
   });
   it("widgets.parts.create: POST /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts", async () => {
     const { fetch, fixture } = setup();
-    const result = await fixture.widgets.parts.create("widget-id-1", { label: "Bolt" });
+    const result = await fixture.widgets.parts.create("widget-id-1", { label: "Bolt", sku: "B-100" });
     expect(result).toBeDefined();
     const call = fetch.calls[0]!;
     expect(call.operation).toBe("widgets.parts.create");
@@ -285,7 +285,7 @@ describe("generated operations (gen-fixture)", () => {
     expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
     expect(call.headers.has("idempotency-key")).toBe(true);
     expect(call.headers.has("authorization")).toBe(true);
-    expect(call.body).toEqual({ label: "Bolt" });
+    expect(call.body).toEqual({ label: "Bolt", sku: "B-100" });
   });
   it("widgets.parts.delete: DELETE /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts/{part_id}", async () => {
     const { fetch, fixture } = setup();

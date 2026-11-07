@@ -21,22 +21,24 @@ export type WithResult<M, K extends keyof M, R> = Omit<M, K> & { [P in keyof M a
 export type WidgetStatus = components["schemas"]["WidgetStatus"];
 export const WidgetStatus = { values: ["draft", "active", "archived"] as const };
 
-export type Comment = Open<components["schemas"]["CommentResponseDto"]>;
-export type Entry = Open<components["schemas"]["EntryResponseDto"]>;
-export type Pagination = Open<components["schemas"]["PaginationDto"]>;
-export type PartList = Open<components["schemas"]["PartListResponseDto"]>;
-export type Part = Open<components["schemas"]["PartResponseDto"]>;
-export type PostList = Open<components["schemas"]["PostListResponseDto"]>;
-export type Post = Open<components["schemas"]["PostResponseDto"]>;
-export type Region = Open<components["schemas"]["RegionResponseDto"]>;
-export type Settings = Open<components["schemas"]["SettingsResponseDto"]>;
-export type WebhookEndpointList = Open<components["schemas"]["WebhookEndpointListResponseDto"]>;
-export type WebhookEndpoint = Open<components["schemas"]["WebhookEndpointResponseDto"]>;
-export type WidgetList = Open<components["schemas"]["WidgetListResponseDto"]>;
+export interface Comment extends Open<components["schemas"]["CommentResponseDto"]> {}
+export interface Entry extends Open<components["schemas"]["EntryResponseDto"]> {}
+export interface Pagination extends Open<components["schemas"]["PaginationDto"]> {}
+export interface PartList extends Open<components["schemas"]["PartListResponseDto"]> {}
+export interface Part extends Open<components["schemas"]["PartResponseDto"]> {}
+export interface PostList extends Open<components["schemas"]["PostListResponseDto"]> {}
+export interface Post extends Open<components["schemas"]["PostResponseDto"]> {}
+export interface Region extends Open<components["schemas"]["RegionResponseDto"]> {}
+/** @deprecated Renamed to `Region`. Kept for 1.x callers; removed in the next major. */
+export type Area = Region;
+export interface Settings extends Open<components["schemas"]["SettingsResponseDto"]> {}
+export interface WebhookEndpointList extends Open<components["schemas"]["WebhookEndpointListResponseDto"]> {}
+export interface WebhookEndpoint extends Open<components["schemas"]["WebhookEndpointResponseDto"]> {}
+export interface WidgetList extends Open<components["schemas"]["WidgetListResponseDto"]> {}
 /**
  * A widget.
  */
-export type Widget = Open<components["schemas"]["WidgetResponseDto"]>;
+export interface Widget extends Open<components["schemas"]["WidgetResponseDto"]> {}
 
 /** Params for `posts.list` (GET /v1/communities/{community_id}/posts). */
 export type PostListParams = NonNullable<paths["/v1/communities/{community_id}/posts"]["get"]["parameters"]["query"]>;
@@ -76,3 +78,7 @@ export type WidgetUpdateStatusParams = NonNullable<paths["/v1/workspaces/{worksp
 export type WidgetPartListParams = NonNullable<paths["/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts"]["get"]["parameters"]["query"]>;
 /** Params for `widgets.parts.create` (POST /v1/workspaces/{workspace_id}/widgets/{widget_id}/parts). */
 export type WidgetPartCreateParams = NonNullable<paths["/v1/workspaces/{workspace_id}/widgets/{widget_id}/parts"]["post"]["requestBody"]>["content"]["application/json"];
+/** @deprecated Renamed to `WidgetCountParams` (`widgets.tally` is now `widgets.count`). Kept for 1.x callers; removed in the next major. */
+export type WidgetTallyParams = WidgetCountParams;
+/** @deprecated Renamed to `WidgetCountResponse` (`widgets.tally` is now `widgets.count`). Kept for 1.x callers; removed in the next major. */
+export type WidgetTallyResponse = WidgetCountResponse;

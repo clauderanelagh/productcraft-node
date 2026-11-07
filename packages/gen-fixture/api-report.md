@@ -20,21 +20,26 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -43,6 +48,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -87,7 +94,15 @@ export type components = {
         CreatePartDto: {
             label: string;
             quantity?: number;
-        };
+            sku?: string;
+            catalog_ref?: string;
+        } & ({
+            sku: string;
+            catalog_ref?: never;
+        } | {
+            catalog_ref: string;
+            sku?: never;
+        });
         PartResponseDto: {
             id: string;
             widget_id: string;
@@ -188,17 +203,29 @@ class Fixture extends FixtureResources {
 // @public
 namespace Fixture {
     // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
+    // @deprecated (undocumented)
+    type Area = __Area;
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
+    // (undocumented)
     type Comment = __Comment;
     // (undocumented)
     type Entry = __Entry;
     // (undocumented)
     type EntryCreateParams = __EntryCreateParams;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type LastResponse = __LastResponse;
+    // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
     const // (undocumented)
     WidgetStatus: {
         values: readonly ["draft", "active", "archived"];
     };
-    // (undocumented)
-    type ErrorCode = __ErrorCode;
     // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
@@ -217,6 +244,8 @@ namespace Fixture {
     type PostList = __PostList;
     // (undocumented)
     type PostListParams = __PostListParams;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type Region = __Region;
     // (undocumented)
@@ -273,10 +302,16 @@ namespace Fixture {
     type WidgetPartListParams = __WidgetPartListParams;
     // (undocumented)
     type WidgetStatus = __WidgetStatus;
+    // @deprecated (undocumented)
+    type WidgetTallyParams = __WidgetTallyParams;
+    // @deprecated (undocumented)
+    type WidgetTallyResponse = __WidgetTallyResponse;
     // (undocumented)
     type WidgetUpdateParams = __WidgetUpdateParams;
     // (undocumented)
     type WidgetUpdateStatusParams = __WidgetUpdateStatusParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["widget.archived", "widget.created"];
@@ -297,7 +332,13 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -577,13 +618,21 @@ export type paths = {
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
 
+export { RateLimitInfo }
+
+export { RequestOptions }
+
 export { UnprocessableEntityError }
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

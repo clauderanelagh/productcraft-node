@@ -45,4 +45,9 @@ const mail = new Mail();
   const receivedEmailDetail = await mail.received.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
+// received.timeline: Day-bucketed inbound message volume for a workspace
+{
+  const messageTimeline = await mail.received.timeline({ granularity: "day", since: "2026-04-01T00:00:00Z", until: "2026-05-01T00:00:00Z" });
+}
+
 export {};

@@ -40,7 +40,7 @@ for await (const message of mail.messages.list({ status: ["bounced", "complained
 
 `workspaceId` is optional for workspace API keys: without it the client looks it up once per process (one extra request on a cold start). Pass it, or set `PRODUCTCRAFT_WORKSPACE_ID`, to skip the lookup. Bearer tokens must always pass it.
 
-Nouns: `emails` is the call you made (send, batch, list, retrieve, metrics); `messages` is the per-recipient delivery log (list, retrieve, timeline, body, export, erase). Exports, raw MIME and attachments resolve to the raw `Response` (`.text()`, `.arrayBuffer()`, `.body`).
+Nouns: `emails` is the call you made (send, batch, list, retrieve, metrics); `messages` is the per-recipient delivery log of what you sent (list, retrieve, body, export, erase); `received` is the mail your domains received, with its daily `timeline`. Exports, raw MIME and attachments resolve to the raw `Response` (`.text()`, `.arrayBuffer()`, `.body`).
 
 ## Credentials
 
@@ -62,8 +62,8 @@ Full reference: [api.md](./api.md).
 - `mail.emails`: `batch`, `list`, `metrics`, `retrieve`, `send`
 - `mail.integrations`: `delete`, `github.connect`, `github.repos.branches.list`, `github.repos.list`, `github.settings.update`, `github.sync.create`, `github.sync.retrieve`, `list`, `retrieve`
 - `mail.mailboxes`: `create`, `delete`, `list`, `messages.attachments.retrieve`, `messages.delete`, `messages.list`, `messages.raw`, `messages.read`, `messages.retrieve`, `retrieve`, `update`
-- `mail.messages`: `body`, `erase`, `export`, `list`, `retrieve`, `settings.retrieve`, `settings.update`, `timeline`
-- `mail.received`: `attachments.retrieve`, `delete`, `export`, `list`, `raw`, `read`, `retrieve`
+- `mail.messages`: `body`, `erase`, `export`, `list`, `retrieve`, `settings.retrieve`, `settings.update`
+- `mail.received`: `attachments.retrieve`, `delete`, `export`, `list`, `raw`, `read`, `retrieve`, `timeline`
 - `mail.segments`: `contacts.list`, `create`, `delete`, `list`, `metrics`, `preview`, `retrieve`, `update`
 - `mail.sendingDefaults`: `retrieve`, `update`
 - `mail.smtpConfig`: `list`, `reset`, `retrieve`, `update`, `verify`, `verifySaved`

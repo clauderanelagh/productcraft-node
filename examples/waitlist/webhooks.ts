@@ -61,7 +61,7 @@ const waitlist = new Waitlist();
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await waitlist.webhooks.eventTypes.list();
+  const webhookEventTypeList = await waitlist.webhooks.eventTypes.list();
 }
 
 export {};

@@ -350,7 +350,14 @@ export class RateLimitError extends APIError {
 }
 
 // @public
-export interface RateLimitInfo {
+export interface RateLimitInfo extends RateLimitWindow {
+    window: string;
+    // (undocumented)
+    windows: Record<string, RateLimitWindow>;
+}
+
+// @public
+export interface RateLimitWindow {
     // (undocumented)
     limit: number | undefined;
     // (undocumented)

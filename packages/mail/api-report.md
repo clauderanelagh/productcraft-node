@@ -20,21 +20,26 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -43,6 +48,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -1836,7 +1843,20 @@ export type components = {
             template?: components["schemas"]["EmailTemplateRefDto"];
             text?: string;
             to: string | string[];
-        };
+        } & ({
+            html: string;
+            subject: string;
+            template?: never;
+        } | {
+            html?: never;
+            subject: string;
+            template?: never;
+            text: string;
+        } | {
+            html?: never;
+            template: components["schemas"]["EmailTemplateRefDto"];
+            text?: never;
+        });
         SendEmailDto: {
             bcc?: string | string[];
             cc?: string | string[];
@@ -1851,7 +1871,20 @@ export type components = {
             template?: components["schemas"]["EmailTemplateRefDto"];
             text?: string;
             to: string | string[];
-        };
+        } & ({
+            html: string;
+            subject: string;
+            template?: never;
+        } | {
+            html?: never;
+            subject: string;
+            template?: never;
+            text: string;
+        } | {
+            html?: never;
+            template: components["schemas"]["EmailTemplateRefDto"];
+            text?: never;
+        });
         SendEmailResponseDto: {
             id: string;
         };
@@ -2324,6 +2357,8 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 // @public
 class Mail extends MailResources {
     constructor(options?: ClientOptions);
@@ -2333,445 +2368,449 @@ class Mail extends MailResources {
 // @public
 namespace Mail {
     // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
+    // (undocumented)
     type BounceSource = __BounceSource;
     // (undocumented)
     type BounceType = __BounceType;
     // (undocumented)
     type Brand = __Brand;
+    // (undocumented)
+    type BrandUpdateParams = __BrandUpdateParams;
+    // (undocumented)
+    type Broadcast = __Broadcast;
+    // (undocumented)
+    type BroadcastAudience = __BroadcastAudience;
+    // (undocumented)
+    type BroadcastAudienceParams = __BroadcastAudienceParams;
+    // (undocumented)
+    type BroadcastCounts = __BroadcastCounts;
+    // (undocumented)
+    type BroadcastCreateParams = __BroadcastCreateParams;
     const // (undocumented)
     BounceSource: {
         values: readonly ["relay", "ses", "mixed", "none"];
     };
     // (undocumented)
-    type BrandUpdateParams = __BrandUpdateParams;
+    type BroadcastListParams = __BroadcastListParams;
     const // (undocumented)
     BounceType: {
         values: readonly ["Permanent", "Transient", "Undetermined"];
     };
     // (undocumented)
-    type Broadcast = __Broadcast;
+    type BroadcastRecipient = __BroadcastRecipient;
     const // (undocumented)
     BroadcastRecipientStatus: {
         values: readonly ["pending", "sending", "sent", "skipped", "failed", "canceled"];
     };
     // (undocumented)
-    type BroadcastAudience = __BroadcastAudience;
+    type BroadcastRecipientListParams = __BroadcastRecipientListParams;
     const // (undocumented)
     BroadcastStatus: {
         values: readonly ["draft", "scheduled", "sending", "sent", "canceled"];
     };
     // (undocumented)
-    type BroadcastAudienceParams = __BroadcastAudienceParams;
+    type BroadcastRecipientStatus = __BroadcastRecipientStatus;
     const // (undocumented)
     ContactCreatedVia: {
         values: readonly ["api", "dashboard", "import", "unsubscribe"];
     };
     // (undocumented)
-    type BroadcastCounts = __BroadcastCounts;
+    type BroadcastSendParams = __BroadcastSendParams;
     const // (undocumented)
     ContactImportConflictMode: {
         values: readonly ["upsert", "skip"];
     };
     // (undocumented)
-    type BroadcastCreateParams = __BroadcastCreateParams;
+    type BroadcastSettings = __BroadcastSettings;
     const // (undocumented)
     ContactImportStatus: {
         values: readonly ["queued", "processing", "completed", "failed"];
     };
     // (undocumented)
-    type BroadcastListParams = __BroadcastListParams;
+    type BroadcastSettingsUpdateParams = __BroadcastSettingsUpdateParams;
     const // (undocumented)
     ContactPropertyType: {
         values: readonly ["string", "number"];
     };
     // (undocumented)
-    type BroadcastRecipient = __BroadcastRecipient;
+    type BroadcastStatus = __BroadcastStatus;
     const // (undocumented)
     DeliverabilityVerdict: {
         values: readonly ["no_data", "healthy", "unconfirmed", "degraded", "blocked"];
     };
     // (undocumented)
-    type BroadcastRecipientListParams = __BroadcastRecipientListParams;
+    type BroadcastUpdateParams = __BroadcastUpdateParams;
     const // (undocumented)
     DmarcAlignmentMode: {
         values: readonly ["r", "s"];
     };
     // (undocumented)
-    type BroadcastRecipientStatus = __BroadcastRecipientStatus;
+    type ClickedLink = __ClickedLink;
     const // (undocumented)
     DmarcPolicy: {
         values: readonly ["none", "quarantine", "reject"];
     };
     // (undocumented)
-    type BroadcastSendParams = __BroadcastSendParams;
+    type ClickedLinks = __ClickedLinks;
     const // (undocumented)
     DmarcRecordLocation: {
         values: readonly ["subdomain", "organizational", "none"];
     };
     // (undocumented)
-    type BroadcastSettings = __BroadcastSettings;
+    type ClientOptions = __ClientOptions;
     const // (undocumented)
     DnsApplyAction: {
         values: readonly ["create", "update", "skip"];
     };
     // (undocumented)
-    type BroadcastSettingsUpdateParams = __BroadcastSettingsUpdateParams;
+    type ConnectGitHub = __ConnectGitHub;
     const // (undocumented)
     DnsApplyProvider: {
         values: readonly ["cloudflare", "digitalocean"];
     };
     // (undocumented)
-    type BroadcastStatus = __BroadcastStatus;
+    type Contact = __Contact;
     const // (undocumented)
     DnsApplyRecordResult: {
         values: readonly ["created", "updated", "unchanged", "failed"];
     };
     // (undocumented)
-    type BroadcastUpdateParams = __BroadcastUpdateParams;
+    type ContactCreatedEvent = __ContactCreatedEvent;
     const // (undocumented)
     DnsApplyWarning: {
         values: readonly ["token_scope_broader_than_zone", "dmarc_lookup_failed", "partially_applied"];
     };
     // (undocumented)
-    type ClickedLink = __ClickedLink;
+    type ContactCreatedVia = __ContactCreatedVia;
     const // (undocumented)
     DnsConflictCode: {
         values: readonly ["spf_multiple", "spf_merge", "spf_lookup_limit", "cname_at_host", "mail_from_mx_multiple", "dmarc_duplicate", "dkim_selector_taken", "mx_foreign"];
     };
     // (undocumented)
-    type ClickedLinks = __ClickedLinks;
+    type ContactCreateParams = __ContactCreateParams;
     const // (undocumented)
     DnsConflictSeverity: {
         values: readonly ["blocking", "warning"];
     };
     // (undocumented)
-    type ConnectGitHub = __ConnectGitHub;
+    type ContactDeletedEvent = __ContactDeletedEvent;
     const // (undocumented)
     DnsProviderId: {
         values: readonly ["cloudflare", "digitalocean", "namecheap", "godaddy", "squarespace", "route53", "porkbun", "vercel", "netlify", "gandi", "hover", "other"];
     };
     // (undocumented)
-    type Contact = __Contact;
+    type ContactDeletedEventData = __ContactDeletedEventData;
     const // (undocumented)
     DnsProviderLookupSource: {
         values: readonly ["ns", "domain_connect"];
     };
     // (undocumented)
-    type ContactCreatedEvent = __ContactCreatedEvent;
+    type ContactEventData = __ContactEventData;
     const // (undocumented)
     DnsProviderSource: {
         values: readonly ["user", "detected"];
     };
     // (undocumented)
-    type ContactCreatedVia = __ContactCreatedVia;
+    type ContactImport = __ContactImport;
     const // (undocumented)
     DnsRecordPurpose: {
         values: readonly ["dkim", "mx", "verification", "spf", "mail_from_mx", "mail_from_spf", "dmarc"];
     };
     // (undocumented)
-    type ContactCreateParams = __ContactCreateParams;
+    type ContactImportConflictMode = __ContactImportConflictMode;
     const // (undocumented)
     DnsRecordState: {
         values: readonly ["missing", "mismatch", "conflict", "propagating", "verified"];
     };
     // (undocumented)
-    type ContactDeletedEvent = __ContactDeletedEvent;
+    type ContactImportCreateParams = __ContactImportCreateParams;
     const // (undocumented)
     DnsRecordType: {
         values: readonly ["TXT", "MX"];
     };
     // (undocumented)
-    type ContactDeletedEventData = __ContactDeletedEventData;
+    type ContactImportError = __ContactImportError;
     const // (undocumented)
     DomainCapabilityState: {
         values: readonly ["enabled", "disabled"];
     };
     // (undocumented)
-    type ContactEventData = __ContactEventData;
+    type ContactImportListParams = __ContactImportListParams;
     const // (undocumented)
     DomainConnectUnavailableReason: {
         values: readonly ["no_record", "settings_unreachable", "template_not_onboarded", "lookup_failed", "disabled"];
     };
     // (undocumented)
-    type ContactImport = __ContactImport;
+    type ContactImportStatus = __ContactImportStatus;
     const // (undocumented)
     DomainEventType: {
         values: readonly ["added", "records_found", "verified", "degraded", "failing", "recovered", "mail_from_verified", "dmarc_detected", "check_failed", "deleted"];
     };
     // (undocumented)
-    type ContactImportConflictMode = __ContactImportConflictMode;
+    type ContactListParams = __ContactListParams;
     const // (undocumented)
     DomainHealth: {
         values: readonly ["ok", "degraded", "failing"];
     };
     // (undocumented)
-    type ContactImportCreateParams = __ContactImportCreateParams;
+    type ContactProperty = __ContactProperty;
     const // (undocumented)
     DomainIntent: {
         values: readonly ["receive", "send", "both"];
     };
     // (undocumented)
-    type ContactImportError = __ContactImportError;
+    type ContactPropertyCreateParams = __ContactPropertyCreateParams;
     const // (undocumented)
     DomainRecordKind: {
         values: readonly ["DKIM", "SPF", "MX", "DMARC", "Verification"];
     };
     // (undocumented)
-    type ContactImportListParams = __ContactImportListParams;
+    type ContactPropertyListParams = __ContactPropertyListParams;
     const // (undocumented)
     DomainRecordStatus: {
         values: readonly ["not_started", "pending", "verified", "failed", "temporary_failure"];
     };
     // (undocumented)
-    type ContactImportStatus = __ContactImportStatus;
+    type ContactPropertyType = __ContactPropertyType;
     const // (undocumented)
     DomainSetupMethod: {
         values: readonly ["manual", "domain_connect", "provider_api"];
     };
     // (undocumented)
-    type ContactListParams = __ContactListParams;
+    type ContactPropertyUpdateParams = __ContactPropertyUpdateParams;
     const // (undocumented)
     DomainStatus: {
         values: readonly ["pending", "active", "disabled"];
     };
     // (undocumented)
-    type ContactProperty = __ContactProperty;
+    type ContactSegments = __ContactSegments;
     const // (undocumented)
     DomainTlsMode: {
         values: readonly ["opportunistic"];
     };
     // (undocumented)
-    type ContactPropertyCreateParams = __ContactPropertyCreateParams;
+    type ContactTopic = __ContactTopic;
     const // (undocumented)
     DomainVerificationStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled"];
     };
     // (undocumented)
-    type ContactPropertyListParams = __ContactPropertyListParams;
+    type ContactTopics = __ContactTopics;
     const // (undocumented)
     EmailMetricsGranularity: {
         values: readonly ["hourly", "daily"];
     };
     // (undocumented)
-    type ContactPropertyType = __ContactPropertyType;
+    type ContactTopicUpdateParams = __ContactTopicUpdateParams;
     const // (undocumented)
     EmailMetricsObject: {
         values: readonly ["metrics"];
     };
     // (undocumented)
-    type ContactPropertyUpdateParams = __ContactPropertyUpdateParams;
+    type ContactUpdatedEvent = __ContactUpdatedEvent;
     const // (undocumented)
     IntegrationStatus: {
         values: readonly ["active", "error", "revoked"];
     };
     // (undocumented)
-    type ContactSegments = __ContactSegments;
+    type ContactUpdateParams = __ContactUpdateParams;
     const // (undocumented)
     IntegrationSyncState: {
         values: readonly ["running", "completed", "failed"];
     };
     // (undocumented)
-    type ContactTopic = __ContactTopic;
+    type CreatedShareLink = __CreatedShareLink;
     const // (undocumented)
     LintSeverity: {
         values: readonly ["error", "warn", "info"];
     };
     // (undocumented)
-    type ContactTopics = __ContactTopics;
+    type DefaultSender = __DefaultSender;
     const // (undocumented)
     MailboxStatus: {
         values: readonly ["active", "disabled"];
     };
     // (undocumented)
-    type ContactTopicUpdateParams = __ContactTopicUpdateParams;
+    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
     const // (undocumented)
     MessageEventType: {
         values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed"];
     };
-    // (undocumented)
-    type ContactUpdatedEvent = __ContactUpdatedEvent;
+    // @deprecated (undocumented)
+    type DeleteByRecipient = __DeleteByRecipient;
     const // (undocumented)
     MessageSource: {
         values: readonly ["api_key", "dashboard", "platform", "test_send"];
     };
     // (undocumented)
-    type ContactUpdateParams = __ContactUpdateParams;
+    type Deliverability = __Deliverability;
     const // (undocumented)
     MessageStatus: {
         values: readonly ["queued", "sent", "delivered", "bounced", "complained", "failed", "suppressed", "deferred"];
     };
     // (undocumented)
-    type CreatedShareLink = __CreatedShareLink;
+    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
     const // (undocumented)
     MessageTransport: {
         values: readonly ["smtp", "ses"];
     };
     // (undocumented)
-    type DefaultSender = __DefaultSender;
+    type DeliverabilityDomain = __DeliverabilityDomain;
     const // (undocumented)
     SegmentMatch: {
         values: readonly ["all", "any"];
     };
     // (undocumented)
-    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
+    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
     const // (undocumented)
     SegmentOperator: {
         values: readonly ["equals", "contains", "exists"];
     };
     // (undocumented)
-    type DeleteByRecipient = __DeleteByRecipient;
+    type DeliverabilityVerdict = __DeliverabilityVerdict;
     const // (undocumented)
     SegmentType: {
         values: readonly ["static", "rule"];
     };
     // (undocumented)
-    type Deliverability = __Deliverability;
+    type DmarcAlignmentMode = __DmarcAlignmentMode;
     const // (undocumented)
     SendBatchRowState: {
         values: readonly ["accepted", "rejected"];
     };
     // (undocumented)
-    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
+    type DmarcGrade = __DmarcGrade;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type DeliverabilityDomain = __DeliverabilityDomain;
+    type DmarcPolicy = __DmarcPolicy;
     const // (undocumented)
     SesDkimStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE", "NOT_STARTED", "not_enabled"];
     };
     // (undocumented)
-    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
+    type DmarcRecordLocation = __DmarcRecordLocation;
     const // (undocumented)
     SesMailFromStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE"];
     };
     // (undocumented)
-    type DeliverabilityVerdict = __DeliverabilityVerdict;
+    type DnsApplyAction = __DnsApplyAction;
     const // (undocumented)
     ShareLinkStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type DmarcAlignmentMode = __DmarcAlignmentMode;
+    type DnsApplyConflict = __DnsApplyConflict;
     const // (undocumented)
     SmtpConfigStatus: {
         values: readonly ["pending", "active", "failed"];
     };
     // (undocumented)
-    type DmarcGrade = __DmarcGrade;
+    type DnsApplyCounts = __DnsApplyCounts;
     const // (undocumented)
     SpamVerdict: {
         values: readonly ["ham", "junk", "reject"];
     };
     // (undocumented)
-    type DmarcPolicy = __DmarcPolicy;
+    type DnsApplyPlanItem = __DnsApplyPlanItem;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type DmarcRecordLocation = __DmarcRecordLocation;
+    type DnsApplyProvider = __DnsApplyProvider;
     const // (undocumented)
     StatsSeriesMetric: {
         values: readonly ["sent"];
     };
     // (undocumented)
-    type DnsApplyAction = __DnsApplyAction;
+    type DnsApplyRecordResult = __DnsApplyRecordResult;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type DnsApplyConflict = __DnsApplyConflict;
+    type DnsApplyResult = __DnsApplyResult;
     const // (undocumented)
     Subscription: {
         values: readonly ["opt_in", "opt_out"];
     };
     // (undocumented)
-    type DnsApplyCounts = __DnsApplyCounts;
+    type DnsApplyWarning = __DnsApplyWarning;
     const // (undocumented)
     SubscriptionReason: {
         values: readonly ["opted_in", "default_with_consent", "unsubscribed", "opted_out", "no_consent", "not_opted_in"];
     };
     // (undocumented)
-    type DnsApplyPlanItem = __DnsApplyPlanItem;
+    type DnsConflictCode = __DnsConflictCode;
     const // (undocumented)
     SuppressionSource: {
         values: readonly ["manual", "bounce", "complaint"];
     };
     // (undocumented)
-    type DnsApplyProvider = __DnsApplyProvider;
+    type DnsConflictSeverity = __DnsConflictSeverity;
     const // (undocumented)
     TemplateKind: {
         values: readonly ["template", "layout", "partial"];
     };
     // (undocumented)
-    type DnsApplyRecordResult = __DnsApplyRecordResult;
+    type DnsInstruction = __DnsInstruction;
     const // (undocumented)
     TemplateSource: {
         values: readonly ["manual", "github"];
     };
     // (undocumented)
-    type DnsApplyResult = __DnsApplyResult;
+    type DnsProviderId = __DnsProviderId;
     const // (undocumented)
     TimelineMetric: {
         values: readonly ["sent", "bounced"];
     };
     // (undocumented)
-    type DnsApplyWarning = __DnsApplyWarning;
+    type DnsProviderLookupSource = __DnsProviderLookupSource;
     const // (undocumented)
     TopicVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type DnsConflictCode = __DnsConflictCode;
+    type DnsProviderSource = __DnsProviderSource;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type DnsConflictSeverity = __DnsConflictSeverity;
+    type DnsRecordConflict = __DnsRecordConflict;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type DnsInstruction = __DnsInstruction;
+    type DnsRecordPurpose = __DnsRecordPurpose;
     const // (undocumented)
     WebhookEndpointLegacySlot: {
         values: readonly ["default", "domain"];
     };
     // (undocumented)
-    type DnsProviderId = __DnsProviderId;
+    type DnsRecordState = __DnsRecordState;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DnsProviderLookupSource = __DnsProviderLookupSource;
+    type DnsRecordStatus = __DnsRecordStatus;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type DnsProviderSource = __DnsProviderSource;
+    type DnsRecordType = __DnsRecordType;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained", "email.failed", "email.suppressed", "email.skipped", "email.scheduled", "email.canceled", "email.opened", "email.clicked", "email.received", "domain.created", "domain.updated", "domain.verified", "domain.deleted", "suppression.added", "suppression.removed", "sending_defaults.updated", "contact.created", "contact.updated", "contact.deleted"];
     };
-    // (undocumented)
-    type DnsRecordConflict = __DnsRecordConflict;
-    // (undocumented)
-    type DnsRecordPurpose = __DnsRecordPurpose;
-    // (undocumented)
-    type DnsRecordState = __DnsRecordState;
-    // (undocumented)
-    type DnsRecordStatus = __DnsRecordStatus;
-    // (undocumented)
-    type DnsRecordType = __DnsRecordType;
     // (undocumented)
     type Domain = __Domain;
     // (undocumented)
@@ -2865,6 +2904,8 @@ namespace Mail {
     // (undocumented)
     type EmailBatchParams = __EmailBatchParams;
     // (undocumented)
+    type EmailBatchResponse = __EmailBatchResponse;
+    // (undocumented)
     type EmailBouncedEvent = __EmailBouncedEvent;
     // (undocumented)
     type EmailBouncedEventData = __EmailBouncedEventData;
@@ -2929,6 +2970,8 @@ namespace Mail {
     // (undocumented)
     type EmailSendParams = __EmailSendParams;
     // (undocumented)
+    type EmailSendResponse = __EmailSendResponse;
+    // (undocumented)
     type EmailSentEvent = __EmailSentEvent;
     // (undocumented)
     type EmailSentEventData = __EmailSentEventData;
@@ -2961,11 +3004,15 @@ namespace Mail {
     // (undocumented)
     type IntegrationGithubSettingsUpdateParams = __IntegrationGithubSettingsUpdateParams;
     // (undocumented)
+    type IntegrationList = __IntegrationList;
+    // (undocumented)
     type IntegrationListItem = __IntegrationListItem;
     // (undocumented)
     type IntegrationStatus = __IntegrationStatus;
     // (undocumented)
     type IntegrationSyncState = __IntegrationSyncState;
+    // (undocumented)
+    type LastResponse = __LastResponse;
     // (undocumented)
     type LintFinding = __LintFinding;
     // (undocumented)
@@ -2988,7 +3035,7 @@ namespace Mail {
     type ListDomains = __ListDomains;
     // (undocumented)
     type ListEmails = __ListEmails;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListIntegrations = __ListIntegrations;
     // (undocumented)
     type ListMailboxes = __ListMailboxes;
@@ -3004,13 +3051,13 @@ namespace Mail {
     type ListSegments = __ListSegments;
     // (undocumented)
     type ListShareLinks = __ListShareLinks;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListSmtpConfigs = __ListSmtpConfigs;
     // (undocumented)
     type ListSuppression = __ListSuppression;
     // (undocumented)
     type ListTemplates = __ListTemplates;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListTemplateTags = __ListTemplateTags;
     // (undocumented)
     type ListTopics = __ListTopics;
@@ -3020,7 +3067,7 @@ namespace Mail {
     type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
     type LookupDmarc = __LookupDmarc;
@@ -3063,6 +3110,8 @@ namespace Mail {
     // (undocumented)
     type MessageEraseParams = __MessageEraseParams;
     // (undocumented)
+    type MessageEraseResponse = __MessageEraseResponse;
+    // (undocumented)
     type MessageEvent = __MessageEvent;
     // (undocumented)
     type MessageEventType = __MessageEventType;
@@ -3078,7 +3127,7 @@ namespace Mail {
     type MessageStatus = __MessageStatus;
     // (undocumented)
     type MessageTimeline = __MessageTimeline;
-    // (undocumented)
+    // @deprecated (undocumented)
     type MessageTimelineParams = __MessageTimelineParams;
     // (undocumented)
     type MessageTransport = __MessageTransport;
@@ -3095,9 +3144,15 @@ namespace Mail {
     // (undocumented)
     type OutboundWebhookAttempt = __OutboundWebhookAttempt;
     // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
+    // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
     type PollOptions = __PollOptions;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type RawBrand = __RawBrand;
     // (undocumented)
@@ -3110,6 +3165,8 @@ namespace Mail {
     type ReceivedExportParams = __ReceivedExportParams;
     // (undocumented)
     type ReceivedListParams = __ReceivedListParams;
+    // (undocumented)
+    type ReceivedTimelineParams = __ReceivedTimelineParams;
     // (undocumented)
     type RenderedMessage = __RenderedMessage;
     // (undocumented)
@@ -3146,9 +3203,9 @@ namespace Mail {
     type SegmentType = __SegmentType;
     // (undocumented)
     type SegmentUpdateParams = __SegmentUpdateParams;
-    // (undocumented)
+    // @deprecated (undocumented)
     type SendAccepted = __SendAccepted;
-    // (undocumented)
+    // @deprecated (undocumented)
     type SendBatchOpenApi = __SendBatchOpenApi;
     // (undocumented)
     type SendBatchRowError = __SendBatchRowError;
@@ -3158,7 +3215,7 @@ namespace Mail {
     type SendBatchRowStatus = __SendBatchRowStatus;
     // (undocumented)
     type SendBatchSummary = __SendBatchSummary;
-    // (undocumented)
+    // @deprecated (undocumented)
     type SendEmail = __SendEmail;
     // (undocumented)
     type SenderDomainStatus = __SenderDomainStatus;
@@ -3182,6 +3239,8 @@ namespace Mail {
     type ShareLinkStatus = __ShareLinkStatus;
     // (undocumented)
     type SmtpConfig = __SmtpConfig;
+    // (undocumented)
+    type SmtpConfigList = __SmtpConfigList;
     // (undocumented)
     type SmtpConfigStatus = __SmtpConfigStatus;
     // (undocumented)
@@ -3247,7 +3306,11 @@ namespace Mail {
     // (undocumented)
     type TemplateSendParams = __TemplateSendParams;
     // (undocumented)
+    type TemplateSendResponse = __TemplateSendResponse;
+    // (undocumented)
     type TemplateSource = __TemplateSource;
+    // (undocumented)
+    type TemplateTagList = __TemplateTagList;
     // (undocumented)
     type TemplateTestSendParams = __TemplateTestSendParams;
     // (undocumented)
@@ -3311,11 +3374,15 @@ namespace Mail {
     // (undocumented)
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
+    type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)
     type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
 }
 export { Mail }
 export default Mail;
@@ -3329,6 +3396,10 @@ export const MailErrorCode: {
 };
 
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -5064,13 +5135,21 @@ export type paths = {
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
 
+export { RateLimitInfo }
+
+export { RequestOptions }
+
 export { UnprocessableEntityError }
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

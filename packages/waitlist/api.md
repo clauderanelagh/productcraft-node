@@ -805,7 +805,7 @@ const webhookEndpoint = await waitlist.webhooks.endpoints.update("3f0c3c1e-8a2b-
 
 ### `waitlist.webhooks.eventTypes.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Waitlist.ListWebhookEventTypes`
+`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Waitlist.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -818,7 +818,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await waitlist.webhooks.eventTypes.list();
+const webhookEventTypeList = await waitlist.webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-webhooks-event-types)

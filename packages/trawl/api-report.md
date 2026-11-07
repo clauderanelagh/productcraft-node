@@ -20,21 +20,26 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -43,6 +48,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -422,7 +429,13 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -718,9 +731,15 @@ export type paths = {
 
 export { PermissionDeniedError }
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
+
+export { RateLimitInfo }
+
+export { RequestOptions }
 
 // @public
 class Trawl extends TrawlResources {
@@ -731,85 +750,97 @@ class Trawl extends TrawlResources {
 // @public
 namespace Trawl {
     // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
+    // (undocumented)
     type CreditLedgerEntry = __CreditLedgerEntry;
     // (undocumented)
     type Credits = __Credits;
     // (undocumented)
     type CreditsLowEvent = __CreditsLowEvent;
+    // (undocumented)
+    type CreditsLowEventData = __CreditsLowEventData;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type Job = __Job;
+    // (undocumented)
+    type JobCreateParams = __JobCreateParams;
+    // (undocumented)
+    type JobEventData = __JobEventData;
     const // (undocumented)
     JobOutcomeStatus: {
         values: readonly ["succeeded", "failed"];
     };
     // (undocumented)
-    type CreditsLowEventData = __CreditsLowEventData;
+    type JobFailedEvent = __JobFailedEvent;
     const // (undocumented)
     JobStatus: {
         values: readonly ["queued", "running", "succeeded", "failed", "cancelled"];
     };
     // (undocumented)
-    type ErrorCode = __ErrorCode;
+    type JobList = __JobList;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type Job = __Job;
+    type JobListPagination = __JobListPagination;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type JobCreateParams = __JobCreateParams;
+    type JobListParams = __JobListParams;
     const // (undocumented)
     TrawlStatsMetric: {
         values: readonly ["jobs"];
     };
     // (undocumented)
-    type JobEventData = __JobEventData;
+    type JobOutcome = __JobOutcome;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type JobFailedEvent = __JobFailedEvent;
+    type JobOutcomeStatus = __JobOutcomeStatus;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type JobList = __JobList;
+    type JobStatus = __JobStatus;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type JobListPagination = __JobListPagination;
+    type JobSucceededEvent = __JobSucceededEvent;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type JobListParams = __JobListParams;
+    type LastResponse = __LastResponse;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["job.succeeded", "job.failed", "credits.low"];
     };
     // (undocumented)
-    type JobOutcome = __JobOutcome;
-    // (undocumented)
-    type JobOutcomeStatus = __JobOutcomeStatus;
-    // (undocumented)
-    type JobStatus = __JobStatus;
-    // (undocumented)
-    type JobSucceededEvent = __JobSucceededEvent;
-    // (undocumented)
     type ListWebhookEndpoints = __ListWebhookEndpoints;
     // (undocumented)
     type ListWebhookEvents = __ListWebhookEvents;
-    // (undocumented)
+    // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
+    // (undocumented)
     type PollOptions = __PollOptions;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
@@ -873,11 +904,15 @@ namespace Trawl {
     // (undocumented)
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
+    type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)
     type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
 }
 export { Trawl }
 export default Trawl;
@@ -893,6 +928,8 @@ export const TrawlErrorCode: {
 export { UnprocessableEntityError }
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 

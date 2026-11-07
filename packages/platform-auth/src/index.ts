@@ -6,5 +6,6 @@
  */
 export { PlatformAuth } from "./_generated/client.js";
 export * from "./_generated/errors.js";
+export type * from "./_generated/runtime.js";
 export type { paths, components } from "./_generated/paths.js";
 export { PlatformAuth as default } from "./_generated/client.js";

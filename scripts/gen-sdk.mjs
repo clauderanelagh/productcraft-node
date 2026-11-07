@@ -2,8 +2,8 @@
 // The SDK generator (docs/sdk-standard.md section 5).
 //
 // Turns an OpenAPI document into a package's generated surface:
-//   packages/<p>/src/_generated/   paths.d.ts, types.ts, resources.ts, client.ts,
-//                                  errors.ts, webhooks.ts, testing.ts, manifest.json  (gitignored)
+//   packages/<p>/src/_generated/   paths.d.ts, types.ts, resources.ts, client.ts, errors.ts,
+//                                  runtime.ts, webhooks.ts, testing.ts, manifest.json  (gitignored)
 //   packages/<p>/tests/_generated/operations.test.ts                                  (gitignored)
 //   packages/<p>/api.md, the README region between the generated markers,
 //   examples/<p>/*.ts                                                                 (checked in)
@@ -22,7 +22,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { emitApiMd, emitExamples, emitManifest, emitReadmeRegion, spliceReadme } from "./gen-sdk/emit-docs.mjs";
-import { emitClient, emitCompat, emitErrors, emitOpsTest, emitPaths, emitResources, emitTesting, emitTypes, emitWebhooks } from "./gen-sdk/emit-code.mjs";
+import { emitClient, emitCompat, emitErrors, emitOpsTest, emitPaths, emitResources, emitRuntime, emitTesting, emitTypes, emitWebhooks } from "./gen-sdk/emit-code.mjs";
 import { buildModel, GenError } from "./gen-sdk/model.mjs";
 
 export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -156,6 +156,7 @@ export async function generate(surface, spec = undefined) {
     [`${g}/resources.ts`]: emitResources(model, cfg),
     [`${g}/client.ts`]: emitClient(model, cfg),
     [`${g}/errors.ts`]: emitErrors(model, cfg),
+    [`${g}/runtime.ts`]: emitRuntime(cfg),
     [`${g}/webhooks.ts`]: emitWebhooks(model, cfg),
     [`${g}/testing.ts`]: emitTesting(model, cfg),
     [`${g}/manifest.json`]: emitManifest(model, cfg),

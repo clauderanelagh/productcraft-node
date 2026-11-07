@@ -1007,7 +1007,7 @@ const domainDetail = await mail.domains.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c
 
 ### `mail.domains.testSend(domainId, params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/domains/{domain_id}/test-send` → `Mail.SendAccepted`
+`POST /v1/workspaces/{workspace_id}/domains/{domain_id}/test-send` → `Mail.TemplateSendResponse`
 
 Send a built-in test email from this domain, no template needed.
 
@@ -1027,7 +1027,7 @@ Sends a fixed message (subject `[TEST] Sending from <domain> works`, a short bod
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
+const result = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-test-send)
@@ -1416,7 +1416,7 @@ const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c3c1e-8a2
 
 ### `mail.emails.batch(params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/emails/batch` → `Mail.SendBatchOpenApi`
+`POST /v1/workspaces/{workspace_id}/emails/batch` → `Mail.EmailBatchResponse`
 
 Send up to 100 emails in one request.
 
@@ -1436,8 +1436,15 @@ Each row is a `POST /emails` body plus an optional `idempotency_key`, processed 
 | 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendBatchOpenApi = await mail.emails.batch({
-  emails: [{ from: "Acme <hello@mail.acme.com>", to: ["success@simulator.amazonses.com"] }],
+const result = await mail.emails.batch({
+  emails: [
+    {
+      from: "Acme <hello@mail.acme.com>",
+      html: "<p>Your order has shipped.</p>",
+      subject: "Your order has shipped",
+      to: ["success@simulator.amazonses.com"],
+    },
+  ],
 });
 ```
 
@@ -1526,7 +1533,7 @@ const emailDetail = await mail.emails.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d
 
 ### `mail.emails.send(params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/emails` → `Mail.SendEmail`
+`POST /v1/workspaces/{workspace_id}/emails` → `Mail.EmailSendResponse`
 
 Send an email.
 
@@ -1546,7 +1553,12 @@ Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipient
 | 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendEmail = await mail.emails.send({ from: "Acme <hello@mail.acme.com>", to: ["success@simulator.amazonses.com"] });
+const result = await mail.emails.send({
+  from: "Acme <hello@mail.acme.com>",
+  html: "<p>Your order has shipped.</p>",
+  subject: "Your order has shipped",
+  to: ["success@simulator.amazonses.com"],
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-emails)
@@ -1580,7 +1592,7 @@ await mail.integrations.delete("github");
 
 ### `mail.integrations.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/integrations` → `Mail.ListIntegrations`
+`GET /v1/workspaces/{workspace_id}/integrations` → `Mail.IntegrationList`
 
 List connected workspace integrations.
 
@@ -1595,7 +1607,7 @@ Returns one entry per connected provider (GitHub, …). No secrets in the respon
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listIntegrations = await mail.integrations.list();
+const integrationList = await mail.integrations.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations)
@@ -1885,7 +1897,7 @@ const mailbox = await mail.mailboxes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5
 
 ## mailboxes.messages
 
-### `mail.mailboxes.messages.delete(id, mid, options?)`
+### `mail.mailboxes.messages.delete(mailboxId, messageId, options?)`
 
 `DELETE /v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}` → `void`
 
@@ -1905,7 +1917,7 @@ await mail.mailboxes.messages.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-mailboxes-id-messages-mid)
 
-### `mail.mailboxes.messages.list(id, params?, options?)`
+### `mail.mailboxes.messages.list(mailboxId, params?, options?)`
 
 `GET /v1/workspaces/{workspace_id}/mailboxes/{id}/messages` → `PagePromise<Mail.Message>`
 
@@ -1931,7 +1943,7 @@ const page = await mail.mailboxes.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id-messages)
 
-### `mail.mailboxes.messages.raw(id, mid, options?)`
+### `mail.mailboxes.messages.raw(mailboxId, messageId, options?)`
 
 `GET /v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/raw` → `Response`
 
@@ -1952,7 +1964,7 @@ const text = await response.text();
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id-messages-mid-raw)
 
-### `mail.mailboxes.messages.read(id, mid, options?)`
+### `mail.mailboxes.messages.read(mailboxId, messageId, options?)`
 
 `POST /v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/read` → `void`
 
@@ -1972,7 +1984,7 @@ await mail.mailboxes.messages.read("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-mailboxes-id-messages-mid-read)
 
-### `mail.mailboxes.messages.retrieve(id, mid, options?)`
+### `mail.mailboxes.messages.retrieve(mailboxId, messageId, options?)`
 
 `GET /v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}` → `Mail.MessageDetail`
 
@@ -1994,7 +2006,7 @@ const messageDetail = await mail.mailboxes.messages.retrieve("3f0c3c1e-8a2b-4c55
 
 ## mailboxes.messages.attachments
 
-### `mail.mailboxes.messages.attachments.retrieve(id, mid, position, options?)`
+### `mail.mailboxes.messages.attachments.retrieve(mailboxId, messageId, position, options?)`
 
 `GET /v1/workspaces/{workspace_id}/mailboxes/{id}/messages/{mid}/attachments/{position}` → `Response`
 
@@ -2039,7 +2051,7 @@ const outboundMessageWithBody = await mail.messages.body("3f0c3c1e-8a2b-4c55-9d3
 
 ### `mail.messages.erase(params, options?)`
 
-`DELETE /v1/workspaces/{workspace_id}/messages` → `Mail.DeleteByRecipient`
+`DELETE /v1/workspaces/{workspace_id}/messages` → `Mail.MessageEraseResponse`
 
 RTBF: delete every message log row for `recipient` (case-insensitive). Returns the deleted-row count.
 
@@ -2056,7 +2068,7 @@ The bulk GDPR erase (`messages.erase` in the SDKs): removes every delivery-log r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const deleteByRecipient = await mail.messages.erase({ recipient: "ada@example.com" });
+const result = await mail.messages.erase({ recipient: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-messages)
@@ -2133,30 +2145,6 @@ const outboundMessageDetail = await mail.messages.retrieve("3f0c3c1e-8a2b-4c55-9
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-id)
-
-### `mail.messages.timeline(params, options?)`
-
-`GET /v1/workspaces/{workspace_id}/messages/timeline` → `Mail.MessageTimeline`
-
-Day-bucketed inbound message volume for a workspace.
-
-Counts INBOUND mail only: messages received by the workspace's mailboxes, in dense day buckets in [since, until). `metric=sent` (default, a historical name) counts received messages, not outbound sends; `metric=bounced` counts MX-time rejections matched to this workspace by envelope-to. For outbound counts and rates use `GET /emails/metrics`.
-
-- Params: `Mail.MessageTimelineParams`
-
-| Status | Error class | Codes | When |
-|---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
-| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
-
-```ts
-const messageTimeline = await mail.messages.timeline({ granularity: "day", since: "2026-04-01T00:00:00Z", until: "2026-05-01T00:00:00Z" });
-```
-
-[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-timeline)
 
 ## messages.settings
 
@@ -2345,6 +2333,30 @@ const receivedEmailDetail = await mail.received.retrieve("3f0c3c1e-8a2b-4c55-9d3
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-received-id)
+
+### `mail.received.timeline(params, options?)`
+
+`GET /v1/workspaces/{workspace_id}/messages/timeline` → `Mail.MessageTimeline`
+
+Day-bucketed inbound message volume for a workspace.
+
+Counts INBOUND mail only: messages received by the workspace's mailboxes, in dense day buckets in [since, until). `metric=sent` (default, a historical name) counts received messages, not outbound sends; `metric=bounced` counts MX-time rejections matched to this workspace by envelope-to. For outbound counts and rates use `GET /emails/metrics`.
+
+- Params: `Mail.ReceivedTimelineParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const messageTimeline = await mail.received.timeline({ granularity: "day", since: "2026-04-01T00:00:00Z", until: "2026-05-01T00:00:00Z" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-timeline)
 
 ## received.attachments
 
@@ -2625,7 +2637,7 @@ const sendingDefaults = await mail.sendingDefaults.update({ address: "Acme <hell
 
 ### `mail.smtpConfig.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/smtp-configs` → `Mail.ListSmtpConfigs`
+`GET /v1/workspaces/{workspace_id}/smtp-configs` → `Mail.SmtpConfigList`
 
 List every SMTP config in the workspace (default + per-domain overrides).
 
@@ -2638,7 +2650,7 @@ List every SMTP config in the workspace (default + per-domain overrides).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listSmtpConfigs = await mail.smtpConfig.list();
+const smtpConfigList = await mail.smtpConfig.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-smtp-configs)
@@ -3026,7 +3038,7 @@ const template = await mail.templates.retrieve("welcome");
 
 ### `mail.templates.send(name, params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/templates/{name}/send` → `Mail.SendAccepted`
+`POST /v1/workspaces/{workspace_id}/templates/{name}/send` → `Mail.TemplateSendResponse`
 
 Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9_\-:]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
 
@@ -3044,14 +3056,14 @@ Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars
 | 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
+const result = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-send)
 
 ### `mail.templates.sendBatch(name, params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/templates/{name}/send-batch` → `Mail.SendBatchOpenApi`
+`POST /v1/workspaces/{workspace_id}/templates/{name}/send-batch` → `Mail.EmailBatchResponse`
 
 Send up to 100 messages with the same template in one request. Per-row partial-success: each row carries its own status (`accepted` | `rejected`).
 
@@ -3071,7 +3083,7 @@ Two ways to make retries safe. An `Idempotency-Key` header covers the whole requ
 | 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits (60 per minute, 600 per hour, 10,000 per day) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendBatchOpenApi = await mail.templates.sendBatch("welcome", {
+const result = await mail.templates.sendBatch("welcome", {
   messages: [
     {
       data: { code: "A1B2C3", name: "Alice" },
@@ -3086,7 +3098,7 @@ const sendBatchOpenApi = await mail.templates.sendBatch("welcome", {
 
 ### `mail.templates.testSend(name, params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/templates/{name}/test-send` → `Mail.SendAccepted`
+`POST /v1/workspaces/{workspace_id}/templates/{name}/test-send` → `Mail.TemplateSendResponse`
 
 Send a test rendering of the template to an arbitrary recipient. Bypasses the suppression list and the ordinary send limits (test sends have their own: 30 per hour per workspace); subject is auto-prefixed with [TEST]; missing variables render as [varname] placeholders.
 
@@ -3104,7 +3116,7 @@ Send a test rendering of the template to an arbitrary recipient. Bypasses the su
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
+const result = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-test-send)
@@ -3113,7 +3125,7 @@ const sendAccepted = await mail.templates.testSend("welcome", { from: "Acme <hel
 
 ### `mail.templates.tags.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/templates/tags` → `Mail.ListTemplateTags`
+`GET /v1/workspaces/{workspace_id}/templates/tags` → `Mail.TemplateTagList`
 
 Distinct tag list across all templates in this workspace (for autocomplete).
 
@@ -3126,7 +3138,7 @@ Distinct tag list across all templates in this workspace (for autocomplete).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listTemplateTags = await mail.templates.tags.list();
+const templateTagList = await mail.templates.tags.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-tags)
@@ -3495,7 +3507,7 @@ const webhookEndpoint = await mail.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55
 
 ### `mail.webhooks.eventTypes.list(options?)`
 
-`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Mail.ListWebhookEventTypes`
+`GET /v1/workspaces/{workspace_id}/webhooks/event-types` → `Mail.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -3510,7 +3522,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await mail.webhooks.eventTypes.list();
+const webhookEventTypeList = await mail.webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-webhooks-event-types)

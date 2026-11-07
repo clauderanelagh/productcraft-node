@@ -2873,7 +2873,7 @@ const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e
 
 ### `auth.admin.app(…).webhooks.eventTypes.list(options?)`
 
-`GET /v1/apps/{app_id}/webhooks/event-types` → `Auth.ListWebhookEventTypes`
+`GET /v1/apps/{app_id}/webhooks/event-types` → `Auth.WebhookEventTypeList`
 
 List the events an endpoint can subscribe to.
 
@@ -2889,7 +2889,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.eventTypes.list();
+const webhookEventTypeList = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webhooks-event-types)

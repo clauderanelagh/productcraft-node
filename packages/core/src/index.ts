@@ -16,6 +16,7 @@ export {
   parseRateLimit,
   type LastResponse,
   type RateLimitInfo,
+  type RateLimitWindow,
   type RawResult,
   type WithResponse,
 } from "./api-promise.js";

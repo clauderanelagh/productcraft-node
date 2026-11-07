@@ -20,18 +20,23 @@ import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { LastResponse } from '@productcraft/core';
 import { NotFoundError } from '@productcraft/core';
+import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PermissionDeniedError } from '@productcraft/core';
 import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
+import { RateLimitInfo } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookVerificationError } from '@productcraft/core';
+import { WithResponse } from '@productcraft/core';
 
 export { APIConnectionError }
 
 export { APIError }
+
+export { APIPromise }
 
 export { APITimeoutError }
 
@@ -40,6 +45,8 @@ export { APIUserAbortError }
 export { AuthenticationError }
 
 export { BadRequestError }
+
+export { ClientOptions }
 
 // @public (undocumented)
 export type components = {
@@ -798,7 +805,13 @@ export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
 
+export { LastResponse }
+
 export { NotFoundError }
+
+export { Page }
+
+export { PagePromise }
 
 // @public (undocumented)
 export type paths = {
@@ -1940,68 +1953,72 @@ namespace PlatformAuth {
     type ApiKeySelf = __ApiKeySelf;
     // (undocumented)
     type ApiKeySelfWorkspace = __ApiKeySelfWorkspace;
+    // (undocumented)
+    type ApiKeyStatus = __ApiKeyStatus;
+    // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
+    // (undocumented)
+    type AuditActorType = __AuditActorType;
+    // (undocumented)
+    type AuditFeed = __AuditFeed;
+    // (undocumented)
+    type AuditFeedSource = __AuditFeedSource;
+    // (undocumented)
+    type AuthLogoutParams = __AuthLogoutParams;
+    // (undocumented)
+    type AuthorizationServerMetadata = __AuthorizationServerMetadata;
     const // (undocumented)
     ApiKeyPresetKey: {
         values: readonly ["mail-send", "waitlist-write", "trawl-jobs", "readonly", "full"];
     };
     // (undocumented)
-    type ApiKeyStatus = __ApiKeyStatus;
+    type AuthPasswordRequestResetParams = __AuthPasswordRequestResetParams;
     const // (undocumented)
     ApiKeyStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type AuditActorType = __AuditActorType;
+    type AuthPasswordResetParams = __AuthPasswordResetParams;
     const // (undocumented)
     AuditActorType: {
         values: readonly ["platform_user", "system", "pat"];
     };
     // (undocumented)
-    type AuditFeed = __AuditFeed;
+    type AuthRefreshParams = __AuthRefreshParams;
     const // (undocumented)
     AuditFeedSource: {
         values: readonly ["workspace_audit", "heimdall_audit", "agora_moderation"];
     };
     // (undocumented)
-    type AuditFeedSource = __AuditFeedSource;
+    type AuthSigninParams = __AuthSigninParams;
     const // (undocumented)
     McpProduct: {
         values: readonly ["auth", "mail", "waitlist", "social", "trawl"];
     };
     // (undocumented)
-    type AuthLogoutParams = __AuthLogoutParams;
+    type AuthSignupParams = __AuthSignupParams;
     const // (undocumented)
     PolicyEffect: {
         values: readonly ["allow", "deny"];
     };
     // (undocumented)
-    type AuthorizationServerMetadata = __AuthorizationServerMetadata;
+    type AvatarUrl = __AvatarUrl;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type AuthPasswordRequestResetParams = __AuthPasswordRequestResetParams;
+    type BoundPolicySummary = __BoundPolicySummary;
     const // (undocumented)
     StatsMetric: {
         values: readonly ["audit_events"];
     };
     // (undocumented)
-    type AuthPasswordResetParams = __AuthPasswordResetParams;
+    type ClientOptions = __ClientOptions;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
-    // (undocumented)
-    type AuthRefreshParams = __AuthRefreshParams;
-    // (undocumented)
-    type AuthSigninParams = __AuthSigninParams;
-    // (undocumented)
-    type AuthSignupParams = __AuthSignupParams;
-    // (undocumented)
-    type AvatarUrl = __AvatarUrl;
-    // (undocumented)
-    type BoundPolicySummary = __BoundPolicySummary;
     // (undocumented)
     type ConnectedClient = __ConnectedClient;
     // (undocumented)
@@ -2034,6 +2051,8 @@ namespace PlatformAuth {
     type Jwk = __Jwk;
     // (undocumented)
     type Jwks = __Jwks;
+    // (undocumented)
+    type LastResponse = __LastResponse;
     // (undocumented)
     type ListManagedPolicies = __ListManagedPolicies;
     // (undocumented)
@@ -2073,6 +2092,10 @@ namespace PlatformAuth {
     // (undocumented)
     type OauthWorkspaceConnectionListParams = __OauthWorkspaceConnectionListParams;
     // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
+    // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
     type PakGrantPreview = __PakGrantPreview;
@@ -2088,6 +2111,8 @@ namespace PlatformAuth {
     type PollOptions = __PollOptions;
     // (undocumented)
     type PublicApiKey = __PublicApiKey;
+    // (undocumented)
+    type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
     type RequestOptions = __RequestOptions;
     // (undocumented)
@@ -2118,6 +2143,8 @@ namespace PlatformAuth {
     type UpdateMemberRole = __UpdateMemberRole;
     // (undocumented)
     type VerificationVerifyParams = __VerificationVerifyParams;
+    // (undocumented)
+    type WithResponse<T> = __WithResponse<T>;
     // (undocumented)
     type Workspace = __Workspace;
     // (undocumented)
@@ -2212,13 +2239,21 @@ export const PlatformAuthErrorCode: {
     values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_DEACTIVATED", "ACCOUNT_SUSPENDED", "ALREADY_A_MEMBER", "CROSS_ORIGIN_REJECTED", "EMAIL_NOT_VERIFIED", "INVITE_EMAIL_MISMATCH", "INVITE_EXHAUSTED", "INVITE_EXPIRED", "INVITE_INVALID", "INVITE_NOT_FOUND", "INVITE_REVOKED", "LAST_MEMBER", "MEMBER_RANK_EXCEEDED", "NOT_A_MEMBER", "OAUTH_GRANT_ADMIN_REVOKED", "OWNER_ROLE_REQUIRED", "PAK_ALREADY_MINTED", "PAK_EXPIRED", "PAK_NAME_REQUIRED", "PAK_NAME_TOO_LONG", "PAK_NOT_FOUND", "PAK_REVOKED", "PASSWORD_RESET_INVALID", "POLICY_INVALID", "POLICY_NAME_TAKEN", "POLICY_NOT_FOUND", "ROLE_HAS_MEMBERS", "ROLE_NAME_TAKEN", "ROLE_NOT_FOUND", "ROLE_SYSTEM_IMMUTABLE", "SERVICE_NOT_ACTIVATED", "SERVICE_UNKNOWN", "SOLE_OWNER", "TOO_MANY_ATTEMPTS", "WORKSPACE_KEY_REQUIRED"];
 };
 
+export { PollOptions }
+
 export { ProductCraftError }
 
 export { RateLimitError }
 
+export { RateLimitInfo }
+
+export { RequestOptions }
+
 export { UnprocessableEntityError }
 
 export { WebhookVerificationError }
+
+export { WithResponse }
 
 // (No @packageDocumentation comment for this package)
 
