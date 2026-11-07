@@ -129,7 +129,7 @@ await platformAuth.client.DELETE("/v1/workspaces/{workspace_slug}/api-keys/{id}"
 ```
 
 ```ts
-for await (const key of platform.workspaces.apiKeys.list("acme", { include_revoked: "false" })) console.log(key.name, key.status);
+for await (const key of platform.workspaces.apiKeys.list("acme", { include_revoked: false })) console.log(key.name, key.status);
 const rotated = await platform.workspaces.apiKeys.rotate("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 await platform.workspaces.apiKeys.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { force: true });
 console.log(rotated.token);

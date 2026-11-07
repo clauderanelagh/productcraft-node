@@ -246,6 +246,9 @@ export function buildModel(spec, config) {
         deprecationNote: typeof x.deprecated === "string" ? x.deprecated : "", scope, bind, positional, query, body, idempotent,
         success, errors, paginated, poll, actor,
         credentials: credentialsOf(op, spec),
+        // The API says a workspace API key is refused here (`PAK_NOT_PERMITTED` on its 403):
+        // examples for it use a person's session, not `apiKey`.
+        refusesWorkspaceKey: (op.responses?.["403"]?.["x-pc-error-codes"] ?? []).includes("PAK_NOT_PERMITTED"),
         paramsType: body || query.length ? `${stem}${pascal(method)}Params` : null,
         pathParamSchemas: Object.fromEntries(pathParams.map((p) => [p.name, p.schema ?? { type: "string" }])),
         // Parameter-level `example` (OpenAPI puts it beside the schema, not in it).

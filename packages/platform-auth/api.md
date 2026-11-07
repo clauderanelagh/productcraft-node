@@ -112,7 +112,7 @@ const token = await platform.auth.refresh({ refresh_token: "eyJhbGciOiJIUzI1NiIs
 
 Sign in with email/username and password.
 
-Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body, timing, DB round trips and Redis ops, so signin is not an account-existence oracle. See core/block/CLAUDE.md.
+Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.
 
 - Params: `PlatformAuth.AuthSigninParams`
 - Public: no API key, browser-safe
@@ -198,7 +198,7 @@ await platform.auth.password.reset({ new_password: "MyNewPassword123", token: "1
 
 `POST /v1/introspect/api-key` → `PlatformAuth.IntrospectApiKey`
 
-Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Downstream services use this with a 60s LRU cache and evaluate the policy via @repo/authz-nestjs evaluatePolicy().
+Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Call it with the key a request to your backend carried, cache the answer for up to 60 seconds, and allow an action only when the returned `policy` allows it on the resource.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -320,7 +320,7 @@ Idempotent: hiding a guide that is already hidden returns it unchanged, with its
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The key is not a valid guide key. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -340,7 +340,7 @@ Every guide the caller has hidden in the console, newest first. Hiding is presen
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -360,7 +360,7 @@ Removes every hidden guide for the caller, `all` included. Idempotent.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -381,7 +381,7 @@ Idempotent: showing a guide that is not hidden is a no-op.
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The key is not a valid guide key. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -404,11 +404,11 @@ Update the caller's profile. Currently only `displayName` is editable. An empty 
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed (e.g. displayName outside 1-128 chars). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const meProfile = await platform.me.profile.update({ display_name: "string" });
+const meProfile = await platform.me.profile.update({ display_name: "Ada Lovelace" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-me-profile)
@@ -426,6 +426,7 @@ Revokes the whole grant family — the grant, its authorization codes, its refre
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection for this human. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -450,6 +451,7 @@ The user-facing half of revocation: which third-party clients hold a grant, in w
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -474,7 +476,7 @@ Revokes the whole grant family for a grant made by any member of this workspace 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Not a member, or lacks `workspace.connection.revoke`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -499,7 +501,7 @@ The workspace-side half of revocation, for owners and admins: every grant made a
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Not a member, or lacks `workspace.connection.read`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.read`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -522,7 +524,7 @@ A workspace revocation is durable: the member re-running the connect flow does n
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Not a member, or lacks `workspace.connection.revoke`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection in this workspace. |
 | 409 | `ConflictError` | `CONFLICT` | The connection was not revoked by an administrator — there is nothing to lift. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -710,7 +712,7 @@ Create a new workspace. Cookie/JWT only — PAKs are workspace-scoped credential
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -729,7 +731,7 @@ Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -798,7 +800,7 @@ Update workspace display name, slug, or settings. Slug renames broadcast a `work
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspace = await platform.workspaces.update("acme", { display_name: "string" });
+const workspace = await platform.workspaces.update("acme", { display_name: "Acme Corp" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug)
@@ -818,13 +820,13 @@ Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `m
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PAK_NAME_REQUIRED`, `PAK_NAME_TOO_LONG` | Body failed validation (`VALIDATION_ERROR`): neither or both of `policy_ids` and `preset`, an unknown `preset`, an empty `policy_ids`, more than 25 policies, or a blank/overlong `name` (`PAK_NAME_REQUIRED` / `PAK_NAME_TOO_LONG`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or one of `policy_ids` does not exist in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_ALREADY_MINTED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `PAK_ALREADY_MINTED`: this `Idempotency-Key` already minted a key (its `id` is in `details`); the token was shown once, so rotate that key for a new one. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production social client" });
+const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production mail", preset: "mail-send" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-api-keys)
@@ -841,7 +843,7 @@ Revoke a PAK. Default behaviour: introspect returns null on the next upstream ca
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a UUID. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). Revoking an already-revoked PAK is a 204 no-op. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -891,12 +893,12 @@ Describe the key a mint with this `preset` or these `policy_ids` would create, w
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation (`VALIDATION_ERROR`): neither or both of `policy_ids` and `preset`, an unknown `preset`, or an empty or oversized `policy_ids`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is a PAK, is not a member (`NOT_A_MEMBER`), or lacks `workspace.apikey.create`. A key you could not mint is NOT a 403 here: it comes back with `grantable: false`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK, is not a member (`NOT_A_MEMBER`), or lacks `workspace.apikey.create`. A key you could not mint is NOT a 403 here: it comes back with `grantable: false`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or one of `policy_ids` does not exist in this workspace (`POLICY_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
+const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { preset: "readonly" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-api-keys-preview)
@@ -932,7 +934,7 @@ Mint a replacement for an existing PAK, carrying its name, description and polic
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_REVOKED`, `PAK_EXPIRED` | The key is revoked (`PAK_REVOKED`), already expired (`PAK_EXPIRED`), or has no policy bindings to carry across. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -955,13 +957,13 @@ Update a PAK’s name or description (does not touch bindings).
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PAK_NAME_REQUIRED` | `id` is not a UUID, body failed validation, or `name` is blank (`PAK_NAME_REQUIRED`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_REVOKED` | PAK is revoked (`PAK_REVOKED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
+const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Sends receipts from the checkout service." });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-api-keys-id)
@@ -978,13 +980,13 @@ Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the me
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | One of: bound > 25 policies; merged > 200 statements; one of the policy ids does not exist or lives in a different workspace. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller cannot grant one or more actions in the merged statement set. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller cannot grant one or more actions in the merged statement set. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT` | Empty bindings — revoke the PAK instead of leaving it unbound. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["string"] });
+const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-api-keys-id-bindings)
@@ -1151,7 +1153,7 @@ Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation (`code` missing or empty). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `INVITE_EMAIL_MISMATCH` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `INVITE_EMAIL_MISMATCH`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `INVITE_INVALID` | Invite code not found (`INVITE_INVALID`). |
 | 409 | `ConflictError` | `CONFLICT`, `ALREADY_A_MEMBER` | Caller is already a member of this workspace (`ALREADY_A_MEMBER`). |
 | 410 | `APIError` | `GONE`, `INVITE_REVOKED`, `INVITE_EXPIRED`, `INVITE_EXHAUSTED` | Invite revoked (`INVITE_REVOKED`), expired (`INVITE_EXPIRED`) or out of uses (`INVITE_EXHAUSTED`). |
@@ -1176,7 +1178,7 @@ Create a workspace invite link. Cookie/JWT only — invites bring new humans int
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1196,7 +1198,7 @@ Revoke a workspace invite. Cookie/JWT only.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `INVITE_NOT_FOUND` | Workspace not found, or invite not found (`INVITE_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1318,7 +1320,7 @@ Create a managed policy. Cookie/JWT only — policy authoring is a human-admin s
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid policy shape, name, or condition block. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member (`NOT_A_MEMBER`), lacks `workspace.policy.create` (owner and admin hold it by default), or the policy grants an action the caller does not hold. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member (`NOT_A_MEMBER`), lacks `workspace.policy.create` (owner and admin hold it by default), or the policy grants an action the caller does not hold. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Name already in use, or the workspace already has 100 policies. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1340,7 +1342,7 @@ Delete a managed policy. Cascades: API keys lose the binding (deny-all if no oth
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED` | Caller lacks `workspace.policy.delete`, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED`, `PAK_NOT_PERMITTED` | Caller lacks `workspace.policy.delete`, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Policy not found in this workspace (`POLICY_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1404,7 +1406,7 @@ Update a managed policy. Owners and admins; a policy bound to a role, or a prese
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid policy shape, name, or condition block. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED` | Caller lacks `workspace.policy.update`, cannot grant one or more requested actions, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED`, `PAK_NOT_PERMITTED` | Caller lacks `workspace.policy.update`, cannot grant one or more requested actions, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Policy not found in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `POLICY_NAME_TAKEN` | Name already in use (`POLICY_NAME_TAKEN`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1451,7 +1453,7 @@ Create a new custom role. Cookie/JWT only — role authoring is a human-admin su
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `POLICY_INVALID` | Body failed validation, invalid role name, malformed policy, both `policy_id` and `policy` sent, or an action pattern matches no known permission (`POLICY_INVALID`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or `policy_id` not found in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_NAME_TAKEN`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Role name already in use or reserved for a system role (`ROLE_NAME_TAKEN`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1472,7 +1474,7 @@ Delete a custom role (fails if it has members). Cookie/JWT only — role authori
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `roleId` is not a UUID. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_SYSTEM_IMMUTABLE`, `ROLE_HAS_MEMBERS` | Role is a system role (`ROLE_SYSTEM_IMMUTABLE`) or still has members (`ROLE_HAS_MEMBERS`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1539,13 +1541,13 @@ Update a role or replace its permission set. Cookie/JWT only — role authoring 
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `roleId` is not a UUID, body failed validation, malformed policy, both `policy_id` and `policy` sent, or an action pattern matches no known permission. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace, role (`ROLE_NOT_FOUND`) or bound policy (`POLICY_NOT_FOUND`) not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_SYSTEM_IMMUTABLE`, `ROLE_NAME_TAKEN` | System roles cannot be renamed, edited or bound (`ROLE_SYSTEM_IMMUTABLE`), or the new name is taken (`ROLE_NAME_TAKEN`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
+const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Manages billing and reads invoices." });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-roles-role-id)
@@ -1674,11 +1676,6 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
-| `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
-| `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
-| `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
-| `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
-| `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
 | `ACCOUNT_DEACTIVATED` | Account deactivated. |
 | `ACCOUNT_SUSPENDED` | Account suspended. |
 | `ALREADY_A_MEMBER` | Already a member. |

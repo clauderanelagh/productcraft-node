@@ -17,7 +17,19 @@ export async function acceptance(): Promise<void> {
   void minted.token;
   await platform.workspaces.apiKeys.delete(ws.slug, minted.record.id, { force: true });
   // @ts-expect-error expires_in_days is 30 | 90 | 365 | null
-  void platform.workspaces.apiKeys.create(ws.slug, { name: "x", expires_in_days: 7 });
+  void platform.workspaces.apiKeys.create(ws.slug, { name: "x", preset: "readonly", expires_in_days: 7 });
+  // Exactly one of preset or policy_ids (the spec's oneOf; the API answers 400 otherwise).
+  void platform.workspaces.apiKeys.create(ws.slug, { name: "x", preset: "readonly" });
+  // @ts-expect-error neither preset nor policy_ids
+  void platform.workspaces.apiKeys.create(ws.slug, { name: "x" });
+  // @ts-expect-error both preset and policy_ids
+  void platform.workspaces.apiKeys.create(ws.slug, { name: "x", preset: "readonly", policy_ids: ["11111111-1111-1111-1111-111111111111"] });
+  // @ts-expect-error neither, on the preview either
+  void platform.workspaces.apiKeys.preview(ws.slug, {});
+  // include_revoked is a boolean, like every other flag.
+  for await (const k of platform.workspaces.apiKeys.list(ws.slug, { include_revoked: false })) void k;
+  // @ts-expect-error not the string "false"
+  void platform.workspaces.apiKeys.list(ws.slug, { include_revoked: "false" });
   const page = await platform.workspaces.members.list(ws.slug, { limit: 10 });
   void page.data;
   void page.has_more;

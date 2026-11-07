@@ -1,7 +1,7 @@
 // Emits the checked-in docs (api.md, the README generated region, examples/)
 // and _generated/manifest.json (docs/sdk-standard.md section 8).
 
-import { buildTrees, callExample, deprecationText, errorClass } from "./emit-code.mjs";
+import { buildTrees, callExample, deprecationText, errorClass, pathValue } from "./emit-code.mjs";
 import { anchorId, stableJson } from "./util.mjs";
 
 export const README_START = "<!-- generated:start (scripts/gen-sdk.mjs; edits between the markers are overwritten) -->";
@@ -108,11 +108,27 @@ function withOptions(example, options) {
 /** The README region between the generated markers. */
 export function emitReadmeRegion(model, cfg) {
   const { className: C, clientVar: v, packageName: pkg } = cfg;
-  const firstList = model.ops.find((o) => o.paginated && !o.scope && !o.hasRequiredParams && o.positional.length === 0);
+  // Representative ops for the README sections: the surface's `readme` choice when it names
+  // one, else the first that fits, preferring ops a workspace key may call and that take no
+  // positional argument (sdk review: a keyed client must not demo a session-only route).
+  const pick = (named, fits) => {
+    const byName = named && model.ops.find((o) => !o.scope && `${o.resource}.${o.method}` === named);
+    if (named && !byName) throw new Error(`gen-sdk: readme op ${named} not found`);
+    if (byName) return byName;
+    const rank = (o) => (o.refusesWorkspaceKey ? 2 : 0) + (o.positional.length ? 1 : 0);
+    return model.ops.filter((o) => !o.scope && fits(o)).sort((a, b) => rank(a) - rank(b))[0];
+  };
+  const firstList = pick(cfg.readme?.list, (o) => o.paginated && !o.hasRequiredParams);
   const firstRetrieve = model.ops.find((o) => o.method === "retrieve" && !o.scope && o.positional.length === 1 && o.success.kind === "json");
-  const firstCreate = model.ops.find((o) => o.method === "create" && o.idempotent && !o.scope && o.positional.length === 0);
+  const firstCreate = pick(cfg.readme?.create, (o) => o.method === "create" && o.idempotent);
   const pollOp = model.ops.find((o) => o.poll && !o.scope);
-  const ctor = [`import { ${C} } from "${pkg}";`, `const ${v} = new ${C}({ apiKey: process.env.PRODUCTCRAFT_API_KEY });`];
+  // A client that can call `o`: the workspace key, or a person's session where the API refuses keys.
+  const ctorFor = (o) => o?.refusesWorkspaceKey
+    ? [`import { ${C} } from "${pkg}";`, "declare const sessionToken: string; // a signed-in person's access_token", `const ${v} = new ${C}({ auth: { type: "bearer", token: sessionToken } });`]
+    : [`import { ${C} } from "${pkg}";`, `const ${v} = new ${C}({ apiKey: process.env.PRODUCTCRAFT_API_KEY });`];
+  const ctor = ctorFor(null);
+  const posArgs = (o) => o.positional.map((p, i) => JSON.stringify(pathValue(p, i, model.deref)));
+  const argsWith = (o, ...rest) => [...posArgs(o), ...rest].join(", ");
   const L = [README_START, "", "## Resources", "", `Full reference: [api.md](./api.md).`, ""];
   const tops = new Map();
   for (const o of model.ops) {
@@ -127,10 +143,10 @@ export function emitReadmeRegion(model, cfg) {
   L.push("");
   if (firstList) {
     const m = `${firstList.resource}.${firstList.method}`;
-    L.push("## Pagination", "", "List methods return a `PagePromise`: `for await` walks every item across pages, `await` gives one page.", "", "```ts", ...ctor,
-      `for await (const item of ${v}.${m}({ limit: 50 })) console.log(item);`,
-      `const page = await ${v}.${m}();`, "if (page.hasNextPage()) await page.getNextPage();",
-      `const all = await ${v}.${m}().toArray({ maxItems: 500 });`, "```", "");
+    L.push("## Pagination", "", "List methods return a `PagePromise`: `for await` walks every item across pages, `await` gives one page.", "", "```ts", ...ctorFor(firstList),
+      `for await (const item of ${v}.${m}(${argsWith(firstList, "{ limit: 50 }")})) console.log(item);`,
+      `const page = await ${v}.${m}(${argsWith(firstList)});`, "if (page.hasNextPage()) await page.getNextPage();",
+      `const all = await ${v}.${m}(${argsWith(firstList)}).toArray({ maxItems: 500 });`, "```", "");
   }
   L.push("## Errors", "", "Every failure is a class you can catch. `APIError` carries `status`, `code`, `message`, `errors[]`, `requestId` and `docUrl`.", "", "```ts",
     `import { ${C}, NotFoundError, RateLimitError, APIError } from "${pkg}";`, `const ${v} = new ${C}();`, "try {",
@@ -138,10 +154,12 @@ export function emitReadmeRegion(model, cfg) {
     "} catch (err) {", "  if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);",
     "  else if (err instanceof RateLimitError) console.log(err.retryAfter);", "  else if (err instanceof APIError) console.log(err.status, err.errors);", "  else throw err;", "}", "```", "");
   L.push("## Retries and timeouts", "", "Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` are retried twice by default with exponential backoff and jitter, honouring `Retry-After` up to 60 s. A POST or PATCH without an idempotency key is never retried. Each attempt times out after 60 s, so the worst case with defaults is about 3 minutes; pass `signal: AbortSignal.timeout(ms)` for an overall deadline.", "", "```ts",
-    `import { ${C} } from "${pkg}";`, `const ${v} = new ${C}({ maxRetries: 3, timeout: 20_000 });`,
-    firstList ? `await ${v}.${firstList.resource}.${firstList.method}({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });` : "", "```", "");
+    ...(firstList?.refusesWorkspaceKey
+      ? [ctorFor(firstList)[0], ctorFor(firstList)[1], `const ${v} = new ${C}({ auth: { type: "bearer", token: sessionToken }, maxRetries: 3, timeout: 20_000 });`]
+      : [`import { ${C} } from "${pkg}";`, `const ${v} = new ${C}({ maxRetries: 3, timeout: 20_000 });`]),
+    firstList ? `await ${v}.${firstList.resource}.${firstList.method}(${argsWith(firstList, "{}", "{ maxRetries: 0, signal: AbortSignal.timeout(5_000) }")});` : "", "```", "");
   if (firstCreate) {
-    L.push("## Idempotency", "", "Writes that support it send an `Idempotency-Key` automatically and reuse it on every retry. Pass your own to make a retry across processes safe. If the API's idempotency store is unavailable it runs the request without it (fail-open), so a retry during that window can execute twice.", "", "```ts", ...ctor,
+    L.push("## Idempotency", "", "Writes that support it send an `Idempotency-Key` automatically and reuse it on every retry. Pass your own to make a retry across processes safe. If the API's idempotency store is unavailable it runs the request without it (fail-open), so a retry during that window can execute twice.", "", "```ts", ...ctorFor(firstCreate),
       withOptions(callExample(firstCreate, cfg, model.deref), `{ idempotencyKey: "order-1234" }`), "```", "");
   }
   if (pollOp) {
@@ -175,7 +193,7 @@ export function emitReadmeRegion(model, cfg) {
   L.push("## Testing", "", `\`${pkg}/testing\` exports \`createMockFetch()\`, a \`fetch\` that answers every operation with its spec example. Override one operation by name.${model.webhooks.length ? " It also exports \`signWebhook({ payload, secret })\`, which signs a test event for your webhook handler (the same as \`webhooks.sign()\`, without a client)." : ""}`, "", "```ts",
     `import { ${C} } from "${pkg}";`, `import { createMockFetch } from "${pkg}/testing";`, "const fetch = createMockFetch();",
     `const ${v} = new ${C}({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });`,
-    firstList ? `await ${v}.${firstList.resource}.${firstList.method}();` : "", "console.log(fetch.calls.length);", "```", "");
+    firstList ? `await ${v}.${firstList.resource}.${firstList.method}(${argsWith(firstList)});` : "", "console.log(fetch.calls.length);", "```", "");
   const raw = model.ops.find((o) => !o.scope && o.http === "GET" && o.positional.length === 0);
   if (raw) {
     L.push("## Escape hatch", "", "`.client` is the typed `openapi-fetch` client over the same credential and base URL (no retries). Use it for anything the resource methods do not cover.", "", "```ts", ...ctor,

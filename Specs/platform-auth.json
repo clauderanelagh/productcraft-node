@@ -990,9 +990,47 @@
         "type": "object"
       },
       "CreatePakDto": {
+        "oneOf": [
+          {
+            "description": "A ready-made permission set.",
+            "properties": {
+              "policy_ids": {
+                "not": {}
+              },
+              "preset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "preset"
+            ],
+            "title": "Preset",
+            "type": "object"
+          },
+          {
+            "description": "Managed policies you wrote.",
+            "properties": {
+              "policy_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "not": {}
+              }
+            },
+            "required": [
+              "policy_ids"
+            ],
+            "title": "Policies",
+            "type": "object"
+          }
+        ],
         "properties": {
           "description": {
             "description": "Optional description (e.g. which service uses the key).",
+            "example": "Sends receipts from the checkout service.",
             "maxLength": 500,
             "type": "string"
           },
@@ -1009,7 +1047,7 @@
           },
           "name": {
             "description": "Human-readable PAK name (shown in the keys list).",
-            "example": "Production social client",
+            "example": "Production mail",
             "maxLength": 120,
             "minLength": 1,
             "type": "string"
@@ -1097,6 +1135,7 @@
           },
           "role_id": {
             "description": "UUID of the role to grant on accept. Use to target custom roles.",
+            "example": "11111111-1111-1111-1111-111111111111",
             "type": "string"
           }
         },
@@ -1147,6 +1186,7 @@
         "properties": {
           "description": {
             "description": "Optional human-readable role description.",
+            "example": "Manages billing and reads invoices.",
             "maxLength": 256,
             "type": "string"
           },
@@ -2658,11 +2698,6 @@
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
               "IDEMPOTENCY_IN_PROGRESS",
-              "WEBHOOK_ENDPOINT_LIMIT",
-              "WEBHOOK_ENDPOINT_NOT_FOUND",
-              "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
-              "WEBHOOK_EVENT_NOT_FOUND",
-              "WEBHOOK_EVENT_TYPE_UNKNOWN",
               "ACCOUNT_DEACTIVATED",
               "ACCOUNT_SUSPENDED",
               "ALREADY_A_MEMBER",
@@ -2774,11 +2809,6 @@
           "UNPROCESSABLE_ENTITY": "The request is well-formed but cannot be carried out.",
           "UNSUPPORTED_MEDIA_TYPE": "The request body is not in a content type the route accepts.",
           "VALIDATION_ERROR": "One or more request fields are invalid; `errors` lists each field (`param`, `message`, `code`).",
-          "WEBHOOK_ENDPOINT_LIMIT": "The workspace has the maximum number of webhook endpoints.",
-          "WEBHOOK_ENDPOINT_NOT_FOUND": "No webhook endpoint with this id in this workspace.",
-          "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED": "The endpoint is not subscribed to this event type.",
-          "WEBHOOK_EVENT_NOT_FOUND": "No webhook event with this id in this workspace.",
-          "WEBHOOK_EVENT_TYPE_UNKNOWN": "The event type is not one this product sends.",
           "WORKSPACE_KEY_REQUIRED": "This route needs a workspace API key."
         },
         "x-pc-error-docs": "https://productcraft.co/docs/errors#{code}",
@@ -2833,7 +2863,7 @@
             "example": "allow"
           },
           "resources": {
-            "description": "Resource URNs the statement applies to. Use `[\"*\"]` for workspace-wide. Per-resource scoping (e.g. `pcft:agora:community/<uuid>`) is supported by the PAK lane today; the workspace-role authoring API restricts this to `[\"*\"]` for now (see `tasks/platform-auth-api/001`).",
+            "description": "Resource URNs the statement applies to. Use `[\"*\"]` for workspace-wide. Per-resource scoping (e.g. `pcft:agora:community/<uuid>`) is supported by the PAK lane today; custom roles accept only `[\"*\"]` for now.",
             "example": [
               "*"
             ],
@@ -2853,6 +2883,43 @@
         "x-pc-sdk-model": "PolicyStatement"
       },
       "PreviewPakDto": {
+        "oneOf": [
+          {
+            "description": "A ready-made permission set.",
+            "properties": {
+              "policy_ids": {
+                "not": {}
+              },
+              "preset": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "preset"
+            ],
+            "title": "Preset",
+            "type": "object"
+          },
+          {
+            "description": "Managed policies you wrote.",
+            "properties": {
+              "policy_ids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "preset": {
+                "not": {}
+              }
+            },
+            "required": [
+              "policy_ids"
+            ],
+            "title": "Policies",
+            "type": "object"
+          }
+        ],
         "properties": {
           "policy_ids": {
             "description": "Managed policy ids the key would bind. Send exactly one of `policy_ids` and `preset`.",
@@ -3185,6 +3252,9 @@
         "properties": {
           "policy_ids": {
             "description": "Replacement set of managed-policy IDs. Empty array is rejected — revoke the PAK to disable it.",
+            "example": [
+              "11111111-1111-1111-1111-111111111111"
+            ],
             "items": {
               "type": "string"
             },
@@ -3497,12 +3567,14 @@
         "properties": {
           "description": {
             "description": "New description of the key, or `null` to clear it.",
+            "example": "Sends receipts from the checkout service.",
             "maxLength": 500,
             "nullable": true,
             "type": "string"
           },
           "name": {
             "description": "New name of the key.",
+            "example": "Production mail",
             "maxLength": 120,
             "minLength": 1,
             "type": "string"
@@ -3514,6 +3586,7 @@
         "properties": {
           "display_name": {
             "description": "New display name. 1-128 chars. Optional — empty PATCH is a no-op.",
+            "example": "Ada Lovelace",
             "maxLength": 128,
             "minLength": 1,
             "type": "string"
@@ -3525,6 +3598,7 @@
         "properties": {
           "display_name": {
             "description": "New display name of the workspace.",
+            "example": "Acme Corp",
             "maxLength": 128,
             "minLength": 1,
             "type": "string"
@@ -3585,17 +3659,30 @@
         "properties": {
           "description": {
             "description": "New description of the role.",
+            "example": "Manages billing and reads invoices.",
             "maxLength": 256,
             "type": "string"
           },
           "name": {
             "description": "New name of the role.",
+            "example": "BillingAdmin",
             "maxLength": 64,
             "minLength": 1,
             "type": "string"
           },
           "policy": {
             "description": "Replaces the role policy if provided. Omit to leave policy unchanged.",
+            "example": [
+              {
+                "actions": [
+                  "mail.*.read"
+                ],
+                "effect": "allow",
+                "resources": [
+                  "*"
+                ]
+              }
+            ],
             "items": {
               "$ref": "#/components/schemas/PolicyStatementDto"
             },
@@ -3603,6 +3690,7 @@
           },
           "policy_id": {
             "description": "Bind / unbind the role to a managed policy. UUID → bind, null → unbind, omit → leave unchanged.",
+            "example": "11111111-1111-1111-1111-111111111111",
             "nullable": true,
             "type": "string"
           }
@@ -5300,7 +5388,7 @@
     },
     "/v1/auth/signin": {
       "post": {
-        "description": "Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body, timing, DB round trips and Redis ops, so signin is not an account-existence oracle. See core/block/CLAUDE.md.",
+        "description": "Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.",
         "operationId": "AuthenticationController_signin",
         "parameters": [],
         "requestBody": {
@@ -5650,7 +5738,7 @@
             "bearer": []
           }
         ],
-        "summary": "Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Downstream services use this with a 60s LRU cache and evaluate the policy via @repo/authz-nestjs evaluatePolicy().",
+        "summary": "Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Call it with the key a request to your backend carried, cache the answer for up to 60 seconds, and allow an action only when the returned `policy` allows it on the resource.",
         "tags": [
           "introspect"
         ],
@@ -6104,14 +6192,15 @@
                 }
               }
             },
-            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference.",
+            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -6202,14 +6291,15 @@
                 }
               }
             },
-            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference.",
+            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -6326,14 +6416,15 @@
                 }
               }
             },
-            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference.",
+            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -6455,14 +6546,15 @@
                 }
               }
             },
-            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference.",
+            "description": "The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -6583,14 +6675,15 @@
                 }
               }
             },
-            "description": "The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row.",
+            "description": "The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -6854,6 +6947,25 @@
               "UNAUTHORIZED"
             ]
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
+            ]
+          },
           "429": {
             "content": {
               "application/json": {
@@ -6939,6 +7051,25 @@
             },
             "x-pc-error-codes": [
               "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -7052,6 +7183,25 @@
             "x-pc-error-codes": [
               "UNAUTHORIZED",
               "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -7233,7 +7383,7 @@
                 }
               }
             },
-            "description": "Refused before authentication with `CROSS_ORIGIN_REJECTED` when the request carries no bearer or a browser on another origin is driving it. Otherwise: not a member of the chosen workspace, or the approved policy exceeds the human’s own authority — `details.refused_statements` names which statements and why. Also `ACCOUNT_SUSPENDED` / `ACCOUNT_DEACTIVATED` when the account is no longer active, and `OAUTH_GRANT_ADMIN_REVOKED` when a workspace administrator revoked this connection and has not lifted it.",
+            "description": "Refused before authentication with `CROSS_ORIGIN_REJECTED` when the request carries no bearer or a browser on another origin is driving it. Otherwise: not a member of the chosen workspace, or the approved policy exceeds the human’s own authority — `details.refused_statements` names which statements and why. Also `ACCOUNT_SUSPENDED` / `ACCOUNT_DEACTIVATED` when the account is no longer active, and `OAUTH_GRANT_ADMIN_REVOKED` when a workspace administrator revoked this connection and has not lifted it. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -7244,7 +7394,8 @@
               "CROSS_ORIGIN_REJECTED",
               "ACCOUNT_SUSPENDED",
               "ACCOUNT_DEACTIVATED",
-              "OAUTH_GRANT_ADMIN_REVOKED"
+              "OAUTH_GRANT_ADMIN_REVOKED",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -8419,14 +8570,15 @@
                 }
               }
             },
-            "description": "Not a member, or lacks `workspace.connection.read`.",
+            "description": "Not a member, or lacks `workspace.connection.read`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -8535,14 +8687,15 @@
                 }
               }
             },
-            "description": "Not a member, or lacks `workspace.connection.revoke`.",
+            "description": "Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -8670,14 +8823,15 @@
                 }
               }
             },
-            "description": "Not a member, or lacks `workspace.connection.revoke`.",
+            "description": "Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -9439,14 +9593,15 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session.",
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "409": {
@@ -9594,7 +9749,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`).",
+            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -9603,7 +9758,8 @@
             "x-pc-error-codes": [
               "FORBIDDEN",
               "EMAIL_NOT_VERIFIED",
-              "INVITE_EMAIL_MISMATCH"
+              "INVITE_EMAIL_MISMATCH",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -9928,14 +10084,15 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session.",
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "429": {
@@ -10303,17 +10460,13 @@
           },
           {
             "description": "Send `false` to leave revoked keys out (the console's default view). Expired keys are still listed: they show what needs replacing. The deprecated bare array ignores it.",
-            "example": "true",
+            "example": true,
             "in": "query",
             "name": "include_revoked",
             "required": false,
             "schema": {
-              "default": "true",
-              "enum": [
-                "true",
-                "false"
-              ],
-              "type": "string"
+              "default": true,
+              "type": "boolean"
             }
           }
         ],
@@ -10518,7 +10671,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies.",
+            "description": "Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -10526,7 +10679,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -10834,7 +10988,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK, is not a member (`NOT_A_MEMBER`), or lacks `workspace.apikey.create`. A key you could not mint is NOT a 403 here: it comes back with `grantable: false`.",
+            "description": "Caller is a PAK, is not a member (`NOT_A_MEMBER`), or lacks `workspace.apikey.create`. A key you could not mint is NOT a 403 here: it comes back with `grantable: false`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -10842,7 +10996,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -10998,7 +11153,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`.",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -11006,7 +11161,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -11326,7 +11482,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`.",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -11334,7 +11490,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -11516,14 +11673,15 @@
                 }
               }
             },
-            "description": "Caller cannot grant one or more actions in the merged statement set.",
+            "description": "Caller cannot grant one or more actions in the merged statement set. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -11684,14 +11842,15 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across.",
+            "description": "Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -11803,7 +11962,7 @@
           },
           {
             "description": "ISO-8601 inclusive upper bound on `timestamp`. Composes with `since`, `action`, `actor_id` and with the cursor. A bare date resolves to midnight UTC, so `until=2026-05-01` excludes that day’s later entries.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": false,
@@ -12081,7 +12240,7 @@
           },
           {
             "description": "Inclusive upper bound on `created_at`. Same formats as `since`. Note a bare date resolves to midnight UTC, so `until=2026-05-01` excludes that day’s later entries.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": false,
@@ -12250,7 +12409,7 @@
           },
           {
             "description": "Inclusive upper bound on `created_at`, same formats as the list.",
-            "example": "2026-11-01T00:00:00Z",
+            "example": "2026-12-01T00:00:00Z",
             "in": "query",
             "name": "until",
             "required": false,
@@ -12941,7 +13100,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`).",
+            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -12952,7 +13111,8 @@
               "EMAIL_NOT_VERIFIED",
               "NOT_A_MEMBER",
               "OWNER_ROLE_REQUIRED",
-              "MEMBER_RANK_EXCEEDED"
+              "MEMBER_RANK_EXCEEDED",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -13104,7 +13264,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`.",
+            "description": "Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13112,7 +13272,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -13952,7 +14113,7 @@
                 }
               }
             },
-            "description": "Caller is not a member (`NOT_A_MEMBER`), lacks `workspace.policy.create` (owner and admin hold it by default), or the policy grants an action the caller does not hold.",
+            "description": "Caller is not a member (`NOT_A_MEMBER`), lacks `workspace.policy.create` (owner and admin hold it by default), or the policy grants an action the caller does not hold. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13960,7 +14121,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "409": {
@@ -14230,7 +14392,7 @@
                 }
               }
             },
-            "description": "Caller lacks `workspace.policy.delete`, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`).",
+            "description": "Caller lacks `workspace.policy.delete`, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -14238,7 +14400,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "OWNER_ROLE_REQUIRED"
+              "OWNER_ROLE_REQUIRED",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -14518,7 +14681,7 @@
                 }
               }
             },
-            "description": "Caller lacks `workspace.policy.update`, cannot grant one or more requested actions, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`).",
+            "description": "Caller lacks `workspace.policy.update`, cannot grant one or more requested actions, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -14526,7 +14689,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "OWNER_ROLE_REQUIRED"
+              "OWNER_ROLE_REQUIRED",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -14848,7 +15012,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`).",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -14857,7 +15021,8 @@
             "x-pc-error-codes": [
               "FORBIDDEN",
               "NOT_A_MEMBER",
-              "ACTIONS_NOT_GRANTABLE"
+              "ACTIONS_NOT_GRANTABLE",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -15030,7 +15195,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`.",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -15038,7 +15203,8 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
-              "NOT_A_MEMBER"
+              "NOT_A_MEMBER",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {
@@ -15377,7 +15543,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`).",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -15386,7 +15552,8 @@
             "x-pc-error-codes": [
               "FORBIDDEN",
               "NOT_A_MEMBER",
-              "ACTIONS_NOT_GRANTABLE"
+              "ACTIONS_NOT_GRANTABLE",
+              "PAK_NOT_PERMITTED"
             ]
           },
           "404": {

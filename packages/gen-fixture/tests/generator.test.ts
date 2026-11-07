@@ -101,6 +101,33 @@ describe("form uploads", () => {
   });
 });
 
+describe("README examples use a credential the route accepts (Platform review: a keyed client demoing a session-only route)", () => {
+  const section = (readme: string, title: string) => readme.split(`## ${title}`)[1]?.split("\n## ")[0] ?? "";
+  const readmeOf = async (spec?: Spec) => ((await generate("gen-fixture", spec)) as { files: Record<string, string> }).files["packages/gen-fixture/README.md"]!;
+
+  it("uses the workspace key by default", async () => {
+    const idem = section(await readmeOf(), "Idempotency");
+    expect(idem).toContain("new Fixture({ apiKey: process.env.PRODUCTCRAFT_API_KEY })");
+    expect(idem).not.toContain("sessionToken");
+  });
+
+  it("uses a person's session for an op whose 403 lists PAK_NOT_PERMITTED, and passes its positional arguments", async () => {
+    const spec = fresh();
+    for (const item of Object.values(spec.paths)) {
+      for (const op of Object.values(item)) {
+        const x = op["x-pc-sdk"] as { method?: string } | undefined;
+        if (x?.method !== "create") continue;
+        const responses = (op.responses ??= {}) as Record<string, Record<string, unknown>>;
+        responses["403"] = { description: "Session only.", "x-pc-error-codes": ["FORBIDDEN", "PAK_NOT_PERMITTED"] };
+      }
+    }
+    const idem = section(await readmeOf(spec), "Idempotency");
+    expect(idem).toContain('declare const sessionToken: string;');
+    expect(idem).toContain('new Fixture({ auth: { type: "bearer", token: sessionToken } })');
+    expect(idem).not.toContain("PRODUCTCRAFT_API_KEY");
+  });
+});
+
 describe("names are unique per scope (Social's workspace and community webhooks)", () => {
   const withRootPosts = (s: Spec) => {
     const op = structuredClone(s.paths["/v1/communities/{community_id}/posts"]!.post!);

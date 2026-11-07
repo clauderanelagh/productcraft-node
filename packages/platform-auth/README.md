@@ -37,8 +37,8 @@ console.log(me.workspace_id, me.name, me.allowed);
 const ws = await platform.workspaces.retrieve("acme");
 
 // Pages are fetched as you iterate.
-for await (const key of platform.workspaces.apiKeys.list(ws.slug, { include_revoked: "false" })) {
-  console.log(key.id, key.name, key.status);
+for await (const member of platform.workspaces.members.list(ws.slug, { limit: 50 })) {
+  console.log(member.account_id, member.role);
 }
 ```
 
@@ -101,10 +101,10 @@ List methods return a `PagePromise`: `for await` walks every item across pages, 
 ```ts
 import { PlatformAuth } from "@productcraft/platform-auth";
 const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-for await (const item of platform.oauth.connections.list({ limit: 50 })) console.log(item);
-const page = await platform.oauth.connections.list();
+for await (const item of platform.workspaces.members.list("acme", { limit: 50 })) console.log(item);
+const page = await platform.workspaces.members.list("acme");
 if (page.hasNextPage()) await page.getNextPage();
-const all = await platform.oauth.connections.list().toArray({ maxItems: 500 });
+const all = await platform.workspaces.members.list("acme").toArray({ maxItems: 500 });
 ```
 
 ## Errors
@@ -131,7 +131,7 @@ Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` are retried twic
 ```ts
 import { PlatformAuth } from "@productcraft/platform-auth";
 const platform = new PlatformAuth({ maxRetries: 3, timeout: 20_000 });
-await platform.oauth.connections.list({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
+await platform.workspaces.members.list("acme", {}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
 ```
 
 ## Idempotency
@@ -140,8 +140,12 @@ Writes that support it send an `Idempotency-Key` automatically and reuse it on e
 
 ```ts
 import { PlatformAuth } from "@productcraft/platform-auth";
-const platform = new PlatformAuth({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-const workspace = await platform.workspaces.create({ display_name: "Acme Corp", slug: "acme-corp" }, { idempotencyKey: "order-1234" });
+declare const sessionToken: string; // a signed-in person's access_token
+const platform = new PlatformAuth({ auth: { type: "bearer", token: sessionToken } });
+const managedPolicy = await platform.workspaces.policies.create("acme", {
+  name: "mail-readonly",
+  policy: [{ actions: ["mail.read", "mail.list"], effect: "allow", resources: ["*"] }],
+}, { idempotencyKey: "order-1234" });
 ```
 
 ## Raw responses
@@ -167,7 +171,7 @@ import { PlatformAuth } from "@productcraft/platform-auth";
 import { createMockFetch } from "@productcraft/platform-auth/testing";
 const fetch = createMockFetch();
 const platform = new PlatformAuth({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });
-await platform.oauth.connections.list();
+await platform.workspaces.members.list("acme");
 console.log(fetch.calls.length);
 ```
 
