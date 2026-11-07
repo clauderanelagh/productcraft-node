@@ -52,6 +52,15 @@ describe("example variable names", () => {
     expect(resultVar("domain", "mail", "domains")).toBe("domain");
     expect(resultVar("import", "mail", "contacts.imports", "Item")).toBe("importItem");
   });
+
+  it("names an example result after the thing, not its shape (Trawl's WebhookEndpointWithSecret)", async () => {
+    // @ts-expect-error plain ESM script without type declarations
+    const { resultNoun } = await import("../../../scripts/gen-sdk/emit-code.mjs");
+    expect(resultNoun("WebhookEndpointWithSecret")).toBe("WebhookEndpoint");
+    expect(resultNoun("Stats")).toBe("Stats");
+    expect(resultNoun("With")).toBe("With");
+    expect(resultNoun(undefined)).toBeUndefined();
+  });
 });
 
 describe("form uploads", () => {

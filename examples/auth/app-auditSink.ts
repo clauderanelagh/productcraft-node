@@ -11,7 +11,7 @@ const auth = new Auth();
 
 // auditSink.replace: Create or replace the audit sink. Returns a freshly generated signing secret exactly once.
 {
-  const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
+  const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
 }
 
 // auditSink.retrieve: Current audit sink for this app, or 404 when none is configured. Never returns the signing secret — only its last-4 hint.
@@ -21,7 +21,7 @@ const auth = new Auth();
 
 // auditSink.rotateSecret: Issue a new signing secret, returned exactly once.
 {
-  const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
+  const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
 }
 
 // auditSink.setupStatus: Get the audit export checklist: destination, receiver test and delivery.

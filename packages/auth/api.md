@@ -434,7 +434,7 @@ Audit rows are POSTed in batches of up to 100, signed with the same `X-Auth-Sign
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
+const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-audit-sink)
@@ -478,7 +478,7 @@ The new secret signs every batch from now on; the old one stops at once. Update 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
+const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-audit-sink-rotate-secret)
@@ -2035,7 +2035,7 @@ Get role details with permissions.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const roleWithPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
+const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-roles-role-name)
@@ -2707,7 +2707,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-endpoints)
@@ -2809,7 +2809,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -3312,7 +3312,7 @@ Submit the provider-issued ID token from a native client (iOS ASAuthorizationCon
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.consumer("my-app").signinWithProvider("google", {
+const signin = await auth.consumer("my-app").signinWithProvider("google", {
   id_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl",
   nonce: "n-0S6_WzA2Mj",
 });
@@ -4432,7 +4432,7 @@ Returns the role plus the flat `permissions[]` array currently bound. Use this t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerRoleWithPermissions = await auth.consumer("my-app").roles.retrieve("admin");
+const consumerRole = await auth.consumer("my-app").roles.retrieve("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-roles-role-name)
@@ -4509,7 +4509,7 @@ Returns the secret ONCE (`key`). Scopes must be grantable by the app and held by
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
+const tenantApiKey = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenant-api-keys)
@@ -4614,7 +4614,7 @@ Mints a replacement with the same name and scopes and returns its secret ONCE. Y
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
+const tenantApiKey = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenant-api-keys-key-id-rotate)

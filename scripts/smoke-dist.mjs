@@ -122,7 +122,8 @@ await check("core: a real request with retry, pagination and lastResponse throug
     for (const m of [esm, cjs]) {
       n = 0;
       seen.length = 0;
-      const client = new m.APIClient({ apiKey: "pcft_smoke", workspaceId: "ws1" }, url);
+      assert.equal(new m.APIError(500, {}, new Headers()).constructor.name, "APIError", "keepNames");
+      const client = new m.APIClient({ apiKey: "pcft_smoke", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" }, url);
       const items = await client.list({ method: "GET", path: "/v1/workspaces/{workspace_id}/things" }).toArray({ maxItems: 10 });
       assert.deepEqual(items.map((i) => i.id), ["first", "c2"]);
       assert.equal(seen.length, 3, "one retry + two pages");

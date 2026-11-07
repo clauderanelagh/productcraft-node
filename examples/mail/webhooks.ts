@@ -14,7 +14,7 @@ const mail = new Mail();
 
 // webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
 {
-  const webhookEndpointWithSecret = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+  const webhookEndpoint = await mail.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 }
 
 // webhooks.endpoints.delete: Delete a webhook endpoint.
@@ -36,7 +36,7 @@ const mail = new Mail();
 
 // webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+  const webhookEndpoint = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // webhooks.endpoints.test: Send a test event to this endpoint now and return the result.

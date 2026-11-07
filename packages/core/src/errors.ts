@@ -182,6 +182,8 @@ export class APIError extends ProductCraftError {
         return new BadRequestError(status, body, headers);
       case 401:
         return new AuthenticationError(status, body, headers);
+      case 402:
+        return new PaymentRequiredError(status, body, headers);
       case 403:
         return new PermissionDeniedError(status, body, headers);
       case 404:
@@ -205,6 +207,14 @@ export class BadRequestError extends APIError {
 }
 export class AuthenticationError extends APIError {
   static override readonly brandName: string = "AuthenticationError";
+}
+/**
+ * 402: the workspace is out of the balance the call spends, e.g. Trawl's
+ * `TRAWL_CREDITS_EXHAUSTED` when a job is created at zero credits. Not
+ * retried: it does not clear until credits are added.
+ */
+export class PaymentRequiredError extends APIError {
+  static override readonly brandName: string = "PaymentRequiredError";
 }
 export class PermissionDeniedError extends APIError {
   static override readonly brandName: string = "PermissionDeniedError";

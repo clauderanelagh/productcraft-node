@@ -32,7 +32,7 @@ describe("error branding", () => {
     const names = Object.entries(core)
       .filter(([, v]) => typeof v === "function" && (v as { brandName?: string }).brandName)
       .map(([k, v]) => [k, (v as { brandName: string }).brandName]);
-    expect(names.length).toBe(16);
+    expect(names.length).toBe(17);
     for (const [exportName, brand] of names) expect(brand).toBe(exportName);
   });
 

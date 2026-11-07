@@ -16,7 +16,7 @@ const auth = new Auth();
 
 // tenantApiKeys.create: Create an API key for the active tenant
 {
-  const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
+  const tenantApiKey = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
 }
 
 // tenantApiKeys.delete: Revoke an API key
@@ -39,7 +39,7 @@ const auth = new Auth();
 
 // tenantApiKeys.rotate: Rotate an API key
 {
-  const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
+  const tenantApiKey = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
 }
 
 // tenantApiKeys.status: Why a tenant API key is (in)active

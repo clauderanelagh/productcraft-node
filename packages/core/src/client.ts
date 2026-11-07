@@ -50,8 +50,9 @@ export interface ClientOptions {
   /** Override the product's base URL. */
   baseUrl?: string;
   /**
-   * Default `{workspace_id}`. Falls back to `PRODUCTCRAFT_WORKSPACE_ID`, then (workspace API keys only)
-   * one cached `GET /v1/api-keys/self` lookup per process.
+   * Default `{workspace_id}`: the workspace UUID, or its slug (`acme-corp`, as the console shows it),
+   * which is resolved to the UUID once per process. Falls back to `PRODUCTCRAFT_WORKSPACE_ID`, then
+   * (workspace API keys only) one cached `GET /v1/api-keys/self` lookup per process.
    */
   workspaceId?: string;
   /** Per-attempt timeout in ms. Default 60 000. */
@@ -88,7 +89,7 @@ export interface RequestOptions {
   maxRetries?: number;
   headers?: Record<string, string | undefined>;
   signal?: AbortSignal;
-  /** `{workspace_id}` for this call (bearer tokens that span workspaces). */
+  /** `{workspace_id}` for this call (bearer tokens that span workspaces): a UUID or a workspace slug. */
   workspaceId?: string;
   fetch?: typeof fetch;
 }
@@ -137,6 +138,9 @@ export const MAX_RETRY_AFTER_MS = 60_000;
 export const PC_WORKSPACE_ID_ENV = "PRODUCTCRAFT_WORKSPACE_ID";
 export const PC_LOG_ENV = "PRODUCTCRAFT_LOG";
 const WORKSPACE_LOOKUP_TIMEOUT_MS = 5_000;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** A platform workspace slug: lowercase alphanumerics separated by hyphens, 2..64 chars. */
+const SLUG_RE = /^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 
 const RETRY_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 const SAFE_METHODS = new Set<HTTPMethod>(["GET", "PUT", "DELETE"]);
@@ -388,8 +392,8 @@ export class APIClient {
   }
 
   async #resolveWorkspaceId(options: RequestOptions, fetchImpl: typeof fetch): Promise<string> {
-    if (options.workspaceId) return options.workspaceId;
-    if (this.workspaceId) return this.workspaceId;
+    const given = options.workspaceId || this.workspaceId;
+    if (given) return this.#workspaceUuid(given, fetchImpl);
     if (this.auth?.type !== "apiKey") {
       throw new ConfigurationError(
         "pass workspaceId: this call is workspace-scoped and the credential is not a workspace API key " +
@@ -405,6 +409,94 @@ export class APIClient {
       pending.catch(() => workspaceCache.delete(cacheKey));
     }
     return pending;
+  }
+
+  /**
+   * Every workspace-scoped route takes the workspace UUID. A slug (what the
+   * console and platform URLs show) is looked up once per process: on
+   * platform-auth with the client's own credential for a bearer token or
+   * cookie, and checked against the key's own workspace for an API key.
+   */
+  async #workspaceUuid(value: string, fetchImpl: typeof fetch): Promise<string> {
+    if (UUID_RE.test(value)) return value;
+    if (!SLUG_RE.test(value)) {
+      throw new ConfigurationError(
+        `workspaceId must be a workspace UUID or slug; got ${JSON.stringify(value)}. ` +
+          "Find both under Workspace > Settings in the console.",
+      );
+    }
+    const auth = this.auth;
+    if (!auth) {
+      throw new ConfigurationError(
+        `workspaceId ${JSON.stringify(value)} is a slug; pass the workspace UUID, or a credential the SDK can look the slug up with.`,
+      );
+    }
+    const credential = auth.type === "apiKey" ? auth.key : auth.type === "cookie" ? auth.value : auth.token;
+    const cacheKey = `${this.#platformAuthBaseUrl}\u0000slug\u0000${value}\u0000${credential}`;
+    let pending = workspaceCache.get(cacheKey);
+    if (!pending) {
+      pending = this.#lookupSlug(value, auth, fetchImpl);
+      workspaceCache.set(cacheKey, pending);
+      pending.catch(() => workspaceCache.delete(cacheKey));
+    }
+    return pending;
+  }
+
+  async #lookupSlug(slug: string, auth: PCAuth, fetchImpl: typeof fetch): Promise<string> {
+    const failed = `workspaceId ${JSON.stringify(slug)} is a slug, and resolving it to the workspace UUID failed`;
+    if (auth.type === "apiKey") {
+      // An API key belongs to one workspace: accept its slug, refuse any other.
+      const self = await this.#keySelf(auth.key, fetchImpl, failed);
+      if (self.slug === slug) return self.id;
+      throw new ConfigurationError(
+        `workspaceId ${JSON.stringify(slug)} does not match this API key's workspace` +
+          (typeof self.slug === "string" ? ` (${JSON.stringify(self.slug)}).` : "."),
+      );
+    }
+    this.#log("debug", "resolving workspace slug", { path: "/v1/workspaces/{workspace_slug}" });
+    const headers: Record<string, string> = { Accept: "application/json", "User-Agent": this.#userAgent };
+    if (auth.type === "cookie") headers.Cookie = `auth_token=${auth.value}`;
+    else headers.Authorization = `Bearer ${auth.token}`;
+    let res: Response;
+    try {
+      res = await fetchImpl(`${this.#platformAuthBaseUrl}/v1/workspaces/${encodeURIComponent(slug)}`, {
+        method: "GET",
+        headers,
+        signal: AbortSignal.timeout(WORKSPACE_LOOKUP_TIMEOUT_MS),
+      });
+    } catch (cause) {
+      throw new ConfigurationError(`${failed}.`, { cause });
+    }
+    if (!res.ok) {
+      const body = await readErrorBody(res);
+      throw new ConfigurationError(
+        `${failed} with ${res.status}${res.status === 404 ? " (no such workspace, or you are not a member)" : ""}.`,
+        { cause: APIError.generate(res.status, body, res.headers) },
+      );
+    }
+    const id = ((await res.json().catch(() => undefined)) as { id?: unknown } | undefined)?.id;
+    if (typeof id !== "string" || !UUID_RE.test(id)) throw new ConfigurationError(`${failed}: no workspace id came back.`);
+    return id;
+  }
+
+  async #keySelf(key: string, fetchImpl: typeof fetch, failed: string): Promise<{ id: string; slug: unknown }> {
+    let res: Response;
+    try {
+      res = await fetchImpl(`${this.#platformAuthBaseUrl}/v1/api-keys/self`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${key}`, Accept: "application/json", "User-Agent": this.#userAgent },
+        signal: AbortSignal.timeout(WORKSPACE_LOOKUP_TIMEOUT_MS),
+      });
+    } catch (cause) {
+      throw new ConfigurationError(`${failed}.`, { cause });
+    }
+    if (!res.ok) {
+      const body = await readErrorBody(res);
+      throw new ConfigurationError(`${failed} with ${res.status}.`, { cause: APIError.generate(res.status, body, res.headers) });
+    }
+    const ws = ((await res.json().catch(() => undefined)) as { workspace?: { id?: unknown; slug?: unknown } } | undefined)?.workspace;
+    if (typeof ws?.id !== "string" || ws.id === "") throw new ConfigurationError(`${failed}: the API key lookup returned no workspace id.`);
+    return { id: ws.id, slug: ws.slug };
   }
 
   async #lookupWorkspace(key: string, fetchImpl: typeof fetch): Promise<string> {

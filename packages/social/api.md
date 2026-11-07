@@ -501,7 +501,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints)
@@ -605,7 +605,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -839,7 +839,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await social.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints)
@@ -935,7 +935,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await social.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -4682,7 +4682,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpoint = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-endpoints)
@@ -4778,7 +4778,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
+const webhookEndpoint = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-endpoints-endpoint-id-rotate-secret)
