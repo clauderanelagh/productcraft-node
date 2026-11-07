@@ -6,55 +6,55 @@ const social = new Social();
 
 // lists.create: Create a new list. Default visibility `private`. List creation has no natural key (an owner can hold many same-named lists), so pass an `Idempotency-Key` header to make retries safe.
 {
-  const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.create({ name: "Tech news" });
+  const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.create({ name: "Tech news" });
 }
 
 // lists.delete: Delete a list. Owner-only. Pass the caller via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.delete("list", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // lists.feed.list: List-scoped feed (task 018). Returns posts authored by members of the list, filtered by what the viewer can see. Default order is `chronological`; pass `order=ranked` for the same engagement-blended scoring used by the actor feed.
 {
-  for await (const feed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.feed.list("list", {})) {
+  for await (const feed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
     console.log(feed);
   }
 }
 
 // lists.list: List discoverable lists in this community. Public lists are visible to anyone; private lists surface only when `actor_id` is their owner.
 {
-  for await (const list of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list()) {
+  for await (const list of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list()) {
     console.log(list);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list({}, { timeout: 5_000 });
 }
 
 // lists.members.create: Add a member to a list. Owner-only.
 {
-  const actorListMember = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.create("list", {});
+  const actorListMember = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // lists.members.delete: Remove a member from a list. Owner-only. Idempotent — 204 either way. Pass the caller via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.delete("list", "member_actor", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // lists.members.list: List members of a list. Public lists are visible to anyone; private lists surface only when `actor_id` is the owner.
 {
-  for await (const member of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("list")) {
+  for await (const member of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(member);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("list", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // lists.retrieve: Get one list by id.
 {
-  const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.retrieve("list");
+  const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.update: Update list name / description / visibility. Owner-only.
 {
-  const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.update("list");
+  const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

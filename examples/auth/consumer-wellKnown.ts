@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // wellKnown.jwks: Per-app JWKS
 {
-  const jwks = await auth.consumer("app").wellKnown.jwks();
+  const jwks = await auth.consumer("my-app").wellKnown.jwks();
 }
 
 // wellKnown.openidConfiguration: OAuth 2.0 / OIDC discovery document (subset)
 {
-  const openIdConfiguration = await auth.consumer("app").wellKnown.openidConfiguration();
+  const openIdConfiguration = await auth.consumer("my-app").wellKnown.openidConfiguration();
 }
 
 export {};

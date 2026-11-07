@@ -75,7 +75,7 @@ const me = await platform.apiKeys.self();
 const ws = await platform.workspaces.retrieve("acme");
 
 // Auth
-const session = await auth.consumer("my-app").signin({ email, password });     // 0.x `.auth.signin` kept as an alias
+const session = await auth.consumer("my-app").signin({ identifier: email, password }); // 0.x `.auth.signin` kept as an alias
 const users = auth.admin.app("5d1e…").endUsers.list({ limit: 100 });           // admin scope named by audience
 for await (const u of users) { … }
 const claims = await auth.verifyToken(jwt, { app: "my-app" });                  // top level; hand-written

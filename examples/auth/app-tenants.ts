@@ -6,71 +6,71 @@ const auth = new Auth();
 
 // tenants.create: Create a tenant in this app. Auth-admin lane; requires auth.tenant.create on the app URN.
 {
-  const tenant = await auth.admin.app("app").tenants.create({ display_name: "Acme Co" });
+  const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.create({ display_name: "Acme Co" });
 }
 
 // tenants.delete: Delete a tenant.
 {
-  await auth.admin.app("app").tenants.delete("tenant");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.invites.create: Invite an email address into a tenant. Returns the plaintext code once; only its SHA-256 digest is stored.
 {
-  const createTenantInvite = await auth.admin.app("app").tenants.invites.create("tenant", { email: "alice@example.com", role_name: "member" });
+  const createTenantInvite = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email: "alice@example.com", role_name: "member" });
 }
 
 // tenants.invites.delete: Revoke a pending invite. Idempotent — a second revoke is a 204 no-op and fires no second webhook.
 {
-  await auth.admin.app("app").tenants.invites.delete("tenant", "invite");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.invites.list: List a tenant's invites, newest first. Optional `?status=pending|revoked|expired|used`. Codes are never returned.
 {
-  for await (const invite of auth.admin.app("app").tenants.invites.list("tenant")) {
+  for await (const invite of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(invite);
   }
-  const page = await auth.admin.app("app").tenants.invites.list("tenant", {}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // tenants.list: List tenants in this app, paginated by created_at desc.
 {
-  for await (const tenant of auth.admin.app("app").tenants.list()) {
+  for await (const tenant of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.list()) {
     console.log(tenant);
   }
-  const page = await auth.admin.app("app").tenants.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.list({}, { timeout: 5_000 });
 }
 
 // tenants.members.create: Add a member to a tenant.
 {
-  const addMember = await auth.admin.app("app").tenants.members.create("tenant", { role_name: "member" });
+  const addMember = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 }
 
 // tenants.members.delete: Remove a member from a tenant.
 {
-  await auth.admin.app("app").tenants.members.delete("tenant", "account");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.members.list: List members of a tenant, newest membership first. Filter by `?search=` and/or `?role=`.
 {
-  for await (const member of auth.admin.app("app").tenants.members.list("tenant")) {
+  for await (const member of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(member);
   }
-  const page = await auth.admin.app("app").tenants.members.list("tenant", {}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // tenants.members.update: Change a member's role inside a tenant.
 {
-  const tenantMembership = await auth.admin.app("app").tenants.members.update("tenant", "account", { role_name: "admin" });
+  const tenantMembership = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 }
 
 // tenants.retrieve: Get a single tenant by id or display id.
 {
-  const tenant = await auth.admin.app("app").tenants.retrieve("tenant");
+  const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.update: Update a tenant (display_name, slug, status, metadata).
 {
-  const tenant = await auth.admin.app("app").tenants.update("tenant", { display_name: "string" });
+  const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Acme Inc" });
 }
 
 export {};

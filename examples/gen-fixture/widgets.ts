@@ -73,7 +73,7 @@ const fixture = new Fixture();
 
 // widgets.retrieve: Retrieve a widget
 {
-  const widget = await fixture.widgets.retrieve("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const widget = await fixture.widgets.retrieve("wid_fixture_1");
 }
 
 // widgets.update: Update a widget

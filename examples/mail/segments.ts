@@ -6,10 +6,10 @@ const mail = new Mail();
 
 // segments.contacts.list: List a segment's contacts
 {
-  for await (const contact of mail.segments.contacts.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const contact of mail.segments.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(contact);
   }
-  const page = await mail.segments.contacts.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await mail.segments.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // segments.create: Create a segment
@@ -19,7 +19,7 @@ const mail = new Mail();
 
 // segments.delete: Delete a segment
 {
-  await mail.segments.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.segments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // segments.list: List segments, newest first
@@ -32,7 +32,7 @@ const mail = new Mail();
 
 // segments.metrics: A segment's size and unsubscribed share
 {
-  const segmentMetrics = await mail.segments.metrics("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const segmentMetrics = await mail.segments.metrics("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // segments.preview: Preview a segment rule
@@ -42,12 +42,12 @@ const mail = new Mail();
 
 // segments.retrieve: Get a segment
 {
-  const segment = await mail.segments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const segment = await mail.segments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // segments.update: Update a segment
 {
-  const segment = await mail.segments.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "string" });
+  const segment = await mail.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
 export {};

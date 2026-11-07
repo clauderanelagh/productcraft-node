@@ -6,25 +6,25 @@ const auth = new Auth();
 
 // apiKeys.create: Mint a new hdk_live_* API key with an explicit permission scope. The raw key is returned ONCE.
 {
-  const createApiKey = await auth.admin.app("app").apiKeys.create({ name: "CI deploy bot", permissions: ["user.read", "user.list"] });
+  const createApiKey = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.create({ name: "CI deploy bot", permissions: ["user.read", "user.list"] });
 }
 
 // apiKeys.delete: Revoke an API key. The key stops authenticating immediately; the row is kept (soft delete) so the list and the audit trail can still answer who revoked it and when.
 {
-  await auth.admin.app("app").apiKeys.delete("key");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // apiKeys.list: List API keys for an app (no raw secret), newest first. Cursor-paginated: 20/page by default, 100 max.
 {
-  for await (const apiKey of auth.admin.app("app").apiKeys.list()) {
+  for await (const apiKey of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.list()) {
     console.log(apiKey);
   }
-  const page = await auth.admin.app("app").apiKeys.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.list({}, { timeout: 5_000 });
 }
 
 // apiKeys.rotate: Mint a replacement for an existing key, carrying its name and permissions over. The outgoing key keeps working for `grace_hours` (24 by default) so a fleet can roll over without downtime. The raw key is returned ONCE.
 {
-  const rotateApiKey = await auth.admin.app("app").apiKeys.rotate("key", { grace_hours: 24 });
+  const rotateApiKey = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 export {};

@@ -5,7 +5,7 @@ import type { components, paths } from "./paths.js";
 
 type IsUnion<T, U = T> = T extends unknown ? ([U] extends [T] ? false : true) : never;
 type OpenString<T extends string> = string extends T ? T : true extends IsUnion<T> ? T | (string & {}) : T;
-type OpenValue<T> = [T] extends [string] ? OpenString<T> : T extends readonly (infer I)[] ? Open<I>[] : T extends object ? { [K in keyof T]: Open<T[K]> } : T;
+type OpenValue<T> = [T] extends [string] ? OpenString<T> : T extends readonly (infer I)[] ? (OpenValue<Exclude<I, null | undefined>> | Extract<I, null | undefined>)[] : T extends object ? { [K in keyof T]: OpenValue<Exclude<T[K], null | undefined>> | Extract<T[K], null | undefined> } : T;
 /** A response type: string-literal unions also accept values added after this SDK was built. */
 export type Open<T> = OpenValue<Exclude<T, null | undefined>> | Extract<T, null | undefined>;
 /** What a method resolves to: the parsed body plus non-enumerable `lastResponse`. */

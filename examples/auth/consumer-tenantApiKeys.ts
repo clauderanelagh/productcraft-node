@@ -6,45 +6,45 @@ const auth = new Auth();
 
 // tenantApiKeys.config.retrieve: Read this app's tenant API key settings
 {
-  const tenantApiKeysConfig = await auth.consumer("app").tenantApiKeys.config.retrieve();
+  const tenantApiKeysConfig = await auth.consumer("my-app").tenantApiKeys.config.retrieve();
 }
 
 // tenantApiKeys.config.update: Push this app's tenant API key settings
 {
-  const tenantApiKeysConfig = await auth.consumer("app").tenantApiKeys.config.update({ default_expiry_days: 7 });
+  const tenantApiKeysConfig = await auth.consumer("my-app").tenantApiKeys.config.update({ default_expiry_days: 7 });
 }
 
 // tenantApiKeys.create: Create an API key for the active tenant
 {
-  const tenantApiKeyWithSecret = await auth.consumer("app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
+  const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
 }
 
 // tenantApiKeys.delete: Revoke an API key
 {
-  await auth.consumer("app").tenantApiKeys.delete("key");
+  await auth.consumer("my-app").tenantApiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenantApiKeys.introspect: Verify a tenant API key (RFC 7662 shape)
 {
-  const tenantApiKeyIntrospection = await auth.consumer("app").tenantApiKeys.introspect({ key: "pctk_live_4fQ2aZ0000000000000000000000000000000000000_1a2B3c" });
+  const tenantApiKeyIntrospection = await auth.consumer("my-app").tenantApiKeys.introspect({ key: "pctk_live_4fQ2aZ0000000000000000000000000000000000000_1a2B3c" });
 }
 
 // tenantApiKeys.list: List the active tenant's API keys
 {
-  for await (const tenantApiKey of auth.consumer("app").tenantApiKeys.list()) {
+  for await (const tenantApiKey of auth.consumer("my-app").tenantApiKeys.list()) {
     console.log(tenantApiKey);
   }
-  const page = await auth.consumer("app").tenantApiKeys.list({}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").tenantApiKeys.list({}, { timeout: 5_000 });
 }
 
 // tenantApiKeys.rotate: Rotate an API key
 {
-  const tenantApiKeyWithSecret = await auth.consumer("app").tenantApiKeys.rotate("key", { expires_in_days: 7 });
+  const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
 }
 
 // tenantApiKeys.status: Why a tenant API key is (in)active
 {
-  const tenantApiKeyStatus = await auth.consumer("app").tenantApiKeys.status("key");
+  const tenantApiKeyStatus = await auth.consumer("my-app").tenantApiKeys.status("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

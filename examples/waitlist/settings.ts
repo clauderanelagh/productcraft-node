@@ -6,7 +6,7 @@ const waitlist = new Waitlist();
 
 // settings.notifications.test: Send me a test of one Waitlist email
 {
-  const notificationTest = await waitlist.settings.notifications.test("slot");
+  const notificationTest = await waitlist.settings.notifications.test("welcome");
 }
 
 // settings.retrieve: Read workspace-level Waitlist defaults

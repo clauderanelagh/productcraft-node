@@ -242,7 +242,7 @@ Introspect caller's membership + effective policy + enabled services in a worksp
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const introspectWorkspace = await platform.introspect.workspaces.retrieve("workspace");
+const introspectWorkspace = await platform.introspect.workspaces.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-introspect-workspaces-workspace-id)
@@ -324,7 +324,7 @@ Idempotent: hiding a guide that is already hidden returns it unchanged, with its
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const hiddenGuide = await platform.me.hiddenGuides.hide("key");
+const hiddenGuide = await platform.me.hiddenGuides.hide("dashboard");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#put-v1-me-hidden-guides-key)
@@ -385,7 +385,7 @@ Idempotent: showing a guide that is not hidden is a no-op.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.me.hiddenGuides.unhide("key");
+await platform.me.hiddenGuides.unhide("dashboard");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-me-hidden-guides-key)
@@ -430,7 +430,7 @@ Revokes the whole grant family — the grant, its authorization codes, its refre
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.oauth.connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await platform.oauth.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-oauth-connections-grant-id)
@@ -479,7 +479,7 @@ Revokes the whole grant family for a grant made by any member of this workspace 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.oauth.workspaces.connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await platform.oauth.workspaces.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-oauth-workspaces-workspace-id-connections-grant-id)
@@ -503,10 +503,10 @@ The workspace-side half of revocation, for owners and admins: every grant made a
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const connection of platform.oauth.workspaces.connections.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const connection of platform.oauth.workspaces.connections.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(connection);
 }
-const page = await platform.oauth.workspaces.connections.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await platform.oauth.workspaces.connections.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-oauth-workspaces-workspace-id-connections)
@@ -528,7 +528,7 @@ A workspace revocation is durable: the member re-running the connect flow does n
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.oauth.workspaces.connections.restore("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await platform.oauth.workspaces.connections.restore("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-oauth-workspaces-workspace-id-connections-grant-id-restore)
@@ -549,7 +549,7 @@ Revoke one of the caller's own sessions. Takes effect immediately — the refres
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const revokeSession = await platform.sessions.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const revokeSession = await platform.sessions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-session-id)
@@ -733,7 +733,7 @@ Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.delete("workspace");
+await platform.workspaces.delete("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug)
@@ -776,7 +776,7 @@ Get workspace details.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspace = await platform.workspaces.retrieve("workspace");
+const workspace = await platform.workspaces.retrieve("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug)
@@ -798,7 +798,7 @@ Update workspace display name, slug, or settings. Slug renames broadcast a `work
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspace = await platform.workspaces.update("workspace", { display_name: "string" });
+const workspace = await platform.workspaces.update("acme", { display_name: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug)
@@ -824,7 +824,7 @@ Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `m
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mintPak = await platform.workspaces.apiKeys.create("workspace", { name: "Production social client" });
+const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production social client" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-api-keys)
@@ -846,7 +846,7 @@ Revoke a PAK. Default behaviour: introspect returns null on the next upstream ca
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.apiKeys.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await platform.workspaces.apiKeys.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-api-keys-id)
@@ -871,10 +871,10 @@ Newest first, as the standard cursor-paginated `{data, pagination}` envelope (20
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const apiKey of platform.workspaces.apiKeys.list("workspace")) {
+for await (const apiKey of platform.workspaces.apiKeys.list("acme")) {
   console.log(apiKey);
 }
-const page = await platform.workspaces.apiKeys.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.apiKeys.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-api-keys)
@@ -896,7 +896,7 @@ Describe the key a mint with this `preset` or these `policy_ids` would create, w
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const pakGrantPreview = await platform.workspaces.apiKeys.preview("workspace", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
+const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-api-keys-preview)
@@ -916,7 +916,7 @@ Get a single PAK by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicApiKey = await platform.workspaces.apiKeys.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const publicApiKey = await platform.workspaces.apiKeys.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-api-keys-id)
@@ -938,7 +938,7 @@ Mint a replacement for an existing PAK, carrying its name, description and polic
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const rotatePak = await platform.workspaces.apiKeys.rotate("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { grace_hours: 24 });
+const rotatePak = await platform.workspaces.apiKeys.rotate("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-api-keys-id-rotate)
@@ -961,7 +961,7 @@ Update a PAK’s name or description (does not touch bindings).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicApiKey = await platform.workspaces.apiKeys.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "string" });
+const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-api-keys-id)
@@ -984,7 +984,7 @@ Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the me
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicApiKey = await platform.workspaces.apiKeys.updateBindings("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { policy_ids: ["string"] });
+const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["string"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-api-keys-id-bindings)
@@ -1007,7 +1007,7 @@ List the ready-made permission sets a workspace key can be minted with (`preset`
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const preset of platform.workspaces.apiKeys.presets.list("workspace")) {
+for await (const preset of platform.workspaces.apiKeys.presets.list("acme")) {
   console.log(preset);
 }
 ```
@@ -1036,10 +1036,10 @@ Audit timeline for workspace-scoped events — workspace, member, role, invite, 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const auditFeed of platform.workspaces.auditFeed.list("workspace")) {
+for await (const auditFeed of platform.workspaces.auditFeed.list("acme")) {
   console.log(auditFeed);
 }
-const page = await platform.workspaces.auditFeed.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.auditFeed.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-audit-feed)
@@ -1066,7 +1066,7 @@ The response is streamed: rows are walked in keyset batches and written as they 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await platform.workspaces.auditLogs.export("workspace");
+const response = await platform.workspaces.auditLogs.export("acme");
 const text = await response.text();
 ```
 
@@ -1088,10 +1088,10 @@ List workspace audit log entries, newest first. Filter by `?action=`, `?actor_id
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const auditLog of platform.workspaces.auditLogs.list("workspace")) {
+for await (const auditLog of platform.workspaces.auditLogs.list("acme")) {
   console.log(auditLog);
 }
-const page = await platform.workspaces.auditLogs.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.auditLogs.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-audit-logs)
@@ -1112,7 +1112,7 @@ Clear the workspace avatar and delete the stored object. Gated by `workspace.set
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.avatar.clear("workspace");
+await platform.workspaces.avatar.clear("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-avatar)
@@ -1132,7 +1132,7 @@ Upload (or replace) the workspace identity avatar. Gated by `workspace.settings.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceAvatarUrl = await platform.workspaces.avatar.upload("workspace", { file: new File(["…"], "image.png", { type: "image/png" }) });
+const workspaceAvatarUrl = await platform.workspaces.avatar.upload("acme", { file: new File(["…"], "image.png", { type: "image/png" }) });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-avatar)
@@ -1182,7 +1182,7 @@ Create a workspace invite link. Cookie/JWT only — invites bring new humans int
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceInvite = await platform.workspaces.invites.create("workspace", { email: "alice@example.com" });
+const workspaceInvite = await platform.workspaces.invites.create("acme", { email: "alice@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-invites)
@@ -1201,7 +1201,7 @@ Revoke a workspace invite. Cookie/JWT only.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.invites.delete("workspace", "invite");
+await platform.workspaces.invites.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-invites-invite-id)
@@ -1224,10 +1224,10 @@ List workspace invites, newest first. Cursor-paginated.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const invite of platform.workspaces.invites.list("workspace")) {
+for await (const invite of platform.workspaces.invites.list("acme")) {
   console.log(invite);
 }
-const page = await platform.workspaces.invites.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.invites.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-invites)
@@ -1249,7 +1249,7 @@ Remove a member from a workspace (or self-leave).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.members.delete("workspace", "account");
+await platform.workspaces.members.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-members-account-id)
@@ -1272,10 +1272,10 @@ List workspace members, oldest join first. Narrow with `?q=` (name / username / 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const member of platform.workspaces.members.list("workspace")) {
+for await (const member of platform.workspaces.members.list("acme")) {
   console.log(member);
 }
-const page = await platform.workspaces.members.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.members.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-members)
@@ -1298,7 +1298,7 @@ Update a member's role. Body: { roleId } or { role: "owner"|"admin"|"member" }.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const updateMemberRole = await platform.workspaces.members.updateRole("workspace", "account", { role: "owner" });
+const updateMemberRole = await platform.workspaces.members.updateRole("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role: "owner" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-members-account-id-role)
@@ -1323,7 +1323,7 @@ Create a managed policy. Cookie/JWT only — policy authoring is a human-admin s
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const managedPolicy = await platform.workspaces.policies.create("workspace", {
+const managedPolicy = await platform.workspaces.policies.create("acme", {
   name: "mail-readonly",
   policy: [{ actions: ["mail.read", "mail.list"], effect: "allow", resources: ["*"] }],
 });
@@ -1345,7 +1345,7 @@ Delete a managed policy. Cascades: API keys lose the binding (deny-all if no oth
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const managedPolicyDeleted = await platform.workspaces.policies.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const managedPolicyDeleted = await platform.workspaces.policies.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-policies-policy-id)
@@ -1366,10 +1366,10 @@ List managed policies in a workspace, alphabetically. 20/page (max 100), cursor-
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const policy of platform.workspaces.policies.list("workspace")) {
+for await (const policy of platform.workspaces.policies.list("acme")) {
   console.log(policy);
 }
-const page = await platform.workspaces.policies.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.policies.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-policies)
@@ -1387,7 +1387,7 @@ Get a managed policy by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const managedPolicyDetail = await platform.workspaces.policies.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const managedPolicyDetail = await platform.workspaces.policies.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-policies-policy-id)
@@ -1410,7 +1410,7 @@ Update a managed policy. Owners and admins; a policy bound to a role, or a prese
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const managedPolicyDetail = await platform.workspaces.policies.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "Read-only access to all Mail resources" });
+const managedPolicyDetail = await platform.workspaces.policies.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Read-only access to all Mail resources" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-policies-policy-id)
@@ -1431,7 +1431,7 @@ List every known workspace action (catalog of statement actions).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceActionCatalog = await platform.workspaces.policies.actions.catalog("workspace");
+const workspaceActionCatalog = await platform.workspaces.policies.actions.catalog("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-policies-actions-catalog)
@@ -1457,7 +1457,7 @@ Create a new custom role. Cookie/JWT only — role authoring is a human-admin su
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceRole = await platform.workspaces.roles.create("workspace", { name: "BillingAdmin" });
+const workspaceRole = await platform.workspaces.roles.create("acme", { name: "BillingAdmin" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-roles)
@@ -1478,7 +1478,7 @@ Delete a custom role (fails if it has members). Cookie/JWT only — role authori
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.roles.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await platform.workspaces.roles.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-roles-role-id)
@@ -1499,10 +1499,10 @@ List roles in a workspace. System roles first, then alphabetical. 20/page (max 1
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const role of platform.workspaces.roles.list("workspace")) {
+for await (const role of platform.workspaces.roles.list("acme")) {
   console.log(role);
 }
-const page = await platform.workspaces.roles.list("workspace", {}, { timeout: 5_000 });
+const page = await platform.workspaces.roles.list("acme", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-roles)
@@ -1522,7 +1522,7 @@ Get a role + its permissions.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceRole = await platform.workspaces.roles.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const workspaceRole = await platform.workspaces.roles.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-roles-role-id)
@@ -1545,7 +1545,7 @@ Update a role or replace its permission set. Cookie/JWT only — role authoring 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceRole = await platform.workspaces.roles.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "string" });
+const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-roles-role-id)
@@ -1568,7 +1568,7 @@ Disable a service (settings are retained).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await platform.workspaces.services.disable("workspace", "service");
+await platform.workspaces.services.disable("acme", "mail");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-services-service)
@@ -1590,7 +1590,7 @@ Enable (or re-enable) a service for this workspace.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceServiceState = await platform.workspaces.services.enable("workspace", "service", { settings: {} });
+const workspaceServiceState = await platform.workspaces.services.enable("acme", "mail", { settings: {} });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-services-service)
@@ -1609,7 +1609,7 @@ List services activated on this workspace. Complete — one row per product, not
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWorkspaceServices = await platform.workspaces.services.list("workspace");
+const listWorkspaceServices = await platform.workspaces.services.list("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-services)
@@ -1631,7 +1631,7 @@ Replace the settings jsonb for an active service.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const workspaceServiceState = await platform.workspaces.services.updateSettings("workspace", "service", { default_sender: "noreply@acme.com" });
+const workspaceServiceState = await platform.workspaces.services.updateSettings("acme", "mail", { default_sender: "noreply@acme.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-services-service-settings)

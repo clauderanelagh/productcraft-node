@@ -6,126 +6,129 @@ const auth = new Auth();
 
 // me.activity.list: Recent account activity
 {
-  for await (const activity of auth.consumer("app").me.activity.list()) {
+  for await (const activity of auth.consumer("my-app").me.activity.list()) {
     console.log(activity);
   }
 }
 
 // me.changePassword: Change the password of the signed-in EndUser
 {
-  await auth.consumer("app").me.changePassword({ current_password: "string", new_password: "string" });
+  await auth.consumer("my-app").me.changePassword({
+    current_password: "correct horse battery staple",
+    new_password: "a new long passphrase 42",
+  });
 }
 
 // me.contacts.create: Add a new contact (unverified, non-primary)
 {
-  const meContact = await auth.consumer("app").me.contacts.create({ type: "email", value: "string" });
+  const meContact = await auth.consumer("my-app").me.contacts.create({ type: "email", value: "ada@example.com" });
 }
 
 // me.contacts.delete: Delete a contact
 {
-  await auth.consumer("app").me.contacts.delete("id");
+  await auth.consumer("my-app").me.contacts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // me.contacts.list: List the EndUser's contacts
 {
-  const meContacts = await auth.consumer("app").me.contacts.list();
+  const meContacts = await auth.consumer("my-app").me.contacts.list();
 }
 
 // me.contacts.promote: Promote a verified contact to primary
 {
-  await auth.consumer("app").me.contacts.promote("id");
+  await auth.consumer("my-app").me.contacts.promote("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // me.deleteAccount: Permanently delete the signed-in EndUser account
 {
-  await auth.consumer("app").me.deleteAccount();
+  await auth.consumer("my-app").me.deleteAccount();
 }
 
 // me.deleteAvatar: Remove the EndUser avatar
 {
-  await auth.consumer("app").me.deleteAvatar();
+  await auth.consumer("my-app").me.deleteAvatar();
 }
 
 // me.mfa.factors.create: Begin enrollment of a new MFA factor
 {
-  const startEnrollment = await auth.consumer("app").me.mfa.factors.create({ type: "totp" });
+  const startEnrollment = await auth.consumer("my-app").me.mfa.factors.create({ type: "totp" });
 }
 
 // me.mfa.factors.delete: Disable an MFA factor
 {
-  await auth.consumer("app").me.mfa.factors.delete("id");
+  await auth.consumer("my-app").me.mfa.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // me.mfa.factors.list: List the authenticated EndUser's MFA factors
 {
-  const factorList = await auth.consumer("app").me.mfa.factors.list();
+  const factorList = await auth.consumer("my-app").me.mfa.factors.list();
 }
 
 // me.mfa.factors.verify: Confirm enrollment of a pending factor
 {
-  const confirmEnrollment = await auth.consumer("app").me.mfa.factors.verify("id", { code: "123456" });
+  const confirmEnrollment = await auth.consumer("my-app").me.mfa.factors.verify("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "123456" });
 }
 
 // me.mfa.recoveryCodes.regenerate: Regenerate the recovery-code set
 {
-  const recoveryCodes = await auth.consumer("app").me.mfa.recoveryCodes.regenerate();
+  const recoveryCodes = await auth.consumer("my-app").me.mfa.recoveryCodes.regenerate();
 }
 
 // me.mfa.stepUp.sendCode: Email a step-up code
 {
-  const stepUpSendCode = await auth.consumer("app").me.mfa.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+  const stepUpSendCode = await auth.consumer("my-app").me.mfa.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
 }
 
 // me.mfa.stepUp.verify: Bump this session's MFA recency
 {
-  const stepUp = await auth.consumer("app").me.mfa.stepUp.verify({ code: "123456" });
+  const stepUp = await auth.consumer("my-app").me.mfa.stepUp.verify({ code: "123456" });
 }
 
 // me.mfa.stepUp.webauthn.options: Get passkey assertion options for step-up
 {
-  const webauthnOptions = await auth.consumer("app").me.mfa.stepUp.webauthn.options();
+  const webauthnOptions = await auth.consumer("my-app").me.mfa.stepUp.webauthn.options();
 }
 
 // me.permissions: Resolve the signed-in EndUser's effective permissions
 {
-  const mePermissions = await auth.consumer("app").me.permissions();
+  const mePermissions = await auth.consumer("my-app").me.permissions();
 }
 
 // me.retrieve: Get the signed-in EndUser profile
 {
-  const meProfile = await auth.consumer("app").me.retrieve();
+  const meProfile = await auth.consumer("my-app").me.retrieve();
 }
 
 // me.sessions.delete: Revoke a session
 {
-  await auth.consumer("app").me.sessions.delete("id");
+  await auth.consumer("my-app").me.sessions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // me.sessions.list: List all active sessions for the EndUser
 {
-  for await (const session of auth.consumer("app").me.sessions.list()) {
+  for await (const session of auth.consumer("my-app").me.sessions.list()) {
     console.log(session);
   }
 }
 
 // me.tenantInvites.accept: Accept a tenant invite as the signed-in EndUser
 {
-  const acceptedTenantInvite = await auth.consumer("app").me.tenantInvites.accept({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU" });
+  const acceptedTenantInvite = await auth.consumer("my-app").me.tenantInvites.accept({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU" });
 }
 
 // me.tenants.list: List the EndUser's tenant memberships in this app
 {
-  const myTenants = await auth.consumer("app").me.tenants.list();
+  const myTenants = await auth.consumer("my-app").me.tenants.list();
 }
 
 // me.update: Update the signed-in EndUser profile
 {
-  const meUpdatedAccount = await auth.consumer("app").me.update({ display_name: "Ada Lovelace" });
+  const meUpdatedAccount = await auth.consumer("my-app").me.update({ display_name: "Ada Lovelace" });
 }
 
 // me.uploadAvatar: Upload (or replace) the EndUser avatar
 {
-  const avatarUrl = await auth.consumer("app").me.uploadAvatar({ file: new File(["…"], "image.png", { type: "image/png" }) });
+  const avatarUrl = await auth.consumer("my-app").me.uploadAvatar({ file: new File(["…"], "image.png", { type: "image/png" }) });
 }
 
 export {};

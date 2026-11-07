@@ -6,71 +6,71 @@ const auth = new Auth();
 
 // tenants.create: Create a tenant inside this app. Returns the new tenant with a `display_id` (`tnt_<12hex>`). PAK must hold auth.tenant.create.
 {
-  const consumerTenant = await auth.consumer("app").tenants.create({ display_name: "Acme Co" });
+  const consumerTenant = await auth.consumer("my-app").tenants.create({ display_name: "Acme Co" });
 }
 
 // tenants.delete: Delete a tenant. Cascades to tenant_membership rows; account rows are unaffected. PAK must hold auth.tenant.delete.
 {
-  await auth.consumer("app").tenants.delete("tenant");
+  await auth.consumer("my-app").tenants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.invites.create: Invite an email address into a tenant. Mints a pending invite, mails the code through the app's `invite_template_name` Envoi slot, and returns the plaintext code ONCE. PAK must hold auth.tenant.members.add.
 {
-  const createTenantInvite = await auth.consumer("app").tenants.invites.create("tenant", { email: "alice@example.com", role_name: "member" });
+  const createTenantInvite = await auth.consumer("my-app").tenants.invites.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email: "alice@example.com", role_name: "member" });
 }
 
 // tenants.invites.delete: Revoke a pending invite. Idempotent — revoking an already-revoked invite is a 204 no-op and fires no second webhook. PAK must hold auth.tenant.members.remove.
 {
-  await auth.consumer("app").tenants.invites.delete("tenant", "invite");
+  await auth.consumer("my-app").tenants.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.invites.list: List a tenant's invites, newest first. Optional `?status=pending|revoked|expired|used`. PAK must hold auth.tenant.read.
 {
-  for await (const invite of auth.consumer("app").tenants.invites.list("tenant")) {
+  for await (const invite of auth.consumer("my-app").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(invite);
   }
-  const page = await auth.consumer("app").tenants.invites.list("tenant", {}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // tenants.list: List tenants in this app, paginated by created_at desc. PAK must hold auth.tenant.read.
 {
-  for await (const tenant of auth.consumer("app").tenants.list()) {
+  for await (const tenant of auth.consumer("my-app").tenants.list()) {
     console.log(tenant);
   }
-  const page = await auth.consumer("app").tenants.list({}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").tenants.list({}, { timeout: 5_000 });
 }
 
 // tenants.members.create: Add a member to a tenant. Pass `accountId` for an existing user, or `email` (+ optional `display_name`/`username`) to auto-create the account inline. PAK must hold auth.tenant.members.add.
 {
-  const consumerAddMember = await auth.consumer("app").tenants.members.create("tenant", { role_name: "member" });
+  const consumerAddMember = await auth.consumer("my-app").tenants.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 }
 
 // tenants.members.delete: Remove a member from a tenant. The underlying account row stays in the app — only the tenant_membership row is deleted. PAK must hold auth.tenant.members.remove.
 {
-  await auth.consumer("app").tenants.members.delete("tenant", "account");
+  await auth.consumer("my-app").tenants.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.members.list: List members of a tenant. Cursor-paginated by joined_at desc. Filter by `?search=` and/or `?role=`. PAK must hold auth.tenant.read.
 {
-  for await (const member of auth.consumer("app").tenants.members.list("tenant")) {
+  for await (const member of auth.consumer("my-app").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(member);
   }
-  const page = await auth.consumer("app").tenants.members.list("tenant", {}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // tenants.members.update: Change a member's role. PAK must hold auth.tenant.members.update-role.
 {
-  const consumerTenantMembership = await auth.consumer("app").tenants.members.update("tenant", "account", { role_name: "admin" });
+  const consumerTenantMembership = await auth.consumer("my-app").tenants.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 }
 
 // tenants.retrieve: Fetch a single tenant by its UUID or `tnt_<12hex>` display id. PAK must hold auth.tenant.read.
 {
-  const consumerTenant = await auth.consumer("app").tenants.retrieve("tenant");
+  const consumerTenant = await auth.consumer("my-app").tenants.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenants.update: Patch a tenant. Any subset of {display_name, slug, status, metadata}. PAK must hold auth.tenant.update.
 {
-  const consumerTenant = await auth.consumer("app").tenants.update("tenant", { display_name: "string" });
+  const consumerTenant = await auth.consumer("my-app").tenants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Acme Inc" });
 }
 
 export {};

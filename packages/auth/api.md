@@ -15,8 +15,11 @@ Create a new app owned by the caller.
 
 The new app starts with emails to its users turned on: they go out from the workspace default sender chosen in Mail, and the default verification, welcome, password-reset, invite and sign-in code templates are created in the workspace's Mail templates (an existing template with the same name is reused). Change or turn this off with `PATCH /v1/apps/{appId}/notification-settings`.
 
+**Sign-up starts off.** A new app has `signup_enabled: false`, so `POST /{app_slug}/v1/auth/signup` answers 403 `FORBIDDEN` ("Signup is disabled for this app") until you turn it on with `PATCH /v1/apps/{app_id}/auth-config` and `{ "signup_enabled": true }`. Sign-in, invites and admin-created users work either way.
+
 - Params: `Auth.AppCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -42,6 +45,8 @@ const app = await auth.apps.create({
 
 Delete an app permanently.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -50,7 +55,7 @@ Delete an app permanently.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.apps.delete("app");
+await auth.apps.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id)
@@ -63,6 +68,7 @@ List apps in workspaces the caller is a member of. Pass `workspace_id` to scope 
 
 - Params: `Auth.AppListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -85,6 +91,8 @@ const page = await auth.apps.list({}, { timeout: 5_000 });
 
 Get app details.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -93,7 +101,7 @@ Get app details.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const app = await auth.apps.retrieve("app");
+const app = await auth.apps.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id)
@@ -105,6 +113,7 @@ const app = await auth.apps.retrieve("app");
 Update app display name, slug, metadata, and retention settings.
 
 - Params: `Auth.AppUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -113,7 +122,7 @@ Update app display name, slug, metadata, and retention settings.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const app = await auth.apps.update("app", { audit_retention_days: 365 });
+const app = await auth.apps.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { audit_retention_days: 365 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id)
@@ -129,6 +138,7 @@ Aggregate counts for the signed-in PlatformUser.
 Returns total Auth apps owned by workspaces the caller is a member of, end-users across those apps, and active API keys across those apps. Pass `workspace_id` to scope the counts to a single workspace — required from the dashboard so cross-tenant data does not bleed into the totals.
 
 - Params: `Auth.StatsMeParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -154,6 +164,7 @@ Active end users over 1, 7 and 30 days, total and new end users, production app 
 Days are UTC. Counts only: no end-user identifiers. Cached for up to 60 seconds (`generated_at`).
 
 - Params: `Auth.StatsRetrieveParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -175,6 +186,10 @@ const authWorkspaceStats = await auth.stats.retrieve();
 
 Verifies the signature and returns `Auth.UnwrapWebhookEvent`. Events: `app.slug_changed`, `tenant.created`, `tenant.deleted`, `tenant.invite.accepted`, `tenant.invite.created`, `tenant.invite.revoked`, `tenant.member.added`, `tenant.member.removed`, `tenant.member.role_changed`, `tenant.updated`, `user.contact_verified`, `user.deactivated`, `user.deleted`, `user.email_verified`, `user.mfa.enrollment_required`, `user.mfa.factor_disabled`, `user.mfa.factor_enrolled`, `user.mfa.recovery_code_used`, `user.mfa.reenrollment_required`, `user.mfa.step_up_locked`, `user.mfa.step_up_succeeded`, `user.password_reset.completed`, `user.password_reset.requested`, `user.reinstated`, `user.role_changed`, `user.signin`, `user.signup`, `user.suspended`, plus `UnknownWebhookEvent` for types added later.
 
+### `auth.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
+
 ## admin.app(…)
 
 ### `auth.admin.app(…).clone(params, options?)`
@@ -185,6 +200,7 @@ Create a second app in the same workspace whose configuration matches this one �
 
 - Params: `Auth.CloneParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -196,7 +212,7 @@ Create a second app in the same workspace whose configuration matches this one �
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const cloneApp = await auth.admin.app("app").clone({ environment: "staging", slug: "acme-app-staging" });
+const cloneApp = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").clone({ environment: "staging", slug: "acme-app-staging" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-clone)
@@ -208,6 +224,7 @@ const cloneApp = await auth.admin.app("app").clone({ environment: "staging", slu
 Update app status (active, suspended, archived).
 
 - Params: `Auth.UpdateStatusParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -218,7 +235,7 @@ Update app status (active, suspended, archived).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const app = await auth.admin.app("app").updateStatus({ status: "suspended" });
+const app = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").updateStatus({ status: "suspended" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-status)
@@ -233,6 +250,7 @@ Mint a new hdk_live_* API key with an explicit permission scope. The raw key is 
 
 - Params: `Auth.ApiKeyCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -244,7 +262,7 @@ Mint a new hdk_live_* API key with an explicit permission scope. The raw key is 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createApiKey = await auth.admin.app("app").apiKeys.create({ name: "CI deploy bot", permissions: ["user.read", "user.list"] });
+const createApiKey = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.create({ name: "CI deploy bot", permissions: ["user.read", "user.list"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-api-keys)
@@ -255,6 +273,8 @@ const createApiKey = await auth.admin.app("app").apiKeys.create({ name: "CI depl
 
 Revoke an API key. The key stops authenticating immediately; the row is kept (soft delete) so the list and the audit trail can still answer who revoked it and when.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -262,7 +282,7 @@ Revoke an API key. The key stops authenticating immediately; the row is kept (so
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").apiKeys.delete("key");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-api-keys-key-id)
@@ -275,6 +295,7 @@ List API keys for an app (no raw secret), newest first. Cursor-paginated: 20/pag
 
 - Params: `Auth.ApiKeyListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -283,10 +304,10 @@ List API keys for an app (no raw secret), newest first. Cursor-paginated: 20/pag
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const apiKey of auth.admin.app("app").apiKeys.list()) {
+for await (const apiKey of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.list()) {
   console.log(apiKey);
 }
-const page = await auth.admin.app("app").apiKeys.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-api-keys)
@@ -299,6 +320,7 @@ Mint a replacement for an existing key, carrying its name and permissions over. 
 
 - Params: `Auth.ApiKeyRotateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -308,7 +330,7 @@ Mint a replacement for an existing key, carrying its name and permissions over. 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const rotateApiKey = await auth.admin.app("app").apiKeys.rotate("key", { grace_hours: 24 });
+const rotateApiKey = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").apiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-api-keys-key-id-rotate)
@@ -324,6 +346,7 @@ Stream this app's audit log as NDJSON or CSV, applying the same `?action=` / `?a
 The response is streamed: rows are walked in keyset batches and written as they are read, so neither the service nor the client has to hold the whole result set. Works on both lanes — a platform bearer token and a `pcft_live_*` Platform API Key with `auth.audit.read` hit the same route. Hard cap of 1,000,000 rows per call; a wider request is refused with 413 before any body is written, so a truncated file can never masquerade as a complete one.
 
 - Params: `Auth.AuditLogExportParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -335,7 +358,7 @@ The response is streamed: rows are walked in keyset batches and written as they 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await auth.admin.app("app").auditLogs.export();
+const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.export();
 const text = await response.text();
 ```
 
@@ -349,6 +372,7 @@ Append-only audit log for this app, newest first. Filter by `?action=`, `?actor_
 
 - Params: `Auth.AuditLogListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -359,10 +383,10 @@ Append-only audit log for this app, newest first. Filter by `?action=`, `?actor_
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const auditLog of auth.admin.app("app").auditLogs.list()) {
+for await (const auditLog of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.list()) {
   console.log(auditLog);
 }
-const page = await auth.admin.app("app").auditLogs.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditLogs.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-audit-logs)
@@ -375,6 +399,8 @@ const page = await auth.admin.app("app").auditLogs.list({}, { timeout: 5_000 });
 
 Remove the audit sink. Shipping stops immediately; the audit log itself is untouched.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -383,7 +409,7 @@ Remove the audit sink. Shipping stops immediately; the audit log itself is untou
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").auditSink.disconnect();
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.disconnect();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-audit-sink)
@@ -397,6 +423,7 @@ Create or replace the audit sink. Returns a freshly generated signing secret exa
 Audit rows are POSTed in batches of up to 100, signed with the same `X-Auth-Signature: t=<unix>,v1=<hex>` HMAC header as the outbound webhooks. Delivery is at-least-once: the cursor advances only after a 2xx, so a batch that times out after the receiver processed it is re-sent. Every record carries its immutable `audit_log` id, so dedupe on that. A new sink starts from the moment it is created — configuring one does not replay the existing history into your SIEM. Replacing an existing sink clears the auto-disabled state (the same "I fixed my receiver" signal a webhook PUT carries) but does NOT rewind the cursor.
 
 - Params: `Auth.AuditSinkReplaceParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -407,7 +434,7 @@ Audit rows are POSTed in batches of up to 100, signed with the same `X-Auth-Sign
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSinkWithSecret = await auth.admin.app("app").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
+const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.replace({ url: "https://siem.customer.example.com/ingest/productcraft-auth" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-audit-sink)
@@ -418,6 +445,8 @@ const auditSinkWithSecret = await auth.admin.app("app").auditSink.replace({ url:
 
 Current audit sink for this app, or 404 when none is configured. Never returns the signing secret — only its last-4 hint.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -426,7 +455,7 @@ Current audit sink for this app, or 404 when none is configured. Never returns t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSink = await auth.admin.app("app").auditSink.retrieve();
+const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-audit-sink)
@@ -439,6 +468,8 @@ Issue a new signing secret, returned exactly once.
 
 The new secret signs every batch from now on; the old one stops at once. Update your receiver right away: batches it rejects in between are retried every minute (the position only moves after a 2xx), so nothing is lost, but export stops after 20 failures in a row. Clears the receiver-test proof.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -447,7 +478,7 @@ The new secret signs every batch from now on; the old one stops at once. Update 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSinkWithSecret = await auth.admin.app("app").auditSink.rotateSecret();
+const auditSinkWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.rotateSecret();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-audit-sink-rotate-secret)
@@ -460,6 +491,8 @@ Get the audit export checklist: destination, receiver test and delivery.
 
 Rows, in order: `destination` (not_set until a sink exists), `test_batch` (pass once the receiver accepted a test batch with the current address and secret; blocked when the last test was refused; carries `test.action: audit_sink.test`, run with `POST /v1/apps/{appId}/audit-sink/test`), and `delivery` (blocked when export stopped after repeated failures, attention while paused or while recent batches fail). Computed from the stored sink on every request; answers 200 whether or not a sink exists.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -468,7 +501,7 @@ Rows, in order: `destination` (not_set until a sink exists), `test_batch` (pass 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const setupStatus = await auth.admin.app("app").auditSink.setupStatus();
+const setupStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.setupStatus();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-audit-sink-setup-status)
@@ -482,6 +515,7 @@ Send a test batch to the receiver now and report what it answered.
 POSTs one signed batch, shaped exactly like a real one (`type: audit.batch`, same headers and signature), with `test: true` and a single synthetic record whose `id` starts with `test_`. Works while export is paused or stopped, so a fix can be proven before export is turned back on. The outcome is recorded on the sink (`last_attempt_*`, `last_test_succeeded_at`) but never moves the position in the audit log or counts toward the automatic stop. A refused test is still a 200 with `delivered: false`. At most 20 tests per app per hour.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -492,7 +526,7 @@ POSTs one signed batch, shaped exactly like a real one (`type: audit.batch`, sam
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 tests for this app in the last hour (`RATE_LIMITED`). |
 
 ```ts
-const auditSinkTestResult = await auth.admin.app("app").auditSink.test();
+const auditSinkTestResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.test();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-audit-sink-test)
@@ -506,6 +540,7 @@ Change the address or switch export on or off, keeping the signing secret.
 Send `url`, `enabled` or both. `enabled: false` pauses export; `enabled: true` resumes it and clears a stop after repeated failures and the failure count. The position in the audit log is never moved: nothing is skipped and nothing is replayed twice on purpose. A new `url` is checked by the same address guard as `PUT`.
 
 - Params: `Auth.AuditSinkUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -516,7 +551,7 @@ Send `url`, `enabled` or both. `enabled: false` pauses export; `enabled: true` r
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const auditSink = await auth.admin.app("app").auditSink.update({ enabled: true });
+const auditSink = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").auditSink.update({ enabled: true });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-audit-sink)
@@ -529,6 +564,8 @@ const auditSink = await auth.admin.app("app").auditSink.update({ enabled: true }
 
 Get the per-app auth config (signup, signin, password policy, sessions).
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -537,7 +574,7 @@ Get the per-app auth config (signup, signin, password policy, sessions).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const authConfig = await auth.admin.app("app").authConfig.retrieve();
+const authConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-auth-config)
@@ -549,6 +586,7 @@ const authConfig = await auth.admin.app("app").authConfig.retrieve();
 Update the per-app auth config. Only fields you pass are changed.
 
 - Params: `Auth.AuthConfigUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -560,7 +598,7 @@ Update the per-app auth config. Only fields you pass are changed.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const authConfig = await auth.admin.app("app").authConfig.update({ access_token_minutes: 60 });
+const authConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.update({ access_token_minutes: 60 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-auth-config)
@@ -575,6 +613,8 @@ Check the saved provider credentials with the provider.
 
 Calls the provider's token endpoint with a dummy sign-in code. If the provider refuses the client (`invalid_client`, GitHub `incorrect_client_credentials` or `unknown_client`), the result is `credentials_rejected` and the provider shows as `blocked` with reason `credentials_rejected` until the credentials are fixed. If it only refuses the code (`invalid_grant`, `bad_verification_code`), the credentials are valid. Nobody is signed in. The result is saved on the provider (`last_check_*`). The same check runs automatically whenever the credentials are saved. Works for a provider that is saved but not switched on yet.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown provider id, or the saved config can no longer be read. |
@@ -584,7 +624,7 @@ Calls the provider's token endpoint with a dummy sign-in code. If the provider r
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const providerCheck = await auth.admin.app("app").authConfig.providers.check("provider");
+const providerCheck = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.check("google");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-auth-config-providers-provider-check)
@@ -595,6 +635,8 @@ const providerCheck = await auth.admin.app("app").authConfig.providers.check("pr
 
 Remove the config for an (app, provider). Existing identity rows (people who already signed in with this provider) stay; they just lose the ability to sign in again until config is re-uploaded.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown provider id. |
@@ -602,7 +644,7 @@ Remove the config for an (app, provider). Existing identity rows (people who alr
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").authConfig.providers.delete("provider");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.delete("google");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-auth-config-providers-provider)
@@ -615,6 +657,8 @@ List federated sign-in providers Auth supports, with their setup status for this
 
 Each entry carries `status` (`ready` | `blocked` | `disabled` | `not_configured`) and `blocked_reasons`, computed on the server with the same rule the web sign-in flow enforces, so a provider shown as `ready` is one people can actually sign in with.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -623,7 +667,7 @@ Each entry carries `status` (`ready` | `blocked` | `disabled` | `not_configured`
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.admin.app("app").authConfig.providers.list();
+const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-auth-config-providers)
@@ -635,6 +679,7 @@ const result = await auth.admin.app("app").authConfig.providers.list();
 Write or replace the config for an (app, provider). Validates the body via the provider impl's `parseConfig` before encrypting; malformed config 400s. Default `enabled=false`.
 
 - Params: `Auth.AuthConfigProviderReplaceParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -643,7 +688,7 @@ Write or replace the config for an (app, provider). Validates the body via the p
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const providerDetail = await auth.admin.app("app").authConfig.providers.replace("provider", { config: {} });
+const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.replace("google", { config: {} });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-auth-config-providers-provider)
@@ -654,6 +699,8 @@ const providerDetail = await auth.admin.app("app").authConfig.providers.replace(
 
 Get the config for one (app, provider). Secrets are redacted — `private_key_present: true` is the only acknowledgement that a private key is on file.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown provider id. |
@@ -662,7 +709,7 @@ Get the config for one (app, provider). Secrets are redacted — `private_key_pr
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const providerDetail = await auth.admin.app("app").authConfig.providers.retrieve("provider");
+const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.retrieve("google");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-auth-config-providers-provider)
@@ -674,6 +721,7 @@ const providerDetail = await auth.admin.app("app").authConfig.providers.retrieve
 Partially update the config for an (app, provider). Only top-level keys present in `config` are changed; omitted keys — secrets included — keep their stored values. The merged config is validated by the provider impl's `parseConfig`; 404 if the provider is not configured yet (create it with PUT).
 
 - Params: `Auth.AuthConfigProviderUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -683,7 +731,7 @@ Partially update the config for an (app, provider). Only top-level keys present 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const providerDetail = await auth.admin.app("app").authConfig.providers.update("provider", { config: {} });
+const providerDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.update("google", { config: {} });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-auth-config-providers-provider)
@@ -698,6 +746,7 @@ Create a new M2M client.
 
 - Params: `Auth.CredentialCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -709,7 +758,7 @@ Create a new M2M client.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const m2mClientCreate = await auth.admin.app("app").credentials.create({ name: "CI Pipeline" });
+const m2mClientCreate = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.create({ name: "CI Pipeline" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-credentials)
@@ -720,6 +769,8 @@ const m2mClientCreate = await auth.admin.app("app").credentials.create({ name: "
 
 Delete an M2M client.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -728,7 +779,7 @@ Delete an M2M client.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").credentials.delete("client");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.delete("m2m_a1b2c3d4e5f6");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-credentials-client-id)
@@ -741,6 +792,7 @@ List M2M clients.
 
 - Params: `Auth.CredentialListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -750,10 +802,10 @@ List M2M clients.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const credential of auth.admin.app("app").credentials.list()) {
+for await (const credential of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.list()) {
   console.log(credential);
 }
-const page = await auth.admin.app("app").credentials.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-credentials)
@@ -764,6 +816,8 @@ const page = await auth.admin.app("app").credentials.list({}, { timeout: 5_000 }
 
 Get M2M client details.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -772,7 +826,7 @@ Get M2M client details.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const m2mClientDetail = await auth.admin.app("app").credentials.retrieve("client");
+const m2mClientDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.retrieve("m2m_a1b2c3d4e5f6");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-credentials-client-id)
@@ -783,6 +837,8 @@ const m2mClientDetail = await auth.admin.app("app").credentials.retrieve("client
 
 Rotate M2M client secret.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -791,7 +847,7 @@ Rotate M2M client secret.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const m2mRotateSecret = await auth.admin.app("app").credentials.rotate("client");
+const m2mRotateSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.rotate("m2m_a1b2c3d4e5f6");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-credentials-client-id-rotate)
@@ -803,6 +859,7 @@ const m2mRotateSecret = await auth.admin.app("app").credentials.rotate("client")
 Update M2M client status.
 
 - Params: `Auth.CredentialUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -813,7 +870,7 @@ Update M2M client status.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const m2mClientDetail = await auth.admin.app("app").credentials.update("client", { is_active: true });
+const m2mClientDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.update("m2m_a1b2c3d4e5f6", { is_active: true });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-credentials-client-id)
@@ -825,6 +882,7 @@ const m2mClientDetail = await auth.admin.app("app").credentials.update("client",
 Set scopes for an M2M client.
 
 - Params: `Auth.CredentialUpdateScopesParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -835,7 +893,7 @@ Set scopes for an M2M client.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.admin.app("app").credentials.updateScopes("client", { permissions: ["user.read", "app.read"] });
+const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").credentials.updateScopes("m2m_a1b2c3d4e5f6", { permissions: ["user.read", "app.read"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-credentials-client-id-scopes)
@@ -852,6 +910,7 @@ Reads the zone through the provider's API and plans both records: `create`, or `
 
 - Params: `Auth.CustomDomainApplyParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -864,7 +923,7 @@ Reads the zone through the provider's API and plans both records: `create`, or `
 | 502 | `InternalServerError` | `BAD_GATEWAY`, `PROVIDER_UNAVAILABLE`, `PROVIDER_ERROR` | The provider failed or did not answer (`PROVIDER_UNAVAILABLE`, `PROVIDER_ERROR`). Nothing was written unless the plan items say so. |
 
 ```ts
-const customDomainApplyResult = await auth.admin.app("app").customDomains.apply("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { dry_run: true, provider: "cloudflare", token: "cf-token-from-your-dashboard" });
+const customDomainApplyResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.apply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { dry_run: true, provider: "cloudflare", token: "cf-token-from-your-dashboard" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-custom-domains-domain-id-apply)
@@ -877,6 +936,8 @@ Check the custom domain's DNS records now.
 
 Asks the zone's own nameservers and a public resolver for both records, stores each record's state and conflicts, and moves the status: `active` once both are verified; an active domain turns `failing` only when a record is definitely gone or blocked (a DNS outage never takes a working domain down). Safe to repeat.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `domainId` is not a UUID. |
@@ -886,7 +947,7 @@ Asks the zone's own nameservers and a public resolver for both records, stores e
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const customDomain = await auth.admin.app("app").customDomains.check("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.check("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-custom-domains-domain-id-check)
@@ -901,6 +962,7 @@ Returns the two records to publish: a CNAME from the host to `edge_target`, and 
 
 - Params: `Auth.CustomDomainCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -912,7 +974,7 @@ Returns the two records to publish: a CNAME from the host to `edge_target`, and 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const customDomain = await auth.admin.app("app").customDomains.create({ hostname: "auth.acme.com" });
+const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.create({ hostname: "auth.acme.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-custom-domains)
@@ -925,6 +987,8 @@ Remove the custom domain.
 
 The host stops serving this app at once and its certificate is no longer renewed. Your DNS records are not touched: delete the CNAME and the `_productcraft-auth` TXT record at your DNS provider. Sign-ins on the canonical host are unaffected.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `domainId` is not a UUID. |
@@ -934,7 +998,7 @@ The host stops serving this app at once and its certificate is no longer renewed
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").customDomains.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-custom-domains-domain-id)
@@ -948,6 +1012,7 @@ Download the custom domain's DNS records as a BIND zone fragment or a CSV.
 `format=bind`: a zone-file fragment (`$ORIGIN <zone>.`, `$TTL 3600`, names relative to the zone, a comment per record with its purpose and any conflict) that Cloudflare and Route 53 import directly. `format=csv`: `type,name,value,priority,ttl,purpose,required`, fully qualified names. By default only records not verified yet; `all=true` for both. Served as an attachment.
 
 - Params: `Auth.CustomDomainExportParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -958,7 +1023,7 @@ Download the custom domain's DNS records as a BIND zone fragment or a CSV.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await auth.admin.app("app").customDomains.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { format: "bind" });
+const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { format: "bind" });
 const text = await response.text();
 ```
 
@@ -973,6 +1038,7 @@ List the app's custom domains (at most one).
 Each with its status and the last check of its records, plus `available`: whether custom domains are switched on for the workspace. Always a single page.
 
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -982,7 +1048,7 @@ Each with its status and the last check of its records, plus `available`: whethe
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const customDomain of auth.admin.app("app").customDomains.list()) {
+for await (const customDomain of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.list()) {
   console.log(customDomain);
 }
 ```
@@ -997,6 +1063,8 @@ Get a custom domain and the last check of its records.
 
 Reads stored state only; `POST …/check` runs a new DNS check.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `domainId` is not a UUID. |
@@ -1006,7 +1074,7 @@ Reads stored state only; `POST …/check` runs a new DNS check.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const customDomain = await auth.admin.app("app").customDomains.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const customDomain = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").customDomains.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-custom-domains-domain-id)
@@ -1019,6 +1087,8 @@ const customDomain = await auth.admin.app("app").customDomains.retrieve("3f0c1a2
 
 Auth health for this app over the last 30 days: verification completion, sign-in failure rate, MFA adoption, password-reset follow-through, and session counts. Rates are null when there is nothing to divide by.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `appId` is not a UUID. |
@@ -1027,7 +1097,7 @@ Auth health for this app over the last 30 days: verification completion, sign-in
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserInsights = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").endUserInsights.retrieve();
+const endUserInsights = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUserInsights.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-user-insights)
@@ -1040,6 +1110,8 @@ const endUserInsights = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a
 
 One end-user's recorded activity: their audit trail, their sessions with device/IP, and their enrolled factors. `noActivityRecorded` distinguishes "nothing happened" from "no data".
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `appId` or `userId` is not a UUID. |
@@ -1049,7 +1121,7 @@ One end-user's recorded activity: their audit trail, their sessions with device/
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserDetailInsights = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").endUserInsights.users.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const endUserDetailInsights = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUserInsights.users.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-user-insights-users-user-id)
@@ -1065,6 +1137,7 @@ Bulk-delete accounts across a selection.
 Deletes every matched account in one transaction. Each deleted account gets an `auth.account.deleted` audit row (`via: platform_bulk`) whose metadata carries the `selection` (`{ mode: "ids" }`, or `{ mode: "filter", filter }`), so a filter sweep reads as one. The workspace audit log gets one `auth.end_users.deleted` row with the count. `user.deleted` (`via: "platform_bulk"`) fires per account only when 100 or fewer were deleted.
 
 - Params: `Auth.EndUserBulkDeleteParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1075,7 +1148,7 @@ Deletes every matched account in one transaction. Each deleted account gets an `
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkDelete({ selection: { mode: "ids" } });
+const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkDelete({ selection: { mode: "ids" } });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-bulk-delete)
@@ -1087,6 +1160,7 @@ const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkDelete({ sele
 Bulk-revoke sessions across a selection.
 
 - Params: `Auth.EndUserBulkRevokeSessionsParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1097,7 +1171,7 @@ Bulk-revoke sessions across a selection.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkRevokeSessions({ selection: { mode: "ids" } });
+const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkRevokeSessions({ selection: { mode: "ids" } });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-bulk-revoke-sessions)
@@ -1109,6 +1183,7 @@ const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkRevokeSession
 Bulk-assign a role across a selection.
 
 - Params: `Auth.EndUserBulkUpdateRoleParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1119,7 +1194,7 @@ Bulk-assign a role across a selection.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkUpdateRole({ role_name: "string", selection: { mode: "ids" } });
+const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkUpdateRole({ role_name: "member", selection: { mode: "ids" } });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-bulk-update-role)
@@ -1131,6 +1206,7 @@ const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkUpdateRole({ 
 Bulk-update status across a selection.
 
 - Params: `Auth.EndUserBulkUpdateStatusParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1141,7 +1217,7 @@ Bulk-update status across a selection.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bulkAffectedUsers = await auth.admin.app("app").endUsers.bulkUpdateStatus({ selection: { mode: "ids" }, status: "suspended" });
+const bulkAffectedUsers = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.bulkUpdateStatus({ selection: { mode: "ids" }, status: "suspended" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-bulk-update-status)
@@ -1154,6 +1230,8 @@ Delete an end-user permanently.
 
 Removes the account with its contacts, sessions and tenant memberships. Writes one `auth.account.deleted` audit row (`via: platform`) in the same transaction, mirrors the deletion into the workspace audit log as `auth.end_users.deleted`, and fires `user.deleted` with `via: "platform"`.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1162,7 +1240,7 @@ Removes the account with its contacts, sessions and tenant memberships. Writes o
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").endUsers.delete("user");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-end-users-user-id)
@@ -1176,6 +1254,7 @@ Stream this app's end-user directory as NDJSON or CSV, applying the list's `?sta
 Streamed in keyset batches — neither the service nor the client holds the whole directory. Ordered oldest-first by `(created_at, id)` so a re-run is stable. Gated on `auth.user.export`, which is escalation class: this hands over every address in the directory in one call, where `auth.list` pages it. Hard cap of 1,000,000 rows; a wider request is refused with 413 before any body is written.
 
 - Params: `Auth.EndUserExportParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1187,7 +1266,7 @@ Streamed in keyset batches — neither the service nor the client holds the whol
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await auth.admin.app("app").endUsers.export();
+const response = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.export();
 const text = await response.text();
 ```
 
@@ -1201,6 +1280,7 @@ List end-users in this app (cursor-paginated).
 
 - Params: `Auth.EndUserListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1209,10 +1289,10 @@ List end-users in this app (cursor-paginated).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const endUser of auth.admin.app("app").endUsers.list()) {
+for await (const endUser of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.list()) {
   console.log(endUser);
 }
-const page = await auth.admin.app("app").endUsers.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-users)
@@ -1223,6 +1303,8 @@ const page = await auth.admin.app("app").endUsers.list({}, { timeout: 5_000 });
 
 Resend verification to the primary email contact.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1232,7 +1314,7 @@ Resend verification to the primary email contact.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const issuedVerificationCode = await auth.admin.app("app").endUsers.resendVerification("user");
+const issuedVerificationCode = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.resendVerification("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-resend-verification)
@@ -1243,6 +1325,8 @@ const issuedVerificationCode = await auth.admin.app("app").endUsers.resendVerifi
 
 Get one end-user.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1251,7 +1335,7 @@ Get one end-user.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserSummary = await auth.admin.app("app").endUsers.retrieve("user");
+const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-users-user-id)
@@ -1263,6 +1347,7 @@ const endUserSummary = await auth.admin.app("app").endUsers.retrieve("user");
 Update end-user display name, primary email, or metadata keys (merged).
 
 - Params: `Auth.EndUserUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1273,7 +1358,7 @@ Update end-user display name, primary email, or metadata keys (merged).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserSummary = await auth.admin.app("app").endUsers.update("user", { display_name: "string" });
+const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Ada Lovelace" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-end-users-user-id)
@@ -1285,6 +1370,7 @@ const endUserSummary = await auth.admin.app("app").endUsers.update("user", { dis
 Assign an end-user a role.
 
 - Params: `Auth.EndUserUpdateRoleParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1295,7 +1381,7 @@ Assign an end-user a role.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserRoleAssignment = await auth.admin.app("app").endUsers.updateRole("user", { role_name: "admin" });
+const endUserRoleAssignment = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.updateRole("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-end-users-user-id-role)
@@ -1307,6 +1393,7 @@ const endUserRoleAssignment = await auth.admin.app("app").endUsers.updateRole("u
 Change end-user status (active / suspended / deactivated).
 
 - Params: `Auth.EndUserUpdateStatusParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1317,7 +1404,7 @@ Change end-user status (active / suspended / deactivated).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserSummary = await auth.admin.app("app").endUsers.updateStatus("user", { status: "suspended" });
+const endUserSummary = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "suspended" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-end-users-user-id-status)
@@ -1332,6 +1419,7 @@ Add a contact for an end-user (unverified).
 
 - Params: `Auth.EndUserContactCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1343,7 +1431,7 @@ Add a contact for an end-user (unverified).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const accountContact = await auth.admin.app("app").endUsers.contacts.create("user", { type: "email", value: "string" });
+const accountContact = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "email", value: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-contacts)
@@ -1354,6 +1442,8 @@ const accountContact = await auth.admin.app("app").endUsers.contacts.create("use
 
 Delete a contact from an end-user.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1363,7 +1453,7 @@ Delete a contact from an end-user.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").endUsers.contacts.delete("user", "contact");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-end-users-user-id-contacts-contact-id)
@@ -1374,6 +1464,8 @@ await auth.admin.app("app").endUsers.contacts.delete("user", "contact");
 
 List an end-user's contacts.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1382,7 +1474,7 @@ List an end-user's contacts.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const accountContactList = await auth.admin.app("app").endUsers.contacts.list("user");
+const accountContactList = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-users-user-id-contacts)
@@ -1393,6 +1485,8 @@ const accountContactList = await auth.admin.app("app").endUsers.contacts.list("u
 
 Promote a verified contact to primary.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1402,7 +1496,7 @@ Promote a verified contact to primary.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").endUsers.contacts.promote("user", "contact");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.promote("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-contacts-contact-id-promote)
@@ -1413,6 +1507,8 @@ await auth.admin.app("app").endUsers.contacts.promote("user", "contact");
 
 Reissue a verification code for a contact.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1422,7 +1518,7 @@ Reissue a verification code for a contact.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const issuedVerificationCode = await auth.admin.app("app").endUsers.contacts.resendVerification("user", "contact");
+const issuedVerificationCode = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.contacts.resendVerification("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-contacts-contact-id-resend-verification)
@@ -1438,6 +1534,7 @@ Queue a bulk end-user import. Body is NDJSON — one JSON object per line. Retur
 Row fields: `email` (required), `username`, `display_name`, `role`, `tenant_slugs` (array), `external_id`, `metadata`, `email_verified`, and `password_hash` + `password_hash_algorithm`.  `password_hash_algorithm` is `argon2id` or `bcrypt`. **argon2id** hashes are accepted at any parameters. **bcrypt** hashes (`$2a$`, `$2b$`, `$2y$` — Auth0, PHP `password_hash`, Spring, node `bcrypt`, Devise / Rails, Laravel, Django) are accepted at any valid cost (4-31), verified on the user's first signin and replaced by an argon2id hash of the same password in that request, so the user keeps their password and never notices. Signin pads a bcrypt verify up to the argon2id floor, so at cost 10 and below an imported account cannot be told apart by timing; at cost 11 and above the verify is slower than the floor and answers when it finishes — a small timing difference on migrated accounts only, gone after each one's first signin.  A re-run is idempotent: rows match on `external_id` first, then the primary email, and update rather than duplicate. An existing password, an already-verified address and an existing member's role are never overwritten — see the module docs for why each one.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1449,7 +1546,7 @@ Row fields: `email` (required), `username`, `display_name`, `role`, `tenant_slug
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const importJob = await auth.admin.app("app").endUsers.imports.create();
+const importJob = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.imports.create();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-import)
@@ -1462,6 +1559,8 @@ Import job status and per-row error report. Never returns the uploaded file.
 
 `status: succeeded` means the job RAN TO COMPLETION, not that every row landed — read `failed_count` and `errors` for that. `errors` is capped at the first 500 entries; the counts stay exact.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -1470,7 +1569,7 @@ Import job status and per-row error report. Never returns the uploaded file.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const importJob = await auth.admin.app("app").endUsers.imports.retrieve("job");
+const importJob = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.imports.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-users-import-job-id)
@@ -1485,6 +1584,7 @@ Pre-allocate an EndUser invite. Dispatches an invitation email via the workspace
 
 - Params: `Auth.EndUserInviteCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1494,7 +1594,7 @@ Pre-allocate an EndUser invite. Dispatches an invitation email via the workspace
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const endUserInvite = await auth.admin.app("app").endUsers.invites.create({ email: "alice@example.com" });
+const endUserInvite = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.create({ email: "alice@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-invites)
@@ -1505,6 +1605,8 @@ const endUserInvite = await auth.admin.app("app").endUsers.invites.create({ emai
 
 Revoke an EndUser invite (soft-delete).
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1513,7 +1615,7 @@ Revoke an EndUser invite (soft-delete).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").endUsers.invites.delete("invite");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-end-users-invites-invite-id)
@@ -1526,6 +1628,7 @@ List EndUser invites for this app, newest first. Filter by `?status=`.
 
 - Params: `Auth.EndUserInviteListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1534,10 +1637,10 @@ List EndUser invites for this app, newest first. Filter by `?status=`.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const invite of auth.admin.app("app").endUsers.invites.list()) {
+for await (const invite of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.list()) {
   console.log(invite);
 }
-const page = await auth.admin.app("app").endUsers.invites.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.invites.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-end-users-invites)
@@ -1552,6 +1655,8 @@ Force an end-user back through MFA enrolment.
 
 Disables every enabled factor on the account, destroys its recovery codes, and revokes every live session. The next sign-in on an app running `auth_config.mfa: "required"` returns `mfa_enrollment_required` and the user must enrol a new factor before a session is minted. On an app running `mfa: "optional"` the user simply ends up with no MFA, which is the pre-existing meaning of deleting their factors. All three steps matter: leaving the recovery codes alive would let whoever holds the old printout complete `/auth/mfa/recover` and skip enrolment entirely. Audited, and emits `user.mfa.factor_disabled` per factor plus one `user.mfa.reenrollment_required`. Idempotent.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -1560,7 +1665,7 @@ Disables every enabled factor on the account, destroys its recovery codes, and r
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const requireMfaReenrollment = await auth.admin.app("app").endUsers.mfa.requireReenrollment("user");
+const requireMfaReenrollment = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.mfa.requireReenrollment("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-mfa-require-reenrollment)
@@ -1573,6 +1678,8 @@ const requireMfaReenrollment = await auth.admin.app("app").endUsers.mfa.requireR
 
 Revoke every active session for an end-user.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1581,7 +1688,7 @@ Revoke every active session for an end-user.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").endUsers.sessions.revokeAll("user");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUsers.sessions.revokeAll("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-end-users-user-id-sessions-revoke-all)
@@ -1594,6 +1701,8 @@ await auth.admin.app("app").endUsers.sessions.revokeAll("user");
 
 Remove a member from the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1602,7 +1711,7 @@ Remove a member from the app.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").members.delete("account");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-members-account-id)
@@ -1615,6 +1724,7 @@ List app members (PlatformUser view of EndUser memberships).
 
 - Params: `Auth.MemberListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1625,10 +1735,10 @@ List app members (PlatformUser view of EndUser memberships).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const member of auth.admin.app("app").members.list()) {
+for await (const member of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.list()) {
   console.log(member);
 }
-const page = await auth.admin.app("app").members.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-members)
@@ -1643,6 +1753,8 @@ Read the per-app notification settings. Absent row reads as defaults (notificati
 
 `effective_sender` is the sender emails actually go out from, checked live in Mail with your own access (the workspace default sender, or the app's custom address).
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1651,7 +1763,7 @@ Read the per-app notification settings. Absent row reads as defaults (notificati
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const appNotificationSettings = await auth.admin.app("app").notificationSettings.retrieve();
+const appNotificationSettings = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notificationSettings.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-notification-settings)
@@ -1665,6 +1777,7 @@ Update the per-app notification settings. Each field is independently optional; 
 Turning `notifications_via_envoi` on (from off) creates the default template of every empty slot in the workspace's Mail templates (`auth-verification`, `auth-welcome`, `auth-password-reset`, `auth-invite`, `auth-mfa-code`), reusing a template that already has that name, and fills the slot. Templates are created with your own Mail access; a slot that could not be created stays empty. A slot you clear later is not refilled until emails are switched off and on again.
 
 - Params: `Auth.NotificationSettingUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1676,7 +1789,7 @@ Turning `notifications_via_envoi` on (from off) creates the default template of 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const appNotificationSettings = await auth.admin.app("app").notificationSettings.update({ default_sender_address: "ada@example.com" });
+const appNotificationSettings = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notificationSettings.update({ default_sender_address: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-notification-settings)
@@ -1692,6 +1805,7 @@ Send me a test of one email.
 Sends the slot's real Mail template, with this app's real sender (the workspace default or the custom address) and example values for every variable, to your own verified account address. It cannot be sent anywhere else. It uses your own Mail access, goes through the same send path as real emails, and shows up in Mail > Emails. At most 10 tests per person per hour. Not available to API keys (a key has no inbox).
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1706,7 +1820,7 @@ Sends the slot's real Mail template, with this app's real sender (the workspace 
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MAIL_UNREACHABLE` | `MAIL_UNREACHABLE`: Mail did not answer. |
 
 ```ts
-const notificationTest = await auth.admin.app("app").notifications.test("slot");
+const notificationTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notifications.test("verification");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-notifications-slot-test)
@@ -1721,6 +1835,7 @@ Create a custom permission.
 
 - Params: `Auth.AppScopedPermissionCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1732,7 +1847,7 @@ Create a custom permission.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const permission = await auth.admin.app("app").permissions.create({ action: "read", resource: "project" });
+const permission = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.create({ action: "read", resource: "project" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-permissions)
@@ -1743,6 +1858,8 @@ const permission = await auth.admin.app("app").permissions.create({ action: "rea
 
 Delete a custom permission.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `permissionKey` is not in `resource.action` format. |
@@ -1752,7 +1869,7 @@ Delete a custom permission.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").permissions.delete("permission_key");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.delete("invoice.read");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-permissions-permission-key)
@@ -1763,6 +1880,8 @@ await auth.admin.app("app").permissions.delete("permission_key");
 
 List all permissions (system + custom).
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1771,7 +1890,7 @@ List all permissions (system + custom).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.admin.app("app").permissions.list();
+const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-permissions)
@@ -1786,6 +1905,8 @@ List permissions that at least one Consumer-API route enforces.
 
 Returns the deduplicated set of permission strings that any handler in this users-api build gates via `@RequireAppPermission`. Drives the console "Enforced" badge — a customer who binds `user.delete` to a role can see whether any route in this deploy actually checks for it. App-agnostic in shape; the path parameter is included for URN symmetry with the rest of the per-app surface, not to narrow the response.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1794,7 +1915,7 @@ Returns the deduplicated set of permission strings that any handler in this user
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const enforcedPermissions = await auth.admin.app("app").permissions.enforcement.list();
+const enforcedPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.enforcement.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-permissions-enforcement)
@@ -1808,6 +1929,7 @@ const enforcedPermissions = await auth.admin.app("app").permissions.enforcement.
 Assign a role to a user.
 
 - Params: `Auth.RoleAssignParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1818,7 +1940,7 @@ Assign a role to a user.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const appMembership = await auth.admin.app("app").roles.assign({ account_id: "string", role: "admin" });
+const appMembership = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.assign({ account_id: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", role: "admin" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-roles-assign)
@@ -1831,6 +1953,7 @@ Create a new role (no permissions yet — set them via PUT /:roleName/permission
 
 - Params: `Auth.AppScopedRoleCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1842,7 +1965,7 @@ Create a new role (no permissions yet — set them via PUT /:roleName/permission
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const role = await auth.admin.app("app").roles.create({ name: "editor" });
+const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.create({ name: "editor" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-roles)
@@ -1853,6 +1976,8 @@ const role = await auth.admin.app("app").roles.create({ name: "editor" });
 
 Delete a custom role.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1862,7 +1987,7 @@ Delete a custom role.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").roles.delete("role_name");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.delete("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-roles-role-name)
@@ -1875,6 +2000,7 @@ List all roles in an app. Filter by `?search=` on the role name.
 
 - Params: `Auth.AppScopedRoleListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1885,10 +2011,10 @@ List all roles in an app. Filter by `?search=` on the role name.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const role of auth.admin.app("app").roles.list()) {
+for await (const role of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.list()) {
   console.log(role);
 }
-const page = await auth.admin.app("app").roles.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-roles)
@@ -1899,6 +2025,8 @@ const page = await auth.admin.app("app").roles.list({}, { timeout: 5_000 });
 
 Get role details with permissions.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1907,7 +2035,7 @@ Get role details with permissions.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const roleWithPermissions = await auth.admin.app("app").roles.retrieve("role_name");
+const roleWithPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-roles-role-name)
@@ -1919,6 +2047,7 @@ const roleWithPermissions = await auth.admin.app("app").roles.retrieve("role_nam
 Update role name or description.
 
 - Params: `Auth.AppScopedRoleUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1929,7 +2058,7 @@ Update role name or description.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const role = await auth.admin.app("app").roles.update("role_name", { description: "Updated description" });
+const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.update("admin", { description: "Updated description" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-roles-role-name)
@@ -1941,6 +2070,7 @@ const role = await auth.admin.app("app").roles.update("role_name", { description
 Set permissions for a role (caller-narrowed: caller must hold every requested permission).
 
 - Params: `Auth.AppScopedRoleUpdatePermissionsParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1951,7 +2081,7 @@ Set permissions for a role (caller-narrowed: caller must hold every requested pe
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.admin.app("app").roles.updatePermissions("role_name", { permissions: ["user.read", "role.create"] });
+const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.updatePermissions("admin", { permissions: ["user.read", "role.create"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-roles-role-name-permissions)
@@ -1964,6 +2094,8 @@ const result = await auth.admin.app("app").roles.updatePermissions("role_name", 
 
 List all available permissions.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1972,7 +2104,7 @@ List all available permissions.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.admin.app("app").roles.permissions.list();
+const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.permissions.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-roles-permissions)
@@ -1987,6 +2119,8 @@ Get the setup checklist for an app: what works, what is missing, and where to fi
 
 Rows, in order: `signups` (attention while sign-ups are off), `redirect_origins` (blocked until at least one site may start sign-in), one `provider_<id>` row per switched-on sign-in provider (blocked while its status is blocked), `email` (sender chosen and a template for every email; attention while emails are off), `api_key` (attention until an active app key exists), `webhook` (attention until an endpoint has accepted a delivery), and `passkeys` (only while passkeys are on; blocked when no allowed redirect origin is on the passkey site). `complete` is true once no row is `not_set` or `blocked`. Each `fix.href` is a console path to the exact setting. Computed on every request from stored settings, plus the workspace default sender read from Mail with your own access when emails use it: nothing here calls DNS or a sign-in provider (a provider whose last credential check was rejected shows as blocked). A ready provider row carries `test.action: sign_in.try`: run it with `POST /v1/apps/{appId}/sign-in-tests` `{ method: "oauth", provider }`.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -1995,7 +2129,7 @@ Rows, in order: `signups` (attention while sign-ups are off), `redirect_origins`
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const setupStatus = await auth.admin.app("app").setupStatus.retrieve();
+const setupStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").setupStatus.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-setup-status)
@@ -2012,6 +2146,7 @@ For `oauth`, the server first checks what it can on its own (an allowed redirect
 
 - Params: `Auth.SignInTestCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2023,7 +2158,7 @@ For `oauth`, the server first checks what it can on its own (an allowed redirect
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 tests for this app in the last hour (`RATE_LIMITED`). |
 
 ```ts
-const signInTest = await auth.admin.app("app").signInTests.create({ method: "oauth" });
+const signInTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").signInTests.create({ method: "oauth" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-sign-in-tests)
@@ -2036,6 +2171,8 @@ Get a sign-in test and its result.
 
 Poll this after opening `start_url`. `state` turns `succeeded` (with `outcome` and `identity`) or `failed` (with `error.fix`). A test that is never finished turns `failed` with code `expired` 15 minutes after it was created.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `testId` is not a UUID. |
@@ -2045,7 +2182,7 @@ Poll this after opening `start_url`. `state` turns `succeeded` (with `outcome` a
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const signInTest = await auth.admin.app("app").signInTests.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const signInTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").signInTests.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-sign-in-tests-test-id)
@@ -2060,6 +2197,8 @@ Revoke a tenant's API key.
 
 Immediate and final; recorded as revoked by you (`revoked_by_type: platform_user`) in the key and in the audit log. Idempotent: revoking a revoked key is a 204 that changes nothing. Requires `auth.revoke` on the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2068,7 +2207,7 @@ Immediate and final; recorded as revoked by you (`revoked_by_type: platform_user
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").tenantApiKeys.delete("key");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-tenant-api-keys-key-id)
@@ -2083,6 +2222,7 @@ Every tenant of the app, newest first, cursor-paginated (20 per page, max 100). 
 
 - Params: `Auth.AppScopedTenantApiKeyListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2093,10 +2233,10 @@ Every tenant of the app, newest first, cursor-paginated (20 per page, max 100). 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const tenantApiKey of auth.admin.app("app").tenantApiKeys.list()) {
+for await (const tenantApiKey of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.list()) {
   console.log(tenantApiKey);
 }
-const page = await auth.admin.app("app").tenantApiKeys.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenant-api-keys)
@@ -2111,6 +2251,8 @@ Read the app's tenant API key settings.
 
 Includes the platform kill switch `suspended`. Requires `auth.read` on the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2119,7 +2261,7 @@ Includes the platform kill switch `suspended`. Requires `auth.read` on the app.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeysConfig = await auth.admin.app("app").tenantApiKeys.config.retrieve();
+const tenantApiKeysConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.config.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenant-api-keys-config)
@@ -2134,6 +2276,7 @@ Fields you leave out keep their stored value. `suspended: true` is the kill swit
 
 - Params: `Auth.AppScopedTenantApiKeyConfigUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2145,7 +2288,7 @@ Fields you leave out keep their stored value. `suspended: true` is the kill swit
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeysConfig = await auth.admin.app("app").tenantApiKeys.config.update({ default_expiry_days: 7 });
+const tenantApiKeysConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.config.update({ default_expiry_days: 7 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-tenant-api-keys-config)
@@ -2160,6 +2303,7 @@ Create a tenant in this app. Auth-admin lane; requires auth.tenant.create on the
 
 - Params: `Auth.AppScopedTenantCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2171,7 +2315,7 @@ Create a tenant in this app. Auth-admin lane; requires auth.tenant.create on the
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenant = await auth.admin.app("app").tenants.create({ display_name: "Acme Co" });
+const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.create({ display_name: "Acme Co" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-tenants)
@@ -2182,6 +2326,8 @@ const tenant = await auth.admin.app("app").tenants.create({ display_name: "Acme 
 
 Delete a tenant.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2190,7 +2336,7 @@ Delete a tenant.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").tenants.delete("tenant");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-tenants-tenant-id)
@@ -2203,6 +2349,7 @@ List tenants in this app, paginated by created_at desc.
 
 - Params: `Auth.AppScopedTenantListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2213,10 +2360,10 @@ List tenants in this app, paginated by created_at desc.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const tenant of auth.admin.app("app").tenants.list()) {
+for await (const tenant of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.list()) {
   console.log(tenant);
 }
-const page = await auth.admin.app("app").tenants.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenants)
@@ -2227,6 +2374,8 @@ const page = await auth.admin.app("app").tenants.list({}, { timeout: 5_000 });
 
 Get a single tenant by id or display id.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2235,7 +2384,7 @@ Get a single tenant by id or display id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenant = await auth.admin.app("app").tenants.retrieve("tenant");
+const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenants-tenant-id)
@@ -2247,6 +2396,7 @@ const tenant = await auth.admin.app("app").tenants.retrieve("tenant");
 Update a tenant (display_name, slug, status, metadata).
 
 - Params: `Auth.AppScopedTenantUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2258,7 +2408,7 @@ Update a tenant (display_name, slug, status, metadata).
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenant = await auth.admin.app("app").tenants.update("tenant", { display_name: "string" });
+const tenant = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Acme Inc" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-tenants-tenant-id)
@@ -2273,6 +2423,7 @@ Invite an email address into a tenant. Returns the plaintext code once; only its
 
 - Params: `Auth.AppScopedTenantInviteCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2283,7 +2434,7 @@ Invite an email address into a tenant. Returns the plaintext code once; only its
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createTenantInvite = await auth.admin.app("app").tenants.invites.create("tenant", { email: "alice@example.com", role_name: "member" });
+const createTenantInvite = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email: "alice@example.com", role_name: "member" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-tenants-tenant-id-invites)
@@ -2294,6 +2445,8 @@ const createTenantInvite = await auth.admin.app("app").tenants.invites.create("t
 
 Revoke a pending invite. Idempotent — a second revoke is a 204 no-op and fires no second webhook.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -2301,7 +2454,7 @@ Revoke a pending invite. Idempotent — a second revoke is a 204 no-op and fires
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").tenants.invites.delete("tenant", "invite");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-tenants-tenant-id-invites-invite-id)
@@ -2314,6 +2467,7 @@ List a tenant's invites, newest first. Optional `?status=pending|revoked|expired
 
 - Params: `Auth.AppScopedTenantInviteListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2323,10 +2477,10 @@ List a tenant's invites, newest first. Optional `?status=pending|revoked|expired
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const invite of auth.admin.app("app").tenants.invites.list("tenant")) {
+for await (const invite of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(invite);
 }
-const page = await auth.admin.app("app").tenants.invites.list("tenant", {}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenants-tenant-id-invites)
@@ -2341,6 +2495,7 @@ Add a member to a tenant.
 
 - Params: `Auth.AppScopedTenantMemberCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2352,7 +2507,7 @@ Add a member to a tenant.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const addMember = await auth.admin.app("app").tenants.members.create("tenant", { role_name: "member" });
+const addMember = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-tenants-tenant-id-members)
@@ -2363,6 +2518,8 @@ const addMember = await auth.admin.app("app").tenants.members.create("tenant", {
 
 Remove a member from a tenant.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2371,7 +2528,7 @@ Remove a member from a tenant.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("app").tenants.members.delete("tenant", "account");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-tenants-tenant-id-members-account-id)
@@ -2384,6 +2541,7 @@ List members of a tenant, newest membership first. Filter by `?search=` and/or `
 
 - Params: `Auth.AppScopedTenantMemberListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2394,10 +2552,10 @@ List members of a tenant, newest membership first. Filter by `?search=` and/or `
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const member of auth.admin.app("app").tenants.members.list("tenant")) {
+for await (const member of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(member);
 }
-const page = await auth.admin.app("app").tenants.members.list("tenant", {}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-tenants-tenant-id-members)
@@ -2409,6 +2567,7 @@ const page = await auth.admin.app("app").tenants.members.list("tenant", {}, { ti
 Change a member's role inside a tenant.
 
 - Params: `Auth.AppScopedTenantMemberUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2419,7 +2578,7 @@ Change a member's role inside a tenant.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantMembership = await auth.admin.app("app").tenants.members.update("tenant", "account", { role_name: "admin" });
+const tenantMembership = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenants.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-tenants-tenant-id-members-account-id)
@@ -2432,6 +2591,8 @@ const tenantMembership = await auth.admin.app("app").tenants.members.update("ten
 
 Get the unverified-account expiry setting and how many accounts it deleted in the last 30 days.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2440,7 +2601,7 @@ Get the unverified-account expiry setting and how many accounts it deleted in th
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const unverifiedAccountExpiryStatus = await auth.admin.app("app").unverifiedAccountExpiry.retrieve();
+const unverifiedAccountExpiryStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").unverifiedAccountExpiry.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-unverified-account-expiry)
@@ -2455,6 +2616,7 @@ Permanently deletes every account that qualifies under the app's `unverified_acc
 
 - Params: `Auth.UnverifiedAccountExpiryRunParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2467,7 +2629,7 @@ Permanently deletes every account that qualifies under the app's `unverified_acc
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const unverifiedAccountExpiryRun = await auth.admin.app("app").unverifiedAccountExpiry.run({ dry_run: false });
+const unverifiedAccountExpiryRun = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").unverifiedAccountExpiry.run({ dry_run: false });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-unverified-account-expiry-run)
@@ -2482,6 +2644,8 @@ Get the per-app passkey (WebAuthn) relying-party settings.
 
 Returns defaults with `enabled: false` and a null `rp_id` when passkeys have never been configured for the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2490,7 +2654,7 @@ Returns defaults with `enabled: false` and a null `rp_id` when passkeys have nev
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webauthnConfig = await auth.admin.app("app").webauthnConfig.retrieve();
+const webauthnConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webauthnConfig.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webauthn-config)
@@ -2502,6 +2666,7 @@ const webauthnConfig = await auth.admin.app("app").webauthnConfig.retrieve();
 Set the per-app passkey (WebAuthn) relying-party settings.
 
 - Params: `Auth.WebauthnConfigUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2512,7 +2677,7 @@ Set the per-app passkey (WebAuthn) relying-party settings.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webauthnConfig = await auth.admin.app("app").webauthnConfig.update({ enabled: true, rp_id: "example.com" });
+const webauthnConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webauthnConfig.update({ enabled: true, rp_id: "example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-v1-apps-app-id-webauthn-config)
@@ -2529,6 +2694,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 
 - Params: `Auth.WebhookEndpointCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2541,7 +2707,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-endpoints)
@@ -2554,6 +2720,8 @@ Delete a webhook endpoint.
 
 Queued retries are dropped. Its past attempts stay in the event log until the events expire.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `endpoint_id` is not a UUID. |
@@ -2563,7 +2731,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-webhooks-endpoints-endpoint-id)
@@ -2577,6 +2745,7 @@ List webhook endpoints, oldest first.
 At most 10, so this is always one page. Signing secrets are never returned here, only their last 4 characters.
 
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2587,7 +2756,7 @@ At most 10, so this is always one page. Signing secrets are never returned here,
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const endpoint of auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.list()) {
+for await (const endpoint of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.list()) {
   console.log(endpoint);
 }
 ```
@@ -2602,6 +2771,8 @@ Get one webhook endpoint (without its secret).
 
 The endpoint's URL, subscription, on/off state, failure streak and the last 4 characters of its signing secret. The full secret is only returned when the endpoint is created or its secret is rotated.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `endpoint_id` is not a UUID. |
@@ -2611,7 +2782,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webhooks-endpoints-endpoint-id)
@@ -2626,6 +2797,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 
 - Params: `Auth.WebhookEndpointRotateSecretParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2637,7 +2809,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -2652,6 +2824,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 
 - Params: `Auth.WebhookEndpointTestParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2663,7 +2836,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "user.signup" });
+const webhookDeliveryAttempt = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "user.signup" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-endpoints-endpoint-id-test)
@@ -2678,6 +2851,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 
 - Params: `Auth.WebhookEndpointUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2690,7 +2864,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-v1-apps-app-id-webhooks-endpoints-endpoint-id)
@@ -2705,6 +2879,8 @@ List the events an endpoint can subscribe to.
 
 Each type with a plain description, its group and an example `data` object (what "Send test" delivers).
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
@@ -2713,7 +2889,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.eventTypes.list();
+const listWebhookEventTypes = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webhooks-event-types)
@@ -2730,6 +2906,7 @@ Every event logged while at least one endpoint existed, with the latest state pe
 
 - Params: `Auth.WebhookEventListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2740,10 +2917,10 @@ Every event logged while at least one endpoint existed, with the latest state pe
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const event of auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.list()) {
+for await (const event of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.list()) {
   console.log(event);
 }
-const page = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.list({}, { timeout: 5_000 });
+const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webhooks-events)
@@ -2758,6 +2935,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 
 - Params: `Auth.WebhookEventReplayParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2769,7 +2947,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.replay("event");
+const replayWebhookEvent = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-webhooks-events-event-id-replay)
@@ -2782,6 +2960,8 @@ Get one webhook event with every delivery attempt.
 
 The event as it was sent (`type`, `data`) and every delivery attempt to every endpoint, with its trigger, HTTP status, error and the start of the response body. Use it to debug a receiver, then `replay` to send it again.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `event_id` is not `evt_<uuid>`. |
@@ -2791,7 +2971,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.retrieve("event");
+const webhookEventDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-v1-apps-app-id-webhooks-events-event-id)
@@ -2821,7 +3001,7 @@ Materialises a pre-allocated invite into a real EndUser: creates account + prima
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const result = await auth.consumer("app").acceptInvite({ code: "inv_x7H2k3jLqXr", password: "CorrectHorseBatteryStaple" });
+const result = await auth.consumer("my-app").acceptInvite({ code: "inv_x7H2k3jLqXr", password: "CorrectHorseBatteryStaple" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-accept-invite)
@@ -2849,7 +3029,7 @@ Materialises a pending `tenant_invite` into a real EndUser: creates account + ve
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const consumerToken = await auth.consumer("app").acceptTenantInvite({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU", password: "CorrectHorseBatteryStaple" });
+const consumerToken = await auth.consumer("my-app").acceptTenantInvite({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU", password: "CorrectHorseBatteryStaple" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-accept-tenant-invite)
@@ -2870,7 +3050,7 @@ Exchange a `heimdall_code` (received on the web-flow callback redirect) for Auth
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const exchange = await auth.consumer("app").exchangeProviderCode({ code: "string" });
+const exchange = await auth.consumer("my-app").exchangeProviderCode({ code: "hc_8f14e45fceea167a5a36dedd4bea2543" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-oauth-exchange)
@@ -2896,7 +3076,9 @@ Destroys the session that owns the refresh token. The matching access token cont
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-await auth.consumer("app").logout({ refresh_token: "string" });
+await auth.consumer("my-app").logout({
+  refresh_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJ0eXAiOiJyZWZyZXNoIn0.c2lnbmF0dXJl",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-logout)
@@ -2922,7 +3104,9 @@ Rotates the refresh token on every call — the previous refresh token is revoke
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerToken = await auth.consumer("app").refresh({ refresh_token: "string" });
+const consumerToken = await auth.consumer("my-app").refresh({
+  refresh_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJ0eXAiOiJyZWZyZXNoIn0.c2lnbmF0dXJl",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-refresh)
@@ -2940,6 +3124,7 @@ PAK-required: `auth.user.password-reset.create`. Returns `{ code, expires_at }` 
 Renamed from /auth/request-reset.
 
 - Params: `Auth.RequestPasswordResetParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2951,7 +3136,7 @@ Renamed from /auth/request-reset.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerCodeIssue = await auth.consumer("app").requestPasswordReset({ email: "jane@example.com" });
+const consumerCodeIssue = await auth.consumer("my-app").requestPasswordReset({ email: "jane@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-request-password-reset)
@@ -2969,6 +3154,7 @@ Returns `{ code, expires_at }` for delivery via the customer's own SMTP / SMS pr
 Issuing a code invalidates any previously issued, unconsumed code for the same contact — including the one auto-emailed at signup. Only the most recently minted code is accepted.
 
 - Params: `Auth.RequestVerificationParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2980,7 +3166,7 @@ Issuing a code invalidates any previously issued, unconsumed code for the same c
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerCodeIssue = await auth.consumer("app").requestVerification({ email: "jane@example.com" });
+const consumerCodeIssue = await auth.consumer("my-app").requestVerification({ email: "jane@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-request-verification)
@@ -3007,7 +3193,7 @@ Consumes the 6-digit reset code (single-use). On success the password is updated
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-await auth.consumer("app").resetPassword({ code: "123456", new_password: "string" });
+await auth.consumer("my-app").resetPassword({ code: "123456", new_password: "a new long passphrase 42" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-reset-password)
@@ -3021,6 +3207,7 @@ Mint + dispatch a password-reset email via Mail (PAK-required).
 Same shape as `send-verification-email` but for the reset slot. PAK perm: `auth.user.password-reset.send-email`. Same loud precondition errors. Email-only.
 
 - Params: `Auth.SendPasswordResetEmailParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3034,7 +3221,7 @@ Same shape as `send-verification-email` but for the reset slot. PAK perm: `auth.
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | Mail dispatch failed or client not wired. |
 
 ```ts
-const consumerCodeDispatch = await auth.consumer("app").sendPasswordResetEmail({ email: "jane@example.com" });
+const consumerCodeDispatch = await auth.consumer("my-app").sendPasswordResetEmail({ email: "jane@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-send-password-reset-email)
@@ -3061,6 +3248,7 @@ On success returns `{ expires_at }`. The plaintext code is NOT returned. Returns
 Issuing a code invalidates any previously issued, unconsumed code for the same contact — including the one auto-emailed at signup. Only the most recently minted code is accepted.
 
 - Params: `Auth.SendVerificationEmailParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3074,7 +3262,7 @@ Issuing a code invalidates any previously issued, unconsumed code for the same c
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | Mail dispatch failed or client not wired. |
 
 ```ts
-const consumerCodeDispatch = await auth.consumer("app").sendVerificationEmail({ email: "jane@example.com" });
+const consumerCodeDispatch = await auth.consumer("my-app").sendVerificationEmail({ email: "jane@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-send-verification-email)
@@ -3101,7 +3289,7 @@ Authenticate with username or verified primary email + password. When the accoun
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const result = await auth.consumer("app").signin({ identifier: "jane_doe", password: "string" });
+const result = await auth.consumer("my-app").signin({ identifier: "jane_doe", password: "correct horse battery staple" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-signin)
@@ -3124,7 +3312,10 @@ Submit the provider-issued ID token from a native client (iOS ASAuthorizationCon
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.consumer("app").signinWithProvider("provider", { id_token: "string", nonce: "string" });
+const result = await auth.consumer("my-app").signinWithProvider("google", {
+  id_token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl",
+  nonce: "n-0S6_WzA2Mj",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-oauth-provider)
@@ -3142,12 +3333,13 @@ When the app runs `auth_config.mfa: "required"`, the account is still created bu
 When the app has bot protection on (`auth_config.bot_protection`, Cloudflare Turnstile or hCaptcha), send the widget response as `bot_protection_token`. Auth verifies it with the provider before it looks at the email, username or password, and refuses the sign-up when the token is missing (400 `BOT_PROTECTION_REQUIRED`), rejected (403 `BOT_PROTECTION_FAILED`) or cannot be checked (503 `BOT_PROTECTION_UNAVAILABLE`; no account is created). This applies to PAK-authenticated calls too: a backend forwards the token its browser received.
 
 - Params: `Auth.SignupParams`
+- Credential (optional): [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `BOT_PROTECTION_REQUIRED` | `BOT_PROTECTION_REQUIRED`: the app has bot protection on and the request carried no `bot_protection_token`. Also: Request validation failed: a required body field is missing, has the wrong type, or fails its format constraint. Produced by the global `ValidationPipe` before the handler runs; the response body lists the offending fields. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | The app sets `signup_requires_pak` and no Platform API Key was presented on `Authorization: Bearer`. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `BOT_PROTECTION_FAILED`, `APP_SUSPENDED`, `APP_ARCHIVED` | `BOT_PROTECTION_FAILED`: the bot-protection provider rejected the `bot_protection_token` (bad, expired or already used), or the hostname it reported is not one of the app's `bot_protection.expected_hostnames`; render a fresh widget and retry. Otherwise: signup is disabled for this app, the email domain is not on the app's allow-list, the presented PAK belongs to a different workspace, or its policy denies `auth.signup.create` on this app. Also returned when the app itself is suspended (`APP_SUSPENDED`) or archived (`APP_ARCHIVED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `BOT_PROTECTION_FAILED`, `APP_SUSPENDED`, `APP_ARCHIVED` | `BOT_PROTECTION_FAILED`: the bot-protection provider rejected the `bot_protection_token` (bad, expired or already used), or the hostname it reported is not one of the app's `bot_protection.expected_hostnames`; render a fresh widget and retry. Otherwise: signup is disabled for this app (new apps start with `signup_enabled: false`; turn it on with `PATCH /v1/apps/{app_id}/auth-config`), the email domain is not on the app's allow-list, the presented PAK belongs to a different workspace, or its policy denies `auth.signup.create` on this app. Also returned when the app itself is suspended (`APP_SUSPENDED`) or archived (`APP_ARCHIVED`). |
 | 404 | `NotFoundError` | `NOT_FOUND` | The `:appSlug` in the path matches no app (or no live rename alias for one). This is about the **app**, not the account — it is decided before any identifier, code or credential in the body is looked at, so it is never a signal about whether an account or a contact exists. |
 | 409 | `ConflictError` | `CONFLICT` | Email or username already in use in this app, or the app has no workspace binding and therefore cannot accept a PAK signup. |
 | 415 | `APIError` | `UNSUPPORTED_MEDIA_TYPE` | The request body was sent as `application/x-www-form-urlencoded` (`UNSUPPORTED_MEDIA_TYPE`). This API is JSON-only: a form body is a CORS-simple request that skips preflight, so accepting one would widen the CSRF surface. Send `application/json`. Rejected in `main.ts` before routing, on every non-GET request. |
@@ -3155,7 +3347,7 @@ When the app has bot protection on (`auth_config.bot_protection`, Cloudflare Tur
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `BOT_PROTECTION_UNAVAILABLE` | `BOT_PROTECTION_UNAVAILABLE`: the app has bot protection on and the token could not be checked (the provider timed out or failed, or the app's bot-protection secret is missing or was refused by the provider). Sign-up fails closed: no account was created. Retry shortly. Otherwise: The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const result = await auth.consumer("app").signup({ email: "jane@example.com", password: "CorrectHorseBatteryStaple", username: "john_doe" });
+const result = await auth.consumer("my-app").signup({ email: "jane@example.com", password: "CorrectHorseBatteryStaple", username: "john_doe" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-signup)
@@ -3169,6 +3361,7 @@ Switch the active tenant for this session.
 Re-issues the EndUser's access + refresh tokens with the new `org_id` + `org_role` claims, after verifying the caller holds a tenant_membership for the target tenant. The session row is updated to the new tenant so subsequent refreshes preserve the context. The new access token keeps the session's `amr` and `mfa_at` (as `/auth/refresh` does), so a sign-in that completed MFA still proves it after a switch. Refresh-token rotation runs as usual; the previous refresh token enters the standard 60-second grace window.
 
 - Params: `Auth.SwitchTenantParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3180,7 +3373,7 @@ Re-issues the EndUser's access + refresh tokens with the new `org_id` + `org_rol
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerToken = await auth.consumer("app").switchTenant({ tenant_id: "string" });
+const consumerToken = await auth.consumer("my-app").switchTenant({ tenant_id: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-switch-tenant)
@@ -3208,7 +3401,7 @@ Renamed from /verify-email — the same endpoint now serves both email and phone
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `verify_code` bucket — 5 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerVerify = await auth.consumer("app").verifyEmail({ code: "123456" });
+const consumerVerify = await auth.consumer("my-app").verifyEmail({ code: "123456" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-verify)
@@ -3224,6 +3417,7 @@ Change the password of the signed-in EndUser.
 Verifies `current_password`, sets the new hash, and revokes every OTHER active session for the account (the calling session is preserved). 401 if the current password is wrong or the account has no password credential — admin-provisioned accounts without an initial password should use the reset flow instead. The new password is held to exactly the same policy as signup: the app's length + character-class rules, the common-password deny-list, and the breach corpus.
 
 - Params: `Auth.MeChangePasswordParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3233,7 +3427,10 @@ Verifies `current_password`, sets the new hash, and revokes every OTHER active s
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-await auth.consumer("app").me.changePassword({ current_password: "string", new_password: "string" });
+await auth.consumer("my-app").me.changePassword({
+  current_password: "correct horse battery staple",
+  new_password: "a new long passphrase 42",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-change-password)
@@ -3246,13 +3443,15 @@ Permanently delete the signed-in EndUser account.
 
 Removes the EndUser, all sessions, and all related records inside this app. Cannot be undone. The app audit log keeps one `auth.account.deleted` row (`via: self`; username and email domain only, never the address), and `user.deleted` fires with `via: "self"`.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").me.deleteAccount();
+await auth.consumer("my-app").me.deleteAccount();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me)
@@ -3265,6 +3464,8 @@ Remove the EndUser avatar.
 
 Clears both the uploaded avatar and any provider-captured picture, and deletes the stored object. A later Google/GitHub sign-in re-populates the provider picture — that is "sync from provider" behavior, by design.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
@@ -3272,7 +3473,7 @@ Clears both the uploaded avatar and any provider-captured picture, and deletes t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").me.deleteAvatar();
+await auth.consumer("my-app").me.deleteAvatar();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me-avatar)
@@ -3285,13 +3486,15 @@ Resolve the signed-in EndUser's effective permissions.
 
 Returns the union of the app-level role permissions and the tenant-level role permissions (when the token carries an `org_id`). Resolved per-request through a 60-second LRU — role-permission edits propagate within ~1 minute. Use this instead of decoding a `permissions[]` claim from the JWT, which is no longer included. M2M tokens cannot call this — use `POST /:appSlug/v1/oauth/introspect` to inspect M2M scopes.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mePermissions = await auth.consumer("app").me.permissions();
+const mePermissions = await auth.consumer("my-app").me.permissions();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me-permissions)
@@ -3304,6 +3507,8 @@ Get the signed-in EndUser profile.
 
 Returns the EndUser identity, app membership, and role name. The flat `permissions[]` array is intentionally NOT included — permissions resolve from the role on demand. Call `GET /me/permissions` for the flat list when the client needs it for UI gating.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -3311,7 +3516,7 @@ Returns the EndUser identity, app membership, and role name. The flat `permissio
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const meProfile = await auth.consumer("app").me.retrieve();
+const meProfile = await auth.consumer("my-app").me.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me)
@@ -3325,6 +3530,7 @@ Update the signed-in EndUser profile.
 Editable fields: `display_name` and `username`. The username is unique per app (case-insensitive, same rule as signup); sending the current username is a no-op. Usernames cannot be cleared.
 
 - Params: `Auth.MeUpdateParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3333,7 +3539,7 @@ Editable fields: `display_name` and `username`. The username is unique per app (
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const meUpdatedAccount = await auth.consumer("app").me.update({ display_name: "Ada Lovelace" });
+const meUpdatedAccount = await auth.consumer("my-app").me.update({ display_name: "Ada Lovelace" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-me)
@@ -3347,6 +3553,7 @@ Upload (or replace) the EndUser avatar.
 PNG/JPEG/WEBP only — SVG is rejected (stored-XSS vector). ≤2 MB. Magic bytes are sniffed; a mislabeled file is rejected. The image is re-encoded server-side (orientation baked in, all metadata incl. EXIF/GPS stripped, bounded to 512×512, webp). An uploaded avatar takes precedence over a provider-captured picture.
 
 - Params: `Auth.MeUploadAvatarParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3356,7 +3563,7 @@ PNG/JPEG/WEBP only — SVG is rejected (stored-XSS vector). ≤2 MB. Magic bytes
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const avatarUrl = await auth.consumer("app").me.uploadAvatar({ file: new File(["…"], "image.png", { type: "image/png" }) });
+const avatarUrl = await auth.consumer("my-app").me.uploadAvatar({ file: new File(["…"], "image.png", { type: "image/png" }) });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-avatar)
@@ -3372,6 +3579,7 @@ Recent account activity.
 Login events, password changes, and other security-relevant records, scoped to this EndUser.
 
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3379,7 +3587,7 @@ Login events, password changes, and other security-relevant records, scoped to t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const activity of auth.consumer("app").me.activity.list()) {
+for await (const activity of auth.consumer("my-app").me.activity.list()) {
   console.log(activity);
 }
 ```
@@ -3398,6 +3606,7 @@ Adds an email or phone contact to the EndUser. The contact starts unverified and
 
 - Params: `Auth.MeContactCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3407,7 +3616,7 @@ Adds an email or phone contact to the EndUser. The contact starts unverified and
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): `/me/contacts` is in the strict `auth` bucket (10 requests per minute per IP). |
 
 ```ts
-const meContact = await auth.consumer("app").me.contacts.create({ type: "email", value: "string" });
+const meContact = await auth.consumer("my-app").me.contacts.create({ type: "email", value: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-contacts)
@@ -3418,6 +3627,8 @@ const meContact = await auth.consumer("app").me.contacts.create({ type: "email",
 
 Delete a contact.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
@@ -3426,7 +3637,7 @@ Delete a contact.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): `/me/contacts` is in the strict `auth` bucket (10 requests per minute per IP). |
 
 ```ts
-await auth.consumer("app").me.contacts.delete("id");
+await auth.consumer("my-app").me.contacts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me-contacts-id)
@@ -3437,13 +3648,15 @@ await auth.consumer("app").me.contacts.delete("id");
 
 List the EndUser's contacts.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): the general bucket, 60 requests per minute per IP. Adding, verifying or removing a contact is in the strict `auth` bucket (10 per minute). |
 
 ```ts
-const meContacts = await auth.consumer("app").me.contacts.list();
+const meContacts = await auth.consumer("my-app").me.contacts.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me-contacts)
@@ -3456,6 +3669,8 @@ Promote a verified contact to primary.
 
 Demotes the previous primary of the same type. Refused (409) when the target contact is unverified — promoting an unverified contact would let an attacker who registered the contact bypass verification by routing reset codes through it.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
@@ -3464,7 +3679,7 @@ Demotes the previous primary of the same type. Refused (409) when the target con
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): `/me/contacts` is in the strict `auth` bucket (10 requests per minute per IP). |
 
 ```ts
-await auth.consumer("app").me.contacts.promote("id");
+await auth.consumer("my-app").me.contacts.promote("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-contacts-id-promote)
@@ -3481,6 +3696,7 @@ Creates a pending factor and returns the type-specific enrollment payload. TOTP:
 
 - Params: `Auth.MeMfaFactorCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3492,7 +3708,7 @@ Creates a pending factor and returns the type-specific enrollment payload. TOTP:
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const startEnrollment = await auth.consumer("app").me.mfa.factors.create({ type: "totp" });
+const startEnrollment = await auth.consumer("my-app").me.mfa.factors.create({ type: "totp" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-factors)
@@ -3505,6 +3721,8 @@ Disable an MFA factor.
 
 Soft-disable. The row is preserved (with `disabled_at` set) for audit. Has no effect on existing sessions — their `amr` claim still reflects whatever satisfied sign-in at the time. Disabling the only enabled factor removes the MFA requirement on future sign-ins.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
@@ -3512,7 +3730,7 @@ Soft-disable. The row is preserved (with `disabled_at` set) for audit. Has no ef
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").me.mfa.factors.delete("id");
+await auth.consumer("my-app").me.mfa.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me-mfa-factors-id)
@@ -3525,13 +3743,15 @@ List the authenticated EndUser's MFA factors.
 
 Includes factors in any state (pending enrollment + enabled). Disabled factors are not listed.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const factorList = await auth.consumer("app").me.mfa.factors.list();
+const factorList = await auth.consumer("my-app").me.mfa.factors.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me-mfa-factors)
@@ -3545,6 +3765,7 @@ Confirm enrollment of a pending factor.
 TOTP: submit two `codes` from consecutive 30-second windows. Email: submit the emailed 6-digit `code`. On success the factor flips to enabled, recovery codes are minted (returned once), and prior recovery codes for the account are invalidated. Subsequent calls with the same `:id` fail with 400.
 
 - Params: `Auth.MeMfaFactorVerifyParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3553,7 +3774,7 @@ TOTP: submit two `codes` from consecutive 30-second windows. Email: submit the e
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const confirmEnrollment = await auth.consumer("app").me.mfa.factors.verify("id", { code: "123456" });
+const confirmEnrollment = await auth.consumer("my-app").me.mfa.factors.verify("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "123456" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-factors-id-verify)
@@ -3568,13 +3789,15 @@ Regenerate the recovery-code set.
 
 Mints a fresh set of single-use recovery codes and invalidates every prior code for the account. The new codes are returned once — store them now.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const recoveryCodes = await auth.consumer("app").me.mfa.recoveryCodes.regenerate();
+const recoveryCodes = await auth.consumer("my-app").me.mfa.recoveryCodes.regenerate();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-recovery-codes-regenerate)
@@ -3590,6 +3813,7 @@ Email a step-up code.
 Mints a single-use 6-digit code against one of the account's enabled email factors and delivers it to the bound address. Follow with `/step-up` submitting the code. Codes expire after 5 minutes; sends are throttled per contact (30s between sends, shared with the sign-in path). Refused while step-up is locked on this session.
 
 - Params: `Auth.MeMfaStepUpSendCodeParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3600,7 +3824,7 @@ Mints a single-use 6-digit code against one of the account's enabled email facto
 | 429 | `RateLimitError` | `RATE_LIMITED` | Send throttled, or step-up is locked on this session. |
 
 ```ts
-const stepUpSendCode = await auth.consumer("app").me.mfa.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+const stepUpSendCode = await auth.consumer("my-app").me.mfa.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-step-up-send-code)
@@ -3614,6 +3838,7 @@ Bump this session's MFA recency.
 Verify a fresh code (TOTP, emailed via `/step-up/send-code`, or recovery) against any enabled factor on the account, and update the session's `auth_methods` + `mfa_at`. Call `/auth/refresh` after this to mint a token whose claims reflect the new state. Customers reading `mfa_at` from access tokens to gate sensitive actions should require a `/step-up` + refresh cycle when the timestamp is older than their policy window. 5 consecutive wrong codes lock step-up on this session for 15 minutes.
 
 - Params: `Auth.MeMfaStepUpVerifyParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3622,7 +3847,7 @@ Verify a fresh code (TOTP, emailed via `/step-up/send-code`, or recovery) agains
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const stepUp = await auth.consumer("app").me.mfa.stepUp.verify({ code: "123456" });
+const stepUp = await auth.consumer("my-app").me.mfa.stepUp.verify({ code: "123456" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-step-up)
@@ -3637,6 +3862,8 @@ Get passkey assertion options for step-up.
 
 Mints a single-use WebAuthn challenge for the enabled passkeys on this account and returns the `publicKey` member for `navigator.credentials.get()`. Submit the result to `/step-up` as `credential`. Refused while step-up is locked on this session — a locked session must not be able to keep minting challenges.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | No passkey is enrolled on this account. |
@@ -3645,7 +3872,7 @@ Mints a single-use WebAuthn challenge for the enabled passkeys on this account a
 | 429 | `RateLimitError` | `RATE_LIMITED` | Step-up is locked on this session. |
 
 ```ts
-const webauthnOptions = await auth.consumer("app").me.mfa.stepUp.webauthn.options();
+const webauthnOptions = await auth.consumer("my-app").me.mfa.stepUp.webauthn.options();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-mfa-step-up-webauthn-options)
@@ -3660,6 +3887,8 @@ Revoke a session.
 
 Sign the EndUser out of one device. The session's refresh token is destroyed; its access token expires on its TTL. Requires the `session.revoke` permission when the app's `enforce_app_permissions` flag is on; otherwise (the default) any valid token can call this. Self-revoke (revoking your own session as a member with no perms) is something to enforce separately if needed; this guard does not exempt the principal from the role check.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token, unknown or inactive app, or the account/session is no longer active. |
@@ -3667,7 +3896,7 @@ Sign the EndUser out of one device. The session's refresh token is destroyed; it
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").me.sessions.delete("id");
+await auth.consumer("my-app").me.sessions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me-sessions-id)
@@ -3681,6 +3910,7 @@ List all active sessions for the EndUser.
 Each session includes a `current` flag identifying the one belonging to the bearer token used for this request.
 
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3688,7 +3918,7 @@ Each session includes a `current` flag identifying the one belonging to the bear
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const session of auth.consumer("app").me.sessions.list()) {
+for await (const session of auth.consumer("my-app").me.sessions.list()) {
   console.log(session);
 }
 ```
@@ -3706,6 +3936,7 @@ Accept a tenant invite as the signed-in EndUser.
 Adds the caller to the invited tenant with the role the invite names, and consumes the invite. Requires the invited address to be one of the caller's own VERIFIED email contacts in this app — holding the code is not sufficient, because whoever minted the invite also holds it, and an unverified contact is not proof of owning the address. A refused accept leaves the invite redeemable.
 
 - Params: `Auth.MeTenantInviteAcceptParams`
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3717,7 +3948,7 @@ Adds the caller to the invited tenant with the role the invite names, and consum
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const acceptedTenantInvite = await auth.consumer("app").me.tenantInvites.accept({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU" });
+const acceptedTenantInvite = await auth.consumer("my-app").me.tenantInvites.accept({ code: "tinv_9dK2mQ7pR4vXbN1sT6yZ0hLcJeW3fAgU" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-me-tenant-invites-accept)
@@ -3732,6 +3963,8 @@ List the EndUser's tenant memberships in this app.
 
 Returns each tenant the caller is a member of, including the tenant slug + display name and the member's role. Powers a tenant-switcher UI on the customer's product.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing / invalid bearer, or the session behind the token is revoked, expired or no longer exists. |
@@ -3740,7 +3973,7 @@ Returns each tenant the caller is a member of, including the tenant slug + displ
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const myTenants = await auth.consumer("app").me.tenants.list();
+const myTenants = await auth.consumer("my-app").me.tenants.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-auth-me-tenants)
@@ -3769,7 +4002,7 @@ For apps running `auth_config.mfa: "required"`. When a user proves their passwor
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const startEnrollment = await auth.consumer("app").mfa.enroll({ mfa_token: "string", type: "totp" });
+const startEnrollment = await auth.consumer("my-app").mfa.enroll({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", type: "totp" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-enroll)
@@ -3796,7 +4029,10 @@ Same flow as `/auth/mfa/verify` but consumes a single-use recovery code (16 hex 
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const consumerToken = await auth.consumer("app").mfa.recover({ mfa_token: "string", recovery_code: "1a2b-3c4d-5e6f-7890" });
+const consumerToken = await auth.consumer("my-app").mfa.recover({
+  mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+  recovery_code: "1a2b-3c4d-5e6f-7890",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-recover)
@@ -3824,7 +4060,10 @@ Delivers a single-use 6-digit code to the masked address of an `email` factor li
 | 429 | `RateLimitError` | `RATE_LIMITED` | Send throttled (max 3 sends per challenge, 30s apart), or too many failed attempts on the challenge. Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerMfaSendCode = await auth.consumer("app").mfa.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+const consumerMfaSendCode = await auth.consumer("my-app").mfa.sendCode({
+  factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
+  mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-send-code)
@@ -3850,7 +4089,7 @@ Submit the `mfa_token` from a `mfa_required: true` signin response, plus EITHER 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many failed attempts against this challenge (5 locks it). Per-IP rate limit (`RATE_LIMITED`): this path is in the `verify_code` bucket — 5 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerToken = await auth.consumer("app").mfa.verify({ mfa_token: "string" });
+const consumerToken = await auth.consumer("my-app").mfa.verify({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-verify)
@@ -3876,7 +4115,10 @@ Completes the flow started by `/auth/mfa/enroll`. TOTP: submit two `codes` from 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many failed attempts against this enrolment token (5 locks it). Per-IP rate limit (`RATE_LIMITED`): this path is in the `verify_code` bucket — 5 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerMfaEnrollVerify = await auth.consumer("app").mfa.verifyEnrollment({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+const consumerMfaEnrollVerify = await auth.consumer("my-app").mfa.verifyEnrollment({
+  factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
+  mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-enroll-verify)
@@ -3905,7 +4147,7 @@ Mints a single-use WebAuthn challenge scoped to the account behind `mfa_token` a
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many failed attempts on the challenge. Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerWebauthnOptions = await auth.consumer("app").mfa.webauthn.options({ mfa_token: "string" });
+const consumerWebauthnOptions = await auth.consumer("my-app").mfa.webauthn.options({ mfa_token: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-mfa-webauthn-options)
@@ -3921,6 +4163,7 @@ Introspect the bearer access token (RFC 7662).
 OAuth 2.0 token introspection. Send the access token via `Authorization: Bearer <token>` and receive either `{ active: false }` (invalid / expired / wrong app, or a session that is revoked, past its `expires_at`, or gone because the end user was deleted) or the active claim set including `scopes` (M2M) or `role` (EndUser), `exp`, `iat`, `iss`, `aid`. The body `token` field is optional and, if present, must match the bearer — RFC 7662 allows a separate `token` body field but we deliberately refuse cross-token introspection so a stolen token can't be probed against another active credential. The endpoint accepts both M2M and EndUser tokens — use it as the canonical way for a service to know what its own token can do, instead of decoding the JWT by hand. Returns 401 when the bearer is missing.
 
 - Params: `Auth.OauthIntrospectParams`
+- Credential: [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3932,7 +4175,7 @@ OAuth 2.0 token introspection. Send the access token via `Authorization: Bearer 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const introspect = await auth.consumer("app").oauth.introspect({ token: "string" });
+const introspect = await auth.consumer("my-app").oauth.introspect({ token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-oauth-introspect)
@@ -3958,9 +4201,9 @@ Standard OAuth 2.0 client_credentials grant. Returns an app-scoped access token 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `token_exchange` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const oAuthToken = await auth.consumer("app").oauth.token({
+const oAuthToken = await auth.consumer("my-app").oauth.token({
   client_id: "m2m_a1b2c3d4e5f6...",
-  client_secret: "string",
+  client_secret: "the-secret-returned-by-credentials-create",
   grant_type: "client_credentials",
 });
 ```
@@ -3990,7 +4233,7 @@ Returns a single-use WebAuthn challenge for `navigator.credentials.get()`. `allo
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP burst limit. The endpoint does no credential work — one random challenge and one insert — so the bucket is the whole bound. Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerWebauthnOptions = await auth.consumer("app").passkey.options({ tenant_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+const consumerWebauthnOptions = await auth.consumer("my-app").passkey.options({ tenant_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-passkey-options)
@@ -4016,7 +4259,7 @@ Verifies the assertion against the challenge from `/auth/passkey/options` and mi
 | 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP burst limit on credential consumption. Per-IP rate limit (`RATE_LIMITED`): this path is in the `verify_code` bucket — 5 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 
 ```ts
-const consumerToken = await auth.consumer("app").passkey.verify({ credential: {} });
+const consumerToken = await auth.consumer("my-app").passkey.verify({ credential: {} });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-passkey-verify)
@@ -4033,6 +4276,7 @@ Inserts a `<resource>.<action>` row in the per-app permission catalogue. The res
 
 - Params: `Auth.ConsumerScopedPermissionCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4041,7 +4285,7 @@ Inserts a `<resource>.<action>` row in the per-app permission catalogue. The res
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAdminPermission = await auth.consumer("app").permissions.create({ action: "read", resource: "project" });
+const consumerAdminPermission = await auth.consumer("my-app").permissions.create({ action: "read", resource: "project" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-admin-permissions)
@@ -4054,6 +4298,8 @@ Delete a custom permission.
 
 The `permissionKey` path parameter is the literal `<resource>.<action>` string. System permissions cannot be deleted — attempts return 403. Removing a permission also removes every `role_permission` row that bound it (cascade); role lookups dropped of that perm on the next request.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | permissionKey must be in `resource.action` format. |
@@ -4063,7 +4309,7 @@ The `permissionKey` path parameter is the literal `<resource>.<action>` string. 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").permissions.delete("permission_key");
+await auth.consumer("my-app").permissions.delete("invoice.read");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-admin-permissions-permission-key)
@@ -4076,6 +4322,8 @@ List all permissions visible to this app.
 
 Returns the union of system permissions (shared across every app — `is_system: true` in the response) and any custom entries this app has defined (`is_system: false`). Useful for driving a role-editor UI that picks from the full catalogue.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired Consumer-API bearer: an EndUser or M2M token, or an app API key (`hdk_live_*` / `hdk_test_*`); or the account, session, M2M client or key is no longer active, or the key belongs to another app. |
@@ -4084,7 +4332,7 @@ Returns the union of system permissions (shared across every app — `is_system:
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.consumer("app").permissions.list();
+const result = await auth.consumer("my-app").permissions.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-permissions)
@@ -4101,6 +4349,7 @@ Creates a role with no permissions bound yet. Use `PUT /:roleName/permissions` t
 
 - Params: `Auth.ConsumerScopedRoleCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4109,7 +4358,7 @@ Creates a role with no permissions bound yet. Use `PUT /:roleName/permissions` t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerRole = await auth.consumer("app").roles.create({ name: "editor" });
+const consumerRole = await auth.consumer("my-app").roles.create({ name: "editor" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-admin-roles)
@@ -4122,6 +4371,8 @@ Delete a custom role.
 
 System roles (`owner`, `admin`, `member`) cannot be deleted — attempts return 403. Roles currently assigned to any member return 409 `ROLE_IN_USE`; reassign the affected members first.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4130,7 +4381,7 @@ System roles (`owner`, `admin`, `member`) cannot be deleted — attempts return 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").roles.delete("role_name");
+await auth.consumer("my-app").roles.delete("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-admin-roles-role-name)
@@ -4145,6 +4396,7 @@ Cursor-paginated by `created_at`. Use the returned `next_cursor` in subsequent c
 
 - Params: `Auth.ConsumerScopedRoleListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4155,10 +4407,10 @@ Cursor-paginated by `created_at`. Use the returned `next_cursor` in subsequent c
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const role of auth.consumer("app").roles.list()) {
+for await (const role of auth.consumer("my-app").roles.list()) {
   console.log(role);
 }
-const page = await auth.consumer("app").roles.list({}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").roles.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-roles)
@@ -4171,6 +4423,8 @@ Read one role with its permission set.
 
 Returns the role plus the flat `permissions[]` array currently bound. Use this to drive a "configure role" UI in the customer product without having to call `/permissions` separately.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4178,7 +4432,7 @@ Returns the role plus the flat `permissions[]` array currently bound. Use this t
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerRoleWithPermissions = await auth.consumer("app").roles.retrieve("role_name");
+const consumerRoleWithPermissions = await auth.consumer("my-app").roles.retrieve("admin");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-roles-role-name)
@@ -4192,6 +4446,7 @@ Update a role's description.
 Renames are intentionally NOT supported — the role name is part of every issued EndUser JWT, so changing it would silently break live sessions. Create a new role and migrate users instead.
 
 - Params: `Auth.ConsumerScopedRoleUpdateParams`
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4200,7 +4455,7 @@ Renames are intentionally NOT supported — the role name is part of every issue
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerRole = await auth.consumer("app").roles.update("role_name", { description: "Updated description" });
+const consumerRole = await auth.consumer("my-app").roles.update("admin", { description: "Updated description" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-admin-roles-role-name)
@@ -4214,6 +4469,7 @@ Replace a role's permission set.
 Destructive — the role's permission set is replaced wholesale with the supplied array. Caller-narrowed: the caller must hold every permission in the request, otherwise 403 `Cannot grant actions you don't have: ...`. For EndUser callers the caller-held set is their app-membership role's effective permissions. For M2M callers the held set is the token's `scopes[]` claim — the M2M cannot grant a role any verb that wasn't configured on the M2M credential. Unknown permission strings return 400.
 
 - Params: `Auth.ConsumerScopedRoleUpdatePermissionsParams`
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4224,7 +4480,7 @@ Destructive — the role's permission set is replaced wholesale with the supplie
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await auth.consumer("app").roles.updatePermissions("role_name", { permissions: ["user.read", "role.create"] });
+const result = await auth.consumer("my-app").roles.updatePermissions("admin", { permissions: ["user.read", "role.create"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-app-slug-v1-admin-roles-role-name-permissions)
@@ -4241,6 +4497,7 @@ Returns the secret ONCE (`key`). Scopes must be grantable by the app and held by
 
 - Params: `Auth.TenantApiKeyCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4252,7 +4509,7 @@ Returns the secret ONCE (`key`). Scopes must be grantable by the app and held by
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeyWithSecret = await auth.consumer("app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
+const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.create({ name: "CI e2e", scopes: ["disputes.read", "audit.read"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenant-api-keys)
@@ -4265,6 +4522,8 @@ Revoke an API key.
 
 Immediate and final. Idempotent: revoking a revoked key is a 204 that changes nothing.
 
+- Credential: [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid end-user bearer token (M2M tokens, PAKs and API keys are refused). |
@@ -4273,7 +4532,7 @@ Immediate and final. Idempotent: revoking a revoked key is a 204 that changes no
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").tenantApiKeys.delete("key");
+await auth.consumer("my-app").tenantApiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-tenant-api-keys-key-id)
@@ -4287,6 +4546,7 @@ Verify a tenant API key (RFC 7662 shape).
 For your backend: is this `pctk_` key, presented to YOUR API, usable right now, for which tenant and with which scopes? A key of another app is `{"active": false}`. Cache answers by the key's SHA-256: positives up to 30 s (never past `expires_at`), negatives up to 60 s. Intersect `scopes` with the permissions of `created_by.tenant_role` in your app. Requires `auth.tenant.api_keys.introspect` on the app. Not audited per call; `last_used_at` records use (5-minute granularity). This route has its own per-app rate bucket (1200 calls a minute by default), separate from your PAK's other calls; over it the answer is 429 with `Retry-After`, never a false `active: false`, so keep serving keys you hold a fresh positive for.
 
 - Params: `Auth.TenantApiKeyIntrospectParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4298,7 +4558,7 @@ For your backend: is this `pctk_` key, presented to YOUR API, usable right now, 
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: this app's introspect bucket is exhausted for the current minute. `Retry-After` says when it refills. |
 
 ```ts
-const tenantApiKeyIntrospection = await auth.consumer("app").tenantApiKeys.introspect({ key: "pctk_live_4fQ2aZ0000000000000000000000000000000000000_1a2B3c" });
+const tenantApiKeyIntrospection = await auth.consumer("my-app").tenantApiKeys.introspect({ key: "pctk_live_4fQ2aZ0000000000000000000000000000000000000_1a2B3c" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenant-api-keys-introspect)
@@ -4313,6 +4573,7 @@ Newest first, cursor-paginated (20 per page, max 100). Secrets are never returne
 
 - Params: `Auth.ConsumerScopedTenantApiKeyListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4323,10 +4584,10 @@ Newest first, cursor-paginated (20 per page, max 100). Secrets are never returne
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const tenantApiKey of auth.consumer("app").tenantApiKeys.list()) {
+for await (const tenantApiKey of auth.consumer("my-app").tenantApiKeys.list()) {
   console.log(tenantApiKey);
 }
-const page = await auth.consumer("app").tenantApiKeys.list({}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").tenantApiKeys.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenant-api-keys)
@@ -4341,6 +4602,7 @@ Mints a replacement with the same name and scopes and returns its secret ONCE. Y
 
 - Params: `Auth.TenantApiKeyRotateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4352,7 +4614,7 @@ Mints a replacement with the same name and scopes and returns its secret ONCE. Y
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeyWithSecret = await auth.consumer("app").tenantApiKeys.rotate("key", { expires_in_days: 7 });
+const tenantApiKeyWithSecret = await auth.consumer("my-app").tenantApiKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { expires_in_days: 7 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenant-api-keys-key-id-rotate)
@@ -4365,6 +4627,8 @@ Why a tenant API key is (in)active.
 
 For your own audit trail: record why a key you saw go inactive died (revoked in the console, creator left the tenant, expired, keys suspended). Only keys of this app; another app's key is 404. Requires `auth.tenant.api_keys.introspect` on the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
@@ -4374,7 +4638,7 @@ For your own audit trail: record why a key you saw go inactive died (revoked in 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeyStatus = await auth.consumer("app").tenantApiKeys.status("key");
+const tenantApiKeyStatus = await auth.consumer("my-app").tenantApiKeys.status("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenant-api-keys-key-id-status)
@@ -4389,6 +4653,8 @@ Read this app's tenant API key settings.
 
 Requires `auth.tenant.api_keys.configure` on the app.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
@@ -4398,7 +4664,7 @@ Requires `auth.tenant.api_keys.configure` on the app.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeysConfig = await auth.consumer("app").tenantApiKeys.config.retrieve();
+const tenantApiKeysConfig = await auth.consumer("my-app").tenantApiKeys.config.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenant-api-keys-config)
@@ -4413,6 +4679,7 @@ Call it on boot: your code is the source of truth for the scopes a key can carry
 
 - Params: `Auth.ConsumerScopedTenantApiKeyConfigUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4424,7 +4691,7 @@ Call it on boot: your code is the source of truth for the scopes a key can carry
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const tenantApiKeysConfig = await auth.consumer("app").tenantApiKeys.config.update({ default_expiry_days: 7 });
+const tenantApiKeysConfig = await auth.consumer("my-app").tenantApiKeys.config.update({ default_expiry_days: 7 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#put-app-slug-v1-tenant-api-keys-config)
@@ -4439,6 +4706,7 @@ Create a tenant inside this app. Returns the new tenant with a `display_id` (`tn
 
 - Params: `Auth.ConsumerScopedTenantCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4450,7 +4718,7 @@ Create a tenant inside this app. Returns the new tenant with a `display_id` (`tn
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerTenant = await auth.consumer("app").tenants.create({ display_name: "Acme Co" });
+const consumerTenant = await auth.consumer("my-app").tenants.create({ display_name: "Acme Co" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenants)
@@ -4461,6 +4729,8 @@ const consumerTenant = await auth.consumer("app").tenants.create({ display_name:
 
 Delete a tenant. Cascades to tenant_membership rows; account rows are unaffected. PAK must hold auth.tenant.delete.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4468,7 +4738,7 @@ Delete a tenant. Cascades to tenant_membership rows; account rows are unaffected
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").tenants.delete("tenant");
+await auth.consumer("my-app").tenants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-tenants-tenant-id)
@@ -4481,6 +4751,7 @@ List tenants in this app, paginated by created_at desc. PAK must hold auth.tenan
 
 - Params: `Auth.ConsumerScopedTenantListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4492,10 +4763,10 @@ List tenants in this app, paginated by created_at desc. PAK must hold auth.tenan
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const tenant of auth.consumer("app").tenants.list()) {
+for await (const tenant of auth.consumer("my-app").tenants.list()) {
   console.log(tenant);
 }
-const page = await auth.consumer("app").tenants.list({}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").tenants.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenants)
@@ -4506,6 +4777,8 @@ const page = await auth.consumer("app").tenants.list({}, { timeout: 5_000 });
 
 Fetch a single tenant by its UUID or `tnt_<12hex>` display id. PAK must hold auth.tenant.read.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4513,7 +4786,7 @@ Fetch a single tenant by its UUID or `tnt_<12hex>` display id. PAK must hold aut
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerTenant = await auth.consumer("app").tenants.retrieve("tenant");
+const consumerTenant = await auth.consumer("my-app").tenants.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenants-tenant-id)
@@ -4525,6 +4798,7 @@ const consumerTenant = await auth.consumer("app").tenants.retrieve("tenant");
 Patch a tenant. Any subset of {display_name, slug, status, metadata}. PAK must hold auth.tenant.update.
 
 - Params: `Auth.ConsumerScopedTenantUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4535,7 +4809,7 @@ Patch a tenant. Any subset of {display_name, slug, status, metadata}. PAK must h
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerTenant = await auth.consumer("app").tenants.update("tenant", { display_name: "string" });
+const consumerTenant = await auth.consumer("my-app").tenants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Acme Inc" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-tenants-tenant-id)
@@ -4552,6 +4826,7 @@ Unlike `POST /members`, nothing is granted until the invitee accepts at `POST /:
 
 - Params: `Auth.ConsumerScopedTenantInviteCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4563,7 +4838,7 @@ Unlike `POST /members`, nothing is granted until the invitee accepts at `POST /:
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createTenantInvite = await auth.consumer("app").tenants.invites.create("tenant", { email: "alice@example.com", role_name: "member" });
+const createTenantInvite = await auth.consumer("my-app").tenants.invites.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email: "alice@example.com", role_name: "member" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenants-tenant-id-invites)
@@ -4574,6 +4849,8 @@ const createTenantInvite = await auth.consumer("app").tenants.invites.create("te
 
 Revoke a pending invite. Idempotent — revoking an already-revoked invite is a 204 no-op and fires no second webhook. PAK must hold auth.tenant.members.remove.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4581,7 +4858,7 @@ Revoke a pending invite. Idempotent — revoking an already-revoked invite is a 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").tenants.invites.delete("tenant", "invite");
+await auth.consumer("my-app").tenants.invites.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-tenants-tenant-id-invites-invite-id)
@@ -4596,6 +4873,7 @@ Codes are never returned here — only the digest is stored. Use `status=pending
 
 - Params: `Auth.ConsumerScopedTenantInviteListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4605,10 +4883,10 @@ Codes are never returned here — only the digest is stored. Use `status=pending
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const invite of auth.consumer("app").tenants.invites.list("tenant")) {
+for await (const invite of auth.consumer("my-app").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(invite);
 }
-const page = await auth.consumer("app").tenants.invites.list("tenant", {}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").tenants.invites.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenants-tenant-id-invites)
@@ -4623,6 +4901,7 @@ Add a member to a tenant. Pass `accountId` for an existing user, or `email` (+ o
 
 - Params: `Auth.ConsumerScopedTenantMemberCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4633,7 +4912,7 @@ Add a member to a tenant. Pass `accountId` for an existing user, or `email` (+ o
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAddMember = await auth.consumer("app").tenants.members.create("tenant", { role_name: "member" });
+const consumerAddMember = await auth.consumer("my-app").tenants.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-tenants-tenant-id-members)
@@ -4644,6 +4923,8 @@ const consumerAddMember = await auth.consumer("app").tenants.members.create("ten
 
 Remove a member from a tenant. The underlying account row stays in the app — only the tenant_membership row is deleted. PAK must hold auth.tenant.members.remove.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4651,7 +4932,7 @@ Remove a member from a tenant. The underlying account row stays in the app — o
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").tenants.members.delete("tenant", "account");
+await auth.consumer("my-app").tenants.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-tenants-tenant-id-members-account-id)
@@ -4664,6 +4945,7 @@ List members of a tenant. Cursor-paginated by joined_at desc. Filter by `?search
 
 - Params: `Auth.ConsumerScopedTenantMemberListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4675,10 +4957,10 @@ List members of a tenant. Cursor-paginated by joined_at desc. Filter by `?search
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const member of auth.consumer("app").tenants.members.list("tenant")) {
+for await (const member of auth.consumer("my-app").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(member);
 }
-const page = await auth.consumer("app").tenants.members.list("tenant", {}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").tenants.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-tenants-tenant-id-members)
@@ -4690,6 +4972,7 @@ const page = await auth.consumer("app").tenants.members.list("tenant", {}, { tim
 Change a member's role. PAK must hold auth.tenant.members.update-role.
 
 - Params: `Auth.ConsumerScopedTenantMemberUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4699,7 +4982,7 @@ Change a member's role. PAK must hold auth.tenant.members.update-role.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerTenantMembership = await auth.consumer("app").tenants.members.update("tenant", "account", { role_name: "admin" });
+const consumerTenantMembership = await auth.consumer("my-app").tenants.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "admin" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-tenants-tenant-id-members-account-id)
@@ -4718,6 +5001,7 @@ What is NOT distinct: the password policy. A supplied `password` goes through th
 
 - Params: `Auth.UserCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4728,7 +5012,7 @@ What is NOT distinct: the password policy. A supplied `password` goes through th
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The service is momentarily busy (`SERVICE_UNAVAILABLE`): too many password hashes or verifications are already running or queued on the instance that took the request. Nothing was changed and no attempt was counted. Retry after the number of seconds in the `Retry-After` header (also in `details.retry_after_seconds`). Decided by instance load only, never by the identifier or the account, so it reveals nothing about whether an account exists. |
 
 ```ts
-const consumerAdminCreatedUser = await auth.consumer("app").users.create({ email: "string" });
+const consumerAdminCreatedUser = await auth.consumer("my-app").users.create({ email: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-admin-users)
@@ -4741,6 +5025,8 @@ Permanently delete an end-user.
 
 Removes the account, its sessions, contacts, and tenant memberships. Audit rows are preserved, and the deletion itself is audited as `auth.account.deleted` with `via: consumer_admin` and the caller as actor. Fires `user.deleted` with `via: "consumer_admin"`.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired Consumer-API bearer: an EndUser or M2M token, or an app API key (`hdk_live_*` / `hdk_test_*`); or the account, session, M2M client or key is no longer active, or the key belongs to another app. |
@@ -4749,7 +5035,7 @@ Removes the account, its sessions, contacts, and tenant memberships. Audit rows 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").users.delete("user");
+await auth.consumer("my-app").users.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-admin-users-user-id)
@@ -4764,6 +5050,7 @@ Cursor-paginated. Supports the same `status` and `search` filters as the auth-ad
 
 - Params: `Auth.UserListParams`
 - Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4774,10 +5061,10 @@ Cursor-paginated. Supports the same `status` and `search` filters as the auth-ad
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const user of auth.consumer("app").users.list()) {
+for await (const user of auth.consumer("my-app").users.list()) {
   console.log(user);
 }
-const page = await auth.consumer("app").users.list({}, { timeout: 5_000 });
+const page = await auth.consumer("my-app").users.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-users)
@@ -4788,6 +5075,8 @@ const page = await auth.consumer("app").users.list({}, { timeout: 5_000 });
 
 Read one end-user.
 
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
@@ -4795,7 +5084,7 @@ Read one end-user.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAdminEndUser = await auth.consumer("app").users.retrieve("user");
+const consumerAdminEndUser = await auth.consumer("my-app").users.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-admin-users-user-id)
@@ -4809,6 +5098,7 @@ Update an end-user's display name or primary email.
 Email update promotes an existing contact to primary (not for creating new contacts — that goes through the per-contact flow).
 
 - Params: `Auth.UserUpdateParams`
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4819,7 +5109,7 @@ Email update promotes an existing contact to primary (not for creating new conta
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAdminEndUser = await auth.consumer("app").users.update("user", { display_name: "string" });
+const consumerAdminEndUser = await auth.consumer("my-app").users.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Ada Lovelace" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-admin-users-user-id)
@@ -4833,6 +5123,7 @@ Assign an end-user a role.
 Sets `app_membership.role_id` for the target user. For M2M callers the assignable role is bounded by the token's scopes (the guard already enforced `role.assign`); the role's own permission set is NOT additionally narrowed against the M2M scopes because M2M scopes are typically broader than per-user role perms by design (a backend cron with `user.list` + `role.assign` SHOULD be able to promote a user into a role carrying any per-app perm). EndUser admins are bounded by their own role's perms transitively — they couldn't authenticate as an admin without holding the perm.
 
 - Params: `Auth.UserUpdateRoleParams`
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4843,7 +5134,7 @@ Sets `app_membership.role_id` for the target user. For M2M callers the assignabl
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAdminRoleAssignment = await auth.consumer("app").users.updateRole("user", { role_name: "string" });
+const consumerAdminRoleAssignment = await auth.consumer("my-app").users.updateRole("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-admin-users-user-id-role)
@@ -4857,6 +5148,7 @@ Change an end-user status (active / suspended / deactivated).
 Setting status to `suspended` or `deactivated` also revokes all active sessions for the user (same behaviour as the auth-admin equivalent).
 
 - Params: `Auth.UserUpdateStatusParams`
+- Credential: [`app_api_key`](#app_api_key) or [`m2m_token`](#m2m_token) or [`end_user_token`](#end_user_token)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4867,7 +5159,7 @@ Setting status to `suspended` or `deactivated` also revokes all active sessions 
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const consumerAdminEndUser = await auth.consumer("app").users.updateStatus("user", { status: "active" });
+const consumerAdminEndUser = await auth.consumer("my-app").users.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "active" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#patch-app-slug-v1-admin-users-user-id-status)
@@ -4884,6 +5176,7 @@ Creates the factor in the enabled state. TOTP: returns the cleartext secret + ot
 
 - Params: `Auth.UserFactorCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`workspace_key`](#workspace_key)
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -4896,7 +5189,7 @@ Creates the factor in the enabled state. TOTP: returns the cleartext secret + ot
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const adminProvisionFactor = await auth.consumer("app").users.factors.create("user", { type: "totp" });
+const adminProvisionFactor = await auth.consumer("my-app").users.factors.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "totp" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-users-user-id-factors)
@@ -4907,6 +5200,8 @@ const adminProvisionFactor = await auth.consumer("app").users.factors.create("us
 
 Disable a user's MFA factor.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing bearer token, or the Platform API Key is malformed, unknown or revoked. |
@@ -4916,7 +5211,7 @@ Disable a user's MFA factor.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await auth.consumer("app").users.factors.delete("user", "factor");
+await auth.consumer("my-app").users.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-users-user-id-factors-factor-id)
@@ -4927,6 +5222,8 @@ await auth.consumer("app").users.factors.delete("user", "factor");
 
 List a user's MFA factors.
 
+- Credential: [`workspace_key`](#workspace_key)
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing bearer token, or the Platform API Key is malformed, unknown or revoked. |
@@ -4936,7 +5233,7 @@ List a user's MFA factors.
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const factorList = await auth.consumer("app").users.factors.list("user");
+const factorList = await auth.consumer("my-app").users.factors.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-users-user-id-factors)
@@ -4963,7 +5260,7 @@ Token source: `body.token` if provided, else the `Authorization: Bearer <jwt>` h
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const authorize = await auth.consumer("app").verify.authorize({ permission: "string" });
+const authorize = await auth.consumer("my-app").verify.authorize({ permission: "invoice.read" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-authorize)
@@ -4988,7 +5285,7 @@ Token source: `body.token` if provided, else the `Authorization: Bearer <jwt>` h
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const authorizeBatch = await auth.consumer("app").verify.authorizeBatch({ checks: [{}] });
+const authorizeBatch = await auth.consumer("my-app").verify.authorizeBatch({ checks: [{}] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-authorize-batch)
@@ -5013,7 +5310,7 @@ Token source: `body.token` if provided, else the `Authorization: Bearer <jwt>` h
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const verify = await auth.consumer("app").verify.token({ token: "string" });
+const verify = await auth.consumer("my-app").verify.token({ token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-verify)
@@ -5036,7 +5333,7 @@ Returns the JSON Web Key Set used to sign EndUser and M2M access tokens for this
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const jwks = await auth.consumer("app").wellKnown.jwks();
+const jwks = await auth.consumer("my-app").wellKnown.jwks();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-well-known-jwks-json)
@@ -5057,10 +5354,30 @@ Returns `issuer`, `jwks_uri`, `token_endpoint`, `introspection_endpoint`, `useri
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const openIdConfiguration = await auth.consumer("app").wellKnown.openidConfiguration();
+const openIdConfiguration = await auth.consumer("my-app").wellKnown.openidConfiguration();
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-well-known-openid-configuration)
+
+## Credentials
+
+Routes take different credentials; each method above says which. Every one is sent as `Authorization: Bearer`. A workspace API key is the client's `apiKey` (or `PRODUCTCRAFT_API_KEY`); pass any other as `new Auth({ auth: { type: "bearer", token } })`. The wrong one answers 401.
+
+### `app_api_key`
+
+An app API key (`hdk_live_…` or `hdk_test_…`) minted for this app (`POST /v1/apps/{app_id}/api-keys`). Its permissions are always enforced. A workspace key is refused.
+
+### `end_user_token`
+
+An end user's access token for this app, from `signin`, `signup` or `refresh`. Acts as that user.
+
+### `m2m_token`
+
+An access token from this app's client-credentials grant (`POST /{app_slug}/v1/oauth/token`).
+
+### `workspace_key`
+
+A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_KEY`) or a signed-in ProductCraft platform session token. Its workspace policy decides what it may do.
 
 ## Error codes
 

@@ -35,6 +35,9 @@ import { PlatformAuthErrorCode } from '@productcraft/platform-auth';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
+import { SignedWebhook } from '@productcraft/core';
+import { signWebhook } from '@productcraft/core';
+import { SignWebhookParams } from '@productcraft/core';
 import { Social } from '@productcraft/social';
 import { SocialErrorCode } from '@productcraft/social';
 import { Trawl } from '@productcraft/trawl';
@@ -148,6 +151,12 @@ export interface ProductCraftOverrides {
 export { RateLimitError }
 
 export { RequestOptions }
+
+export { SignedWebhook }
+
+export { signWebhook }
+
+export { SignWebhookParams }
 
 export { Social }
 

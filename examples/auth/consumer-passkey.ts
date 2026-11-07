@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // passkey.options: Begin a passwordless passkey sign-in
 {
-  const consumerWebauthnOptions = await auth.consumer("app").passkey.options({ tenant_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+  const consumerWebauthnOptions = await auth.consumer("my-app").passkey.options({ tenant_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
 }
 
 // passkey.verify: Complete a passwordless passkey sign-in
 {
-  const consumerToken = await auth.consumer("app").passkey.verify({ credential: {} });
+  const consumerToken = await auth.consumer("my-app").passkey.verify({ credential: {} });
 }
 
 export {};

@@ -20,7 +20,7 @@ Community-level analytics rollup: total active actors, published posts, publishe
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const communityAnalytics = await social.communities.analytics("cccccccc-cccc-cccc-cccc-cccccccccccc");
+const communityAnalytics = await social.communities.analytics("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-analytics)
@@ -62,7 +62,7 @@ Delete a community. Cascades to every actor, post, comment, edge, flag, and noti
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.communities.delete("cccccccc-cccc-cccc-cccc-cccccccccccc");
+await social.communities.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-workspaces-workspace-id-communities-community-id)
@@ -104,7 +104,7 @@ Get one community by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const community = await social.communities.retrieve("cccccccc-cccc-cccc-cccc-cccccccccccc");
+const community = await social.communities.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id)
@@ -125,7 +125,7 @@ Update community display name, description, settings, or status. Status transiti
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const community = await social.communities.update("cccccccc-cccc-cccc-cccc-cccccccccccc", { description: "string" });
+const community = await social.communities.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-workspaces-workspace-id-communities-community-id)
@@ -148,10 +148,10 @@ Every comment an actor authored, all statuses (published / hidden / removed) —
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const comment of social.communities.actors.comments.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const comment of social.communities.actors.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(comment);
 }
-const page = await social.communities.actors.comments.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.communities.actors.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-actors-actor-id-comments)
@@ -174,10 +174,10 @@ Every reaction an actor has given — post reactions and comment reactions unifi
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const reaction of social.communities.actors.reactions.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const reaction of social.communities.actors.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(reaction);
 }
-const page = await social.communities.actors.reactions.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.communities.actors.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-actors-actor-id-reactions)
@@ -202,7 +202,7 @@ Apply a moderation action directly, without a preceding flag (task 017). Acts on
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const moderationAction = await social.communities.moderation.actions.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+const moderationAction = await social.communities.moderation.actions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
   action: "remove",
   target_id: "bbbbbbbb-0000-0000-0000-000000000001",
   target_kind: "direct_message",
@@ -231,7 +231,7 @@ Apply a shadow ban to an actor. The actor sees their own content normally; every
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const moderationActor = await social.communities.moderation.actors.shadowBan("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { duration_hours: 168 });
+const moderationActor = await social.communities.moderation.actors.shadowBan("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { duration_hours: 168 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-moderation-actors-actor-id-shadow-ban)
@@ -249,7 +249,7 @@ Remove a shadow ban. No-op if not currently shadow-banned.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const moderationActor = await social.communities.moderation.actors.unshadowBan("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const moderationActor = await social.communities.moderation.actors.unshadowBan("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-workspaces-workspace-id-communities-community-id-moderation-actors-actor-id-shadow-ban)
@@ -273,10 +273,10 @@ Append-only audit of moderator actions in this community. 50/page (max 200), cur
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const audit of social.communities.moderation.audit.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const audit of social.communities.moderation.audit.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(audit);
 }
-const page = await social.communities.moderation.audit.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.audit.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-audit)
@@ -300,7 +300,7 @@ Add a hidden word to the community lexicon. A comment whose body contains the te
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const blockedTerm = await social.communities.moderation.blockedTerms.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { term: "spoiler" });
+const blockedTerm = await social.communities.moderation.blockedTerms.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { term: "spoiler" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-moderation-blocked-terms)
@@ -317,7 +317,7 @@ Remove a hidden word. Idempotent — 204 whether or not it existed.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.communities.moderation.blockedTerms.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "term");
+await social.communities.moderation.blockedTerms.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "spoiler");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-workspaces-workspace-id-communities-community-id-moderation-blocked-terms-term)
@@ -338,10 +338,10 @@ List the community hidden-words lexicon, newest-first. Cursor-paginated (50/page
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const blockedTerm of social.communities.moderation.blockedTerms.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const blockedTerm of social.communities.moderation.blockedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(blockedTerm);
 }
-const page = await social.communities.moderation.blockedTerms.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.blockedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-blocked-terms)
@@ -364,10 +364,10 @@ List every conversation in the community, most-recent-activity first. Moderation
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const conversation of social.communities.moderation.conversations.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const conversation of social.communities.moderation.conversations.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(conversation);
 }
-const page = await social.communities.moderation.conversations.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.conversations.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-conversations)
@@ -390,10 +390,10 @@ List every message in a conversation. Moderation-only.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const message of social.communities.moderation.conversations.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "conversation")) {
+for await (const message of social.communities.moderation.conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(message);
 }
-const page = await social.communities.moderation.conversations.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "conversation", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-conversations-conversation-id-messages)
@@ -417,10 +417,10 @@ List flags in this community. Filter by ?status=open|dismissed|actioned. 50/page
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const flag of social.communities.moderation.flags.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const flag of social.communities.moderation.flags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(flag);
 }
-const page = await social.communities.moderation.flags.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.flags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-flags)
@@ -443,7 +443,7 @@ Apply a moderation action to a flag. Records an audit entry and updates the targ
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actOnFlag = await social.communities.moderation.flags.resolve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { action: "hide" });
+const actOnFlag = await social.communities.moderation.flags.resolve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { action: "hide" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-moderation-flags-flag-id-actions)
@@ -467,10 +467,10 @@ List currently shadow-banned actors in this community. 50/page (max 200), cursor
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const shadowBanned of social.communities.moderation.shadowBanned.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const shadowBanned of social.communities.moderation.shadowBanned.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(shadowBanned);
 }
-const page = await social.communities.moderation.shadowBanned.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.moderation.shadowBanned.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-moderation-shadow-banned)
@@ -499,7 +499,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { url: "https://api.acme.com/webhooks" });
+const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints)
@@ -521,7 +521,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.communities.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await social.communities.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -545,7 +545,7 @@ At most 10, so this is always one page. Signing secrets are never returned here,
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const endpoint of social.communities.webhooks.endpoints.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const endpoint of social.communities.webhooks.endpoints.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(endpoint);
 }
 ```
@@ -569,7 +569,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.communities.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const webhookEndpoint = await social.communities.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -595,7 +595,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { grace_hours: 24 });
+const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -621,7 +621,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await social.communities.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { event_type: "post.created" });
+const webhookDeliveryAttempt = await social.communities.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id-test)
@@ -648,7 +648,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "Production receiver" });
+const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-workspaces-workspace-id-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -671,7 +671,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await social.communities.webhooks.eventTypes.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const listWebhookEventTypes = await social.communities.webhooks.eventTypes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-webhooks-event-types)
@@ -698,10 +698,10 @@ Every event logged while at least one endpoint existed, with the latest state pe
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const event of social.communities.webhooks.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const event of social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(event);
 }
-const page = await social.communities.webhooks.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-webhooks-events)
@@ -727,7 +727,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "event");
+const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-communities-community-id-webhooks-events-event-id-replay)
@@ -749,7 +749,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await social.communities.webhooks.events.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "event");
+const webhookEventDetail = await social.communities.webhooks.events.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-communities-community-id-webhooks-events-event-id)
@@ -788,6 +788,10 @@ const socialWorkspaceStats = await social.stats.retrieve();
 ### `social.webhooks.unwrap({ payload, headers, secret? })`
 
 Verifies the signature and returns `Social.UnwrapWebhookEvent`. Events: `actor.updated`, `asset.failed`, `asset.ready`, `comment.created`, `comment.deleted`, `comment.reaction.created`, `comment.updated`, `dm.message.created`, `edge.follow.created`, `edge.follow.deleted`, `edge.follow.request_approved`, `edge.follow.requested`, `flag.created`, `flag.updated`, `moderation.action.applied`, `post.created`, `post.deleted`, `post.reaction.created`, `post.updated`, `repost.created`, `tag.created`, plus `UnknownWebhookEvent` for types added later.
+
+### `social.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
 
 ## webhooks.endpoints
 
@@ -835,7 +839,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await social.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -883,7 +887,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await social.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -909,7 +913,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await social.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -935,7 +939,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await social.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "post.created" });
+const webhookDeliveryAttempt = await social.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-test)
@@ -962,7 +966,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await social.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -1041,7 +1045,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await social.webhooks.events.replay("event");
+const replayWebhookEvent = await social.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)
@@ -1063,7 +1067,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await social.webhooks.events.retrieve("event");
+const webhookEventDetail = await social.webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-workspaces-workspace-id-webhooks-events-event-id)
@@ -1086,7 +1090,7 @@ Bulk actor upsert (max 200 per call) — the import lane. Each item runs the exa
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const batchActors = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.batch({ actors: [{ external_id: "user_abc123" }] });
+const batchActors = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.batch({ actors: [{ external_id: "user_abc123" }] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors-batch)
@@ -1104,7 +1108,7 @@ Denormalised counters for one actor (followers, following, posts, comments, bloc
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorCounters = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.counters("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+const actorCounters = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.counters("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-counters)
@@ -1127,7 +1131,7 @@ Upsert an actor by external_id. Creates on first call, updates on subsequent cal
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const upsertActor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.create({ external_id: "user_abc123" });
+const upsertActor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.create({ external_id: "user_abc123" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors)
@@ -1145,7 +1149,7 @@ Delete an actor. Hard delete — cascades to every post, comment, edge, flag, an
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.delete("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-actors-actor-id)
@@ -1166,7 +1170,7 @@ An actor's follower time series: live follower_count plus a nightly-snapshot dai
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorInsights = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.insights("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const actorInsights = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.insights("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-insights)
@@ -1188,10 +1192,10 @@ List actors in a community. 50 per page by default (max 200) — paginate with t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const actor of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list()) {
+for await (const actor of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list()) {
   console.log(actor);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors)
@@ -1214,7 +1218,7 @@ Read-over-POST (the id list is too large for a query string) — no side effects
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const postState = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.postState("aaaaaaaa-0000-0000-0000-000000000001", {
+const postState = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.postState("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
   post_ids: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "cccccccc-cccc-cccc-cccc-cccccccccccc"],
 });
 ```
@@ -1233,7 +1237,7 @@ Get an actor by its UUID.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.retrieve("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id)
@@ -1254,7 +1258,7 @@ Update actor profile fields. Pass only the fields you want to change.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.update("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", { avatar_url: "string" });
+const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { avatar_url: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-actors-actor-id)
@@ -1279,10 +1283,10 @@ Archived posts keep their engagement (reaction / comment counts intact) but fall
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const archived of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("actor")) {
+for await (const archived of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(archived);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-archived)
@@ -1304,10 +1308,10 @@ List an actor's uploaded assets — the "your uploads" surface + GDPR export wal
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const asset of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const asset of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(asset);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-assets)
@@ -1331,10 +1335,10 @@ List actors this actor has blocked. Pass `?expand=dst_actor` to nest each blocke
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const block of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("actor")) {
+for await (const block of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(block);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-blocks)
@@ -1359,10 +1363,10 @@ Bookmarks are private — only the bookmarker should see their own list. The PAK
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const bookmark of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const bookmark of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(bookmark);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-bookmarks)
@@ -1385,7 +1389,7 @@ Batch-resolve external_ids to actors (max 200 per call). POST-only — external_
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorsByExternalBatch = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.batch({ external_ids: ["user_abc123", "user_def456"] });
+const actorsByExternalBatch = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.batch({ external_ids: ["user_abc123", "user_def456"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors-by-external-batch)
@@ -1403,7 +1407,7 @@ Look up an actor by the customer-supplied external_id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.retrieve("user_abc123");
+const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.retrieve("user_42");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-by-external-external-id)
@@ -1429,10 +1433,10 @@ Returns the actors on `external_id`'s close-friends list, with denormalised acto
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const closeFriend of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const closeFriend of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(closeFriend);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-close-friends)
@@ -1453,10 +1457,10 @@ List actors this actor has dismissed from suggestions. Pass `?expand=dst_actor` 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const dismissedSuggestion of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("actor")) {
+for await (const dismissedSuggestion of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(dismissedSuggestion);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-dismissed-suggestions)
@@ -1481,10 +1485,10 @@ Drafts are visible only via this endpoint — they're stripped from public feeds
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const draft of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+for await (const draft of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(draft);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-drafts)
@@ -1508,10 +1512,10 @@ Feed for an actor: their own posts + posts from actors they follow, with blocks 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const feed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+for await (const feed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(feed);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-feed)
@@ -1533,10 +1537,10 @@ List incoming follow requests for a (private) actor, newest-first (task 014).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const followRequest of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("actor")) {
+for await (const followRequest of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(followRequest);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-follow-requests)
@@ -1560,10 +1564,10 @@ List the actors who follow this actor. Pass `?expand=src_actor` to nest each fol
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const follower of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+for await (const follower of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(follower);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-followers)
@@ -1587,10 +1591,10 @@ List the actors this actor follows. Pass `?expand=dst_actor` to nest each follow
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const following of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+for await (const following of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(following);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-following)
@@ -1615,7 +1619,7 @@ Follow a hashtag on behalf of an actor. Idempotent — re-follow refreshes the f
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const hashtagFollow = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.create("aaaaaaaa-0000-0000-0000-000000000001", { tag: "storymode" });
+const hashtagFollow = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { tag: "storymode" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors-actor-id-hashtag-follows)
@@ -1634,7 +1638,7 @@ Unfollow a hashtag. Idempotent — 204 either way.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.delete("aaaaaaaa-0000-0000-0000-000000000001", "storymode");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "launch");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-actors-actor-id-hashtag-follows-tag)
@@ -1655,10 +1659,10 @@ List the hashtags an actor follows. Cursor-paginated newest-first by followed_at
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const hashtagFollow of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const hashtagFollow of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(hashtagFollow);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-hashtag-follows)
@@ -1679,10 +1683,10 @@ List the posts an actor has hidden, newest-first.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const hide of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("actor")) {
+for await (const hide of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(hide);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-hides)
@@ -1708,10 +1712,10 @@ Pinned posts appear here regardless of their `expires_at`. Visibility still appl
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const highlight of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const highlight of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001")) {
   console.log(highlight);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-owner-actor-id-highlights)
@@ -1736,10 +1740,10 @@ Cursor-paginated, newest-first. Interleaves post + comment mentions in a single 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const mention of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const mention of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(mention);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-mentions)
@@ -1764,7 +1768,7 @@ Add (or refresh) a muted term for the actor. Re-posting the same `term` updates 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mutedTerm = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.create("aaaaaaaa-0000-0000-0000-000000000001", { term: "spoiler" });
+const mutedTerm = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { term: "spoiler" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors-actor-id-muted-terms)
@@ -1782,7 +1786,7 @@ Remove a muted term. Idempotent — 204 either way.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.delete("aaaaaaaa-0000-0000-0000-000000000001", "term");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "spoiler");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-actors-actor-id-muted-terms-term)
@@ -1803,10 +1807,10 @@ List the actor's currently-active muted terms, newest-first. Cursor-paginated (t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const mutedTerm of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const mutedTerm of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(mutedTerm);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-muted-terms)
@@ -1830,10 +1834,10 @@ List actors this actor has muted. Pass `?expand=dst_actor` to nest each muted ac
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const mute of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("actor")) {
+for await (const mute of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(mute);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-mutes)
@@ -1855,7 +1859,7 @@ Returns one row per known NotificationKind so the client UI can render every tog
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notificationPrefList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.list("aaaaaaaa-0000-0000-0000-000000000001");
+const notificationPrefList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-notification-prefs)
@@ -1878,7 +1882,7 @@ Idempotent upsert. Pass `{ enabled: false }` to mute, `{ enabled: true }` to re-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notificationPref = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.update("aaaaaaaa-0000-0000-0000-000000000001", "kind", { enabled: false });
+const notificationPref = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "follow", { enabled: false });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-actors-actor-id-notification-prefs-kind)
@@ -1903,10 +1907,10 @@ Reverse-chronological inbox. Pass `unread_only=true` to filter to unread rows on
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const notification of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const notification of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(notification);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-notifications)
@@ -1929,7 +1933,7 @@ Single bulk write. Optional `before` ISO timestamp scopes to rows older than tha
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.markAllRead("aaaaaaaa-0000-0000-0000-000000000001", { before: "2026-05-01T00:00:00.000Z" });
+const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.markAllRead("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { before: "2026-05-01T00:00:00.000Z" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-actors-actor-id-notifications-read-all)
@@ -1949,7 +1953,7 @@ Cheap badge endpoint backed by a partial index — safe to poll at the cadence o
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.unreadCount("aaaaaaaa-0000-0000-0000-000000000001");
+const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.unreadCount("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-notifications-unread-count)
@@ -1972,7 +1976,7 @@ Idempotent: marking an already-read row read again is a no-op 204. Returns 404 i
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.update("aaaaaaaa-0000-0000-0000-000000000001", "11111111-1111-1111-1111-111111111111", { read: true });
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "11111111-1111-1111-1111-111111111111", { read: true });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-actors-actor-id-notifications-notification-id)
@@ -1997,7 +2001,7 @@ One query resolves the seven pairwise flags for a whole profile header or member
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const relationshipList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.relationships.list("aaaaaaaa-0000-0000-0000-000000000001", { with: "string" });
+const relationshipList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.relationships.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { with: "0b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-src-actor-id-relationships)
@@ -2021,10 +2025,10 @@ List actors this actor has restricted. Pass `?expand=dst_actor` to nest each res
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const restrict of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("actor")) {
+for await (const restrict of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(restrict);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-restricts)
@@ -2049,10 +2053,10 @@ Scheduled posts are invisible to everyone except the author until the per-minute
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const scheduledPost of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("actor")) {
+for await (const scheduledPost of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(scheduledPost);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-scheduled-posts)
@@ -2076,7 +2080,7 @@ Includes the requester themselves and every actor they follow. Ordered by latest
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const storyTray of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.storyTray.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+for await (const storyTray of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.storyTray.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(storyTray);
 }
 ```
@@ -2103,10 +2107,10 @@ Friend-of-a-friend signal first (people the requester's followees also follow), 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const suggestedFollow of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+for await (const suggestedFollow of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(suggestedFollow);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-actor-id-suggested-follows)
@@ -2132,10 +2136,10 @@ Approved tags only, on published + unexpired posts, newest-tag-first. Visibility
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const tagged of social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("tagged_actor")) {
+for await (const tagged of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(tagged);
 }
-const page = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("tagged_actor", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-actors-tagged-actor-id-tagged)
@@ -2159,7 +2163,7 @@ Finalize a presigned-PUT video upload. Verifies the stored object (existence, si
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const uploadAsset = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.complete("eeeeeeee-0000-0000-0000-000000000001");
+const uploadAsset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.complete("eeeeeeee-0000-0000-0000-000000000001");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-assets-asset-id-complete)
@@ -2184,7 +2188,7 @@ Upload media. Images (multipart): processed synchronously, returns ready. Videos
 | 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_UPLOADS` | `TOO_MANY_ACTIVE_UPLOADS` — the community already has the max videos uploading/processing. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const uploadAsset = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.create();
+const uploadAsset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.create();
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-assets)
@@ -2202,7 +2206,7 @@ Delete an asset — removes every stored rendition object, then the row.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-assets-asset-id)
@@ -2220,7 +2224,7 @@ Fetch one asset with freshly-minted presigned rendition URLs.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const asset = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const asset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-assets-asset-id)
@@ -2247,7 +2251,7 @@ Block another actor. Removes any existing follows/mutes between the two in eithe
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-blocks)
@@ -2265,7 +2269,7 @@ Unblock. Idempotent — 204 either way. Does NOT restore prior follows / mutes (
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.delete("src_actor", "dst_actor");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-blocks-src-actor-id-dst-actor-id)
@@ -2294,7 +2298,7 @@ Idempotent on `(community, owner, member)`. 422 on self-add. 409 if a block exis
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.create({ member_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.create({ member_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-close-friends)
@@ -2314,7 +2318,7 @@ Idempotent: 204 whether or not the edge exists. After removal, `close_friends`-v
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.delete("aaaaaaaa-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").closeFriends.delete("aaaaaaaa-0000-0000-0000-000000000001", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-close-friends-owner-actor-id-member-actor-id)
@@ -2341,7 +2345,7 @@ Create a collection. Default kind `bookmark`, visibility `private`. Pass an Idem
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const collection = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.create({ name: "Travel" });
+const collection = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.create({ name: "Travel" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-collections)
@@ -2362,7 +2366,7 @@ Delete a collection (owner only). Items cascade; the posts themselves are untouc
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { caller_actor_id: "aaaaaaaa-0000-0000-0000-000000000001" });
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { caller_actor_id: "aaaaaaaa-0000-0000-0000-000000000001" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-collections-collection-id)
@@ -2382,10 +2386,10 @@ List collections. Public ones are visible to anyone; private ones surface only t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const collection of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.list()) {
+for await (const collection of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.list()) {
   console.log(collection);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-collections)
@@ -2405,7 +2409,7 @@ Fetch one collection. Private collections resolve only for their owner (via acto
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const collection = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const collection = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-collections-collection-id)
@@ -2427,7 +2431,7 @@ Update a collection (owner only) — rename, cover, visibility, reorder position
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const collection = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const collection = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-collections-collection-id)
@@ -2452,7 +2456,7 @@ Add a post to a collection (owner only). Idempotent per (collection, post).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const collectionItem = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { post_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" });
+const collectionItem = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { post_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-collections-collection-id-items)
@@ -2472,7 +2476,7 @@ Remove a post from a collection (owner only).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { caller_actor_id: "aaaaaaaa-0000-0000-0000-000000000001" });
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { caller_actor_id: "aaaaaaaa-0000-0000-0000-000000000001" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-collections-collection-id-items-post-id)
@@ -2493,10 +2497,10 @@ List a collection's posts in curator order. Highlight collections bypass story e
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const item of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const item of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(item);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-collections-collection-id-items)
@@ -2517,7 +2521,7 @@ Reorder a post within a collection (owner only).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const collectionItem = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { position: 3 });
+const collectionItem = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").collections.items.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { position: 3 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-collections-collection-id-items-post-id)
@@ -2538,7 +2542,7 @@ Accept `src_actor_id`'s connection request as `dst_actor_id`: approves the follo
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const connectionResult = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.accept("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const connectionResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.accept("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-connections-dst-actor-id-src-actor-id-accept)
@@ -2562,7 +2566,7 @@ Request a connection (mutual follow). Runs the standard follow path: a private d
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const connectionResult = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.create({
+const connectionResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.create({
   dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002",
   src_actor_id: "aaaaaaaa-0000-0000-0000-000000000001",
 });
@@ -2584,7 +2588,7 @@ Sever a connection COMPLETELY: deletes the follow edges in both directions and w
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-connections-actor-id-other-actor-id)
@@ -2610,7 +2614,7 @@ Open a conversation. Default `kind="direct"` is the naturally-idempotent 1-on-1 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.create({});
+const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.create({});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-conversations)
@@ -2632,7 +2636,7 @@ Leave the conversation. Drops the caller's participant row; the conversation is 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.delete("conversation", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-conversations-conversation-id)
@@ -2654,7 +2658,7 @@ List the caller's conversations in this community, most-recent-activity first.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const conversation of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.list({})) {
+for await (const conversation of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.list({})) {
   console.log(conversation);
 }
 ```
@@ -2678,7 +2682,7 @@ Mark messages as read up to a given timestamp (default: now()). Sets the caller'
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.markRead("conversation", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.markRead("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-conversations-conversation-id-read)
@@ -2699,7 +2703,7 @@ Get a single conversation by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.retrieve("conversation", {});
+const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-conversations-conversation-id)
@@ -2720,7 +2724,7 @@ Global unread message count for the caller across every conversation in this com
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const unreadCount = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.unreadCount({});
+const unreadCount = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.unreadCount({});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-conversations-unread-count)
@@ -2743,7 +2747,7 @@ Conversation-level update (task 025). Pass `name` to rename a group (admin-only)
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.update("conversation", {});
+const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-conversations-conversation-id)
@@ -2769,7 +2773,7 @@ Add a member to a group conversation. Admin-only. Refuses if the new member has 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.create("conversation", {});
+const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-conversations-conversation-id-members)
@@ -2792,7 +2796,7 @@ Remove a participant. Admin-only unless the acting `?actor_id=` equals the targe
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.delete("conversation", "member_actor", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-conversations-conversation-id-members-member-actor-id)
@@ -2814,7 +2818,7 @@ Update a participant (task 025). Field-level authz: `role` is admin-only; `muted
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.update("conversation", "member_actor");
+const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-conversations-conversation-id-members-member-actor-id)
@@ -2840,7 +2844,7 @@ Send a message in the conversation. Pass an `Idempotency-Key` header to make ret
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.create("conversation", {});
+const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-conversations-conversation-id-messages)
@@ -2862,7 +2866,7 @@ Soft-delete a message. Reserved to the sender; the row stays so the conversation
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.delete("conversation", "message", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-conversations-conversation-id-messages-message-id)
@@ -2884,7 +2888,7 @@ List messages in the conversation. Default newest-first cursor. Pass `since` (en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const message of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.list("conversation", {})) {
+for await (const message of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
   console.log(message);
 }
 ```
@@ -2907,7 +2911,7 @@ Fetch a single message (task 024) — resolves a reply target without paging the
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.retrieve("conversation", "message", {});
+const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-conversations-conversation-id-messages-message-id)
@@ -2930,7 +2934,7 @@ Edit a message body. Allowed within 5 minutes of send and only by the sender.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.update("conversation", "message", { body: "edited" });
+const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "edited" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-conversations-conversation-id-messages-message-id)
@@ -2956,7 +2960,7 @@ Add a reaction to a direct message. Idempotent — re-posting the same (actor, t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const directMessageReactionCreated = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.create("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", { type: "heart" });
+const directMessageReactionCreated = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "heart" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-conversations-conversation-id-messages-message-id-reactions)
@@ -2974,7 +2978,7 @@ Remove the (actor, type) reaction. Idempotent — calling on a missing reaction 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const directMessageReactionRemoved = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.delete("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", "actor", "like");
+const directMessageReactionRemoved = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-conversations-conversation-id-messages-message-id-reactions-actor-id-type)
@@ -2996,7 +3000,7 @@ List the reactions on a direct message. Cursor-paginated, newest-first.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.list("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", {})) {
+for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
   console.log(reaction);
 }
 ```
@@ -3021,7 +3025,7 @@ Batch counters (max 100 actors per call) — render a member list with follower 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const batchCounters = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").counters.list({ actor_ids: "string" });
+const batchCounters = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").counters.list({ actor_ids: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f,0b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-counters)
@@ -3045,10 +3049,10 @@ Discover / explore feed (task 019). Ranked surface over every public post in the
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const discoverFeed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list()) {
+for await (const discoverFeed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list()) {
   console.log(discoverFeed);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").discoverFeed.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-discover-feed)
@@ -3073,7 +3077,7 @@ Dismiss an actor from your follow suggestions ("don't suggest"). Idempotent. The
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").dismissedSuggestions.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").dismissedSuggestions.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-dismissed-suggestions)
@@ -3089,7 +3093,7 @@ Un-dismiss a suggestion. Idempotent — 204 either way. The actor becomes eligib
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").dismissedSuggestions.delete("src_actor", "dst_actor");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").dismissedSuggestions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-dismissed-suggestions-src-actor-id-dst-actor-id)
@@ -3116,7 +3120,7 @@ File a moderation report against a post or comment. Idempotent per (reporter, ta
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createFlag = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.create({ target_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", target_kind: "post" });
+const createFlag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.create({ target_id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", target_kind: "post" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-flags)
@@ -3137,10 +3141,10 @@ List a reporter's own flags (task 017). Requires `actor_id` (the reporter) — t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const flag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list()) {
+for await (const flag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list()) {
   console.log(flag);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").flags.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-flags)
@@ -3159,7 +3163,7 @@ Approve a pending follow request (task 014). The destination (private) actor app
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").followRequests.approve("dst_actor", "src_actor");
+const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").followRequests.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-follow-requests-dst-actor-id-src-actor-id-approve)
@@ -3176,7 +3180,7 @@ Decline a pending follow request (task 014). Deletes the request; no edge, no no
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").followRequests.delete("dst_actor", "src_actor");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").followRequests.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-follow-requests-dst-actor-id-src-actor-id)
@@ -3199,7 +3203,7 @@ Bulk follow creation (max 200 per call) — the graph-import lane. Each item run
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const batchFollows = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.batch({
+const batchFollows = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.batch({
   follows: [
     {
       actor_id: "aaaaaaaa-0000-0000-0000-000000000001",
@@ -3231,7 +3235,7 @@ Follow another actor. Idempotent. If the destination is private (task 014), a fo
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const followResult = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+const followResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-follows)
@@ -3249,7 +3253,7 @@ Unfollow. Idempotent — 204 even if the follow didn't exist.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.delete("aaaaaaaa-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-follows-src-actor-id-dst-actor-id)
@@ -3273,10 +3277,10 @@ List hashtags in this community. Default order is `first_used_at` desc; `order=t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const hashtag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list()) {
+for await (const hashtag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list()) {
   console.log(hashtag);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-hashtags)
@@ -3295,7 +3299,7 @@ Get a single hashtag with its current published post count.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const hashtagDetail = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.retrieve("storymode");
+const hashtagDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.retrieve("launch");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-hashtags-tag)
@@ -3319,10 +3323,10 @@ List posts using a hashtag. `order=chronological` (default) or `order=ranked` (t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const post of social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("tag")) {
+for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("launch")) {
   console.log(post);
 }
-const page = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("tag", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("launch", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-hashtags-tag-posts)
@@ -3346,7 +3350,7 @@ Hide a post from the actor's feeds ("not interested"). Idempotent. A hard filter
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const hideResult = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.create({ post_id: "bbbbbbbb-0000-0000-0000-000000000001" });
+const hideResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.create({ post_id: "bbbbbbbb-0000-0000-0000-000000000001" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-hides)
@@ -3362,7 +3366,7 @@ Un-hide a post. Idempotent — 204 either way.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.delete("src_actor", "post");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hides.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-hides-src-actor-id-post-id)
@@ -3388,7 +3392,7 @@ Create a new list. Default visibility `private`. List creation has no natural ke
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.create({ name: "Tech news" });
+const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.create({ name: "Tech news" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-lists)
@@ -3410,7 +3414,7 @@ Delete a list. Owner-only. Pass the caller via `?actor_id=`.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.delete("list", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-lists-list-id)
@@ -3431,10 +3435,10 @@ List discoverable lists in this community. Public lists are visible to anyone; p
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const list of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list()) {
+for await (const list of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list()) {
   console.log(list);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-lists)
@@ -3455,7 +3459,7 @@ Get one list by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.retrieve("list");
+const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-lists-list-id)
@@ -3477,7 +3481,7 @@ Update list name / description / visibility. Owner-only.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.update("list");
+const actorList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-lists-list-id)
@@ -3502,7 +3506,7 @@ List-scoped feed (task 018). Returns posts authored by members of the list, filt
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const feed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.feed.list("list", {})) {
+for await (const feed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
   console.log(feed);
 }
 ```
@@ -3529,7 +3533,7 @@ Add a member to a list. Owner-only.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const actorListMember = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.create("list", {});
+const actorListMember = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-lists-list-id-members)
@@ -3551,7 +3555,7 @@ Remove a member from a list. Owner-only. Idempotent — 204 either way. Pass the
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.delete("list", "member_actor", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-lists-list-id-members-member-actor-id)
@@ -3573,10 +3577,10 @@ List members of a list. Public lists are visible to anyone; private lists surfac
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const member of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("list")) {
+for await (const member of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(member);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("list", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").lists.members.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-lists-list-id-members)
@@ -3603,7 +3607,7 @@ Mute another actor. One-directional and silent — the muted actor isn't notifie
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-mutes)
@@ -3621,7 +3625,7 @@ Unmute. Idempotent — 204 either way.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.delete("src_actor", "dst_actor");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-mutes-src-actor-id-dst-actor-id)
@@ -3647,7 +3651,7 @@ Visibility-aware: the actor must be allowed to read the post. If they can't, ret
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bookmarkToggle = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.bookmark("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+const bookmarkToggle = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.bookmark("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-bookmark)
@@ -3672,7 +3676,7 @@ Create a post on behalf of an actor. Pass an `Idempotency-Key` header to make re
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.create({});
+const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.create({});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts)
@@ -3690,7 +3694,7 @@ Soft-delete a post. The row is marked `removed`; viewers see 404. Comments and r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id)
@@ -3711,7 +3715,7 @@ Aggregate insights for a post: total views, unique reach, engagement counts, and
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const postInsights = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.insights("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const postInsights = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.insights("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-insights)
@@ -3732,10 +3736,10 @@ List posts. Pass `author_id` to filter to a single author. 50/page (max 200), cu
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const post of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list()) {
+for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list()) {
   console.log(post);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts)
@@ -3756,7 +3760,7 @@ Returns counts per option, zero-filling options that received no votes, plus `to
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.pollResults("bbbbbbbb-0000-0000-0000-000000000001");
+const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.pollResults("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-poll-results)
@@ -3777,7 +3781,7 @@ Batch-increment impression (`view_count`) counters on a list of posts. Client-si
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordImpressions({
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordImpressions({
   post_ids: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "cccccccc-cccc-cccc-cccc-cccccccccccc"],
 });
 ```
@@ -3804,7 +3808,7 @@ Idempotent on `(community, viewer, post)`. 204 on success or no-op duplicate. 42
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordView("bbbbbbbb-0000-0000-0000-000000000001", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordView("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-views)
@@ -3829,7 +3833,7 @@ Visibility is inherited from the source. The reposter must be allowed to read th
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createRepost = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.repost("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+const createRepost = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.repost("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-repost)
@@ -3852,7 +3856,7 @@ Without `actor_id`, only `public` posts return. With one, `followers` / `close_f
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.retrieve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id)
@@ -3874,7 +3878,7 @@ Remove a bookmark on behalf of an actor. Idempotent — 204 either way. Pass the
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unbookmark("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unbookmark("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-bookmark)
@@ -3896,7 +3900,7 @@ Undo my repost of a source post. Idempotent — 204 either way. Pass the actor v
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unrepost("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unrepost("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-repost)
@@ -3918,7 +3922,7 @@ Update post fields. `pinned` is the highlights toggle for stories; status transi
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.update("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", { attributes: {} });
+const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { attributes: {} });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-posts-post-id)
@@ -3943,7 +3947,7 @@ Approve a pending_approval comment (restricted-actor pre-moderation). Reserved t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.approve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment");
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-comments-comment-id-approve)
@@ -3967,7 +3971,7 @@ Add a comment on a post. Pass `parent_id` to reply; the depth is computed and ca
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.create("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", { body: "Looks great, shipping today." });
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "Looks great, shipping today." });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-comments)
@@ -3985,7 +3989,7 @@ Soft-delete a comment.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-comments-comment-id)
@@ -4007,10 +4011,10 @@ List comments on a post. Default returns top-level comments newest-first; pass `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const comment of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+for await (const comment of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(comment);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-comments)
@@ -4034,7 +4038,7 @@ Pins a published top-level comment so it leads the top-level listing. Reserved t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.pin("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", {});
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.pin("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-comments-comment-id-pin)
@@ -4055,7 +4059,7 @@ Get a single comment by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.retrieve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001");
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-comments-comment-id)
@@ -4078,7 +4082,7 @@ Clears the pin; the comment returns to its chronological position. Reserved to t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.unpin("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", {});
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.unpin("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-comments-comment-id-pin)
@@ -4099,7 +4103,7 @@ Update a comment's body, status, or visibility.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.update("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", { body: "string" });
+const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-posts-post-id-comments-comment-id)
@@ -4125,7 +4129,7 @@ React to a comment. Idempotent: re-posting the same `(actor, type)` returns the 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const addCommentReaction = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.create("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", { type: "like" });
+const addCommentReaction = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "like" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-comments-comment-id-reactions)
@@ -4144,7 +4148,7 @@ Unreact. Idempotent: returns 200 with current `reaction_counts` even if there wa
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const commentReactionCounts = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", "src_actor", "like");
+const commentReactionCounts = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-comments-comment-id-reactions-src-actor-id-type)
@@ -4165,10 +4169,10 @@ List reactions on a comment, newest-first. Cursor encodes `(created_at, actor_id
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001")) {
+for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(reaction);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-comments-comment-id-reactions)
@@ -4193,10 +4197,10 @@ Cursor-paginated by `(created_at DESC, id DESC)`. Each entry is the full quote p
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const quote of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+for await (const quote of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(quote);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-quotes)
@@ -4222,7 +4226,7 @@ React to a post. Idempotent: re-posting the same (actor, type) returns the exist
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const reaction = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.create("post", { type: "like" });
+const reaction = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "like" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-reactions)
@@ -4241,7 +4245,7 @@ Unreact. Idempotent: returns 200 with current `reaction_counts` even if there wa
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const reactionCounts = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.delete("post", "src_actor", "like");
+const reactionCounts = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-reactions-src-actor-id-type)
@@ -4263,10 +4267,10 @@ List reactions on a post, newest-first. Cursor encodes `(created_at, actor_id, t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(reaction);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-reactions)
@@ -4289,10 +4293,10 @@ List the actors who have reposted a source post. Cursor-paginated newest-first. 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const repost of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+for await (const repost of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(repost);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-reposts)
@@ -4317,10 +4321,10 @@ Each entry is a snapshot of body/title/attributes from BEFORE the edit landed. T
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const revision of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+for await (const revision of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(revision);
 }
-const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-revisions)
@@ -4346,7 +4350,7 @@ The tagged actor accepts being tagged; the tag flips `pending → approved` and 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const postTag = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.approve("post", "tagged_actor", {});
+const postTag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-tags-tagged-actor-id-approve)
@@ -4369,7 +4373,7 @@ Flips the tag to `removed`. Removable by either the tagged actor or the post aut
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const postTag = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.delete("post", "tagged_actor", {});
+const postTag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-tags-tagged-actor-id-remove)
@@ -4396,7 +4400,7 @@ Only the post author can list viewers. The PAK passes `actor_id`; if that resolv
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const viewer of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.viewers.list("bbbbbbbb-0000-0000-0000-000000000001", {})) {
+for await (const viewer of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.viewers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
   console.log(viewer);
 }
 ```
@@ -4425,7 +4429,7 @@ Only the poll author can list voters. Pass the author via `actor_id`; a requeste
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const voter of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.voters.list("bbbbbbbb-0000-0000-0000-000000000001", {})) {
+for await (const voter of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.voters.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
   console.log(voter);
 }
 ```
@@ -4456,7 +4460,7 @@ Last-vote-wins: an actor changing their vote replaces the prior one. 422 if the 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.create("bbbbbbbb-0000-0000-0000-000000000001", { option_index: 1 });
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { option_index: 1 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-posts-post-id-votes)
@@ -4476,7 +4480,7 @@ Deletes the vote edge. Idempotent — 204 whether or not a vote existed. No tall
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.delete("bbbbbbbb-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-posts-post-id-votes-actor-id)
@@ -4496,7 +4500,7 @@ Returns the actor's chosen `option_index` and when it was cast. 404 when the pos
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.retrieve("bbbbbbbb-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-posts-post-id-votes-actor-id)
@@ -4523,7 +4527,7 @@ Restrict another actor (Instagram-style). One-directional. Restricted actors can
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").restricts.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").restricts.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-restricts)
@@ -4541,7 +4545,7 @@ Unrestrict. Idempotent — 204 either way.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").restricts.delete("src_actor", "dst_actor");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").restricts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-restricts-src-actor-id-dst-actor-id)
@@ -4568,7 +4572,7 @@ Postgres FTS over a generated tsvector column (display_name A + external_id B + 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const actor of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.actors.list({ q: "string" })) {
+for await (const actor of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.actors.list({ q: "onboarding" })) {
   console.log(actor);
 }
 ```
@@ -4596,7 +4600,7 @@ Backed by a `text_pattern_ops` partial index — sub-100ms for any prefix length
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const hashtag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.hashtags.list({ q: "string" })) {
+for await (const hashtag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.hashtags.list({ q: "onboarding" })) {
   console.log(hashtag);
 }
 ```
@@ -4625,7 +4629,7 @@ Postgres FTS over a generated tsvector column on the post table (title A + body 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const post of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.posts.list({ q: "string" })) {
+for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").search.posts.list({ q: "onboarding" })) {
   console.log(post);
 }
 ```
@@ -4656,7 +4660,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+const webhookEndpointWithSecret = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-endpoints)
@@ -4678,7 +4682,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#delete-v1-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -4702,7 +4706,7 @@ At most 10, so this is always one page. Signing secrets are never returned here,
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const endpoint of social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.list()) {
+for await (const endpoint of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.list()) {
   console.log(endpoint);
 }
 ```
@@ -4726,7 +4730,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -4752,7 +4756,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -4778,7 +4782,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "post.created" });
+const webhookDeliveryAttempt = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-endpoints-endpoint-id-test)
@@ -4805,7 +4809,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#patch-v1-communities-community-id-webhooks-endpoints-endpoint-id)
@@ -4828,7 +4832,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const listWebhookEventTypes = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.eventTypes.list();
+const listWebhookEventTypes = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.eventTypes.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-webhooks-event-types)
@@ -4855,10 +4859,10 @@ Every event logged while at least one endpoint existed, with the latest state pe
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const event of social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.list()) {
+for await (const event of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.list()) {
   console.log(event);
 }
-const page = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.list({}, { timeout: 5_000 });
+const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.list({}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-webhooks-events)
@@ -4884,7 +4888,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.replay("event");
+const replayWebhookEvent = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#post-v1-communities-community-id-webhooks-events-event-id-replay)
@@ -4906,7 +4910,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await social.community("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.retrieve("event");
+const webhookEventDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/social/api-reference#get-v1-communities-community-id-webhooks-events-event-id)

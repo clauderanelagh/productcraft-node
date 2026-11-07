@@ -18,22 +18,45 @@ export class Page<Item> {
   readonly next_cursor: string | null;
   declare readonly lastResponse: LastResponse;
   #fetchPage: (cursor: string) => PagePromise<Item>;
+  #usedCursors: ReadonlySet<string>;
 
-  constructor(body: PageResponse<Item>, fetchPage: (cursor: string) => PagePromise<Item>) {
+  /**
+   * @param usedCursors The cursors already sent to reach this page (this
+   *   page's own included). A `next_cursor` among them means the API is
+   *   handing back a page it already returned, and following it would loop.
+   */
+  constructor(
+    body: PageResponse<Item>,
+    fetchPage: (cursor: string) => PagePromise<Item>,
+    usedCursors: Iterable<string> = [],
+  ) {
     this.data = Array.isArray(body?.data) ? body.data : [];
     this.next_cursor = body?.pagination?.next_cursor ?? null;
     this.has_more = Boolean(body?.pagination?.has_more) && this.next_cursor !== null;
     this.#fetchPage = fetchPage;
+    this.#usedCursors = new Set(usedCursors);
   }
 
   hasNextPage(): boolean {
     return this.has_more;
   }
 
-  /** Fetch the following page. Throws when there is none (check `hasNextPage()` first). */
+  /**
+   * Fetch the following page. Throws when there is none (check `hasNextPage()` first),
+   * and when the API returns a `next_cursor` this walk already sent: that would
+   * fetch the same page forever, so `for await` stops with an error instead.
+   */
   getNextPage(): PagePromise<Item> {
     if (!this.has_more || this.next_cursor === null) {
       throw new ProductCraftError("No next page; check hasNextPage() before calling getNextPage().");
+    }
+    if (this.#usedCursors.has(this.next_cursor)) {
+      const requestId = this.lastResponse?.requestId;
+      throw new ProductCraftError(
+        "The API returned a next_cursor this list already used, so the next page would repeat an earlier one. " +
+          "Stopped instead of looping; this is an API bug" +
+          (requestId ? ` (request id ${requestId}).` : "."),
+      );
     }
     return this.#fetchPage(this.next_cursor);
   }

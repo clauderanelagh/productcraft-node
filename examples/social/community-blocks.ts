@@ -6,12 +6,12 @@ const social = new Social();
 
 // blocks.create: Block another actor. Removes any existing follows/mutes between the two in either direction (one transaction).
 {
-  const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+  const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 }
 
 // blocks.delete: Unblock. Idempotent — 204 either way. Does NOT restore prior follows / mutes (the block tear-down is one-way).
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.delete("src_actor", "dst_actor");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").blocks.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

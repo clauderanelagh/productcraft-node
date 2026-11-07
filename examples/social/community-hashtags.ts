@@ -6,23 +6,23 @@ const social = new Social();
 
 // hashtags.list: List hashtags in this community. Default order is `first_used_at` desc; `order=trending` ranks by windowed post count (task 023) — pass `window=24h|7d`. `window_post_count` is populated only when trending.
 {
-  for await (const hashtag of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list()) {
+  for await (const hashtag of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list()) {
     console.log(hashtag);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.list({}, { timeout: 5_000 });
 }
 
 // hashtags.posts.list: List posts using a hashtag. `order=chronological` (default) or `order=ranked` (task 023) — ranked reuses the discover recency+engagement scoring, paginated on a (score, id) cursor. Same wire shape as the regular post list.
 {
-  for await (const post of social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("tag")) {
+  for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("launch")) {
     console.log(post);
   }
-  const page = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("tag", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.posts.list("launch", {}, { timeout: 5_000 });
 }
 
 // hashtags.retrieve: Get a single hashtag with its current published post count.
 {
-  const hashtagDetail = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.retrieve("storymode");
+  const hashtagDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").hashtags.retrieve("launch");
 }
 
 export {};

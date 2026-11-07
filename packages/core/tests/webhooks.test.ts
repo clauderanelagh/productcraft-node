@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APIClient, ConfigurationError, verifyWebhook, WebhookVerificationError } from "../src/index.js";
+import { APIClient, ConfigurationError, signWebhook, verifyWebhook, WebhookVerificationError } from "../src/index.js";
 
 // Standard Webhooks published test vector (standard-webhooks spec / libraries).
 const STD = {
@@ -110,5 +110,32 @@ describe("APIClient.unwrapWebhook", () => {
     } finally {
       delete process.env.PRODUCTCRAFT_TEST_WEBHOOK_SECRET;
     }
+  });
+});
+
+describe("signWebhook", () => {
+  it("reproduces the Standard Webhooks test vector", async () => {
+    const signed = await signWebhook({ payload: STD.payload, secret: STD.secret, id: STD.id, timestamp: STD.ts });
+    expect(signed.payload).toBe(STD.payload);
+    expect(signed.headers["webhook-signature"]).toBe(STD.signature);
+    expect(signed.headers["webhook-id"]).toBe(STD.id);
+    expect(signed.headers["webhook-timestamp"]).toBe(String(STD.ts));
+  });
+
+  it("signs an object as its JSON, and verifyWebhook accepts it", async () => {
+    const event = { id: "evt_1", type: "user.signup", data: { email: "ada@example.com" } };
+    const { payload, headers } = await signWebhook({ payload: event, secret: STD.secret });
+    expect(payload).toBe(JSON.stringify(event));
+    expect(headers["webhook-id"]).toMatch(/^msg_[0-9a-f]{32}$/);
+    await expect(verifyWebhook({ payload, headers, secret: STD.secret })).resolves.toEqual(event);
+    await expect(verifyWebhook({ payload: payload + " ", headers, secret: STD.secret })).rejects.toBeInstanceOf(WebhookVerificationError);
+  });
+
+  it("client.signWebhook falls back to webhookSecret, then the env var", async () => {
+    const client = new APIClient({ webhookSecret: STD.secret }, "http://x");
+    const { payload, headers } = await client.signWebhook({ payload: { ok: true } });
+    await expect(client.unwrapWebhook({ payload, headers })).resolves.toEqual({ ok: true });
+    const bare = new APIClient({}, "http://x");
+    await expect(bare.signWebhook({ payload: {} }, "PRODUCTCRAFT_TEST_SIGN_SECRET")).rejects.toBeInstanceOf(ConfigurationError);
   });
 });

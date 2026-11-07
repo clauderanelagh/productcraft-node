@@ -46,7 +46,7 @@ Deletes the waitlist with all its entries and variants. Cannot be undone.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await waitlist.lists.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await waitlist.lists.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#delete-v1-workspaces-workspace-id-waitlists-id)
@@ -91,7 +91,7 @@ The waitlist with its settings, `allowed_origins`, and whether it accepts public
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const list = await waitlist.lists.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const list = await waitlist.lists.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-id)
@@ -115,7 +115,7 @@ Only the fields you send change. `settings` is merged shallowly into the saved s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const list = await waitlist.lists.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { allowed_origins: ["https://acme.com"] });
+const list = await waitlist.lists.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { allowed_origins: ["https://acme.com"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-id)
@@ -139,7 +139,7 @@ Only an `active` waitlist accepts public sign-ups. `paused` refuses them for now
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const list = await waitlist.lists.updateStatus("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { status: "active" });
+const list = await waitlist.lists.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "active" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-id-status)
@@ -163,7 +163,7 @@ Test entries ("Add test signup") are left out unless `include_test=true`.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const waitlistAnalytics = await waitlist.lists.analytics.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const waitlistAnalytics = await waitlist.lists.analytics.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-analytics)
@@ -186,7 +186,7 @@ One point per UTC day in [`since`, `until`), oldest first, zero-count days inclu
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { since: "2026-01-01T00:00:00.000Z", until: "2026-01-01T00:00:00.000Z" });
+const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-11-01T00:00:00Z" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-analytics-timeline)
@@ -213,7 +213,7 @@ Applies one action to every id, serially. Per-row results are returned, so one b
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const bulkEntryActionResult = await waitlist.lists.entries.bulk("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+const bulkEntryActionResult = await waitlist.lists.entries.bulk("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
   action: "approve",
   ids: ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"],
 });
@@ -238,7 +238,7 @@ Every status counts. Test entries are left out unless `include_test=true`.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const entryCount = await waitlist.lists.entries.count("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const entryCount = await waitlist.lists.entries.count("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-count)
@@ -258,7 +258,7 @@ Removes the entry. Other entries keep their positions (no renumbering).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await waitlist.lists.entries.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await waitlist.lists.entries.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#delete-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id)
@@ -280,7 +280,7 @@ A `text/csv` stream: one header row (`id,email,name,position,status,…`, plus `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await waitlist.lists.entries.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const response = await waitlist.lists.entries.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 const text = await response.text();
 ```
 
@@ -307,7 +307,7 @@ One-click handoff from Waitlist to Auth: creates an invite in the Auth consumer 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const entryInvite = await waitlist.lists.entries.inviteToApp("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { app_slug: "acme-product" });
+const entryInvite = await waitlist.lists.entries.inviteToApp("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { app_slug: "acme-product" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id-invite-to-app)
@@ -331,10 +331,10 @@ Queue-position order, cursor-paginated. Filterable by status, free-text search a
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const entry of waitlist.lists.entries.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const entry of waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(entry);
 }
-const page = await waitlist.lists.entries.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-entries)
@@ -354,7 +354,7 @@ One entry of the waitlist, test entries included.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const entry = await waitlist.lists.entries.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const entry = await waitlist.lists.entries.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id)
@@ -379,7 +379,7 @@ Sets `status` to `approved` or `rejected`, sends the matching email when the wor
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const entry = await waitlist.lists.entries.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { status: "approved" });
+const entry = await waitlist.lists.entries.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "approved" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id)
@@ -407,7 +407,7 @@ Creates an entry marked `is_test` with a generated Amazon SES mailbox-simulator 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const entry = await waitlist.lists.testEntries.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { name: "Test signup" });
+const entry = await waitlist.lists.testEntries.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { name: "Test signup" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-test-entries)
@@ -434,7 +434,7 @@ A `locale` variant serves its copy to visitors whose `?lang=` or `Accept-Languag
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const variant = await waitlist.lists.variants.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { copy: { display_name: "Accès anticipé" }, kind: "locale", locale: "en" });
+const variant = await waitlist.lists.variants.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { copy: { display_name: "Accès anticipé" }, kind: "locale", locale: "en" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-variants)
@@ -453,7 +453,7 @@ Entries attributed to it keep their `metadata.variant_id`.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await waitlist.lists.variants.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await waitlist.lists.variants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#delete-v1-workspaces-workspace-id-waitlists-waitlist-id-variants-id)
@@ -477,10 +477,10 @@ Cursor-paginated, in (kind, locale, created_at) order. This endpoint used to ret
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const variant of waitlist.lists.variants.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const variant of waitlist.lists.variants.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(variant);
 }
-const page = await waitlist.lists.variants.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await waitlist.lists.variants.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-variants)
@@ -504,7 +504,7 @@ Changes the locale, copy, weight or active flag; only the fields you send change
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const variant = await waitlist.lists.variants.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { active: false });
+const variant = await waitlist.lists.variants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { active: false });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-waitlist-id-variants-id)
@@ -581,7 +581,7 @@ Sends the slot's real Mail template, with the workspace's real Waitlist sender (
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MAIL_UNREACHABLE` | `MAIL_UNREACHABLE`: Mail did not answer. |
 
 ```ts
-const notificationTest = await waitlist.settings.notifications.test("slot");
+const notificationTest = await waitlist.settings.notifications.test("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlist-settings-notifications-slot-test)
@@ -620,6 +620,10 @@ const waitlistWorkspaceStats = await waitlist.stats.retrieve();
 ### `waitlist.webhooks.unwrap({ payload, headers, secret? })`
 
 Verifies the signature and returns `Waitlist.UnwrapWebhookEvent`. Events: `entry.approved`, `entry.created`, `entry.rejected`, plus `UnknownWebhookEvent` for types added later.
+
+### `waitlist.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
 
 ## webhooks.endpoints
 
@@ -666,7 +670,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await waitlist.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await waitlist.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#delete-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -713,7 +717,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await waitlist.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await waitlist.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -739,7 +743,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await waitlist.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -765,7 +769,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await waitlist.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "entry.created" });
+const webhookDeliveryAttempt = await waitlist.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "entry.created" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-test)
@@ -792,7 +796,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await waitlist.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await waitlist.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -869,7 +873,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await waitlist.webhooks.events.replay("event");
+const replayWebhookEvent = await waitlist.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)
@@ -891,7 +895,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await waitlist.webhooks.events.retrieve("event");
+const webhookEventDetail = await waitlist.webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-webhooks-events-event-id)
@@ -920,7 +924,7 @@ The sign-up your form posts. No API key, callable from a browser; a waitlist wit
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many requests from this IP Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicEntryCreated = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
+const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-waitlists-workspace-slug-waitlist-slug-entries)
@@ -944,7 +948,7 @@ What your sign-up form renders: the copy (from the variant served for this reque
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicWaitlistInfo = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).info.retrieve();
+const publicWaitlistInfo = await waitlist.public({ workspace: "acme", waitlist: "beta" }).info.retrieve();
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-waitlists-workspace-slug-waitlist-slug)
@@ -968,7 +972,7 @@ The same rows as the deprecated `GET …/leaderboard`, in a `{ data }` envelope.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const publicLeaderboard = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).leaderboard.list();
+const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "beta" }).leaderboard.list();
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-waitlists-workspace-slug-waitlist-slug-leaderboard-top)

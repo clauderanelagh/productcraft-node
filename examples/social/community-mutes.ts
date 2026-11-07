@@ -6,12 +6,12 @@ const social = new Social();
 
 // mutes.create: Mute another actor. One-directional and silent — the muted actor isn't notified. Hides their content from the muter's feed.
 {
-  const createEdge = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+  const createEdge = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 }
 
 // mutes.delete: Unmute. Idempotent — 204 either way.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.delete("src_actor", "dst_actor");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").mutes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

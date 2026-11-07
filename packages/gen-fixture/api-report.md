@@ -26,6 +26,7 @@ import { PollOptions } from '@productcraft/core';
 import { ProductCraftError } from '@productcraft/core';
 import { RateLimitError } from '@productcraft/core';
 import { RequestOptions } from '@productcraft/core';
+import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { WebhookHeaders } from '@productcraft/core';
 import { WebhookPayload } from '@productcraft/core';
@@ -238,6 +239,8 @@ namespace Fixture {
     type WebhookEndpointListParams = __WebhookEndpointListParams;
     // (undocumented)
     type WebhookEventType = __WebhookEventType;
+    // (undocumented)
+    type WebhookSignParams = __WebhookSignParams;
     // (undocumented)
     type WebhookUnwrapParams = __WebhookUnwrapParams;
     // (undocumented)

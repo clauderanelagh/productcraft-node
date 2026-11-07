@@ -6,7 +6,7 @@ const waitlist = new Waitlist();
 
 // info.retrieve: Public waitlist info (display name, description, custom-field schema, branding hints, active variant)
 {
-  const publicWaitlistInfo = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).info.retrieve();
+  const publicWaitlistInfo = await waitlist.public({ workspace: "acme", waitlist: "beta" }).info.retrieve();
 }
 
 export {};

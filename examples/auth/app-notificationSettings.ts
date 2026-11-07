@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // notificationSettings.retrieve: Read the per-app notification settings. Absent row reads as defaults (notifications_via_envoi: false, sender_mode: workspace, every template slot null).
 {
-  const appNotificationSettings = await auth.admin.app("app").notificationSettings.retrieve();
+  const appNotificationSettings = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notificationSettings.retrieve();
 }
 
 // notificationSettings.update: Update the per-app notification settings. Each field is independently optional; null clears that slot.
 {
-  const appNotificationSettings = await auth.admin.app("app").notificationSettings.update({ default_sender_address: "ada@example.com" });
+  const appNotificationSettings = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").notificationSettings.update({ default_sender_address: "ada@example.com" });
 }
 
 export {};

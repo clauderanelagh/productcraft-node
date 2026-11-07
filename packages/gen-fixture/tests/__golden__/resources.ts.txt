@@ -2,7 +2,8 @@
 
 import type { APIClient, APIPromise, PagePromise, PollOptions, RequestOptions } from "@productcraft/core";
 import type * as T from "./types.js";
-import type { UnwrapWebhookEvent, WebhookUnwrapParams } from "./webhooks.js";
+import type { UnwrapWebhookEvent, WebhookSignParams, WebhookUnwrapParams } from "./webhooks.js";
+import type { SignedWebhook } from "@productcraft/core";
 
 type Bound = Readonly<Record<string, string | undefined>>;
 
@@ -40,6 +41,9 @@ export class RegionsResource extends APIResource {
    *
    * Every region the API runs in.
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param options - Per-request options.
    * @see GET /v1/regions
    * @see https://productcraft.co/docs/fixture/api-reference#get-v1-regions
@@ -58,6 +62,9 @@ export class SettingsResource extends APIResource {
   /**
    * Retrieve workspace settings
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param options - Per-request options.
    * @see GET /v1/workspaces/{workspace_id}/settings
    * @see https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-settings
@@ -71,6 +78,9 @@ export class SettingsResource extends APIResource {
   }
   /**
    * Replace workspace settings
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.SettingsUpdateParams`.
    * @param options - Per-request options.
@@ -91,6 +101,9 @@ export class SettingsResource extends APIResource {
 export class WebhooksEndpointsResource extends APIResource {
   /**
    * List webhook endpoints
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.WebhookEndpointListParams`.
    * @param options - Per-request options.
@@ -125,12 +138,25 @@ export class WebhooksResource extends APIResource {
   unwrap(params: WebhookUnwrapParams): Promise<UnwrapWebhookEvent> {
     return this._client.unwrapWebhook<UnwrapWebhookEvent>(params, "PRODUCTCRAFT_FIXTURE_WEBHOOK_SECRET");
   }
+  /**
+   * Sign a test event the way ProductCraft signs deliveries (Standard Webhooks), so a handler
+   * test can call `unwrap` without a live delivery. Returns the exact body and the headers.
+   *
+   * @param params - The event (an object is JSON-encoded), and optionally the secret, `id` and `timestamp`.
+   * @throws {ConfigurationError} No secret was passed or configured.
+   */
+  sign(params: WebhookSignParams): Promise<SignedWebhook> {
+    return this._client.signWebhook(params, "PRODUCTCRAFT_FIXTURE_WEBHOOK_SECRET");
+  }
 }
 
 /** `widgets.parts` */
 export class WidgetsPartsResource extends APIResource {
   /**
    * Add a part to a widget
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param widgetId - Widget id.
    * @param params - `Fixture.WidgetPartCreateParams`.
@@ -151,6 +177,9 @@ export class WidgetsPartsResource extends APIResource {
   /**
    * Remove a part
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param widgetId - Widget id.
    * @param partId - Part id.
    * @param options - Per-request options.
@@ -167,6 +196,9 @@ export class WidgetsPartsResource extends APIResource {
   }
   /**
    * List a widget's parts
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param widgetId - Widget id.
    * @param params - `Fixture.WidgetPartListParams`.
@@ -198,6 +230,9 @@ export class WidgetsResource extends APIResource {
    *
    * Use `updateStatus` instead.
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @deprecated Use `updateStatus` instead.
    * @param id - Widget id.
    * @param options - Per-request options.
@@ -214,6 +249,9 @@ export class WidgetsResource extends APIResource {
   }
   /**
    * Delete several widgets
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.WidgetBulkDeleteParams`.
    * @param options - Per-request options (an Idempotency-Key is sent automatically; override with `idempotencyKey`).
@@ -232,6 +270,9 @@ export class WidgetsResource extends APIResource {
   /**
    * Count widgets
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param params - `Fixture.WidgetCountParams`.
    * @param options - Per-request options.
    * @see GET /v1/workspaces/{workspace_id}/widgets/count
@@ -246,6 +287,9 @@ export class WidgetsResource extends APIResource {
   }
   /**
    * Create a widget
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.WidgetCreateParams`.
    * @param options - Per-request options (an Idempotency-Key is sent automatically; override with `idempotencyKey`).
@@ -265,6 +309,9 @@ export class WidgetsResource extends APIResource {
   /**
    * Delete a widget
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param id - Widget id.
    * @param options - Per-request options.
    * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
@@ -283,6 +330,9 @@ export class WidgetsResource extends APIResource {
    *
    * Bulk, irreversible.
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param params - `Fixture.WidgetEraseParams`.
    * @param options - Per-request options.
    * @throws {BadRequestError} 400 BAD_REQUEST, VALIDATION_ERROR: Validation failed.
@@ -299,6 +349,9 @@ export class WidgetsResource extends APIResource {
   /**
    * Export widgets as CSV
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param options - Per-request options.
    * @see GET /v1/workspaces/{workspace_id}/widgets/export.csv
    * @see https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-export-csv
@@ -313,6 +366,9 @@ export class WidgetsResource extends APIResource {
   }
   /**
    * Status history of a widget
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param id - Widget id.
    * @param options - Per-request options.
@@ -331,6 +387,9 @@ export class WidgetsResource extends APIResource {
    * List widgets
    *
    * Newest first.
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.WidgetListParams`.
    * @param options - Per-request options.
@@ -352,6 +411,10 @@ export class WidgetsResource extends APIResource {
   /**
    * Retrieve a widget
    *
+   * Credential: one of `bearer`, `end_user_token`.
+   * - `bearer`: A workspace API key.
+   * - `end_user_token`: An end user's access token.
+   *
    * @param id - Widget id.
    * @param options - Per-request options.
    * @throws {NotFoundError} 404 NOT_FOUND: No such object in this workspace.
@@ -359,7 +422,7 @@ export class WidgetsResource extends APIResource {
    * @see https://productcraft.co/docs/fixture/api-reference#get-v1-workspaces-workspace-id-widgets-id
    * @example
    * ```ts
-   * const widget = await fixture.widgets.retrieve("5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+   * const widget = await fixture.widgets.retrieve("wid_fixture_1");
    * ```
    */
   retrieve(id: string, options?: RequestOptions): APIPromise<T.WithLastResponse<T.Widget>> {
@@ -397,6 +460,9 @@ export class WidgetsResource extends APIResource {
   /**
    * Update a widget
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param id - Widget id.
    * @param params - `Fixture.WidgetUpdateParams`.
    * @param options - Per-request options (an Idempotency-Key is sent automatically; override with `idempotencyKey`).
@@ -415,6 +481,9 @@ export class WidgetsResource extends APIResource {
   }
   /**
    * Change a widget's status
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param id - Widget id.
    * @param params - `Fixture.WidgetUpdateStatusParams`.
@@ -458,6 +527,9 @@ export class CommunityPostsCommentsResource extends APIResource {
   /**
    * Comment on a post
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param postId - Post id.
    * @param params - `Fixture.PostCommentCreateParams`.
    * @param options - Per-request options (an Idempotency-Key is sent automatically; override with `idempotencyKey`).
@@ -484,6 +556,9 @@ export class CommunityPostsResource extends APIResource {
   /**
    * Create a post
    *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
+   *
    * @param params - `Fixture.PostCreateParams`.
    * @param options - Per-request options (an Idempotency-Key is sent automatically; override with `idempotencyKey`).
    * @throws {BadRequestError} 400 BAD_REQUEST, VALIDATION_ERROR: Validation failed.
@@ -500,6 +575,9 @@ export class CommunityPostsResource extends APIResource {
   }
   /**
    * List posts
+   *
+   * Credential: `bearer`.
+   * - `bearer`: A workspace API key.
    *
    * @param params - `Fixture.PostListParams`.
    * @param options - Per-request options.

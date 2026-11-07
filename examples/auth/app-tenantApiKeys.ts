@@ -6,25 +6,25 @@ const auth = new Auth();
 
 // tenantApiKeys.config.retrieve: Read the app's tenant API key settings
 {
-  const tenantApiKeysConfig = await auth.admin.app("app").tenantApiKeys.config.retrieve();
+  const tenantApiKeysConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.config.retrieve();
 }
 
 // tenantApiKeys.config.update: Change the app's tenant API key settings, or suspend its keys
 {
-  const tenantApiKeysConfig = await auth.admin.app("app").tenantApiKeys.config.update({ default_expiry_days: 7 });
+  const tenantApiKeysConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.config.update({ default_expiry_days: 7 });
 }
 
 // tenantApiKeys.delete: Revoke a tenant's API key
 {
-  await auth.admin.app("app").tenantApiKeys.delete("key");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // tenantApiKeys.list: List the app's tenant API keys
 {
-  for await (const tenantApiKey of auth.admin.app("app").tenantApiKeys.list()) {
+  for await (const tenantApiKey of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.list()) {
     console.log(tenantApiKey);
   }
-  const page = await auth.admin.app("app").tenantApiKeys.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").tenantApiKeys.list({}, { timeout: 5_000 });
 }
 
 export {};

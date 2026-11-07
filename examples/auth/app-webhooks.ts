@@ -6,62 +6,62 @@ const auth = new Auth();
 
 // webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
 {
-  const webhookEndpointWithSecret = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
+  const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
 }
 
 // webhooks.endpoints.delete: Delete a webhook endpoint.
 {
-  await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.endpoints.list: List webhook endpoints, oldest first.
 {
-  for await (const endpoint of auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.list()) {
+  for await (const endpoint of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.list()) {
     console.log(endpoint);
   }
 }
 
 // webhooks.endpoints.retrieve: Get one webhook endpoint (without its secret).
 {
-  const webhookEndpoint = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+  const webhookEndpointWithSecret = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
 {
-  const webhookDeliveryAttempt = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "user.signup" });
+  const webhookDeliveryAttempt = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "user.signup" });
 }
 
 // webhooks.endpoints.update: Change a webhook endpoint: URL, description, events, on/off.
 {
-  const webhookEndpoint = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+  const webhookEndpoint = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 }
 
 // webhooks.events.list: List webhook events, newest first (kept for 30 days).
 {
-  for await (const event of auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.list()) {
+  for await (const event of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.list()) {
     console.log(event);
   }
-  const page = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.list({}, { timeout: 5_000 });
 }
 
 // webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.replay("event");
+  const replayWebhookEvent = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.events.retrieve: Get one webhook event with every delivery attempt.
 {
-  const webhookEventDetail = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.events.retrieve("event");
+  const webhookEventDetail = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").webhooks.eventTypes.list();
+  const listWebhookEventTypes = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").webhooks.eventTypes.list();
 }
 
 export {};

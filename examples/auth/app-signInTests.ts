@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // signInTests.create: Start a sign-in test: prove sign-in works without creating a user.
 {
-  const signInTest = await auth.admin.app("app").signInTests.create({ method: "oauth" });
+  const signInTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").signInTests.create({ method: "oauth" });
 }
 
 // signInTests.retrieve: Get a sign-in test and its result.
 {
-  const signInTest = await auth.admin.app("app").signInTests.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const signInTest = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").signInTests.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

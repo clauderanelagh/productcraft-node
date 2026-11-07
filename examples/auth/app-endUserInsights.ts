@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // endUserInsights.retrieve: Auth health for this app over the last 30 days: verification completion, sign-in failure rate, MFA adoption, password-reset follow-through, and session counts. Rates are null when there is nothing to divide by.
 {
-  const endUserInsights = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").endUserInsights.retrieve();
+  const endUserInsights = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUserInsights.retrieve();
 }
 
 // endUserInsights.users.retrieve: One end-user's recorded activity: their audit trail, their sessions with device/IP, and their enrolled factors. `noActivityRecorded` distinguishes "nothing happened" from "no data".
 {
-  const endUserDetailInsights = await auth.admin.app("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b").endUserInsights.users.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const endUserDetailInsights = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").endUserInsights.users.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

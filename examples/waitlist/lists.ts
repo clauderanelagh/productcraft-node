@@ -6,12 +6,12 @@ const waitlist = new Waitlist();
 
 // lists.analytics.retrieve: Aggregate counts, viral coefficient, top referrers + referrals
 {
-  const waitlistAnalytics = await waitlist.lists.analytics.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const waitlistAnalytics = await waitlist.lists.analytics.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.analytics.timeline: Daily sign-up timeline
 {
-  const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { since: "2026-01-01T00:00:00.000Z", until: "2026-01-01T00:00:00.000Z" });
+  const analyticsTimeline = await waitlist.lists.analytics.timeline("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { since: "2026-11-01T00:00:00Z", until: "2026-11-01T00:00:00Z" });
 }
 
 // lists.create: Create a waitlist (workspace-scoped)
@@ -21,12 +21,12 @@ const waitlist = new Waitlist();
 
 // lists.delete: Delete a waitlist (cascades to entries)
 {
-  await waitlist.lists.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await waitlist.lists.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.entries.bulk: Approve, reject or invite up to 100 entries at once
 {
-  const bulkEntryActionResult = await waitlist.lists.entries.bulk("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+  const bulkEntryActionResult = await waitlist.lists.entries.bulk("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
     action: "approve",
     ids: ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222"],
   });
@@ -34,41 +34,41 @@ const waitlist = new Waitlist();
 
 // lists.entries.count: Count the entries on a waitlist
 {
-  const entryCount = await waitlist.lists.entries.count("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const entryCount = await waitlist.lists.entries.count("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.entries.delete: Delete an entry
 {
-  await waitlist.lists.entries.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await waitlist.lists.entries.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.entries.export: Export every entry as CSV
 {
-  const response = await waitlist.lists.entries.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const response = await waitlist.lists.entries.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
   const text = await response.text();
 }
 
 // lists.entries.inviteToApp: Invite an entry into a linked Auth app
 {
-  const entryInvite = await waitlist.lists.entries.inviteToApp("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { app_slug: "acme-product" });
+  const entryInvite = await waitlist.lists.entries.inviteToApp("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { app_slug: "acme-product" });
 }
 
 // lists.entries.list: List entries on a waitlist
 {
-  for await (const entry of waitlist.lists.entries.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const entry of waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(entry);
   }
-  const page = await waitlist.lists.entries.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // lists.entries.retrieve: Get a single entry
 {
-  const entry = await waitlist.lists.entries.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const entry = await waitlist.lists.entries.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.entries.update: Approve or reject an entry
 {
-  const entry = await waitlist.lists.entries.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { status: "approved" });
+  const entry = await waitlist.lists.entries.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "approved" });
 }
 
 // lists.list: List waitlists in this workspace
@@ -81,45 +81,45 @@ const waitlist = new Waitlist();
 
 // lists.retrieve: Get waitlist details
 {
-  const list = await waitlist.lists.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const list = await waitlist.lists.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.testEntries.create: Add a test signup
 {
-  const entry = await waitlist.lists.testEntries.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { name: "Test signup" });
+  const entry = await waitlist.lists.testEntries.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { name: "Test signup" });
 }
 
 // lists.update: Update waitlist metadata and settings
 {
-  const list = await waitlist.lists.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { allowed_origins: ["https://acme.com"] });
+  const list = await waitlist.lists.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { allowed_origins: ["https://acme.com"] });
 }
 
 // lists.updateStatus: Change waitlist status
 {
-  const list = await waitlist.lists.updateStatus("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { status: "active" });
+  const list = await waitlist.lists.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "active" });
 }
 
 // lists.variants.create: Create a variant
 {
-  const variant = await waitlist.lists.variants.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { copy: { display_name: "Accès anticipé" }, kind: "locale", locale: "en" });
+  const variant = await waitlist.lists.variants.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { copy: { display_name: "Accès anticipé" }, kind: "locale", locale: "en" });
 }
 
 // lists.variants.delete: Delete a variant
 {
-  await waitlist.lists.variants.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await waitlist.lists.variants.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.variants.list: List variants on a waitlist
 {
-  for await (const variant of waitlist.lists.variants.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const variant of waitlist.lists.variants.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(variant);
   }
-  const page = await waitlist.lists.variants.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await waitlist.lists.variants.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // lists.variants.update: Update a variant
 {
-  const variant = await waitlist.lists.variants.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { active: false });
+  const variant = await waitlist.lists.variants.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { active: false });
 }
 
 export {};

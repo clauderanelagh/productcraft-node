@@ -6,84 +6,84 @@ const platform = new PlatformAuth();
 
 // workspaces.apiKeys.create: Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `mail-send`) or `policy_ids` (managed policies you wrote), never both. The plaintext `token` is returned ONCE — store it now, then call `GET /v1/api-keys/self` with it to check what it can do. The minter can grant at most their own effective permissions. Cookie/JWT only — PAKs cannot mint other PAKs. Send an `Idempotency-Key` to make a retry safe: a retry of a mint that succeeded mints nothing and answers `409 PAK_ALREADY_MINTED` with that key's `id` (the token itself is never cached).
 {
-  const mintPak = await platform.workspaces.apiKeys.create("workspace", { name: "Production social client" });
+  const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production social client" });
 }
 
 // workspaces.apiKeys.delete: Revoke a PAK. Default behaviour: introspect returns null on the next upstream call; downstream services fail-closed within the 60s cache TTL window. Pass `?force=true` to additionally publish a Redis fan-out that evicts the matching cache entry across every PAK-consuming service immediately — use it when rotating a leaked PAK and the 60s window matters.
 {
-  await platform.workspaces.apiKeys.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await platform.workspaces.apiKeys.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.apiKeys.list: List the API keys in this workspace
 {
-  for await (const apiKey of platform.workspaces.apiKeys.list("workspace")) {
+  for await (const apiKey of platform.workspaces.apiKeys.list("acme")) {
     console.log(apiKey);
   }
-  const page = await platform.workspaces.apiKeys.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.apiKeys.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.apiKeys.presets.list: List the ready-made permission sets a workspace key can be minted with (`preset` on create), each with a label, a description and what it allows in this workspace, in plain sentences. A preset a key has already used reads its stored policy, so edits show.
 {
-  for await (const preset of platform.workspaces.apiKeys.presets.list("workspace")) {
+  for await (const preset of platform.workspaces.apiKeys.presets.list("acme")) {
     console.log(preset);
   }
 }
 
 // workspaces.apiKeys.preview: Describe the key a mint with this `preset` or these `policy_ids` would create, without creating anything: what it could do in plain sentences, and whether you may mint it. Read-only, so it takes no `Idempotency-Key`. Powers the review step of the console key wizard.
 {
-  const pakGrantPreview = await platform.workspaces.apiKeys.preview("workspace", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
+  const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
 }
 
 // workspaces.apiKeys.retrieve: Get a single PAK by id.
 {
-  const publicApiKey = await platform.workspaces.apiKeys.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const publicApiKey = await platform.workspaces.apiKeys.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.apiKeys.rotate: Mint a replacement for an existing PAK, carrying its name, description and policy bindings over. The outgoing key keeps working for `grace_hours` (24 by default) so a fleet can roll over without downtime. The plaintext `token` is returned ONCE. Cookie/JWT only — a PAK cannot rotate a PAK, for the same reason it cannot mint one.
 {
-  const rotatePak = await platform.workspaces.apiKeys.rotate("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { grace_hours: 24 });
+  const rotatePak = await platform.workspaces.apiKeys.rotate("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // workspaces.apiKeys.update: Update a PAK’s name or description (does not touch bindings).
 {
-  const publicApiKey = await platform.workspaces.apiKeys.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "string" });
+  const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
 // workspaces.apiKeys.updateBindings: Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the merged union of statements.
 {
-  const publicApiKey = await platform.workspaces.apiKeys.updateBindings("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { policy_ids: ["string"] });
+  const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["string"] });
 }
 
 // workspaces.auditFeed.list: Unified workspace audit feed (cursor-paginated)
 {
-  for await (const auditFeed of platform.workspaces.auditFeed.list("workspace")) {
+  for await (const auditFeed of platform.workspaces.auditFeed.list("acme")) {
     console.log(auditFeed);
   }
-  const page = await platform.workspaces.auditFeed.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.auditFeed.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.auditLogs.export: Stream the workspace audit log as NDJSON or CSV, applying the same `?action=` / `?actor_id=` / `?since=` / `?until=` filters as the list. Newest first. Reading the export is itself audited.
 {
-  const response = await platform.workspaces.auditLogs.export("workspace");
+  const response = await platform.workspaces.auditLogs.export("acme");
   const text = await response.text();
 }
 
 // workspaces.auditLogs.list: List workspace audit log entries, newest first. Filter by `?action=`, `?actor_id=`, and/or the `?since=` / `?until=` date range. 20/page (max 100), cursor-paginated.
 {
-  for await (const auditLog of platform.workspaces.auditLogs.list("workspace")) {
+  for await (const auditLog of platform.workspaces.auditLogs.list("acme")) {
     console.log(auditLog);
   }
-  const page = await platform.workspaces.auditLogs.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.auditLogs.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.avatar.clear: Clear the workspace avatar and delete the stored object. Gated by `workspace.settings.update`.
 {
-  await platform.workspaces.avatar.clear("workspace");
+  await platform.workspaces.avatar.clear("acme");
 }
 
 // workspaces.avatar.upload: Upload (or replace) the workspace identity avatar. Gated by `workspace.settings.update` (owner + admin). PNG/JPEG/WEBP only, ≤2 MB, magic-byte sniffed. SVG is rejected (stored-XSS).
 {
-  const workspaceAvatarUrl = await platform.workspaces.avatar.upload("workspace", { file: new File(["…"], "image.png", { type: "image/png" }) });
+  const workspaceAvatarUrl = await platform.workspaces.avatar.upload("acme", { file: new File(["…"], "image.png", { type: "image/png" }) });
 }
 
 // workspaces.create: Create a new workspace. Cookie/JWT only — PAKs are workspace-scoped credentials and cannot create new workspaces.
@@ -93,7 +93,7 @@ const platform = new PlatformAuth();
 
 // workspaces.delete: Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible workspace destruction needs a human-attributed audit row.
 {
-  await platform.workspaces.delete("workspace");
+  await platform.workspaces.delete("acme");
 }
 
 // workspaces.invites.accept: Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a human identity to a workspace.
@@ -103,20 +103,20 @@ const platform = new PlatformAuth();
 
 // workspaces.invites.create: Create a workspace invite link. Cookie/JWT only — invites bring new humans into the workspace.
 {
-  const workspaceInvite = await platform.workspaces.invites.create("workspace", { email: "alice@example.com" });
+  const workspaceInvite = await platform.workspaces.invites.create("acme", { email: "alice@example.com" });
 }
 
 // workspaces.invites.delete: Revoke a workspace invite. Cookie/JWT only.
 {
-  await platform.workspaces.invites.delete("workspace", "invite");
+  await platform.workspaces.invites.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.invites.list: List workspace invites, newest first. Cursor-paginated.
 {
-  for await (const invite of platform.workspaces.invites.list("workspace")) {
+  for await (const invite of platform.workspaces.invites.list("acme")) {
     console.log(invite);
   }
-  const page = await platform.workspaces.invites.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.invites.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.list: List workspaces the current user belongs to
@@ -129,30 +129,30 @@ const platform = new PlatformAuth();
 
 // workspaces.members.delete: Remove a member from a workspace (or self-leave)
 {
-  await platform.workspaces.members.delete("workspace", "account");
+  await platform.workspaces.members.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.members.list: List workspace members, oldest join first. Narrow with `?q=` (name / username / email substring) and/or `?role=`. Cursor-paginated.
 {
-  for await (const member of platform.workspaces.members.list("workspace")) {
+  for await (const member of platform.workspaces.members.list("acme")) {
     console.log(member);
   }
-  const page = await platform.workspaces.members.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.members.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.members.updateRole: Update a member's role. Body: { roleId } or { role: "owner"|"admin"|"member" }.
 {
-  const updateMemberRole = await platform.workspaces.members.updateRole("workspace", "account", { role: "owner" });
+  const updateMemberRole = await platform.workspaces.members.updateRole("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role: "owner" });
 }
 
 // workspaces.policies.actions.catalog: List every known workspace action (catalog of statement actions).
 {
-  const workspaceActionCatalog = await platform.workspaces.policies.actions.catalog("workspace");
+  const workspaceActionCatalog = await platform.workspaces.policies.actions.catalog("acme");
 }
 
 // workspaces.policies.create: Create a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.
 {
-  const managedPolicy = await platform.workspaces.policies.create("workspace", {
+  const managedPolicy = await platform.workspaces.policies.create("acme", {
     name: "mail-readonly",
     policy: [{ actions: ["mail.read", "mail.list"], effect: "allow", resources: ["*"] }],
   });
@@ -160,83 +160,83 @@ const platform = new PlatformAuth();
 
 // workspaces.policies.delete: Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column. Owners and admins; a policy bound to a role, or a preset policy, only an owner can delete. Cookie/JWT only.
 {
-  const managedPolicyDeleted = await platform.workspaces.policies.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const managedPolicyDeleted = await platform.workspaces.policies.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.policies.list: List managed policies in a workspace, alphabetically. 20/page (max 100), cursor-paginated.
 {
-  for await (const policy of platform.workspaces.policies.list("workspace")) {
+  for await (const policy of platform.workspaces.policies.list("acme")) {
     console.log(policy);
   }
-  const page = await platform.workspaces.policies.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.policies.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.policies.retrieve: Get a managed policy by id
 {
-  const managedPolicyDetail = await platform.workspaces.policies.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const managedPolicyDetail = await platform.workspaces.policies.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.policies.update: Update a managed policy. Owners and admins; a policy bound to a role, or a preset policy, only an owner can edit. Cookie/JWT only — policy authoring is a human-admin surface.
 {
-  const managedPolicyDetail = await platform.workspaces.policies.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "Read-only access to all Mail resources" });
+  const managedPolicyDetail = await platform.workspaces.policies.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Read-only access to all Mail resources" });
 }
 
 // workspaces.retrieve: Get workspace details
 {
-  const workspace = await platform.workspaces.retrieve("workspace");
+  const workspace = await platform.workspaces.retrieve("acme");
 }
 
 // workspaces.roles.create: Create a new custom role. Cookie/JWT only — role authoring is a human-admin surface.
 {
-  const workspaceRole = await platform.workspaces.roles.create("workspace", { name: "BillingAdmin" });
+  const workspaceRole = await platform.workspaces.roles.create("acme", { name: "BillingAdmin" });
 }
 
 // workspaces.roles.delete: Delete a custom role (fails if it has members). Cookie/JWT only — role authoring is a human-admin surface.
 {
-  await platform.workspaces.roles.delete("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await platform.workspaces.roles.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.roles.list: List roles in a workspace. System roles first, then alphabetical. 20/page (max 100), cursor-paginated.
 {
-  for await (const role of platform.workspaces.roles.list("workspace")) {
+  for await (const role of platform.workspaces.roles.list("acme")) {
     console.log(role);
   }
-  const page = await platform.workspaces.roles.list("workspace", {}, { timeout: 5_000 });
+  const page = await platform.workspaces.roles.list("acme", {}, { timeout: 5_000 });
 }
 
 // workspaces.roles.retrieve: Get a role + its permissions
 {
-  const workspaceRole = await platform.workspaces.roles.retrieve("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const workspaceRole = await platform.workspaces.roles.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // workspaces.roles.update: Update a role or replace its permission set. Cookie/JWT only — role authoring is a human-admin surface.
 {
-  const workspaceRole = await platform.workspaces.roles.update("workspace", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "string" });
+  const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
 // workspaces.services.disable: Disable a service (settings are retained)
 {
-  await platform.workspaces.services.disable("workspace", "service");
+  await platform.workspaces.services.disable("acme", "mail");
 }
 
 // workspaces.services.enable: Enable (or re-enable) a service for this workspace
 {
-  const workspaceServiceState = await platform.workspaces.services.enable("workspace", "service", { settings: {} });
+  const workspaceServiceState = await platform.workspaces.services.enable("acme", "mail", { settings: {} });
 }
 
 // workspaces.services.list: List services activated on this workspace. Complete — one row per product, not paginated.
 {
-  const listWorkspaceServices = await platform.workspaces.services.list("workspace");
+  const listWorkspaceServices = await platform.workspaces.services.list("acme");
 }
 
 // workspaces.services.updateSettings: Replace the settings jsonb for an active service
 {
-  const workspaceServiceState = await platform.workspaces.services.updateSettings("workspace", "service", { default_sender: "noreply@acme.com" });
+  const workspaceServiceState = await platform.workspaces.services.updateSettings("acme", "mail", { default_sender: "noreply@acme.com" });
 }
 
 // workspaces.update: Update workspace display name, slug, or settings. Slug renames broadcast a `workspace.renamed` event so denormalised consumers (waitlist-api) sync.
 {
-  const workspace = await platform.workspaces.update("workspace", { display_name: "string" });
+  const workspace = await platform.workspaces.update("acme", { display_name: "string" });
 }
 
 export {};

@@ -6,17 +6,17 @@ const auth = new Auth();
 
 // verify.authorize: Verify a token + check one or more permissions
 {
-  const authorize = await auth.consumer("app").verify.authorize({ permission: "string" });
+  const authorize = await auth.consumer("my-app").verify.authorize({ permission: "invoice.read" });
 }
 
 // verify.authorizeBatch: Multi-permission authorization in a single round-trip
 {
-  const authorizeBatch = await auth.consumer("app").verify.authorizeBatch({ checks: [{}] });
+  const authorizeBatch = await auth.consumer("my-app").verify.authorizeBatch({ checks: [{}] });
 }
 
 // verify.token: Verify a token signature + return its principal
 {
-  const verify = await auth.consumer("app").verify.token({ token: "string" });
+  const verify = await auth.consumer("my-app").verify.token({ token: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImsxIn0.eyJzdWIiOiJ1c3JfMSJ9.c2lnbmF0dXJl" });
 }
 
 export {};

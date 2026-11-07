@@ -16,7 +16,7 @@ const platform = new PlatformAuth();
 
 // me.hiddenGuides.hide: Hide a getting-started guide for the caller.
 {
-  const hiddenGuide = await platform.me.hiddenGuides.hide("key");
+  const hiddenGuide = await platform.me.hiddenGuides.hide("dashboard");
 }
 
 // me.hiddenGuides.list: List the getting-started guides the caller has hidden.
@@ -31,7 +31,7 @@ const platform = new PlatformAuth();
 
 // me.hiddenGuides.unhide: Show a hidden getting-started guide again.
 {
-  await platform.me.hiddenGuides.unhide("key");
+  await platform.me.hiddenGuides.unhide("dashboard");
 }
 
 // me.profile.update: Update the caller's profile. Currently only `displayName` is editable. An empty body is a no-op that returns the current profile. Cookie/JWT only — this is a human-self-service surface, not a PAK-mutation surface.

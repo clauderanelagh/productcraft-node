@@ -6,295 +6,295 @@ const social = new Social();
 
 // actors.archived.list: List the actor's archived posts (status='archived'), newest-first. Cursor-paginated.
 {
-  for await (const archived of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("actor")) {
+  for await (const archived of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(archived);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.archived.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.assets.list: List an actor's uploaded assets — the "your uploads" surface + GDPR export walk. 50/page (max 200), cursor-paginated newest-first.
 {
-  for await (const asset of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const asset of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(asset);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.assets.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.batch: Bulk actor upsert (max 200 per call) — the import lane. Each item runs the exact single-upsert path; results come back per item with partial success (`201` even when some items fail — inspect `success` / `error` per entry). No wrapping transaction.
 {
-  const batchActors = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.batch({ actors: [{ external_id: "user_abc123" }] });
+  const batchActors = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.batch({ actors: [{ external_id: "user_abc123" }] });
 }
 
 // actors.blocks.list: List actors this actor has blocked. Pass `?expand=dst_actor` to nest each blocked actor's full row on the edge.
 {
-  for await (const block of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("actor")) {
+  for await (const block of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(block);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.blocks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.bookmarks.list: List the actor's bookmarks. Cursor-paginated newest-first.
 {
-  for await (const bookmark of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const bookmark of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(bookmark);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.bookmarks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.byExternal.batch: Batch-resolve external_ids to actors (max 200 per call). POST-only — external_ids are up to 256 chars and can't ride a querystring. Unknown ids come back in `missing[]` instead of failing the call.
 {
-  const actorsByExternalBatch = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.batch({ external_ids: ["user_abc123", "user_def456"] });
+  const actorsByExternalBatch = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.batch({ external_ids: ["user_abc123", "user_def456"] });
 }
 
 // actors.byExternal.retrieve: Look up an actor by the customer-supplied external_id.
 {
-  const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.retrieve("user_abc123");
+  const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.byExternal.retrieve("user_42");
 }
 
 // actors.closeFriends.list: List the close-friends members of an actor.
 {
-  for await (const closeFriend of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const closeFriend of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(closeFriend);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.closeFriends.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.counters: Denormalised counters for one actor (followers, following, posts, comments, blocks).
 {
-  const actorCounters = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.counters("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+  const actorCounters = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.counters("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.create: Upsert an actor by external_id. Creates on first call, updates on subsequent calls with the same external_id. Idempotent on `(community, external_id)`. Note: omitted fields on a follow-up call are overwritten with the new body — pass every field you want to keep on each call.
 {
-  const upsertActor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.create({ external_id: "user_abc123" });
+  const upsertActor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.create({ external_id: "user_abc123" });
 }
 
 // actors.delete: Delete an actor. Hard delete — cascades to every post, comment, edge, flag, and notification it owns.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.delete("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.dismissedSuggestions.list: List actors this actor has dismissed from suggestions. Pass `?expand=dst_actor` to nest each actor's full row.
 {
-  for await (const dismissedSuggestion of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("actor")) {
+  for await (const dismissedSuggestion of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(dismissedSuggestion);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.dismissedSuggestions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.drafts.list: List the actor's drafts (status='draft'). Cursor-paginated newest-first.
 {
-  for await (const draft of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+  for await (const draft of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(draft);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.drafts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.feed.list: Feed for an actor: their own posts + posts from actors they follow, with blocks excluded. Default order is `ranked` (recency + engagement + follow-graph signals); pass `order=chronological` to get the time-ordered feed. 50/page (max 200). The cursor shape differs between orders — passing a chronological cursor with `order=ranked` returns 400 INVALID_CURSOR.
 {
-  for await (const feed of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+  for await (const feed of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(feed);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.feed.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.followers.list: List the actors who follow this actor. Pass `?expand=src_actor` to nest each follower's full actor row on the edge — a followers screen renders from this one call.
 {
-  for await (const follower of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+  for await (const follower of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(follower);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.following.list: List the actors this actor follows. Pass `?expand=dst_actor` to nest each followee's full actor row on the edge (no N+1 hydration).
 {
-  for await (const following of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+  for await (const following of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(following);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.following.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.followRequests.list: List incoming follow requests for a (private) actor, newest-first (task 014).
 {
-  for await (const followRequest of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("actor")) {
+  for await (const followRequest of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(followRequest);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.followRequests.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.hashtagFollows.create: Follow a hashtag on behalf of an actor. Idempotent — re-follow refreshes the followed_at timestamp but doesn't error.
 {
-  const hashtagFollow = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.create("aaaaaaaa-0000-0000-0000-000000000001", { tag: "storymode" });
+  const hashtagFollow = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { tag: "storymode" });
 }
 
 // actors.hashtagFollows.delete: Unfollow a hashtag. Idempotent — 204 either way.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.delete("aaaaaaaa-0000-0000-0000-000000000001", "storymode");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "launch");
 }
 
 // actors.hashtagFollows.list: List the hashtags an actor follows. Cursor-paginated newest-first by followed_at.
 {
-  for await (const hashtagFollow of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const hashtagFollow of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(hashtagFollow);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hashtagFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.hides.list: List the posts an actor has hidden, newest-first.
 {
-  for await (const hide of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("actor")) {
+  for await (const hide of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(hide);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.hides.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.highlights.list: List the actor's pinned posts (highlights).
 {
-  for await (const highlight of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const highlight of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001")) {
     console.log(highlight);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.highlights.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
 }
 
 // actors.insights: An actor's follower time series: live follower_count plus a nightly-snapshot daily series over ?from/?to (default trailing 30 days).
 {
-  const actorInsights = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.insights("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const actorInsights = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.insights("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.list: List actors in a community. 50 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true. Pass `?ids=<uuid,uuid,…>` (max 100) to batch-fetch specific actors instead — one hydration call for a screenful of ids; unknown ids are silently omitted and `pagination` is the exhausted shape (`next_cursor: null`).
 {
-  for await (const actor of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list()) {
+  for await (const actor of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list()) {
     console.log(actor);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.list({}, { timeout: 5_000 });
 }
 
 // actors.mentions.list: List every place this actor has been @-mentioned (posts + comments).
 {
-  for await (const mention of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const mention of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(mention);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mentions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.mutedTerms.create: Add (or refresh) a muted term for the actor. Re-posting the same `term` updates the scope + expires_at.
 {
-  const mutedTerm = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.create("aaaaaaaa-0000-0000-0000-000000000001", { term: "spoiler" });
+  const mutedTerm = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { term: "spoiler" });
 }
 
 // actors.mutedTerms.delete: Remove a muted term. Idempotent — 204 either way.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.delete("aaaaaaaa-0000-0000-0000-000000000001", "term");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "spoiler");
 }
 
 // actors.mutedTerms.list: List the actor's currently-active muted terms, newest-first. Cursor-paginated (task 008 / G13 — previously an unbounded bare array).
 {
-  for await (const mutedTerm of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const mutedTerm of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(mutedTerm);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.mutes.list: List actors this actor has muted. Pass `?expand=dst_actor` to nest each muted actor's full row on the edge.
 {
-  for await (const mute of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("actor")) {
+  for await (const mute of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(mute);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.mutes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.notificationPrefs.list: List the actor's per-kind notification preferences. Synthesises `enabled=true` defaults for kinds the actor has not explicitly toggled.
 {
-  const notificationPrefList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.list("aaaaaaaa-0000-0000-0000-000000000001");
+  const notificationPrefList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.notificationPrefs.update: Set a single notification-kind preference for the actor.
 {
-  const notificationPref = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.update("aaaaaaaa-0000-0000-0000-000000000001", "kind", { enabled: false });
+  const notificationPref = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notificationPrefs.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "follow", { enabled: false });
 }
 
 // actors.notifications.list: List notifications for an actor (newest first).
 {
-  for await (const notification of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const notification of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(notification);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.notifications.markAllRead: Mark every unread notification for the actor as read.
 {
-  const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.markAllRead("aaaaaaaa-0000-0000-0000-000000000001", { before: "2026-05-01T00:00:00.000Z" });
+  const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.markAllRead("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { before: "2026-05-01T00:00:00.000Z" });
 }
 
 // actors.notifications.unreadCount: Count unread notifications for an actor.
 {
-  const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.unreadCount("aaaaaaaa-0000-0000-0000-000000000001");
+  const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.unreadCount("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.notifications.update: Mark a single notification as read or unread.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.update("aaaaaaaa-0000-0000-0000-000000000001", "11111111-1111-1111-1111-111111111111", { read: true });
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.notifications.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "11111111-1111-1111-1111-111111111111", { read: true });
 }
 
 // actors.postState: Batch viewer-state hydration: the actor's reactions, bookmark, repost, and poll-vote state for up to 200 posts in one call.
 {
-  const postState = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.postState("aaaaaaaa-0000-0000-0000-000000000001", {
+  const postState = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.postState("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
     post_ids: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "cccccccc-cccc-cccc-cccc-cccccccccccc"],
   });
 }
 
 // actors.relationships.list: Batched pairwise relationship lookup: does this actor follow / mute / block / restrict each of up to 100 others (and is it followed / blocked back)?
 {
-  const relationshipList = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.relationships.list("aaaaaaaa-0000-0000-0000-000000000001", { with: "string" });
+  const relationshipList = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.relationships.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { with: "0b1c2d3e-4f50-4a6b-8c7d-8e9f0a1b2c3d" });
 }
 
 // actors.restricts.list: List actors this actor has restricted. Pass `?expand=dst_actor` to nest each restricted actor's full row on the edge.
 {
-  for await (const restrict of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("actor")) {
+  for await (const restrict of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(restrict);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.restricts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.retrieve: Get an actor by its UUID.
 {
-  const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.retrieve("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
+  const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // actors.scheduledPosts.list: List the actor's scheduled posts (status='scheduled'), ordered soonest-to-publish first. Cursor-paginated.
 {
-  for await (const scheduledPost of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("actor")) {
+  for await (const scheduledPost of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(scheduledPost);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.scheduledPosts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.storyTray.list: Story tray for an actor — one entry per author with at least one unexpired or pinned story.
 {
-  for await (const storyTray of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.storyTray.list("aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const storyTray of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.storyTray.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(storyTray);
   }
 }
 
 // actors.suggestedFollows.list: Suggested follows for an actor.
 {
-  for await (const suggestedFollow of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa")) {
+  for await (const suggestedFollow of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(suggestedFollow);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.suggestedFollows.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.tagged.list: List posts an actor is tagged in.
 {
-  for await (const tagged of social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("tagged_actor")) {
+  for await (const tagged of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(tagged);
   }
-  const page = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("tagged_actor", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.tagged.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // actors.update: Update actor profile fields. Pass only the fields you want to change.
 {
-  const actor = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.update("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", { avatar_url: "string" });
+  const actor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").actors.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { avatar_url: "string" });
 }
 
 export {};

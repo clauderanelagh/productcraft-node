@@ -38,3 +38,14 @@ export interface WebhookUnwrapParams {
   /** Accepted clock skew in seconds. Default 300. */
   toleranceSeconds?: number;
 }
+/** `webhooks.sign()`: what to sign. Tests only; ProductCraft signs real deliveries. */
+export interface WebhookSignParams {
+  /** The event: an `UnwrapWebhookEvent`-shaped object (JSON-encoded) or the exact body string. */
+  payload: WebhookPayload | Record<string, unknown>;
+  /** Signing secret. Default: the client's `webhookSecret` (the first, when several), then `PRODUCTCRAFT_FIXTURE_WEBHOOK_SECRET`. */
+  secret?: string;
+  /** `webhook-id`. Default: a random `msg_…` id. */
+  id?: string;
+  /** Unix seconds for `webhook-timestamp`. Default: now. */
+  timestamp?: number;
+}

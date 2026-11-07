@@ -9,7 +9,7 @@
 // ~/.secrets.toml (read here, never printed) and uses that session as the admin
 // bearer; it logs the session out in `finally`. It changes no workspace settings,
 // services, keys or policies. Everything it creates lives in one throwaway Auth app
-// `sdk-smoke-<ts>` (an end user, a webhook endpoint), deleted in `finally`; stale
+// `sdk-smoke-<ts>` (end users, an app API key, a webhook endpoint), deleted in `finally`; stale
 // `sdk-smoke-*` apps a killed run left behind are deleted first. The end user's
 // address is the SES simulator, so any mail Auth sends goes nowhere real.
 // All traffic goes through a throttle: at most 4 requests per second.
@@ -120,6 +120,44 @@ try {
     gone = err instanceof NotFoundError;
   }
   check(gone, "webhooks.endpoints.delete (retrieve then 404s)");
+
+  // apps.list honours the cursor: one app per page, every id new, and the walk ends
+  // (it once returned page one forever; the SDK now also stops on a repeated cursor).
+  const appIds = [];
+  for await (const a of admin.apps.list({ workspace_id: WORKSPACE_ID, limit: 1 })) {
+    appIds.push(a.id);
+    if (appIds.length > 200) break;
+  }
+  check(appIds.length > 1 && new Set(appIds).size === appIds.length && appIds.includes(app.id), `apps.list({ limit: 1 }) walks ${appIds.length} distinct apps`);
+
+  // Consumer admin routes take an app-scoped credential, not a workspace one.
+  let refusedWorkspace = false;
+  try {
+    await admin.consumer(TAG).users.list({ limit: 1 });
+  } catch (err) {
+    refusedWorkspace = err?.status === 401;
+  }
+  check(refusedWorkspace, "consumer(slug).users with a workspace credential answers 401 (documented as app_api_key | m2m_token | end_user_token)");
+  const appKey = await scope.apiKeys.create({ name: `${TAG}-key`, permissions: ["user.create", "user.list", "user.delete"] });
+  const backend = new Auth({ auth: { type: "bearer", token: appKey.key }, fetch: throttled }).consumer(TAG);
+  const created = await backend.users.create({ email: `success+${TAG}-admin@simulator.amazonses.com` });
+  check(typeof created.id === "string", "consumer(slug).users.create with an app API key (app_api_key)");
+  await backend.users.delete(created.id);
+  await scope.apiKeys.delete(appKey.id);
+
+  // webhooks.sign produces a delivery unwrap accepts, typed by event.
+  const secret = `whsec_${Buffer.from(TAG.padEnd(32, "x")).toString("base64")}`;
+  const hooks = new Auth({ webhookSecret: secret });
+  const signed = await hooks.webhooks.sign({ payload: { id: `evt_${TAG}`, type: "user.signup", created_at: new Date().toISOString(), app_id: app.id, data: { user_id: profile.id, email, username: null } } });
+  const unwrapped = await hooks.webhooks.unwrap({ payload: signed.payload, headers: signed.headers });
+  check(unwrapped.type === "user.signup" && unwrapped.data.email === email, "webhooks.sign → webhooks.unwrap round trip");
+  let tampered = false;
+  try {
+    await hooks.webhooks.unwrap({ payload: signed.payload.replace(TAG, "x"), headers: signed.headers });
+  } catch (err) {
+    tampered = err?.name === "WebhookVerificationError";
+  }
+  check(tampered, "unwrap rejects a tampered signed payload");
 
   // A 404 carries a request id and is an AuthHttpError (= APIError).
   try {

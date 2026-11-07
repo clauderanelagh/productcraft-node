@@ -118,7 +118,7 @@ Recipients not sent yet are marked `canceled`; messages already handed off are n
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const broadcast = await mail.broadcasts.cancel("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const broadcast = await mail.broadcasts.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-broadcasts-broadcast-id-cancel)
@@ -168,7 +168,7 @@ Drafts, sent and canceled broadcasts, with their recipient list. The messages th
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.broadcasts.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.broadcasts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-broadcasts-broadcast-id)
@@ -193,7 +193,7 @@ A new draft with the same content and audience.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const broadcast = await mail.broadcasts.duplicate("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const broadcast = await mail.broadcasts.duplicate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-broadcasts-broadcast-id-duplicate)
@@ -241,7 +241,7 @@ Includes `counts` once sending has started: recipients, sent, delivered, bounced
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const broadcast = await mail.broadcasts.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const broadcast = await mail.broadcasts.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-broadcasts-broadcast-id)
@@ -268,7 +268,7 @@ Now, or at `scheduled_at`. When sending starts the audience is frozen (segment �
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const broadcast = await mail.broadcasts.send("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { scheduled_at: "2026-11-02T09:00:00Z" });
+const broadcast = await mail.broadcasts.send("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { scheduled_at: "2026-11-02T09:00:00Z" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-broadcasts-broadcast-id-send)
@@ -295,7 +295,7 @@ Only drafts can change; null clears an optional field.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const broadcast = await mail.broadcasts.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { from: "string" });
+const broadcast = await mail.broadcasts.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { from: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-broadcasts-broadcast-id)
@@ -319,7 +319,7 @@ Most clicked first. Empty until click tracking is enabled.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const clickedLinks = await mail.broadcasts.clickedLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const clickedLinks = await mail.broadcasts.clickedLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-broadcasts-broadcast-id-clicked-links)
@@ -346,10 +346,10 @@ In send order, with each message status.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const recipient of mail.broadcasts.recipients.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const recipient of mail.broadcasts.recipients.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(recipient);
 }
-const page = await mail.broadcasts.recipients.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await mail.broadcasts.recipients.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-broadcasts-broadcast-id-recipients)
@@ -602,7 +602,7 @@ Get a contact import and its progress.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const contactImport = await mail.contacts.imports.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const contactImport = await mail.contacts.imports.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-contacts-imports-import-id)
@@ -653,7 +653,7 @@ Values already stored on contacts stay, but are no longer validated; define the 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.contacts.properties.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.contacts.properties.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-contact-properties-property-id)
@@ -699,7 +699,7 @@ Get a contact property.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const contactProperty = await mail.contacts.properties.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const contactProperty = await mail.contacts.properties.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-contact-properties-property-id)
@@ -726,7 +726,7 @@ The key and type are fixed once created.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const contactProperty = await mail.contacts.properties.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { fallback_value: "string" });
+const contactProperty = await mail.contacts.properties.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { fallback_value: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-contact-properties-property-id)
@@ -754,7 +754,7 @@ Adds the contact. Adding a contact that is already a member changes nothing and 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const segmentMembership = await mail.contacts.segments.add("ada@example.com", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const segmentMembership = await mail.contacts.segments.add("ada@example.com", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-contacts-contact-segments-segment-id)
@@ -777,7 +777,7 @@ Remove a contact from a static segment.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.contacts.segments.delete("ada@example.com", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await mail.contacts.segments.delete("ada@example.com", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-contacts-contact-segments-segment-id)
@@ -926,7 +926,7 @@ Permanently deletes the domain, its DNS record set and its Amazon SES sending id
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `SES_IDENTITY_DELETE_FAILED` | `SES_IDENTITY_DELETE_FAILED`: the domain's Amazon SES identity could not be removed. Nothing was deleted; retry. |
 
 ```ts
-await mail.domains.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.domains.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-domains-domain-id)
@@ -1000,7 +1000,7 @@ The domain with `verification_status`, `region`, the effective `dns_provider`, `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domainDetail = await mail.domains.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const domainDetail = await mail.domains.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-domains-domain-id)
@@ -1027,7 +1027,7 @@ Sends a fixed message (subject `[TEST] Sending from <domain> works`, a short bod
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.domains.testSend("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { to: "you@acme.com" });
+const sendAccepted = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-test-send)
@@ -1054,7 +1054,7 @@ Update domain settings: capabilities, DNS provider hint, custom MAIL FROM subdom
 | 429 | `RateLimitError` | `RATE_LIMITED` | `mail_from_subdomain` or `intent` changed less than 10 seconds ago (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domain = await mail.domains.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { capabilities: { receiving: "enabled", sending: "enabled" } });
+const domain = await mail.domains.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { capabilities: { receiving: "enabled", sending: "enabled" } });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-domains-domain-id)
@@ -1076,7 +1076,7 @@ Legacy shape, kept as an alias of `POST .../dns-records/check`: returns the doma
 | 429 | `RateLimitError` | `RATE_LIMITED` | Verified less than 10 seconds ago (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domain = await mail.domains.verify("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const domain = await mail.domains.verify("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-verify)
@@ -1105,7 +1105,7 @@ Reads the zone through the provider's API and plans every record the domain need
 | 502 | `InternalServerError` | `BAD_GATEWAY`, `PROVIDER_UNAVAILABLE`, `PROVIDER_ERROR` | The provider failed or did not answer (`PROVIDER_UNAVAILABLE`, `PROVIDER_ERROR`). Nothing was written unless the plan items say so. |
 
 ```ts
-const dnsApplyResult = await mail.domains.dnsRecords.apply("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { dry_run: true, provider: "cloudflare", token: "dop_v1_EXAMPLE_TOKEN_DO_NOT_USE" });
+const dnsApplyResult = await mail.domains.dnsRecords.apply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { dry_run: true, provider: "cloudflare", token: "dop_v1_EXAMPLE_TOKEN_DO_NOT_USE" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-dns-records-apply)
@@ -1129,7 +1129,7 @@ Queries the zone's authoritative nameservers and a public resolver for every rec
 | 429 | `RateLimitError` | `RATE_LIMITED` | Checked less than 10 seconds ago (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domainDnsRecords = await mail.domains.dnsRecords.check("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const domainDnsRecords = await mail.domains.dnsRecords.check("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-dns-records-check)
@@ -1153,7 +1153,7 @@ Download the domain's DNS records as a BIND zone fragment or a CSV.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await mail.domains.dnsRecords.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { format: "bind" });
+const response = await mail.domains.dnsRecords.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { format: "bind" });
 const text = await response.text();
 ```
 
@@ -1178,7 +1178,7 @@ Every record the domain needs for its intent, with its state (`missing`, `mismat
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domainDnsRecords = await mail.domains.dnsRecords.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const domainDnsRecords = await mail.domains.dnsRecords.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-domains-domain-id-dns-records)
@@ -1206,7 +1206,7 @@ Returns a signed Domain Connect URL for the provider that hosts the domain's zon
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const domainConnectStart = await mail.domains.domainConnect.start("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { include_dmarc: true });
+const domainConnectStart = await mail.domains.domainConnect.start("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { include_dmarc: true });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-domain-connect-start)
@@ -1233,10 +1233,10 @@ Added, records found, verified, degraded, failing, recovered, MAIL FROM verified
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const event of mail.domains.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const event of mail.domains.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(event);
 }
-const page = await mail.domains.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await mail.domains.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-domains-domain-id-events)
@@ -1265,7 +1265,7 @@ Returns a link (valid 1–7 days, default 7) to a public page that shows the dom
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `EMAIL_UNAVAILABLE` | `EMAIL_UNAVAILABLE`: `email_to` was given but the email cap cannot be checked right now. No link is created; retry, or create it without `email_to`. |
 
 ```ts
-const createdShareLink = await mail.domains.shareLinks.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { email_to: ["it@example.com"] });
+const createdShareLink = await mail.domains.shareLinks.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email_to: ["it@example.com"] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-share-links)
@@ -1287,7 +1287,7 @@ The public page and its downloads answer 404 from now on. Revoking an already re
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.domains.shareLinks.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await mail.domains.shareLinks.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-domains-domain-id-share-links-link-id)
@@ -1312,10 +1312,10 @@ The links themselves are not returned: they are shown once, at creation.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const shareLink of mail.domains.shareLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const shareLink of mail.domains.shareLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(shareLink);
 }
-const page = await mail.domains.shareLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await mail.domains.shareLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-domains-domain-id-share-links)
@@ -1337,7 +1337,7 @@ Drop the per-domain override; sends from this domain fall back to the workspace 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.domains.smtpConfig.reset("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.domains.smtpConfig.reset("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-domains-domain-id-smtp-config)
@@ -1357,7 +1357,7 @@ Get the per-domain SMTP override (returns null if unset; the workspace default a
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const getSmtpConfig = await mail.domains.smtpConfig.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const getSmtpConfig = await mail.domains.smtpConfig.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-domains-domain-id-smtp-config)
@@ -1381,7 +1381,7 @@ Create or update the per-domain SMTP override (resets verification).
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const smtpConfig = await mail.domains.smtpConfig.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+const smtpConfig = await mail.domains.smtpConfig.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
   from_email: "noreply@acme.com",
   from_name: "Acme Notifications",
   host: "smtp.sendgrid.net",
@@ -1407,7 +1407,7 @@ Test the per-domain SMTP override; updates status.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-smtp-config-verify-saved)
@@ -1519,7 +1519,7 @@ The email as sent (from, to, cc, bcc, reply_to, subject, tags, custom headers) w
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const emailDetail = await mail.emails.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const emailDetail = await mail.emails.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-emails-id)
@@ -1573,7 +1573,7 @@ Hard delete — the encrypted blob is removed. The customer must reconnect via t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.integrations.delete("provider");
+await mail.integrations.delete("github");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-integrations-provider)
@@ -1617,7 +1617,7 @@ Includes the provider's `credentials_redacted` view. Secret fields (access token
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const integrationDetail = await mail.integrations.retrieve("provider");
+const integrationDetail = await mail.integrations.retrieve("github");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-provider)
@@ -1689,7 +1689,7 @@ List branches for the given repo.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const result = await mail.integrations.github.repos.branches.list("owner", "repo");
+const result = await mail.integrations.github.repos.branches.list("acme", "email-templates");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-repos-owner-repo-branches)
@@ -1760,7 +1760,7 @@ Poll a sync run's status.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const syncStatus = await mail.integrations.github.sync.retrieve("sync");
+const syncStatus = await mail.integrations.github.sync.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-sync-sync-id)
@@ -1807,7 +1807,7 @@ Soft-delete a mailbox: its status becomes `disabled` and it stops accepting new 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.mailboxes.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.mailboxes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-mailboxes-id)
@@ -1853,7 +1853,7 @@ Get one mailbox by id.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mailbox = await mail.mailboxes.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const mailbox = await mail.mailboxes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id)
@@ -1878,7 +1878,7 @@ Update mailbox display name, retention, or status. Status transitions are restri
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const mailbox = await mail.mailboxes.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { display_name: "string" });
+const mailbox = await mail.mailboxes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-mailboxes-id)
@@ -1900,7 +1900,7 @@ Soft-delete a message.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.mailboxes.messages.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await mail.mailboxes.messages.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-mailboxes-id-messages-mid)
@@ -1923,10 +1923,10 @@ List messages in a mailbox.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const message of mail.mailboxes.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const message of mail.mailboxes.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(message);
 }
-const page = await mail.mailboxes.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await mail.mailboxes.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id-messages)
@@ -1946,7 +1946,7 @@ Stream the raw RFC5322 .eml for a message. Gated by `mail.message.body.read` (ad
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await mail.mailboxes.messages.raw("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const response = await mail.mailboxes.messages.raw("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 const text = await response.text();
 ```
 
@@ -1967,7 +1967,7 @@ Mark a message as read.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.mailboxes.messages.read("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+await mail.mailboxes.messages.read("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-mailboxes-id-messages-mid-read)
@@ -1987,7 +1987,7 @@ Get a single message (metadata + attachment manifest; `body_preview` is null wit
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const messageDetail = await mail.mailboxes.messages.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+const messageDetail = await mail.mailboxes.messages.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id-messages-mid)
@@ -2009,7 +2009,7 @@ Stream a single attachment by its position. Gated by `mail.message.body.read`: a
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await mail.mailboxes.messages.attachments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", "position");
+const response = await mail.mailboxes.messages.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
 const text = await response.text();
 ```
 
@@ -2032,7 +2032,7 @@ Get the cleartext body of an outbound message. Gated by `mail.message.body.read`
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const outboundMessageWithBody = await mail.messages.body("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const outboundMessageWithBody = await mail.messages.body("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-id-body)
@@ -2129,7 +2129,7 @@ Get a single outbound message (metadata + delivery verdicts; body not included) 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const outboundMessageDetail = await mail.messages.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const outboundMessageDetail = await mail.messages.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-messages-id)
@@ -2223,7 +2223,7 @@ Soft delete: it disappears from every list at once; retention purges the stored 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.received.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.received.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-received-id)
@@ -2298,7 +2298,7 @@ Every header, the full body and every attachment inline. Gated by `mail.message.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await mail.received.raw("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const response = await mail.received.raw("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 const text = await response.text();
 ```
 
@@ -2319,7 +2319,7 @@ Mark a received email as read.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.received.read("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.received.read("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-received-id-read)
@@ -2341,7 +2341,7 @@ Metadata, the authentication results, the envelope recipient and the attachment 
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const receivedEmailDetail = await mail.received.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const receivedEmailDetail = await mail.received.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-received-id)
@@ -2365,7 +2365,7 @@ By its `position` from the detail's attachment manifest. Unscanned, untrusted by
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const response = await mail.received.attachments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "position");
+const response = await mail.received.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
 const text = await response.text();
 ```
 
@@ -2417,7 +2417,7 @@ Contacts are not touched; a static segment's member list goes with it.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.segments.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.segments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-segments-segment-id)
@@ -2465,7 +2465,7 @@ Counted on request.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const segmentMetrics = await mail.segments.metrics("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const segmentMetrics = await mail.segments.metrics("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-segments-segment-id-metrics)
@@ -2510,7 +2510,7 @@ Get a segment.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const segment = await mail.segments.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const segment = await mail.segments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-segments-segment-id)
@@ -2537,7 +2537,7 @@ Rename it, or change a rule segment's rule. A segment's type (static or rule) is
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const segment = await mail.segments.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "string" });
+const segment = await mail.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-segments-segment-id)
@@ -2564,10 +2564,10 @@ Newest contact first. For a rule segment, the contacts matching its rule right n
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-for await (const contact of mail.segments.contacts.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+for await (const contact of mail.segments.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
   console.log(contact);
 }
-const page = await mail.segments.contacts.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+const page = await mail.segments.contacts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-segments-segment-id-contacts)
@@ -2903,7 +2903,7 @@ Delete a template, layout, or partial by name.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.templates.delete("name");
+await mail.templates.delete("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-templates-name)
@@ -2999,7 +2999,7 @@ Render a saved template against a data payload. Returns subject + html + text wi
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const renderedMessage = await mail.templates.render("name", { data: { name: "Alice", order_id: "ord_123" } });
+const renderedMessage = await mail.templates.render("welcome", { data: { name: "Alice", order_id: "ord_123" } });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-render)
@@ -3019,7 +3019,7 @@ Get a template, layout, or partial by name.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const template = await mail.templates.retrieve("name");
+const template = await mail.templates.retrieve("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-name)
@@ -3044,7 +3044,7 @@ Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars
 | 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.templates.send("name", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
+const sendAccepted = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-send)
@@ -3071,7 +3071,7 @@ Two ways to make retries safe. An `Idempotency-Key` header covers the whole requ
 | 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits (60 per minute, 600 per hour, 10,000 per day) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendBatchOpenApi = await mail.templates.sendBatch("name", {
+const sendBatchOpenApi = await mail.templates.sendBatch("welcome", {
   messages: [
     {
       data: { code: "A1B2C3", name: "Alice" },
@@ -3104,7 +3104,7 @@ Send a test rendering of the template to an arbitrary recipient. Bypasses the su
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const sendAccepted = await mail.templates.testSend("name", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
+const sendAccepted = await mail.templates.testSend("welcome", { from: "Acme <hello@acme.com>", to: "ada@example.com" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-test-send)
@@ -3148,7 +3148,7 @@ Variables auto-detected from the saved template body + subject (Handlebars expre
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const templateVariables = await mail.templates.variables.list("name");
+const templateVariables = await mail.templates.variables.list("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-name-variables)
@@ -3198,7 +3198,7 @@ Also deletes every contact's choice for it. Sends naming it are refused afterwar
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.topics.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.topics.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-topics-topic-id)
@@ -3244,7 +3244,7 @@ Get a topic.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const topic = await mail.topics.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const topic = await mail.topics.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-topics-topic-id)
@@ -3270,7 +3270,7 @@ Update a topic.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const topic = await mail.topics.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "string" });
+const topic = await mail.topics.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-topics-topic-id)
@@ -3280,6 +3280,10 @@ const topic = await mail.topics.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
 ### `mail.webhooks.unwrap({ payload, headers, secret? })`
 
 Verifies the signature and returns `Mail.UnwrapWebhookEvent`. Events: `contact.created`, `contact.deleted`, `contact.updated`, `domain.created`, `domain.deleted`, `domain.updated`, `domain.verified`, `email.bounced`, `email.canceled`, `email.clicked`, `email.complained`, `email.delivered`, `email.delivery_delayed`, `email.failed`, `email.opened`, `email.received`, `email.scheduled`, `email.sent`, `email.skipped`, `email.suppressed`, `sending_defaults.updated`, `suppression.added`, `suppression.removed`, plus `UnknownWebhookEvent` for types added later.
+
+### `mail.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
 
 ## webhooks.attempts
 
@@ -3355,7 +3359,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await mail.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -3403,7 +3407,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await mail.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await mail.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -3429,7 +3433,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await mail.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await mail.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -3455,7 +3459,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await mail.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "email.sent" });
+const webhookDeliveryAttempt = await mail.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "email.sent" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-test)
@@ -3482,7 +3486,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await mail.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await mail.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -3562,7 +3566,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await mail.webhooks.events.replay("event");
+const replayWebhookEvent = await mail.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)
@@ -3584,7 +3588,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await mail.webhooks.events.retrieve("event");
+const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-webhooks-events-event-id)

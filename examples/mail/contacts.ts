@@ -32,7 +32,7 @@ const mail = new Mail();
 
 // contacts.imports.retrieve: Get a contact import and its progress
 {
-  const contactImport = await mail.contacts.imports.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const contactImport = await mail.contacts.imports.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // contacts.list: List contacts, newest first
@@ -50,7 +50,7 @@ const mail = new Mail();
 
 // contacts.properties.delete: Delete a contact property
 {
-  await mail.contacts.properties.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.contacts.properties.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // contacts.properties.list: List contact properties, newest first
@@ -63,12 +63,12 @@ const mail = new Mail();
 
 // contacts.properties.retrieve: Get a contact property
 {
-  const contactProperty = await mail.contacts.properties.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const contactProperty = await mail.contacts.properties.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // contacts.properties.update: Change a contact property's fallback value
 {
-  const contactProperty = await mail.contacts.properties.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { fallback_value: "string" });
+  const contactProperty = await mail.contacts.properties.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { fallback_value: "string" });
 }
 
 // contacts.retrieve: Get a contact by id or email
@@ -78,12 +78,12 @@ const mail = new Mail();
 
 // contacts.segments.add: Add a contact to a static segment
 {
-  const segmentMembership = await mail.contacts.segments.add("ada@example.com", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const segmentMembership = await mail.contacts.segments.add("ada@example.com", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // contacts.segments.delete: Remove a contact from a static segment
 {
-  await mail.contacts.segments.delete("ada@example.com", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await mail.contacts.segments.delete("ada@example.com", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // contacts.segments.list: List a contact's segments

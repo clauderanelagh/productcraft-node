@@ -6,22 +6,22 @@ const auth = new Auth();
 
 // permissions.create: Create a custom permission
 {
-  const permission = await auth.admin.app("app").permissions.create({ action: "read", resource: "project" });
+  const permission = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.create({ action: "read", resource: "project" });
 }
 
 // permissions.delete: Delete a custom permission
 {
-  await auth.admin.app("app").permissions.delete("permission_key");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.delete("invoice.read");
 }
 
 // permissions.enforcement.list: List permissions that at least one Consumer-API route enforces
 {
-  const enforcedPermissions = await auth.admin.app("app").permissions.enforcement.list();
+  const enforcedPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.enforcement.list();
 }
 
 // permissions.list: List all permissions (system + custom)
 {
-  const result = await auth.admin.app("app").permissions.list();
+  const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").permissions.list();
 }
 
 export {};

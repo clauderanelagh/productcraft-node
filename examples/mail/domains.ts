@@ -11,41 +11,41 @@ const mail = new Mail();
 
 // domains.delete: Delete a domain (must have no active mailboxes left).
 {
-  await mail.domains.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.domains.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.dnsRecords.apply: Set up the domain's DNS records in one step with a short-lived Cloudflare or DigitalOcean API token.
 {
-  const dnsApplyResult = await mail.domains.dnsRecords.apply("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { dry_run: true, provider: "cloudflare", token: "dop_v1_EXAMPLE_TOKEN_DO_NOT_USE" });
+  const dnsApplyResult = await mail.domains.dnsRecords.apply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { dry_run: true, provider: "cloudflare", token: "dop_v1_EXAMPLE_TOKEN_DO_NOT_USE" });
 }
 
 // domains.dnsRecords.check: Check the domain's DNS records now.
 {
-  const domainDnsRecords = await mail.domains.dnsRecords.check("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const domainDnsRecords = await mail.domains.dnsRecords.check("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.dnsRecords.export: Download the domain's DNS records as a BIND zone fragment or a CSV.
 {
-  const response = await mail.domains.dnsRecords.export("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { format: "bind" });
+  const response = await mail.domains.dnsRecords.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { format: "bind" });
   const text = await response.text();
 }
 
 // domains.dnsRecords.list: Per-record DNS status for a domain.
 {
-  const domainDnsRecords = await mail.domains.dnsRecords.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const domainDnsRecords = await mail.domains.dnsRecords.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.domainConnect.start: Start one-click DNS setup at the domain's DNS provider (Domain Connect).
 {
-  const domainConnectStart = await mail.domains.domainConnect.start("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { include_dmarc: true });
+  const domainConnectStart = await mail.domains.domainConnect.start("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { include_dmarc: true });
 }
 
 // domains.events.list: List a domain's events (its timeline), newest first, cursor-paginated.
 {
-  for await (const event of mail.domains.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const event of mail.domains.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(event);
   }
-  const page = await mail.domains.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await mail.domains.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // domains.list: List domains registered to this workspace (newest first), cursor-paginated.
@@ -63,40 +63,40 @@ const mail = new Mail();
 
 // domains.retrieve: Get a single domain (with DNS instructions and its latest events).
 {
-  const domainDetail = await mail.domains.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const domainDetail = await mail.domains.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.shareLinks.create: Create a share link: a read-only DNS setup page for whoever manages the domain's DNS.
 {
-  const createdShareLink = await mail.domains.shareLinks.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { email_to: ["it@example.com"] });
+  const createdShareLink = await mail.domains.shareLinks.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { email_to: ["it@example.com"] });
 }
 
 // domains.shareLinks.delete: Revoke a share link.
 {
-  await mail.domains.shareLinks.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await mail.domains.shareLinks.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.shareLinks.list: List the domain's share links (newest first, including expired and revoked), cursor-paginated.
 {
-  for await (const shareLink of mail.domains.shareLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const shareLink of mail.domains.shareLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(shareLink);
   }
-  const page = await mail.domains.shareLinks.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await mail.domains.shareLinks.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // domains.smtpConfig.reset: Drop the per-domain override; sends from this domain fall back to the workspace default (or ProductCraft Mail's own sending).
 {
-  await mail.domains.smtpConfig.reset("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  await mail.domains.smtpConfig.reset("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.smtpConfig.retrieve: Get the per-domain SMTP override (returns null if unset; the workspace default applies in that case).
 {
-  const getSmtpConfig = await mail.domains.smtpConfig.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const getSmtpConfig = await mail.domains.smtpConfig.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.smtpConfig.update: Create or update the per-domain SMTP override (resets verification)
 {
-  const smtpConfig = await mail.domains.smtpConfig.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+  const smtpConfig = await mail.domains.smtpConfig.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
     from_email: "noreply@acme.com",
     from_name: "Acme Notifications",
     host: "smtp.sendgrid.net",
@@ -107,22 +107,22 @@ const mail = new Mail();
 
 // domains.smtpConfig.verifySaved: Test the per-domain SMTP override; updates status
 {
-  const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // domains.testSend: Send a built-in test email from this domain, no template needed.
 {
-  const sendAccepted = await mail.domains.testSend("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { to: "you@acme.com" });
+  const sendAccepted = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { to: "you@acme.com" });
 }
 
 // domains.update: Update domain settings: capabilities, DNS provider hint, custom MAIL FROM subdomain, DMARC recommendation.
 {
-  const domain = await mail.domains.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { capabilities: { receiving: "enabled", sending: "enabled" } });
+  const domain = await mail.domains.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { capabilities: { receiving: "enabled", sending: "enabled" } });
 }
 
 // domains.verify: Run a synchronous DNS check against this domain; flips status to active when the required record set passes.
 {
-  const domain = await mail.domains.verify("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const domain = await mail.domains.verify("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

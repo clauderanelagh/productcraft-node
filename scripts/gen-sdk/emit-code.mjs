@@ -14,12 +14,17 @@ export const errorClass = (status) => ERROR_CLASS[status] ?? (status >= 500 ? "I
 // ---------------------------------------------------------------------------
 // Example values (shared with the docs emitter and the per-op test)
 
-/** Example value for a path parameter: its spec example, else a deterministic placeholder. */
+/**
+ * Example value for a path parameter: the parameter's spec example, then its
+ * schema's, else a placeholder of the right shape (a UUID for `*_id`, so a
+ * copied example never sends a bare word where the API expects an id).
+ */
 export function pathValue(p, i, deref) {
+  if (p.example !== undefined && p.example !== null) return String(p.example);
   const s = deref(p.schema) ?? {};
   if (s.example !== undefined) return String(s.example);
-  if (s.format === "uuid") return placeholderUuid(i + 1);
-  return p.name.replace(/_(id|slug)$/, "") || "value";
+  if (s.format === "uuid" || /(^|_)id$/.test(p.name)) return placeholderUuid(i + 1);
+  return p.name.replace(/_slug$/, "") || "value";
 }
 
 /** Example params: required body fields and required query parameters (`full`: every query parameter). */
@@ -36,7 +41,7 @@ export function exampleParams(o, deref, { full = false } = {}) {
   }
   for (const q of o.query) {
     if (q.name === "cursor") continue;
-    if (q.required || (full && q.name !== "actor_id")) out[q.name] = sample(q.schema, deref, "response");
+    if (q.required || (full && q.name !== "actor_id")) out[q.name] = q.example !== undefined ? structuredClone(q.example) : sample(q.schema, deref, "response");
   }
   if (o.scope?.actor && o.actor) delete out.actor_id;
   if (o.body?.multipart) {
@@ -51,7 +56,7 @@ export function exampleParams(o, deref, { full = false } = {}) {
 /** The scope prefix of a call: `.community("…").as("…")` or `.public({ … })`. */
 export function scopeExpr(o, deref, given = undefined) {
   if (!o.scope) return "";
-  const vals = given ?? Object.fromEntries(o.scope.bind.map((b, i) => [b, pathValue({ name: b, schema: o.pathParamSchemas?.[b] ?? { type: "string" } }, i + 4, deref)]));
+  const vals = given ?? Object.fromEntries(o.scope.bind.map((b, i) => [b, pathValue({ name: b, schema: o.pathParamSchemas?.[b] ?? { type: "string" }, example: o.pathParamExamples?.[b] }, i + 4, deref)]));
   let expr;
   const acc = o.scope.accessor || o.scope.name;
   if (o.scope.args === "positional") expr = `.${acc}(${o.scope.bind.map((b) => lit(vals[b])).join(", ")})`;
@@ -135,7 +140,9 @@ export function emitTypes(model, cfg) {
   L.push(
     "type IsUnion<T, U = T> = T extends unknown ? ([U] extends [T] ? false : true) : never;",
     "type OpenString<T extends string> = string extends T ? T : true extends IsUnion<T> ? T | (string & {}) : T;",
-    "type OpenValue<T> = [T] extends [string] ? OpenString<T> : T extends readonly (infer I)[] ? Open<I>[] : T extends object ? { [K in keyof T]: Open<T[K]> } : T;",
+    // Members are spelled out as `OpenValue<…> | Extract<…>` rather than `Open<…>`: TypeScript names a union
+    // after the alias that created it, so `Open<T[K]>` made every nullable field hover as `Open<string | null>`.
+    "type OpenValue<T> = [T] extends [string] ? OpenString<T> : T extends readonly (infer I)[] ? (OpenValue<Exclude<I, null | undefined>> | Extract<I, null | undefined>)[] : T extends object ? { [K in keyof T]: OpenValue<Exclude<T[K], null | undefined>> | Extract<T[K], null | undefined> } : T;",
     "/** A response type: string-literal unions also accept values added after this SDK was built. */",
     "export type Open<T> = OpenValue<Exclude<T, null | undefined>> | Extract<T, null | undefined>;",
     "/** What a method resolves to: the parsed body plus non-enumerable `lastResponse`. */",
@@ -227,6 +234,17 @@ export function emitWebhooks(model, cfg) {
     "  /** Accepted clock skew in seconds. Default 300. */",
     "  toleranceSeconds?: number;",
     "}",
+    "/** `webhooks.sign()`: what to sign. Tests only; ProductCraft signs real deliveries. */",
+    "export interface WebhookSignParams {",
+    `  /** The event: an \`UnwrapWebhookEvent\`-shaped object (JSON-encoded) or the exact body string. */`,
+    "  payload: WebhookPayload | Record<string, unknown>;",
+    `  /** Signing secret. Default: the client's \`webhookSecret\` (the first, when several), then \`${cfg.webhookSecretEnv}\`. */`,
+    "  secret?: string;",
+    "  /** `webhook-id`. Default: a random `msg_…` id. */",
+    "  id?: string;",
+    "  /** Unix seconds for `webhook-timestamp`. Default: now. */",
+    "  timestamp?: number;",
+    "}",
   );
   return L.join("\n") + "\n";
 }
@@ -310,6 +328,11 @@ function specLiteral(o, argNames = {}) {
 function methodDoc(o, cfg, deref) {
   const lines = [o.summary || `${o.http} ${o.path}`];
   if (o.description) lines.push("", o.description);
+  if (o.credentials) {
+    const { names, optional, descriptions } = o.credentials;
+    lines.push("", `Credential${optional ? " (optional)" : ""}: ${names.length > 1 ? "one of " : ""}${names.map((n) => `\`${n}\``).join(", ")}.`);
+    for (const n of names) if (descriptions[n]) lines.push(`- \`${n}\`: ${descriptions[n]}`);
+  }
   lines.push("");
   if (o.deprecated) lines.push(`@deprecated ${o.description || "Deprecated in the API."}`);
   for (const p of o.positional) lines.push(`@param ${p.arg} - ${p.description ?? `\`{${p.name}}\``}`);
@@ -380,6 +403,16 @@ export function emitResources(model, cfg) {
         `  unwrap(params: WebhookUnwrapParams): Promise<UnwrapWebhookEvent> {`,
         `    return this._client.unwrapWebhook<UnwrapWebhookEvent>(params, ${lit(cfg.webhookSecretEnv)});`,
         "  }",
+        jsdoc([
+          "Sign a test event the way ProductCraft signs deliveries (Standard Webhooks), so a handler",
+          "test can call `unwrap` without a live delivery. Returns the exact body and the headers.",
+          "",
+          "@param params - The event (an object is JSON-encoded), and optionally the secret, `id` and `timestamp`.",
+          "@throws {ConfigurationError} No secret was passed or configured.",
+        ], "  ").trimEnd(),
+        `  sign(params: WebhookSignParams): Promise<SignedWebhook> {`,
+        `    return this._client.signWebhook(params, ${lit(cfg.webhookSecretEnv)});`,
+        "  }",
       );
     }
     L.push("}");
@@ -394,7 +427,8 @@ export function emitResources(model, cfg) {
     banner(cfg),
     `import type { APIClient, APIPromise, PagePromise, PollOptions, RequestOptions } from "@productcraft/core";`,
     `import type * as T from "./types.js";`,
-    model.webhooks.length ? `import type { UnwrapWebhookEvent, WebhookUnwrapParams } from "./webhooks.js";` : null,
+    model.webhooks.length ? `import type { UnwrapWebhookEvent, WebhookSignParams, WebhookUnwrapParams } from "./webhooks.js";` : null,
+    model.webhooks.length ? `import type { SignedWebhook } from "@productcraft/core";` : null,
     "",
     "type Bound = Readonly<Record<string, string | undefined>>;",
     "",
@@ -630,7 +664,7 @@ export function emitClient(model, cfg) {
   alias("ErrorCode", `E.${cfg.className}ErrorCode`);
   for (const h of model.webhooks) typeOnly(h.typeName, "W");
   if (model.webhooks.length) {
-    for (const n of ["UnknownWebhookEvent", "UnwrapWebhookEvent", "WebhookUnwrapParams"]) typeOnly(n, "W");
+    for (const n of ["UnknownWebhookEvent", "UnwrapWebhookEvent", "WebhookSignParams", "WebhookUnwrapParams"]) typeOnly(n, "W");
     if (!model.apiEventTypes) {
       alias("WebhookEventType", "W.WebhookEventType");
       ns.push("  export const WebhookEventType = W.WebhookEventType;");

@@ -6,45 +6,45 @@ const auth = new Auth();
 
 // roles.assign: Assign a role to a user
 {
-  const appMembership = await auth.admin.app("app").roles.assign({ account_id: "string", role: "admin" });
+  const appMembership = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.assign({ account_id: "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", role: "admin" });
 }
 
 // roles.create: Create a new role (no permissions yet — set them via PUT /:roleName/permissions)
 {
-  const role = await auth.admin.app("app").roles.create({ name: "editor" });
+  const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.create({ name: "editor" });
 }
 
 // roles.delete: Delete a custom role
 {
-  await auth.admin.app("app").roles.delete("role_name");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.delete("admin");
 }
 
 // roles.list: List all roles in an app. Filter by `?search=` on the role name.
 {
-  for await (const role of auth.admin.app("app").roles.list()) {
+  for await (const role of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.list()) {
     console.log(role);
   }
-  const page = await auth.admin.app("app").roles.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.list({}, { timeout: 5_000 });
 }
 
 // roles.permissions.list: List all available permissions
 {
-  const result = await auth.admin.app("app").roles.permissions.list();
+  const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.permissions.list();
 }
 
 // roles.retrieve: Get role details with permissions
 {
-  const roleWithPermissions = await auth.admin.app("app").roles.retrieve("role_name");
+  const roleWithPermissions = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.retrieve("admin");
 }
 
 // roles.update: Update role name or description
 {
-  const role = await auth.admin.app("app").roles.update("role_name", { description: "Updated description" });
+  const role = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.update("admin", { description: "Updated description" });
 }
 
 // roles.updatePermissions: Set permissions for a role (caller-narrowed: caller must hold every requested permission)
 {
-  const result = await auth.admin.app("app").roles.updatePermissions("role_name", { permissions: ["user.read", "role.create"] });
+  const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").roles.updatePermissions("admin", { permissions: ["user.read", "role.create"] });
 }
 
 export {};

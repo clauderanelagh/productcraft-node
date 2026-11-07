@@ -6,35 +6,35 @@ const auth = new Auth();
 
 // roles.create: Create a role
 {
-  const consumerRole = await auth.consumer("app").roles.create({ name: "editor" });
+  const consumerRole = await auth.consumer("my-app").roles.create({ name: "editor" });
 }
 
 // roles.delete: Delete a custom role
 {
-  await auth.consumer("app").roles.delete("role_name");
+  await auth.consumer("my-app").roles.delete("admin");
 }
 
 // roles.list: List roles in this app
 {
-  for await (const role of auth.consumer("app").roles.list()) {
+  for await (const role of auth.consumer("my-app").roles.list()) {
     console.log(role);
   }
-  const page = await auth.consumer("app").roles.list({}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").roles.list({}, { timeout: 5_000 });
 }
 
 // roles.retrieve: Read one role with its permission set
 {
-  const consumerRoleWithPermissions = await auth.consumer("app").roles.retrieve("role_name");
+  const consumerRoleWithPermissions = await auth.consumer("my-app").roles.retrieve("admin");
 }
 
 // roles.update: Update a role's description
 {
-  const consumerRole = await auth.consumer("app").roles.update("role_name", { description: "Updated description" });
+  const consumerRole = await auth.consumer("my-app").roles.update("admin", { description: "Updated description" });
 }
 
 // roles.updatePermissions: Replace a role's permission set
 {
-  const result = await auth.consumer("app").roles.updatePermissions("role_name", { permissions: ["user.read", "role.create"] });
+  const result = await auth.consumer("my-app").roles.updatePermissions("admin", { permissions: ["user.read", "role.create"] });
 }
 
 export {};

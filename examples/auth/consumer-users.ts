@@ -6,55 +6,55 @@ const auth = new Auth();
 
 // users.create: Provision a new end-user
 {
-  const consumerAdminCreatedUser = await auth.consumer("app").users.create({ email: "string" });
+  const consumerAdminCreatedUser = await auth.consumer("my-app").users.create({ email: "ada@example.com" });
 }
 
 // users.delete: Permanently delete an end-user
 {
-  await auth.consumer("app").users.delete("user");
+  await auth.consumer("my-app").users.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // users.factors.create: Provision an MFA factor on behalf of a user
 {
-  const adminProvisionFactor = await auth.consumer("app").users.factors.create("user", { type: "totp" });
+  const adminProvisionFactor = await auth.consumer("my-app").users.factors.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "totp" });
 }
 
 // users.factors.delete: Disable a user's MFA factor
 {
-  await auth.consumer("app").users.factors.delete("user", "factor");
+  await auth.consumer("my-app").users.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // users.factors.list: List a user's MFA factors
 {
-  const factorList = await auth.consumer("app").users.factors.list("user");
+  const factorList = await auth.consumer("my-app").users.factors.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // users.list: List end-users in this app
 {
-  for await (const user of auth.consumer("app").users.list()) {
+  for await (const user of auth.consumer("my-app").users.list()) {
     console.log(user);
   }
-  const page = await auth.consumer("app").users.list({}, { timeout: 5_000 });
+  const page = await auth.consumer("my-app").users.list({}, { timeout: 5_000 });
 }
 
 // users.retrieve: Read one end-user
 {
-  const consumerAdminEndUser = await auth.consumer("app").users.retrieve("user");
+  const consumerAdminEndUser = await auth.consumer("my-app").users.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // users.update: Update an end-user's display name or primary email
 {
-  const consumerAdminEndUser = await auth.consumer("app").users.update("user", { display_name: "string" });
+  const consumerAdminEndUser = await auth.consumer("my-app").users.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "Ada Lovelace" });
 }
 
 // users.updateRole: Assign an end-user a role
 {
-  const consumerAdminRoleAssignment = await auth.consumer("app").users.updateRole("user", { role_name: "string" });
+  const consumerAdminRoleAssignment = await auth.consumer("my-app").users.updateRole("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role_name: "member" });
 }
 
 // users.updateStatus: Change an end-user status (active / suspended / deactivated)
 {
-  const consumerAdminEndUser = await auth.consumer("app").users.updateStatus("user", { status: "active" });
+  const consumerAdminEndUser = await auth.consumer("my-app").users.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "active" });
 }
 
 export {};

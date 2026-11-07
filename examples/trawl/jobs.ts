@@ -6,7 +6,7 @@ const trawl = new Trawl();
 
 // jobs.cancel: Cancel a queued or running trawl job
 {
-  const job = await trawl.jobs.cancel("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const job = await trawl.jobs.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // jobs.create: Create (enqueue) a trawl job
@@ -27,7 +27,7 @@ const trawl = new Trawl();
 
 // jobs.retrieve: Get a single trawl job
 {
-  const job = await trawl.jobs.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const job = await trawl.jobs.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

@@ -127,14 +127,14 @@ export function buildModel(spec, config) {
         .filter((n) => !bind.includes(n))
         .map((n) => {
           const p = pathParams.find((q) => q.name === n) ?? { name: n };
-          return { name: n, arg: camel(n), description: p.description, schema: p.schema ?? { type: "string" } };
+          return { name: n, arg: camel(n), description: p.description, schema: p.schema ?? { type: "string" }, example: p.example };
         });
       // Section 3.2: an id-less DELETE has no default; "delete" must name one object.
       if (method === "delete" && positional.length === 0) {
         problems.push(`${w}: DELETE without an id cannot be "delete"; name it with @SdkMethod (e.g. "erase")`);
       }
 
-      const query = params.filter((p) => p.in === "query").map((p) => ({ name: p.name, required: !!p.required, schema: p.schema ?? {}, description: p.description }));
+      const query = params.filter((p) => p.in === "query").map((p) => ({ name: p.name, required: !!p.required, schema: p.schema ?? {}, description: p.description, example: p.example }));
       const headers = params.filter((p) => p.in === "header");
       const idempotent = headers.some((h) => h.name.toLowerCase() === "idempotency-key");
       for (const h of headers) {
@@ -235,8 +235,11 @@ export function buildModel(spec, config) {
         summary: op.summary ?? "", description: op.description && op.description !== op.summary ? op.description : "",
         deprecated: !!op.deprecated, public: x.public === true, scope, bind, positional, query, body, idempotent,
         success, errors, paginated, poll, actor,
+        credentials: credentialsOf(op, spec),
         paramsType: body || query.length ? `${stem}${pascal(method)}Params` : null,
         pathParamSchemas: Object.fromEntries(pathParams.map((p) => [p.name, p.schema ?? { type: "string" }])),
+        // Parameter-level `example` (OpenAPI puts it beside the schema, not in it).
+        pathParamExamples: Object.fromEntries(pathParams.filter((p) => p.example !== undefined).map((p) => [p.name, p.example])),
         requiredNames: [...((body?.json || body?.multipart) && body.required ? body.requiredProps : []), ...query.filter((q) => q.required).map((q) => q.name)],
         hasRequiredParams: (body?.required && (body.multipart ? body.requiredProps.length > 0 : !body.json || !body.isObject || hasRequired(deref(body.schema)))) || query.some((q) => q.required),
         stem,
@@ -300,7 +303,7 @@ export function buildModel(spec, config) {
     else typeNames.set(n, what);
   };
   // Names the generator itself emits into every product namespace.
-  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "WithResult", "RequestOptions", "PollOptions", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams"]) claim(n, "a generator helper type");
+  for (const n of ["Open", "WithLastResponse", "WithOptionalActor", "WithResult", "RequestOptions", "PollOptions", "ErrorCode", "UnwrapWebhookEvent", "UnknownWebhookEvent", "WebhookUnwrapParams", "WebhookSignParams"]) claim(n, "a generator helper type");
   for (const mdl of models) claim(mdl.name, `model ${mdl.schema}`);
   for (const e of enums) claim(e.name, `enum ${e.schema}`);
   for (const o of ops) {
@@ -330,7 +333,7 @@ export function buildModel(spec, config) {
   const compat = resolveCompat(config.compat, ops, scopes, problems, resourceSet);
 
   if (problems.length) throw new GenError(problems);
-  return { apiEventTypes, ops, scopes, models, enums, errorCode, webhooks, deref, compat };
+  return { apiEventTypes, ops, scopes, models, enums, errorCode, webhooks, deref, compat, securitySchemes: namedSchemes(spec) };
 }
 
 /**
@@ -433,4 +436,28 @@ export function applyResponseDefaults(spec) {
   for (const n of [...res].sort()) if (!req.has(n)) promote(schemas[n]);
   for (const s of inlineRes) promote(s);
   return out;
+}
+
+/**
+ * The spec's security schemes, when it names more than one: an API whose routes
+ * take different credentials (Auth: workspace key, end-user token, app API key,
+ * M2M token) says which per operation, and the docs repeat it. One scheme
+ * carries no information, so it yields none.
+ */
+function namedSchemes(spec) {
+  const schemes = spec.components?.securitySchemes ?? {};
+  return Object.keys(schemes).length > 1 ? schemes : null;
+}
+
+/** The scheme names an operation accepts (alternatives), `optional` when `{}` is one of them; null without named schemes. */
+function credentialsOf(op, spec) {
+  if (!namedSchemes(spec) || !Array.isArray(op.security) || op.security.length === 0) return null;
+  const names = [...new Set(op.security.flatMap((r) => Object.keys(r ?? {})))];
+  if (names.length === 0) return null;
+  const schemes = namedSchemes(spec);
+  return {
+    names,
+    optional: op.security.some((r) => r && Object.keys(r).length === 0),
+    descriptions: Object.fromEntries(names.map((n) => [n, String(schemes[n]?.description ?? "").trim()])),
+  };
 }

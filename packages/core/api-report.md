@@ -19,6 +19,9 @@ export class APIClient {
     readonly maxRetries: number;
     poll<T>(spec: RequestSpec, config: PollConfig, options?: PollOptions): Promise<T>;
     request<T>(spec: RequestSpec, options?: RequestOptions): APIPromise<T>;
+    signWebhook(params: Omit<SignWebhookParams, "secret"> & {
+        secret?: string;
+    }, envVar?: string): Promise<SignedWebhook>;
     // (undocumented)
     readonly timeout: number;
     unwrapWebhook<T = unknown>(params: {
@@ -226,7 +229,7 @@ export type OpenEnum<T extends string> = T | (string & {});
 
 // @public
 export class Page<Item> {
-    constructor(body: PageResponse<Item>, fetchPage: (cursor: string) => PagePromise<Item>);
+    constructor(body: PageResponse<Item>, fetchPage: (cursor: string) => PagePromise<Item>, usedCursors?: Iterable<string>);
     // (undocumented)
     readonly data: Item[];
     getNextPage(): PagePromise<Item>;
@@ -411,6 +414,23 @@ export interface SDKIdentity {
     name: string;
     // (undocumented)
     version: string;
+}
+
+// @public (undocumented)
+export interface SignedWebhook {
+    headers: Record<string, string>;
+    payload: string;
+}
+
+// @public
+export function signWebhook(params: SignWebhookParams): Promise<SignedWebhook>;
+
+// @public (undocumented)
+export interface SignWebhookParams {
+    id?: string;
+    payload: WebhookPayload | Record<string, unknown> | unknown[];
+    secret: string;
+    timestamp?: number;
 }
 
 // @public

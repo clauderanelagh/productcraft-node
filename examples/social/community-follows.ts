@@ -6,7 +6,7 @@ const social = new Social();
 
 // follows.batch: Bulk follow creation (max 200 per call) — the graph-import lane. Each item runs the exact single-follow path (block checks, counters, idempotency), so a blocked pair fails ITS item with a 409 in `error` while the rest of the batch proceeds. `201` even with failures — inspect per-item results. Set `suppress_notifications: true` when importing an existing graph.
 {
-  const batchFollows = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.batch({
+  const batchFollows = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.batch({
     follows: [
       {
         actor_id: "aaaaaaaa-0000-0000-0000-000000000001",
@@ -18,12 +18,12 @@ const social = new Social();
 
 // follows.create: Follow another actor. Idempotent. If the destination is private (task 014), a follow request is created instead and the response is `{ status: "pending", edge: null }`; approve/decline it via the follow-request routes. Refused if either side has a block.
 {
-  const followResult = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
+  const followResult = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.create({ dst_actor_id: "aaaaaaaa-0000-0000-0000-000000000002" });
 }
 
 // follows.delete: Unfollow. Idempotent — 204 even if the follow didn't exist.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.delete("aaaaaaaa-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").follows.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

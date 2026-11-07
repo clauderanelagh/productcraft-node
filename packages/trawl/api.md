@@ -44,7 +44,7 @@ Moves a `queued` or `running` job to `cancelled` straight away. A result the wor
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const job = await trawl.jobs.cancel("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const job = await trawl.jobs.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#post-v1-workspaces-workspace-id-jobs-id-cancel)
@@ -117,7 +117,7 @@ The job with its current `status`, and `result` (JSON matching the job's `json_s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const job = await trawl.jobs.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const job = await trawl.jobs.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#get-v1-workspaces-workspace-id-jobs-id)
@@ -156,6 +156,10 @@ const trawlWorkspaceStats = await trawl.stats.retrieve();
 ### `trawl.webhooks.unwrap({ payload, headers, secret? })`
 
 Verifies the signature and returns `Trawl.UnwrapWebhookEvent`. Events: `credits.low`, `job.failed`, `job.succeeded`, plus `UnknownWebhookEvent` for types added later.
+
+### `trawl.webhooks.sign({ payload, secret?, id?, timestamp? })`
+
+Signs a test event exactly as ProductCraft signs deliveries (Standard Webhooks) and returns `{ payload, headers }`, ready for `unwrap` or a request to your handler. For tests; real deliveries come signed.
 
 ## webhooks.endpoints
 
@@ -202,7 +206,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await trawl.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+await trawl.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#delete-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -249,7 +253,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await trawl.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+const webhookEndpoint = await trawl.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#get-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -275,7 +279,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpointWithSecret = await trawl.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { grace_hours: 24 });
+const webhookEndpointWithSecret = await trawl.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-rotate-secret)
@@ -301,7 +305,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookDeliveryAttempt = await trawl.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { event_type: "job.succeeded" });
+const webhookDeliveryAttempt = await trawl.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "job.succeeded" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#post-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id-test)
@@ -328,7 +332,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEndpoint = await trawl.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { description: "Production receiver" });
+const webhookEndpoint = await trawl.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#patch-v1-workspaces-workspace-id-webhooks-endpoints-endpoint-id)
@@ -405,7 +409,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const replayWebhookEvent = await trawl.webhooks.events.replay("event");
+const replayWebhookEvent = await trawl.webhooks.events.replay("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#post-v1-workspaces-workspace-id-webhooks-events-event-id-replay)
@@ -427,7 +431,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const webhookEventDetail = await trawl.webhooks.events.retrieve("event");
+const webhookEventDetail = await trawl.webhooks.events.retrieve("evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 ```
 
 [HTTP reference](https://productcraft.co/docs/trawl/api-reference#get-v1-workspaces-workspace-id-webhooks-events-event-id)

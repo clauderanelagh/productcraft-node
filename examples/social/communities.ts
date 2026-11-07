@@ -6,23 +6,23 @@ const social = new Social();
 
 // communities.actors.comments.list: Every comment an actor authored, all statuses (published / hidden / removed) — the GDPR-export view. 50/page (max 200), cursor-paginated newest-first.
 {
-  for await (const comment of social.communities.actors.comments.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const comment of social.communities.actors.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(comment);
   }
-  const page = await social.communities.actors.comments.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.communities.actors.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.actors.reactions.list: Every reaction an actor has given — post reactions and comment reactions unified into one stream, discriminated by `target_type`. The GDPR-export view. 50/page (max 200), cursor-paginated newest-first.
 {
-  for await (const reaction of social.communities.actors.reactions.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001")) {
+  for await (const reaction of social.communities.actors.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(reaction);
   }
-  const page = await social.communities.actors.reactions.list("cccccccc-cccc-cccc-cccc-cccccccccccc", "aaaaaaaa-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.communities.actors.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.analytics: Community-level analytics rollup: total active actors, published posts, published comments, open flags, and last-7-day windows for each.
 {
-  const communityAnalytics = await social.communities.analytics("cccccccc-cccc-cccc-cccc-cccccccccccc");
+  const communityAnalytics = await social.communities.analytics("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.create: Create an social community. `app_id` is optional — when supplied Social connects the community to an Auth app and refuses if the app belongs to a different workspace (cross-tenant gate) or is already connected. Omit `app_id` for a standalone community (no Auth integration; the customer manages actor identity). Pass an `Idempotency-Key` header to make retries safe.
@@ -32,7 +32,7 @@ const social = new Social();
 
 // communities.delete: Delete a community. Cascades to every actor, post, comment, edge, flag, and notification it owns. Not reversible.
 {
-  await social.communities.delete("cccccccc-cccc-cccc-cccc-cccccccccccc");
+  await social.communities.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.list: List communities in a workspace, newest-first. Cursor-paginated as of task 008 / G13 (previously a bare array). Optional `?q=` substring search (display name OR slug) and `?status=` filter, both composable with each other and with the cursor — the ordering is fixed, so keep the same filters on every follow-up page.
@@ -45,7 +45,7 @@ const social = new Social();
 
 // communities.moderation.actions.create: Apply a moderation action directly, without a preceding flag (task 017). Acts on any target — post/comment (status), direct_message (moderator soft-delete), or actor (ban=suspend / restore=reinstate). Writes a flag_id=null audit row.
 {
-  const moderationAction = await social.communities.moderation.actions.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {
+  const moderationAction = await social.communities.moderation.actions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
     action: "remove",
     target_id: "bbbbbbbb-0000-0000-0000-000000000001",
     target_kind: "direct_message",
@@ -54,145 +54,145 @@ const social = new Social();
 
 // communities.moderation.actors.shadowBan: Apply a shadow ban to an actor. The actor sees their own content normally; everyone else sees nothing from them. Pass `duration_hours` for a timed ban or omit for indefinite. Pass an `Idempotency-Key` header so a retried timed ban doesn't restart the clock.
 {
-  const moderationActor = await social.communities.moderation.actors.shadowBan("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { duration_hours: 168 });
+  const moderationActor = await social.communities.moderation.actors.shadowBan("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { duration_hours: 168 });
 }
 
 // communities.moderation.actors.unshadowBan: Remove a shadow ban. No-op if not currently shadow-banned.
 {
-  const moderationActor = await social.communities.moderation.actors.unshadowBan("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const moderationActor = await social.communities.moderation.actors.unshadowBan("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.moderation.audit.list: Append-only audit of moderator actions in this community. 50/page (max 200), cursor-paginated. Filter by `?action=`, `?actor_id=` (the moderator), and/or the `?since=` / `?until=` window — all optional and composable. The ordering is fixed newest-first, so keep the same filters on every follow-up page.
 {
-  for await (const audit of social.communities.moderation.audit.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const audit of social.communities.moderation.audit.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(audit);
   }
-  const page = await social.communities.moderation.audit.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.audit.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.moderation.blockedTerms.create: Add a hidden word to the community lexicon. A comment whose body contains the term is routed to `action`: `hide` → lands hidden; `pending_approval` → lands in the approve lane. Re-adding a term updates its action. Case-insensitive.
 {
-  const blockedTerm = await social.communities.moderation.blockedTerms.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { term: "spoiler" });
+  const blockedTerm = await social.communities.moderation.blockedTerms.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { term: "spoiler" });
 }
 
 // communities.moderation.blockedTerms.delete: Remove a hidden word. Idempotent — 204 whether or not it existed.
 {
-  await social.communities.moderation.blockedTerms.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "term");
+  await social.communities.moderation.blockedTerms.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "spoiler");
 }
 
 // communities.moderation.blockedTerms.list: List the community hidden-words lexicon, newest-first. Cursor-paginated (50/page, max 200). Optional `?q=` substring search over the term, composable with the cursor.
 {
-  for await (const blockedTerm of social.communities.moderation.blockedTerms.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const blockedTerm of social.communities.moderation.blockedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(blockedTerm);
   }
-  const page = await social.communities.moderation.blockedTerms.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.blockedTerms.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.moderation.conversations.list: List every conversation in the community, most-recent-activity first. Moderation-only.
 {
-  for await (const conversation of social.communities.moderation.conversations.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const conversation of social.communities.moderation.conversations.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(conversation);
   }
-  const page = await social.communities.moderation.conversations.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.conversations.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.moderation.conversations.messages.list: List every message in a conversation. Moderation-only.
 {
-  for await (const message of social.communities.moderation.conversations.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "conversation")) {
+  for await (const message of social.communities.moderation.conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(message);
   }
-  const page = await social.communities.moderation.conversations.messages.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "conversation", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.moderation.flags.list: List flags in this community. Filter by ?status=open|dismissed|actioned. 50/page (max 200), cursor-paginated.
 {
-  for await (const flag of social.communities.moderation.flags.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const flag of social.communities.moderation.flags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(flag);
   }
-  const page = await social.communities.moderation.flags.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.flags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.moderation.flags.resolve: Apply a moderation action to a flag. Records an audit entry and updates the target post/comment status. Pass an `Idempotency-Key` header so a retried request records ONE audit entry, not two.
 {
-  const actOnFlag = await social.communities.moderation.flags.resolve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { action: "hide" });
+  const actOnFlag = await social.communities.moderation.flags.resolve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { action: "hide" });
 }
 
 // communities.moderation.shadowBanned.list: List currently shadow-banned actors in this community. 50/page (max 200), cursor-paginated newest-ban first. Optional `?q=` substring search over display name OR external id, composable with the cursor.
 {
-  for await (const shadowBanned of social.communities.moderation.shadowBanned.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const shadowBanned of social.communities.moderation.shadowBanned.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(shadowBanned);
   }
-  const page = await social.communities.moderation.shadowBanned.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.moderation.shadowBanned.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.retrieve: Get one community by id.
 {
-  const community = await social.communities.retrieve("cccccccc-cccc-cccc-cccc-cccccccccccc");
+  const community = await social.communities.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.update: Update community display name, description, settings, or status. Status transitions are unrestricted (active ↔ suspended; archived is terminal in v1).
 {
-  const community = await social.communities.update("cccccccc-cccc-cccc-cccc-cccccccccccc", { description: "string" });
+  const community = await social.communities.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
 // communities.webhooks.endpoints.create: Add a webhook endpoint. Returns its signing secret once.
 {
-  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", { url: "https://api.acme.com/webhooks" });
+  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { url: "https://api.acme.com/webhooks" });
 }
 
 // communities.webhooks.endpoints.delete: Delete a webhook endpoint.
 {
-  await social.communities.webhooks.endpoints.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  await social.communities.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.webhooks.endpoints.list: List webhook endpoints, oldest first.
 {
-  for await (const endpoint of social.communities.webhooks.endpoints.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const endpoint of social.communities.webhooks.endpoints.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(endpoint);
   }
 }
 
 // communities.webhooks.endpoints.retrieve: Get one webhook endpoint (without its secret).
 {
-  const webhookEndpoint = await social.communities.webhooks.endpoints.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6");
+  const webhookEndpoint = await social.communities.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.webhooks.endpoints.rotateSecret: Rotate the signing secret. The new one is returned once.
 {
-  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { grace_hours: 24 });
+  const webhookEndpointWithSecret = await social.communities.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
 }
 
 // communities.webhooks.endpoints.test: Send a test event to this endpoint now and return the result.
 {
-  const webhookDeliveryAttempt = await social.communities.webhooks.endpoints.test("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { event_type: "post.created" });
+  const webhookDeliveryAttempt = await social.communities.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "post.created" });
 }
 
 // communities.webhooks.endpoints.update: Change a webhook endpoint: URL, description, events, on/off.
 {
-  const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "5d1e2f3a-4b5c-4d6e-8f70-8192a3b4c5d6", { description: "Production receiver" });
+  const webhookEndpoint = await social.communities.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Production receiver" });
 }
 
 // communities.webhooks.events.list: List webhook events, newest first (kept for 30 days).
 {
-  for await (const event of social.communities.webhooks.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b")) {
+  for await (const event of social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(event);
   }
-  const page = await social.communities.webhooks.events.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", {}, { timeout: 5_000 });
+  const page = await social.communities.webhooks.events.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // communities.webhooks.events.replay: Send a logged event again, to its endpoints or to one endpoint.
 {
-  const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "event");
+  const replayWebhookEvent = await social.communities.webhooks.events.replay("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.webhooks.events.retrieve: Get one webhook event with every delivery attempt.
 {
-  const webhookEventDetail = await social.communities.webhooks.events.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b", "event");
+  const webhookEventDetail = await social.communities.webhooks.events.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // communities.webhooks.eventTypes.list: List the events an endpoint can subscribe to.
 {
-  const listWebhookEventTypes = await social.communities.webhooks.eventTypes.list("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const listWebhookEventTypes = await social.communities.webhooks.eventTypes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

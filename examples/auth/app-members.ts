@@ -6,15 +6,15 @@ const auth = new Auth();
 
 // members.delete: Remove a member from the app
 {
-  await auth.admin.app("app").members.delete("account");
+  await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // members.list: List app members (PlatformUser view of EndUser memberships)
 {
-  for await (const member of auth.admin.app("app").members.list()) {
+  for await (const member of auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.list()) {
     console.log(member);
   }
-  const page = await auth.admin.app("app").members.list({}, { timeout: 5_000 });
+  const page = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").members.list({}, { timeout: 5_000 });
 }
 
 export {};

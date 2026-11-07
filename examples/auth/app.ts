@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // clone: Create a second app in the same workspace whose configuration matches this one — the "staging app" flow. Copies the auth config, roles, permissions, notification settings and the webhook target (with a NEW signing secret), and optionally tenants. Never copies credentials, end-users, sessions, signing keys, federated provider configs or audit history.
 {
-  const cloneApp = await auth.admin.app("app").clone({ environment: "staging", slug: "acme-app-staging" });
+  const cloneApp = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").clone({ environment: "staging", slug: "acme-app-staging" });
 }
 
 // updateStatus: Update app status (active, suspended, archived)
 {
-  const app = await auth.admin.app("app").updateStatus({ status: "suspended" });
+  const app = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").updateStatus({ status: "suspended" });
 }
 
 export {};

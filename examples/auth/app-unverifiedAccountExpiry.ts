@@ -6,12 +6,12 @@ const auth = new Auth();
 
 // unverifiedAccountExpiry.retrieve: Get the unverified-account expiry setting and how many accounts it deleted in the last 30 days.
 {
-  const unverifiedAccountExpiryStatus = await auth.admin.app("app").unverifiedAccountExpiry.retrieve();
+  const unverifiedAccountExpiryStatus = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").unverifiedAccountExpiry.retrieve();
 }
 
 // unverifiedAccountExpiry.run: Run the unverified-account expiry for this app now (or as a dry run).
 {
-  const unverifiedAccountExpiryRun = await auth.admin.app("app").unverifiedAccountExpiry.run({ dry_run: false });
+  const unverifiedAccountExpiryRun = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").unverifiedAccountExpiry.run({ dry_run: false });
 }
 
 export {};

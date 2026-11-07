@@ -6,7 +6,7 @@ const waitlist = new Waitlist();
 
 // leaderboard.list: Public referral leaderboard: the top entries by honoured referrals, emails masked.
 {
-  const publicLeaderboard = await waitlist.public({ workspace: "workspace", waitlist: "waitlist" }).leaderboard.list();
+  const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "beta" }).leaderboard.list();
 }
 
 export {};

@@ -6,214 +6,214 @@ const social = new Social();
 
 // posts.bookmark: Bookmark a post on behalf of an actor. Idempotent — returns the existing row with `created: false` on retry.
 {
-  const bookmarkToggle = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.bookmark("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+  const bookmarkToggle = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.bookmark("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.comments.approve: Approve a pending_approval comment (restricted-actor pre-moderation). Reserved to the post-author. No-op if already published.
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.approve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment");
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.comments.create: Add a comment on a post. Pass `parent_id` to reply; the depth is computed and capped by the community config. Pass an `Idempotency-Key` header to make retries safe.
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.create("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", { body: "Looks great, shipping today." });
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "Looks great, shipping today." });
 }
 
 // posts.comments.delete: Soft-delete a comment.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.comments.list: List comments on a post. Default returns top-level comments newest-first; pass `parent_id` to expand a thread (oldest-first). Pass `actor_id` so DM-style `author_only` replies surface only to the post-author and the comment-author pair.
 {
-  for await (const comment of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+  for await (const comment of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(comment);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.comments.pin: Pin a top-level comment (post-author only).
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.pin("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", {});
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.pin("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.comments.reactions.create: React to a comment. Idempotent: re-posting the same `(actor, type)` returns the existing row with `created: false`. Multiple reactions per `(actor, comment)` are allowed (different `type` values count separately).
 {
-  const addCommentReaction = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.create("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", { type: "like" });
+  const addCommentReaction = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "like" });
 }
 
 // posts.comments.reactions.delete: Unreact. Idempotent: returns 200 with current `reaction_counts` even if there was nothing to remove.
 {
-  const commentReactionCounts = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", "src_actor", "like");
+  const commentReactionCounts = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 }
 
 // posts.comments.reactions.list: List reactions on a comment, newest-first. Cursor encodes `(created_at, actor_id, type)` so multi-reaction-from-same-actor stays stable.
 {
-  for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001")) {
+  for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(reaction);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.comments.retrieve: Get a single comment by id.
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.retrieve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "bbbbbbbb-0000-0000-0000-000000000001");
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.comments.unpin: Unpin a comment (post-author only).
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.unpin("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", {});
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.unpin("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.comments.update: Update a comment's body, status, or visibility.
 {
-  const comment = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.update("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "comment", { body: "string" });
+  const comment = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.comments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "string" });
 }
 
 // posts.create: Create a post on behalf of an actor. Pass an `Idempotency-Key` header to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h.
 {
-  const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.create({});
+  const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.create({});
 }
 
 // posts.delete: Soft-delete a post. The row is marked `removed`; viewers see 404. Comments and reactions are kept for moderation audit.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.delete("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.insights: Aggregate insights for a post: total views, unique reach, engagement counts, and a daily views/reach series over ?from/?to (default trailing 30 days).
 {
-  const postInsights = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.insights("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+  const postInsights = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.insights("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.list: List posts. Pass `author_id` to filter to a single author. 50/page (max 200), cursor-paginated.
 {
-  for await (const post of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list()) {
+  for await (const post of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list()) {
     console.log(post);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({}, { timeout: 5_000 });
 }
 
 // posts.pollResults: Aggregate poll results for a post.
 {
-  const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.pollResults("bbbbbbbb-0000-0000-0000-000000000001");
+  const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.pollResults("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.quotes.list: List the quote posts of a source post (X-style "show quotes" link).
 {
-  for await (const quote of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+  for await (const quote of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(quote);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.quotes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.reactions.create: React to a post. Idempotent: re-posting the same (actor, type) returns the existing edge with `created: false`.
 {
-  const reaction = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.create("post", { type: "like" });
+  const reaction = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "like" });
 }
 
 // posts.reactions.delete: Unreact. Idempotent: returns 200 with current `reaction_counts` even if there was nothing to remove.
 {
-  const reactionCounts = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.delete("post", "src_actor", "like");
+  const reactionCounts = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 }
 
 // posts.reactions.list: List reactions on a post, newest-first. Cursor encodes `(created_at, actor_id, type)` so multi-reaction-from-same-actor stays stable. Pass `type` to narrow to one reaction type.
 {
-  for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+  for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(reaction);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.recordImpressions: Batch-increment impression (`view_count`) counters on a list of posts. Client-side debounced; missing post ids are silently skipped (so a deleted post mid-batch doesn’t fail the rest). Renamed from `POST /posts/views` (task 008 / G14) to disambiguate from the story-side per-post `/posts/:post_id/views` route.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordImpressions({
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordImpressions({
     post_ids: ["bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "cccccccc-cccc-cccc-cccc-cccccccccccc"],
   });
 }
 
 // posts.recordView: Record a view of a post (idempotent).
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordView("bbbbbbbb-0000-0000-0000-000000000001", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.recordView("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.repost: Repost a source post on behalf of an actor. Idempotent — returns the existing repost row with `created: false` on retry.
 {
-  const createRepost = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.repost("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+  const createRepost = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.repost("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.reposts.list: List the actors who have reposted a source post. Cursor-paginated newest-first. Useful for "X reposted this" UI.
 {
-  for await (const repost of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+  for await (const repost of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(repost);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.reposts.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.retrieve: Get a post by id. Visibility-aware: pass `actor_id` for non-public posts.
 {
-  const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.retrieve("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
+  const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.revisions.list: List a post's edit history. Cursor-paginated by revision_n desc (newest edit first).
 {
-  for await (const revision of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb")) {
+  for await (const revision of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
     console.log(revision);
   }
-  const page = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {}, { timeout: 5_000 });
+  const page = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.revisions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
 // posts.tags.approve: Approve a pending tag (tagged actor only).
 {
-  const postTag = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.approve("post", "tagged_actor", {});
+  const postTag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.tags.delete: Remove a tag (tagged actor or post author).
 {
-  const postTag = await social.community("community").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.delete("post", "tagged_actor", {});
+  const postTag = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.tags.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.unbookmark: Remove a bookmark on behalf of an actor. Idempotent — 204 either way. Pass the actor via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unbookmark("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unbookmark("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.unrepost: Undo my repost of a source post. Idempotent — 204 either way. Pass the actor via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unrepost("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.unrepost("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // posts.update: Update post fields. `pinned` is the highlights toggle for stories; status transitions to `hidden`/`removed` should usually go through the moderation lane.
 {
-  const post = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.update("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", { attributes: {} });
+  const post = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { attributes: {} });
 }
 
 // posts.viewers.list: List viewers of a post (author-only).
 {
-  for await (const viewer of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.viewers.list("bbbbbbbb-0000-0000-0000-000000000001", {})) {
+  for await (const viewer of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.viewers.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
     console.log(viewer);
   }
 }
 
 // posts.voters.list: List voters of a poll (author-only).
 {
-  for await (const voter of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.voters.list("bbbbbbbb-0000-0000-0000-000000000001", {})) {
+  for await (const voter of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.voters.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
     console.log(voter);
   }
 }
 
 // posts.votes.create: Cast or change a vote on a poll.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.create("bbbbbbbb-0000-0000-0000-000000000001", { option_index: 1 });
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { option_index: 1 });
 }
 
 // posts.votes.delete: Retract an actor's vote on a poll.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.delete("bbbbbbbb-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // posts.votes.retrieve: Read an actor's vote on a poll.
 {
-  const result = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.retrieve("bbbbbbbb-0000-0000-0000-000000000001", "aaaaaaaa-0000-0000-0000-000000000002");
+  const result = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.votes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 export {};

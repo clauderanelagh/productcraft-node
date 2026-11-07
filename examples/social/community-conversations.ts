@@ -6,98 +6,98 @@ const social = new Social();
 
 // conversations.create: Open a conversation. Default `kind="direct"` is the naturally-idempotent 1-on-1 path (get-or-create by participant pair). Pass `kind="group"` with `actor_ids` for a multi-participant chat — group creates always insert a new row, so pass an `Idempotency-Key` header to make group-create retries safe.
 {
-  const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.create({});
+  const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.create({});
 }
 
 // conversations.delete: Leave the conversation. Drops the caller's participant row; the conversation is hard-deleted when the last participant leaves. Pass the actor via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.delete("conversation", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.list: List the caller's conversations in this community, most-recent-activity first.
 {
-  for await (const conversation of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.list({})) {
+  for await (const conversation of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.list({})) {
     console.log(conversation);
   }
 }
 
 // conversations.markRead: Mark messages as read up to a given timestamp (default: now()). Sets the caller's `last_read_at`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.markRead("conversation", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.markRead("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.members.create: Add a member to a group conversation. Admin-only. Refuses if the new member has a block with any existing participant.
 {
-  const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.create("conversation", {});
+  const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.members.delete: Remove a participant. Admin-only unless the acting `?actor_id=` equals the target (self-leave).
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.delete("conversation", "member_actor", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.members.update: Update a participant (task 025). Field-level authz: `role` is admin-only; `muted` / `muted_until` / `pinned` are self-only (the caller must be the path actor). The canonical home for participant state.
 {
-  const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.update("conversation", "member_actor");
+  const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.members.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // conversations.messages.create: Send a message in the conversation. Pass an `Idempotency-Key` header to make retries safe — a retried send never delivers the message twice.
 {
-  const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.create("conversation", {});
+  const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.messages.delete: Soft-delete a message. Reserved to the sender; the row stays so the conversation timeline doesn't orphan replies. Reads return body `"(deleted)"`. Pass the sender via `?actor_id=`.
 {
-  await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.delete("conversation", "message", {});
+  await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.messages.list: List messages in the conversation. Default newest-first cursor. Pass `since` (encoded cursor of the last-seen message) to poll for newer messages instead.
 {
-  for await (const message of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.list("conversation", {})) {
+  for await (const message of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
     console.log(message);
   }
 }
 
 // conversations.messages.reactions.create: Add a reaction to a direct message. Idempotent — re-posting the same (actor, type) is a no-op.
 {
-  const directMessageReactionCreated = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.create("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", { type: "heart" });
+  const directMessageReactionCreated = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { type: "heart" });
 }
 
 // conversations.messages.reactions.delete: Remove the (actor, type) reaction. Idempotent — calling on a missing reaction returns the current counts.
 {
-  const directMessageReactionRemoved = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.delete("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", "actor", "like");
+  const directMessageReactionRemoved = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "like");
 }
 
 // conversations.messages.reactions.list: List the reactions on a direct message. Cursor-paginated, newest-first.
 {
-  for await (const reaction of social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.list("11111111-2222-3333-4444-555555555555", "mmmmmmmm-0000-0000-0000-000000000001", {})) {
+  for await (const reaction of social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.reactions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {})) {
     console.log(reaction);
   }
 }
 
 // conversations.messages.retrieve: Fetch a single message (task 024) — resolves a reply target without paging the whole thread. Participant-gated.
 {
-  const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.retrieve("conversation", "message", {});
+  const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.messages.update: Edit a message body. Allowed within 5 minutes of send and only by the sender.
 {
-  const directMessage = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.update("conversation", "message", { body: "edited" });
+  const directMessage = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.messages.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { body: "edited" });
 }
 
 // conversations.retrieve: Get a single conversation by id.
 {
-  const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.retrieve("conversation", {});
+  const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 // conversations.unreadCount: Global unread message count for the caller across every conversation in this community.
 {
-  const unreadCount = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.unreadCount({});
+  const unreadCount = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.unreadCount({});
 }
 
 // conversations.update: Conversation-level update (task 025). Pass `name` to rename a group (admin-only) — the canonical rename home. Participant state (muted / muted_until / pinned) lives on PATCH /:id/members/:member_actor_id.
 {
-  const conversation = await social.community("cccccccc-cccc-cccc-cccc-cccccccccccc").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.update("conversation", {});
+  const conversation = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").conversations.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {});
 }
 
 export {};
