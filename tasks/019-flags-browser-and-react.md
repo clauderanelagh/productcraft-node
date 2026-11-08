@@ -1,4 +1,4 @@
-# 017 — Flags in the browser: `@productcraft/flags` browser entry and `@productcraft/flags-react`
+# 019 — Flags in the browser: `@productcraft/flags` browser entry and `@productcraft/flags-react`
 
 | Field | Value |
 |---|---|
@@ -11,7 +11,7 @@
 ## Context
 
 - Design 8.1 (package rows for the browser entry and flags-react), 8.2 (`FlagsClient`, `snapshot()`, `bootstrap`), 6.3 (CORS on the delivery path; browsers rely on the HTTP cache and must not set `If-None-Match` by hand), 13 (exposure: a key in a browser makes its config public), section 18 row C4.
-- Standard: `docs/sdk-standard.md` section 6 (the local-evaluation row added in 014 covers `packages/flags-react/**` too: extend it), `check-types-resolution`, size budget, the existing browser guard in core (the management client keeps refusing to run in a browser; `FlagsClient` does not use `APIClient`).
+- Standard: `docs/sdk-standard.md` section 6 (the local-evaluation row added in 014 covers `packages/flags-react/**` too: extend it; Notify's task 018 adds an amendment for hand-written browser packages, so reuse whichever lands first instead of writing a second one), `check-types-resolution`, size budget, the existing browser guard in core (the management client keeps refusing to run in a browser; `FlagsClient` does not use `APIClient`).
 
 ## Requirements
 
