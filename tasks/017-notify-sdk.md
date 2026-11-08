@@ -4,7 +4,7 @@
 |---|---|
 | Title | Notify SDK on the generator, with the bound recipient-token client scope |
 | Status | pending |
-| Priority | high (Notify program, step 18 of 27) |
+| Priority | high (Notify program, step 19 of 29) |
 | Dependencies | monorepo `tasks/notify-api/012` deployed (full spec incl. `/v1/client/*` live at `api.notify.productcraft.co`); Flags 015 merged if it lands first (shared umbrella, `PC_BASE_URL`, size budget, workflow lists: rebase, never revert) |
 | Summary | Add Notify as a generated surface: management resources, the browser-safe `notify.client({ token })` scope, typed webhooks, mocks, live smoke, umbrella entry, first release. |
 
@@ -22,6 +22,11 @@
 - `PC_BASE_URL.notify` in `packages/core/src/legacy.ts`; umbrella `pc.notify` + tests; `scripts/size-budget.json` entry (`new Notify({apiKey}).notifications.send(...)` and `notify.client({token}).inbox.list()`); `spec-refresh.yml` host list; `release.yml` comment list; README and CLAUDE.md tables.
 - `scripts/live/notify.mjs`: testing-environment only; sweep stale `sdk-smoke-` resources first; create a throwaway category + type (inbox + email to a throwaway Mail template), upsert recipient `sdk-smoke-<ts>` with `success@simulator.amazonses.com`, send, poll the delivery to `sent`/`delivered`, mint a token, read the inbox through `client()`, mark read, erase the recipient and delete the type in `finally`. ≤ 5 req/s.
 - npm trusted publisher for `@productcraft/notify` configured before the Version Packages merge.
+
+### Review amendments (2026-11-08, `internal_docs/notify/review-decisions.md`)
+
+- Resources from the amended spec: `recipients.bulkUpsert`, `recipients.timeline`, `recipients.preferences.update` (PATCH) and `.replace` (PUT), `notificationTypes.upsertByKey`, `templates.versions/revert`, `notifications.cancelByKey/retract`, `export.retrieve`, `settings.revokeAllTokens`; `dry_run` typed on send; client scope `inbox.interact`, `preferences.update` (PATCH).
+- No JWKS helper (the public route was dropped).
 
 ## Testing
 
