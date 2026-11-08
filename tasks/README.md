@@ -9,4 +9,10 @@ Open backlog for the Node SDK workspace. Same conventions as `monorepo/tasks/`:
 
 ## Current program
 
-None open. The Stripe-grade SDK program (2026-11) is complete: task 012 shipped the last stable releases on 2026-11-07. The standard and the full cross-repo build order are in [`docs/sdk-standard.md`](../docs/sdk-standard.md), section 11, which interleaves these tasks with the monorepo spec tasks (`monorepo/tasks/{monorepo,trawl-api,mail-api,waitlist-api,platform-auth-api,social-api,users-api,console,productcraft-co}/`). Each product task depends on its API's spec task being deployed; 001-003 do not wait for them. There is no 011 (folded into 003, 004 and 012).
+**Flags (2026-11-08).** A new product, ProductCraft Flags (ConfigCat-style feature flags with local evaluation). Spec: `monorepo/internal_docs/flags/prd.md` and `design.md`; the cross-repo build order is design section 15. The SDK tasks here are:
+
+- `014-flags-engine-and-vectors.md`: `@productcraft/flags-engine` (pure engine, spec, vectors) and the SDK-standard amendment for local-evaluation code. Can start now.
+- `015-flags-sdk.md`: `@productcraft/flags` (generated management client + `FlagsClient`). Needs 014 and the monorepo flags-api SDK-grade spec deployed.
+- `016-flags-openfeature-provider.md`: `@productcraft/flags-openfeature`. Needs 015.
+
+The previous program (Stripe-grade SDKs, 2026-11) is complete: task 012 shipped the last stable releases on 2026-11-07; its build order is in [`docs/sdk-standard.md`](../docs/sdk-standard.md) section 11. 013 (local webhook loop) is independent.
