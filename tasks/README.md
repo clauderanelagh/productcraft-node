@@ -14,5 +14,6 @@ Open backlog for the Node SDK workspace. Same conventions as `monorepo/tasks/`:
 - `014-flags-engine-and-vectors.md`: `@productcraft/flags-engine` (pure engine, spec, vectors) and the SDK-standard amendment for local-evaluation code. Can start now.
 - `015-flags-sdk.md`: `@productcraft/flags` (generated management client + `FlagsClient`). Needs 014 and the monorepo flags-api SDK-grade spec deployed.
 - `016-flags-openfeature-provider.md`: `@productcraft/flags-openfeature`. Needs 015.
+- `017-flags-browser-and-react.md`: the browser entry of `@productcraft/flags` and `@productcraft/flags-react`. Needs 015 (added after the 2026-11-08 reviews, design section 18).
 
 The previous program (Stripe-grade SDKs, 2026-11) is complete: task 012 shipped the last stable releases on 2026-11-07; its build order is in [`docs/sdk-standard.md`](../docs/sdk-standard.md) section 11. 013 (local webhook loop) is independent.

@@ -4,7 +4,7 @@
 |---|---|
 | Title | OpenFeature provider over `FlagsClient` |
 | Status | pending |
-| Priority | high (Flags program, step 15 of 23) |
+| Priority | high (Flags program, step 16 of 26) |
 | Dependencies | 015 published |
 | Summary | Ship `ProductCraftFlagsProvider` for `@openfeature/server-sdk` as its own package (PRD P13), mapping context, reasons, error codes, variants and events. |
 
