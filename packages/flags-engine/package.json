@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/flags-engine",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "The ProductCraft Flags evaluation engine: parses a config JSON and evaluates feature flags and settings locally, synchronously and with zero dependencies. Ships the spec, the JSON Schema and the test vectors.",
   "type": "module",
   "main": "./dist/index.cjs",
