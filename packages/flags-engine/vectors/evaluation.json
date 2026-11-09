@@ -1,0 +1,3179 @@
+{
+  "format": 1,
+  "engine_schema": 1,
+  "description": "The algorithm: rule order, AND short-circuit, STATIC/DEFAULT, type mismatch, unknown keys, the user shape, splits (buckets 0 and 99, 0% and 100% options, seed != key, missing and empty percentage attribute at rule and flag level), segments, prerequisites (chain, cycle, depth), prototype names.",
+  "suites": [
+    {
+      "name": "rule order, AND short-circuit, STATIC and DEFAULT",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "first_match": {
+            "type": "string",
+            "value": "none",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "one_of",
+                      "values": [
+                        "PT"
+                      ]
+                    }
+                  }
+                ],
+                "serve": "a"
+              },
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "one_of",
+                      "values": [
+                        "PT",
+                        "ES"
+                      ]
+                    }
+                  }
+                ],
+                "serve": "b"
+              }
+            ]
+          },
+          "and_stops_at_false": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "eq",
+                      "values": [
+                        "PT"
+                      ]
+                    }
+                  },
+                  {
+                    "user": {
+                      "attribute": "plan",
+                      "comparator": "eq",
+                      "values": [
+                        "pro"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "static_flag": {
+            "type": "boolean",
+            "value": true
+          },
+          "static_string": {
+            "type": "string",
+            "value": "héllo ☃"
+          },
+          "static_int": {
+            "type": "integer",
+            "value": 9007199254740991
+          },
+          "static_number": {
+            "type": "number",
+            "value": -0.25
+          },
+          "static_json": {
+            "type": "json",
+            "value": "{\"max\":5}"
+          },
+          "empty_rules": {
+            "type": "boolean",
+            "value": true,
+            "rules": []
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "first matching rule wins",
+          "key": "first_match",
+          "default": "x",
+          "user": {
+            "country": "PT"
+          },
+          "expect": {
+            "value": "a",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "second rule",
+          "key": "first_match",
+          "default": "x",
+          "user": {
+            "country": "ES"
+          },
+          "expect": {
+            "value": "b",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 1,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:1"
+          }
+        },
+        {
+          "name": "no rule matches: DEFAULT",
+          "key": "first_match",
+          "default": "x",
+          "user": {
+            "country": "FR"
+          },
+          "expect": {
+            "value": "none",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "both conditions true",
+          "key": "and_stops_at_false",
+          "default": false,
+          "user": {
+            "country": "PT",
+            "plan": "pro"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "first condition false: the second is not evaluated (no warning for the missing plan)",
+          "key": "and_stops_at_false",
+          "default": false,
+          "user": {
+            "country": "ES"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "first condition true, second soft miss",
+          "key": "and_stops_at_false",
+          "default": false,
+          "user": {
+            "country": "PT"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "first condition soft miss stops the rule",
+          "key": "and_stops_at_false",
+          "default": false,
+          "user": {
+            "plan": "free"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "STATIC boolean",
+          "key": "static_flag",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "STATIC string, non-ASCII",
+          "key": "static_string",
+          "default": "",
+          "user": null,
+          "expect": {
+            "value": "héllo ☃",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "STATIC integer (max safe)",
+          "key": "static_int",
+          "default": 0,
+          "user": null,
+          "expect": {
+            "value": 9007199254740991,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "STATIC number",
+          "key": "static_number",
+          "default": 0,
+          "user": null,
+          "expect": {
+            "value": -0.25,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "STATIC json ships as text",
+          "key": "static_json",
+          "default": "{}",
+          "user": null,
+          "expect": {
+            "value": "{\"max\":5}",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "rules: [] is STATIC",
+          "key": "empty_rules",
+          "default": false,
+          "user": {},
+          "expect": {
+            "value": true,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "null default skips the type check",
+          "key": "static_int",
+          "default": null,
+          "user": null,
+          "expect": {
+            "value": 9007199254740991,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "type mismatch and unknown keys",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "b": {
+            "type": "boolean",
+            "value": true
+          },
+          "s": {
+            "type": "string",
+            "value": "x"
+          },
+          "i": {
+            "type": "integer",
+            "value": 3
+          },
+          "n": {
+            "type": "number",
+            "value": 1.5
+          },
+          "j": {
+            "type": "json",
+            "value": "[1]"
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "boolean setting, string default",
+          "key": "b",
+          "default": "true",
+          "user": null,
+          "expect": {
+            "value": "true",
+            "reason": "ERROR",
+            "error_code": "TYPE_MISMATCH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "boolean setting, number default",
+          "key": "b",
+          "default": 1,
+          "user": null,
+          "expect": {
+            "value": 1,
+            "reason": "ERROR",
+            "error_code": "TYPE_MISMATCH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "string setting, boolean default",
+          "key": "s",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "TYPE_MISMATCH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "integer setting accepts a fractional number default",
+          "key": "i",
+          "default": 1.5,
+          "user": null,
+          "expect": {
+            "value": 3,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "number setting accepts an integer default",
+          "key": "n",
+          "default": 2,
+          "user": null,
+          "expect": {
+            "value": 1.5,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "integer setting, string default",
+          "key": "i",
+          "default": "3",
+          "user": null,
+          "expect": {
+            "value": "3",
+            "reason": "ERROR",
+            "error_code": "TYPE_MISMATCH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "json setting takes a string default",
+          "key": "j",
+          "default": "[]",
+          "user": null,
+          "expect": {
+            "value": "[1]",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "json setting, object default",
+          "key": "j",
+          "default": {},
+          "user": null,
+          "expect": {
+            "value": {},
+            "reason": "ERROR",
+            "error_code": "TYPE_MISMATCH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "unknown key",
+          "key": "missing",
+          "default": "fallback",
+          "user": null,
+          "expect": {
+            "value": "fallback",
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "unknown key, null default",
+          "key": "missing",
+          "default": null,
+          "user": null,
+          "expect": {
+            "value": null,
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "keys are case-sensitive",
+          "key": "B",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "user shape: custom, flat, both",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "plan_pro": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "plan",
+                      "comparator": "one_of",
+                      "values": [
+                        "pro"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "email_acme": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "email",
+                      "comparator": "ends_with_any",
+                      "values": [
+                        "@acme.com"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "identifier_u1": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "identifier",
+                      "comparator": "eq",
+                      "values": [
+                        "u1"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "country_pt": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "eq",
+                      "values": [
+                        "PT"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "custom.plan",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "identifier": "u1",
+            "custom": {
+              "plan": "pro"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "flat plan",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "identifier": "u1",
+            "plan": "pro"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "both present: custom wins (match)",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "plan": "free",
+            "custom": {
+              "plan": "pro"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "both present: custom wins (no match)",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "custom": {
+              "plan": "free"
+            }
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "custom without the attribute falls back to the top level",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "custom": {
+              "other": "x"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "custom: null falls back to the top level",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "custom": null
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "custom.plan empty is missing (no fallback to the top level)",
+          "key": "plan_pro",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "custom": {
+              "plan": ""
+            }
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "email reads the top level",
+          "key": "email_acme",
+          "default": false,
+          "user": {
+            "email": "ada@acme.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "email never reads custom",
+          "key": "email_acme",
+          "default": false,
+          "user": {
+            "custom": {
+              "email": "ada@acme.com"
+            }
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "identifier never reads custom",
+          "key": "identifier_u1",
+          "default": false,
+          "user": {
+            "identifier": "u2",
+            "custom": {
+              "identifier": "u1"
+            }
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "country reads the top level",
+          "key": "country_pt",
+          "default": false,
+          "user": {
+            "country": "PT",
+            "custom": {
+              "country": "ES"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "empty user object",
+          "key": "plan_pro",
+          "default": false,
+          "user": {},
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "percentage splits",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "new_checkout": {
+            "type": "boolean",
+            "value": false,
+            "percentages": [
+              {
+                "percentage": 10,
+                "value": true
+              },
+              {
+                "percentage": 90,
+                "value": false
+              }
+            ]
+          },
+          "seeded_copy": {
+            "type": "boolean",
+            "value": false,
+            "seed": "new_checkout",
+            "percentages": [
+              {
+                "percentage": 10,
+                "value": true
+              },
+              {
+                "percentage": 90,
+                "value": false
+              }
+            ]
+          },
+          "unseeded_dark": {
+            "type": "boolean",
+            "value": false,
+            "seed": "dark_mode",
+            "percentages": [
+              {
+                "percentage": 50,
+                "value": true
+              },
+              {
+                "percentage": 50,
+                "value": false
+              }
+            ]
+          },
+          "edges": {
+            "type": "string",
+            "value": "none",
+            "seed": "split_edges",
+            "percentages": [
+              {
+                "percentage": 1,
+                "value": "a"
+              },
+              {
+                "percentage": 98,
+                "value": "b"
+              },
+              {
+                "percentage": 1,
+                "value": "c"
+              }
+            ]
+          },
+          "zero_first": {
+            "type": "boolean",
+            "value": true,
+            "percentages": [
+              {
+                "percentage": 0,
+                "value": true
+              },
+              {
+                "percentage": 100,
+                "value": false
+              }
+            ]
+          },
+          "hundred_first": {
+            "type": "boolean",
+            "value": false,
+            "percentages": [
+              {
+                "percentage": 100,
+                "value": true
+              },
+              {
+                "percentage": 0,
+                "value": false
+              }
+            ]
+          },
+          "by_account": {
+            "type": "string",
+            "value": "control",
+            "percentage_attribute": "account_id",
+            "seed": "new_checkout",
+            "percentages": [
+              {
+                "percentage": 10,
+                "value": "x"
+              },
+              {
+                "percentage": 90,
+                "value": "y"
+              }
+            ]
+          },
+          "rule_split": {
+            "type": "boolean",
+            "value": false,
+            "seed": "new_checkout",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "eq",
+                      "values": [
+                        "PT"
+                      ]
+                    }
+                  }
+                ],
+                "percentages": [
+                  {
+                    "percentage": 10,
+                    "value": true
+                  },
+                  {
+                    "percentage": 90,
+                    "value": false
+                  }
+                ]
+              },
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "country",
+                      "comparator": "eq",
+                      "values": [
+                        "PT"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ],
+            "percentages": [
+              {
+                "percentage": 10,
+                "value": true
+              },
+              {
+                "percentage": 90,
+                "value": false
+              }
+            ]
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "user-1 buckets 85: second option",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "identifier": "user-1"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "user-2 buckets 7: first option",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "identifier": "user-2"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "multibyte identifier buckets 24",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "identifier": "jürgen@example.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "seed != key: the seed decides (user-2 under seed new_checkout)",
+          "key": "seeded_copy",
+          "default": false,
+          "user": {
+            "identifier": "user-2"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "seed dark_mode, user-1 buckets 82",
+          "key": "unseeded_dark",
+          "default": false,
+          "user": {
+            "identifier": "user-1"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "seed dark_mode, user-3 buckets 27",
+          "key": "unseeded_dark",
+          "default": false,
+          "user": {
+            "identifier": "user-3"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "bucket 0 picks the first 1% option",
+          "key": "edges",
+          "default": "",
+          "user": {
+            "identifier": "u38"
+          },
+          "expect": {
+            "value": "a",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "bucket 98 picks the middle option",
+          "key": "edges",
+          "default": "",
+          "user": {
+            "identifier": "u21"
+          },
+          "expect": {
+            "value": "b",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "bucket 99 picks the last 1% option",
+          "key": "edges",
+          "default": "",
+          "user": {
+            "identifier": "u53"
+          },
+          "expect": {
+            "value": "c",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 2,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:2"
+          }
+        },
+        {
+          "name": "a 0% option is never chosen (bucket 0)",
+          "key": "zero_first",
+          "default": true,
+          "user": {
+            "identifier": "u348"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "a 100% option is always chosen (bucket 99)",
+          "key": "hundred_first",
+          "default": false,
+          "user": {
+            "identifier": "u78"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "custom percentage attribute account_id=acct-1 (bucket 72)",
+          "key": "by_account",
+          "default": "",
+          "user": {
+            "identifier": "user-2",
+            "custom": {
+              "account_id": "acct-1"
+            }
+          },
+          "expect": {
+            "value": "y",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "custom percentage attribute account_id=acct-2 (bucket 47)",
+          "key": "by_account",
+          "default": "",
+          "user": {
+            "identifier": "user-2",
+            "custom": {
+              "account_id": "acct-2"
+            }
+          },
+          "expect": {
+            "value": "y",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "flat percentage attribute",
+          "key": "by_account",
+          "default": "",
+          "user": {
+            "account_id": "acct-1"
+          },
+          "expect": {
+            "value": "y",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "number percentage attribute is hashed as its text",
+          "key": "by_account",
+          "default": "",
+          "user": {
+            "account_id": 1.5
+          },
+          "expect": {
+            "value": "y",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "flag level: missing identifier skips the split",
+          "key": "new_checkout",
+          "default": true,
+          "user": {},
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "flag level: empty identifier skips the split (no bucket for \"\")",
+          "key": "new_checkout",
+          "default": true,
+          "user": {
+            "identifier": ""
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "flag level: no user skips the split",
+          "key": "new_checkout",
+          "default": true,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "flag level: missing custom percentage attribute (identifier present)",
+          "key": "by_account",
+          "default": "",
+          "user": {
+            "identifier": "user-2"
+          },
+          "expect": {
+            "value": "control",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "rule level split",
+          "key": "rule_split",
+          "default": false,
+          "user": {
+            "identifier": "user-2",
+            "country": "PT"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": 0,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0/pct:0"
+          }
+        },
+        {
+          "name": "rule level split, other option",
+          "key": "rule_split",
+          "default": true,
+          "user": {
+            "identifier": "user-1",
+            "country": "PT"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": 0,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0/pct:1"
+          }
+        },
+        {
+          "name": "rule level: missing identifier skips the rule, the next rule serves",
+          "key": "rule_split",
+          "default": false,
+          "user": {
+            "country": "PT"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 1,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:1",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "rule level: empty identifier skips the rule",
+          "key": "rule_split",
+          "default": false,
+          "user": {
+            "country": "PT",
+            "identifier": ""
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 1,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:1",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "rule and flag level share the hash (same option for the same user)",
+          "key": "rule_split",
+          "default": true,
+          "user": {
+            "identifier": "user-2",
+            "country": "ES"
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "segments",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {
+          "acme_staff": {
+            "seed": "acme_staff_old",
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "email",
+                  "comparator": "ends_with_any",
+                  "values": [
+                    "@acme.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "pro_pt": {
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "plan",
+                  "comparator": "eq",
+                  "values": [
+                    "pro"
+                  ]
+                }
+              },
+              {
+                "user": {
+                  "attribute": "country",
+                  "comparator": "eq",
+                  "values": [
+                    "PT"
+                  ]
+                }
+              }
+            ]
+          },
+          "vip": {
+            "seed": "vip_seed",
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "email",
+                  "comparator": "one_of_hashed",
+                  "values": [
+                    "a62e7a15704e6cb7fb618007380e8eff76b0c054d340bd2f93de107f7760621e"
+                  ]
+                }
+              }
+            ]
+          },
+          "vip_wrong_context": {
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "email",
+                  "comparator": "one_of_hashed",
+                  "values": [
+                    "e1c9035bb87c8ab88e9962d43ed732d65a5205cef183fd95b8832d4ee6e12c90"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "settings": {
+          "staff_in": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "acme_staff",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "staff_not_in": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "acme_staff",
+                      "comparator": "not_in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "pro_pt_in": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "pro_pt",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "pro_pt_not_in": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "pro_pt",
+                      "comparator": "not_in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "uses_vip": {
+            "type": "boolean",
+            "value": false,
+            "seed": "setting_seed",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "vip",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "uses_vip_wrong": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "vip_wrong_context",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "unknown_seg_cmp": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "acme_staff",
+                      "comparator": "maybe_in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "in: match",
+          "key": "staff_in",
+          "default": false,
+          "user": {
+            "email": "a@acme.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "in: no match",
+          "key": "staff_in",
+          "default": false,
+          "user": {
+            "email": "a@x.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "not_in: match",
+          "key": "staff_not_in",
+          "default": false,
+          "user": {
+            "email": "a@x.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "not_in: no match",
+          "key": "staff_not_in",
+          "default": false,
+          "user": {
+            "email": "a@acme.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "in, missing attribute: soft miss",
+          "key": "staff_in",
+          "default": false,
+          "user": {
+            "identifier": "u"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "not_in, missing attribute: soft miss (not a match)",
+          "key": "staff_not_in",
+          "default": false,
+          "user": {
+            "identifier": "u"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "not_in, no user: soft miss",
+          "key": "staff_not_in",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_user"
+            ]
+          }
+        },
+        {
+          "name": "segment conditions AND",
+          "key": "pro_pt_in",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "country": "PT"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "segment conditions AND: one false",
+          "key": "pro_pt_in",
+          "default": false,
+          "user": {
+            "plan": "pro",
+            "country": "ES"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "not_in with a false first condition matches",
+          "key": "pro_pt_not_in",
+          "default": false,
+          "user": {
+            "plan": "free"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "not_in: first true, second missing is a soft miss",
+          "key": "pro_pt_not_in",
+          "default": false,
+          "user": {
+            "plan": "pro"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "hashed segment condition: the context is the segment's seed",
+          "key": "uses_vip",
+          "default": false,
+          "user": {
+            "email": "ada@acme.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "hashed segment condition: hashed with the setting key does not match",
+          "key": "uses_vip_wrong",
+          "default": false,
+          "user": {
+            "email": "ada@acme.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "unknown segment comparator: soft miss",
+          "key": "unknown_seg_cmp",
+          "default": false,
+          "user": {
+            "email": "a@acme.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "unknown_comparator"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "prerequisites",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "p0": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p1",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p1": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p2",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p2": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p3",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p3": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p4",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p4": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p5",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p5": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p6",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p6": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p7",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p7": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p8",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p8": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p9",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p9": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p10",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p10": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p11",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p11": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p12",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p12": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p13",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p13": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p14",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p14": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p15",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p15": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p16",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p16": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "p17",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "p17": {
+            "type": "boolean",
+            "value": true
+          },
+          "cyc_a": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "cyc_b",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "cyc_b": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "cyc_a",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "self": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "self",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "uses_cycle": {
+            "type": "string",
+            "value": "x",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "cyc_a",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": "y"
+              }
+            ]
+          },
+          "missing_pre": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "nope",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "mode": {
+            "type": "string",
+            "value": "off",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "plan",
+                      "comparator": "eq",
+                      "values": [
+                        "pro"
+                      ]
+                    }
+                  }
+                ],
+                "serve": "on"
+              }
+            ]
+          },
+          "needs_mode_on": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "mode",
+                      "comparator": "eq",
+                      "value": "on"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "needs_mode_not_off": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "mode",
+                      "comparator": "neq",
+                      "value": "off"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "limit": {
+            "type": "integer",
+            "value": 5
+          },
+          "needs_limit_5": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "limit",
+                      "comparator": "eq",
+                      "value": 5
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "split_parent": {
+            "type": "boolean",
+            "value": false,
+            "seed": "new_checkout",
+            "percentages": [
+              {
+                "percentage": 10,
+                "value": true
+              },
+              {
+                "percentage": 90,
+                "value": false
+              }
+            ]
+          },
+          "needs_split": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "split_parent",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "pre_unknown_cmp": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "limit",
+                      "comparator": "gt",
+                      "value": 1
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "diamond": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "needs_mode_on",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  },
+                  {
+                    "prerequisite": {
+                      "setting": "needs_mode_not_off",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "16 hops below the key is allowed",
+          "key": "p1",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "17 hops: PREREQUISITE_DEPTH",
+          "key": "p0",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_DEPTH",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "two-setting cycle",
+          "key": "cyc_a",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_CYCLE",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "self cycle",
+          "key": "self",
+          "default": true,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_CYCLE",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "a cycle below the key",
+          "key": "uses_cycle",
+          "default": "d",
+          "user": null,
+          "expect": {
+            "value": "d",
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_CYCLE",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "missing prerequisite",
+          "key": "missing_pre",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "prerequisite evaluated for the same user: eq match",
+          "key": "needs_mode_on",
+          "default": false,
+          "user": {
+            "plan": "pro"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "eq no match (the prerequisite's soft miss is reported)",
+          "key": "needs_mode_on",
+          "default": false,
+          "user": {},
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "neq",
+          "key": "needs_mode_not_off",
+          "default": false,
+          "user": {
+            "plan": "pro"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "neq no match",
+          "key": "needs_mode_not_off",
+          "default": false,
+          "user": {
+            "plan": "free"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "integer prerequisite",
+          "key": "needs_limit_5",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "prerequisite split: user-2",
+          "key": "needs_split",
+          "default": false,
+          "user": {
+            "identifier": "user-2"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "prerequisite split: user-1",
+          "key": "needs_split",
+          "default": false,
+          "user": {
+            "identifier": "user-1"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "unknown prerequisite comparator: soft miss",
+          "key": "pre_unknown_cmp",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "unknown_comparator"
+            ]
+          }
+        },
+        {
+          "name": "diamond (the shared prerequisite is evaluated once)",
+          "key": "diamond",
+          "default": false,
+          "user": {
+            "plan": "pro"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        }
+      ]
+    },
+    {
+      "name": "prototype names are ordinary keys",
+      "config": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {
+          "__proto__": {
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "constructor",
+                  "comparator": "eq",
+                  "values": [
+                    "c"
+                  ]
+                }
+              }
+            ]
+          },
+          "constructor": {
+            "conditions": [
+              {
+                "user": {
+                  "attribute": "__proto__",
+                  "comparator": "eq",
+                  "values": [
+                    "p"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "settings": {
+          "constructor": {
+            "type": "string",
+            "value": "x",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "toString",
+                      "comparator": "eq",
+                      "values": [
+                        "y"
+                      ]
+                    }
+                  }
+                ],
+                "serve": "z"
+              }
+            ]
+          },
+          "toString": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "__proto__",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "__proto__": {
+            "type": "boolean",
+            "value": true,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "constructor",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": false
+              }
+            ]
+          },
+          "hasOwnProperty": {
+            "type": "string",
+            "value": "h",
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "hasOwnProperty",
+                      "comparator": "eq",
+                      "values": [
+                        "1"
+                      ]
+                    }
+                  }
+                ],
+                "serve": "own"
+              }
+            ]
+          },
+          "valueOf": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "__proto__",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          },
+          "isPrototypeOf_pre": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "isPrototypeOf",
+                      "comparator": "eq",
+                      "value": true
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "cases": [
+        {
+          "name": "setting constructor, attribute toString inherited: missing",
+          "key": "constructor",
+          "default": "",
+          "user": {},
+          "expect": {
+            "value": "x",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "setting constructor, own attribute toString",
+          "key": "constructor",
+          "default": "",
+          "user": {
+            "toString": "y"
+          },
+          "expect": {
+            "value": "z",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "setting toString, segment __proto__ with attribute constructor (missing)",
+          "key": "toString",
+          "default": false,
+          "user": {
+            "identifier": "u"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "segment __proto__ with own attribute constructor",
+          "key": "toString",
+          "default": false,
+          "user": {
+            "constructor": "c"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "segment __proto__, attribute constructor in custom",
+          "key": "toString",
+          "default": false,
+          "user": {
+            "custom": {
+              "constructor": "c"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "setting __proto__, segment constructor, own attribute __proto__",
+          "key": "__proto__",
+          "default": true,
+          "user": {
+            "__proto__": "p"
+          },
+          "expect": {
+            "value": false,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "setting __proto__, attribute __proto__ missing",
+          "key": "__proto__",
+          "default": true,
+          "user": {},
+          "expect": {
+            "value": true,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "setting hasOwnProperty, own attribute hasOwnProperty",
+          "key": "hasOwnProperty",
+          "default": "",
+          "user": {
+            "hasOwnProperty": "1"
+          },
+          "expect": {
+            "value": "own",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "setting valueOf, prerequisite __proto__",
+          "key": "valueOf",
+          "default": false,
+          "user": {},
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "prerequisite isPrototypeOf is not in the config",
+          "key": "isPrototypeOf_pre",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "PREREQUISITE_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "unknown key isPrototypeOf",
+          "key": "isPrototypeOf",
+          "default": "d",
+          "user": null,
+          "expect": {
+            "value": "d",
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        },
+        {
+          "name": "unknown key __defineGetter__",
+          "key": "__defineGetter__",
+          "default": "d",
+          "user": null,
+          "expect": {
+            "value": "d",
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        }
+      ]
+    }
+  ]
+}

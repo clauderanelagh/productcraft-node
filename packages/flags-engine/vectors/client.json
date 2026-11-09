@@ -1,0 +1,714 @@
+{
+  "format": 1,
+  "engine_schema": 1,
+  "description": "Scripted delivery transcripts for the SDK's fetch loop (run against a mock server by @productcraft/flags). Each step is one poll: the request the SDK must send, the server's response, and what the SDK holds afterwards. `held: null` means no config yet. The engine's own tests check every accept/ignore decision with isNewerConfig.",
+  "suites": [],
+  "invalid_configs": [],
+  "client": [
+    {
+      "name": "304 reuses the held config",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"aaa\"",
+              "x-pc-config-revision": "3",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 3,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 3,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"aaa\""
+          },
+          "response": {
+            "status": 304,
+            "headers": {
+              "etag": "W/\"aaa\""
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 3,
+              "generation": 1
+            },
+            "accepted": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a lower revision within a generation is ignored",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"r5\"",
+              "x-pc-config-revision": "5",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 5,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 5,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"r5\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"r4\"",
+              "x-pc-config-revision": "4",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 4,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 5,
+              "generation": 1
+            },
+            "accepted": false,
+            "if_none_match_next": "W/\"r5\""
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"r5\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"r5\"",
+              "x-pc-config-revision": "5",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 5,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 5,
+              "generation": 1
+            },
+            "accepted": false
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"r5\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"r6\"",
+              "x-pc-config-revision": "6",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 6,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 6,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "a new generation with a lower revision is accepted (database restore)",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"g1r42\"",
+              "x-pc-config-revision": "42",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 42,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 42,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"g1r42\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"g2r40\"",
+              "x-pc-config-revision": "40",
+              "x-pc-config-generation": "2"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 40,
+              "generation": 2,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": false
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 40,
+              "generation": 2
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"g2r40\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"g2r39\"",
+              "x-pc-config-revision": "39",
+              "x-pc-config-generation": "2"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 39,
+              "generation": 2,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 40,
+              "generation": 2
+            },
+            "accepted": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "404 keeps the cache and marks the key invalid",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"x\"",
+              "x-pc-config-revision": "1",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 1,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"x\""
+          },
+          "response": {
+            "status": 404,
+            "headers": {
+              "cache-control": "public, max-age=60"
+            },
+            "body": {
+              "error": {
+                "code": "SDK_KEY_NOT_FOUND"
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": false,
+            "state": "key_invalid"
+          }
+        }
+      ]
+    },
+    {
+      "name": "429 honours Retry-After",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"x\"",
+              "x-pc-config-revision": "1",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 1,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"x\""
+          },
+          "response": {
+            "status": 429,
+            "headers": {
+              "retry-after": "120"
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": false,
+            "next_poll_at_least_s": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "a body over 2 MiB is rejected before parsing",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"x\"",
+              "x-pc-config-revision": "1",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 1,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"x\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"big\"",
+              "x-pc-config-revision": "2",
+              "x-pc-config-generation": "1"
+            },
+            "body_size": 2097153
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": false,
+            "error": "too_large"
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unparsable body keeps the held config",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"x\"",
+              "x-pc-config-revision": "1",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 1,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "base_urls": [
+                  "https://api.flags.productcraft.co"
+                ],
+                "mode": "hint"
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": true
+          }
+        },
+        {
+          "request": {
+            "if_none_match": "W/\"x\""
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"y\""
+            },
+            "body": "{\"schema\":2}"
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": false,
+            "error": "UNSUPPORTED_SCHEMA"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bad base_urls entries are dropped",
+      "steps": [
+        {
+          "request": {
+            "if_none_match": null
+          },
+          "response": {
+            "status": 200,
+            "headers": {
+              "etag": "W/\"x\"",
+              "x-pc-config-revision": "1",
+              "x-pc-config-generation": "1"
+            },
+            "body": {
+              "schema": 1,
+              "revision": 1,
+              "generation": 1,
+              "published_at": "2026-11-08T14:02:11Z",
+              "config_id": "11111111-1111-4111-8111-111111111111",
+              "environment_id": "22222222-2222-4222-8222-222222222222",
+              "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+              "delivery": {
+                "mode": "hint",
+                "base_urls": [
+                  "https://evil.example.com",
+                  "http://api.flags.productcraft.co",
+                  "https://api.flags.productcraft.co.evil.com",
+                  "https://user@api.flags.productcraft.co",
+                  "https://api.flags.productcraft.co:8443",
+                  "https://productcraft.co.evil.com",
+                  "https://cdn.flags.productcraft.co/prefix",
+                  "javascript:alert(1)",
+                  "not a url",
+                  "https://cdn.flags.productcraft.co",
+                  "https://api.flags.productcraft.co"
+                ]
+              },
+              "segments": {},
+              "settings": {
+                "flag": {
+                  "type": "boolean",
+                  "value": true
+                }
+              }
+            }
+          },
+          "expect": {
+            "held": {
+              "revision": 1,
+              "generation": 1
+            },
+            "accepted": true,
+            "base_urls": [
+              "https://cdn.flags.productcraft.co",
+              "https://api.flags.productcraft.co"
+            ],
+            "warnings": 9
+          }
+        }
+      ]
+    }
+  ]
+}

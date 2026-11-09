@@ -1,0 +1,66 @@
+{
+  "name": "@productcraft/flags-engine",
+  "version": "0.0.0",
+  "description": "The ProductCraft Flags evaluation engine: parses a config JSON and evaluates feature flags and settings locally, synchronously and with zero dependencies. Ships the spec, the JSON Schema and the test vectors.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./schema/config.schema.json": "./schema/config.schema.json",
+    "./vectors/*": "./vectors/*",
+    "./package.json": "./package.json"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist/**",
+    "schema/**",
+    "vectors/**",
+    "SPEC.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "productcraft",
+    "feature-flags",
+    "feature-toggles",
+    "remote-config",
+    "sdk"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/flags-engine"
+  },
+  "homepage": "https://github.com/clauderanelagh/productcraft-node/tree/main/packages/flags-engine",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "devDependencies": {
+    "ajv": "8.18.0",
+    "ajv-formats": "3.0.1"
+  }
+}

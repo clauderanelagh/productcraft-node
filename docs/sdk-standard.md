@@ -277,6 +277,7 @@ Hand-written code is limited to an allowlist (`scripts/handwritten-allowlist.jso
 | Auth `verifyToken` (JWKS cache, issuer and audience pinning, refresh-token refusal, the JWT error hierarchy), passkey ceremony helpers (`passkeys.enroll/signIn/stepUp/completeMfaChallenge`), `oauth.clientCredentials` convenience, `auth-passport` | Client-side cryptography and browser ceremonies that are not HTTP calls. |
 | Auth compat data: `packages/auth/compat.json` (frozen map of 0.6.x and 0.8.0 names to operationIds) | Data, not code: `compat.ts` is generated from it. Kept for the life of Auth 1.x, deleted in 2.0. |
 | `umbrella/src/index.ts` | Composes the products. |
+| Flags local evaluation (`packages/flags-engine/src/**`, `packages/flags/src/client/**`, `packages/flags-openfeature/**`) | Evaluation, polling and caching run in the customer's process, not over HTTP: the engine evaluates a downloaded config JSON locally (its normative spec is `packages/flags-engine/SPEC.md`, its tests the shipped vectors), `FlagsClient` fetches and caches that config, and the OpenFeature provider adapts it. The Flags management API stays generated like every other product. |
 
 Everything else (every method, param type, JSDoc, README reference section, example and test mock) is generated. Adding an endpoint is a monorepo change plus a spec refresh, with zero SDK edits.
 
@@ -377,6 +378,16 @@ The former task 011 (generated docs) is folded into 003 (the generator emits eve
 - Zod input for Trawl typed results (`jobs.create({ schema: zodSchema })`): the generic `createAndPoll<T>` ships now; zod support would add a peer dependency.
 
 ## 13. Decision log
+
+2026-11-09, task 014 (`@productcraft/flags-engine` 0.1) as built:
+
+- **A hand-written package by design.** The engine is the first SDK code that is not an HTTP wrapper: section 6 gains a "Flags local evaluation" row, and the allowlist names the engine, the future `FlagsClient` (`packages/flags/src/client/**`, 015) and the OpenFeature provider (016). The engine has no dependencies, no I/O, no timers and no `node:` imports (a test greps the source), and is not in `SURFACES`.
+- **Pure-TS SHA-1 and SHA-256** keep evaluation synchronous everywhere. The SHA-256 constants are derived exactly with BigInt integer roots rather than written out or taken from `Math.cbrt` (implementation-approximated): that kept the one-call bundle (parse + evaluate) at 5.9 KB gzip, under the 6 KB limit the task set; the budget entry is that fixed limit, not measured + 10%.
+- **What `parseConfig` rejects:** structure, value types, percentages that do not add up to 100, comparator arity and value shapes, and a segment reference to a segment that is not in the config. It does **not** reject an unknown comparator (a soft miss, so comparators stay additive) or a prerequisite naming a missing setting (a hard error at evaluation, `PREREQUISITE_NOT_FOUND`, as design 7.1 lists it).
+- **Prerequisite depth is checked before the memo**, so whether a key errors with `PREREQUISITE_DEPTH` depends only on its path, never on what `evaluateAll` happened to evaluate first; each key in `evaluateAll` is its own top-level evaluation.
+- **Booleans coerce to text** (`"true"` / `"false"`), which design 7.3 did not list; anything else outside the listed rows is `invalid_attribute`. Prerequisite warnings are reported with the prerequisite's key.
+- **Additions beyond the task's API:** `isNewerConfig(held, incoming)` (the T19 revision/generation guard, so the `client[]` transcripts are checked by the engine's own tests) and `MAX_PREREQUISITE_DEPTH`.
+- **Vectors:** six files, 627 cases and hash rows, every hash and bucket recomputed with `node:crypto` (the design's checked values 85, 7, 24, 82, 8 and 988 confirmed). `renderer.json` evaluates the seven flags-api renderer fixtures (monorepo flags-api/006, `apps/flags-api/src/publish/__fixtures__`) end to end. `client.json` holds the transcripts for 015's mock-server runner.
 
 2026-11-07, task 010 (umbrella `productcraft` 0.4) as built:
 

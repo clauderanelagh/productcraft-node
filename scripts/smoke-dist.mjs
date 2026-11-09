@@ -77,6 +77,30 @@ await check("@productcraft/auth: verifyToken through the ESM and CJS builds", as
   }
 });
 
+// 1c. Flags engine: the evaluation vectors through the ESM and the CJS build, and a config parsed by
+// one build evaluated by the other (the compiled form is keyed by Symbol.for).
+await check("@productcraft/flags-engine: evaluation vectors through the ESM and CJS builds, cross-build configs", async () => {
+  const dir = join(root, "packages", "flags-engine");
+  const builds = [await import(pathToFileURL(join(dir, "dist/index.js")).href), require(join(dir, "dist/index.cjs"))];
+  const doc = JSON.parse(readFileSync(join(dir, "vectors/evaluation.json"), "utf8"));
+  const hash = JSON.parse(readFileSync(join(dir, "vectors/hash.json"), "utf8")).hash;
+  let n = 0;
+  for (const [parser, evaluator] of [[builds[0], builds[0]], [builds[1], builds[1]], [builds[0], builds[1]], [builds[1], builds[0]]]) {
+    for (const row of hash.bucket) assert.equal(evaluator.bucket(row.seed, row.value), row.expect);
+    for (const suite of doc.suites) {
+      const config = parser.parseConfig(JSON.stringify(suite.config));
+      for (const c of suite.cases) {
+        if (JSON.stringify(c).includes('"$')) continue; // typed attributes: covered by the vitest runner
+        const d = evaluator.evaluate(config, c.key, c.default, c.user);
+        assert.deepEqual([d.value, d.reason, d.errorCode], [c.expect.value, c.expect.reason, c.expect.error_code], `${suite.name}: ${c.name}`);
+        n++;
+      }
+    }
+  }
+  assert.ok(n > 100, `only ${n} cases ran`);
+  assert.throws(() => builds[1].parseConfig("{"), (e) => e instanceof builds[1].ConfigParseError && e.code === "PARSE_ERROR");
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);

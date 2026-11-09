@@ -1,0 +1,167 @@
+{
+  "format": 1,
+  "engine_schema": 1,
+  "description": "Hash tables: percentage buckets (SHA-1), their distribution, and confidential-comparator hashes (SHA-256). Computed with node:crypto on 2026-11-09.",
+  "hash": {
+    "bucket": [
+      {
+        "seed": "new_checkout",
+        "value": "user-1",
+        "expect": 85
+      },
+      {
+        "seed": "new_checkout",
+        "value": "user-2",
+        "expect": 7
+      },
+      {
+        "seed": "new_checkout",
+        "value": "jürgen@example.com",
+        "expect": 24
+      },
+      {
+        "seed": "dark_mode",
+        "value": "user-1",
+        "expect": 82
+      },
+      {
+        "seed": "new_checkout",
+        "value": "",
+        "expect": 8
+      },
+      {
+        "seed": "checkout_v2",
+        "value": "user-1",
+        "expect": 71
+      },
+      {
+        "seed": "new_checkout",
+        "value": "😀",
+        "expect": 88
+      },
+      {
+        "seed": "new_checkout",
+        "value": "1",
+        "expect": 40
+      },
+      {
+        "seed": "new_checkout",
+        "value": "1.5",
+        "expect": 90
+      },
+      {
+        "seed": "a",
+        "value": "b",
+        "expect": 84
+      },
+      {
+        "seed": "",
+        "value": "user-1",
+        "expect": 80
+      },
+      {
+        "seed": "split_edges",
+        "value": "u38",
+        "expect": 0
+      },
+      {
+        "seed": "split_edges",
+        "value": "u53",
+        "expect": 99
+      },
+      {
+        "seed": "split_edges",
+        "value": "u21",
+        "expect": 98
+      }
+    ],
+    "distribution": [
+      {
+        "seed": "new_checkout",
+        "values": {
+          "prefix": "user-",
+          "from": 0,
+          "to": 9999
+        },
+        "below": 10,
+        "expect_count": 988
+      },
+      {
+        "seed": "dark_mode",
+        "values": {
+          "prefix": "user-",
+          "from": 0,
+          "to": 9999
+        },
+        "below": 50,
+        "expect_count": 5072
+      }
+    ],
+    "confidential": [
+      {
+        "value": "ada@acme.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "secret_feature",
+        "expect": "4db9c5b04cedf36a0595cf9c90d4a74944ec13777d7576865035574a11ab2aab"
+      },
+      {
+        "value": "ada@acme.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "old_seed",
+        "expect": "45baaf801afc98d29177612f7415b9bfe55269aeec94b7a8a1158189d0ca0c02"
+      },
+      {
+        "value": "jürgen@exämple.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "vip",
+        "expect": "e73c51888604480773f47a7c671d2ec26af0d7ecfb00097273a09eee2f8f6056"
+      },
+      {
+        "value": "",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "x",
+        "expect": "4b54805985fccdc63cf374deeddb7bfa3d30d4912276e035feb47b475323a87d"
+      },
+      {
+        "value": "admin",
+        "salt": "",
+        "context": "",
+        "expect": "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918"
+      },
+      {
+        "value": "jürgen@exämple.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "vip",
+        "slice": "start",
+        "bytes": 4,
+        "expect": "4_03cff4e35bfd0697e40825cf6d381020fcb80d8d615216cb03f48e44b10c0e19"
+      },
+      {
+        "value": "jürgen@exämple.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "vip",
+        "slice": "end",
+        "bytes": 13,
+        "expect": "13_34bec386ae233922f8b638d101391883cec354ed6a029e970cdb661e297b479a"
+      },
+      {
+        "value": "jürgen@exämple.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "vip",
+        "slice": "start",
+        "bytes": 2,
+        "expect": "2_1701b5a999e34434bc0684578942c90ec2ecdbb7dbede4f386cb15007c198e2b"
+      },
+      {
+        "value": "a@acme.com",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "context": "secret_feature",
+        "slice": "end",
+        "bytes": 9,
+        "expect": "9_5f5f53d764043a870b8436615853e0d3e53f0a367f400f1485f05060c140d4bb"
+      }
+    ]
+  },
+  "suites": [],
+  "invalid_configs": []
+}
