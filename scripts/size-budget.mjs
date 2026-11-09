@@ -54,6 +54,13 @@ export const run = () => social.community("c").as("a").posts.create({ body: "Hel
 const auth = new Auth();
 export const run = () => auth.consumer("my-app").signin({ identifier: "ada@example.com", password: "pw" });`,
   },
+  // The engine alone (parse + evaluate), as an edge function that fetches its own config would use it.
+  // Its limit is fixed at 6 KB gzip by task 014 rather than measured + 10%.
+  "@productcraft/flags-engine": {
+    dir: "packages/flags-engine",
+    code: `import { parseConfig, evaluate } from "@productcraft/flags-engine";
+export const run = (body, user) => evaluate(parseConfig(body), "new_checkout", false, user).value;`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

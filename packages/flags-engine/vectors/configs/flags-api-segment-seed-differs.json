@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "generation": 1,
+  "published_at": "2026-11-08T14:02:11Z",
+  "config_id": "11111111-1111-4111-8111-111111111111",
+  "environment_id": "22222222-2222-4222-8222-222222222222",
+  "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+  "delivery": {
+    "base_urls": [
+      "https://api.flags.productcraft.co"
+    ],
+    "mode": "hint"
+  },
+  "segments": {
+    "beta_testers": {
+      "seed": "beta_old",
+      "conditions": [
+        {
+          "user": {
+            "attribute": "identifier",
+            "comparator": "one_of",
+            "values": [
+              "u1",
+              "u2",
+              "u3"
+            ]
+          }
+        }
+      ]
+    },
+    "internal": {
+      "conditions": [
+        {
+          "user": {
+            "attribute": "email",
+            "comparator": "ends_with_any",
+            "values": [
+              "@productcraft.co"
+            ]
+          }
+        },
+        {
+          "user": {
+            "attribute": "plan",
+            "comparator": "neq",
+            "values": [
+              "free"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "settings": {
+    "dark_mode": {
+      "type": "boolean",
+      "value": false,
+      "rules": [
+        {
+          "conditions": [
+            {
+              "segment": {
+                "segment": "beta_testers",
+                "comparator": "in"
+              }
+            },
+            {
+              "segment": {
+                "segment": "internal",
+                "comparator": "not_in"
+              }
+            }
+          ],
+          "serve": true
+        }
+      ]
+    },
+    "beta_banner": {
+      "type": "string",
+      "value": "",
+      "rules": [
+        {
+          "conditions": [
+            {
+              "segment": {
+                "segment": "beta_testers",
+                "comparator": "in"
+              }
+            }
+          ],
+          "serve": "Hello beta"
+        }
+      ]
+    }
+  }
+}

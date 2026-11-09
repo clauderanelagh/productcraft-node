@@ -1,0 +1,1393 @@
+{
+  "format": 1,
+  "engine_schema": 1,
+  "description": "Bodies the engine rejects (the SDK keeps its prior config). A string body is the raw response text; an object body is serialised with JSON.stringify.",
+  "suites": [],
+  "invalid_configs": [
+    {
+      "name": "not JSON",
+      "body": "{\"schema\":1,",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "empty body",
+      "body": "",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "a JSON array",
+      "body": "[]",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "JSON null",
+      "body": "null",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "schema 2",
+      "body": {
+        "schema": 2,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "UNSUPPORTED_SCHEMA"
+    },
+    {
+      "name": "schema 0",
+      "body": {
+        "schema": 0,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "UNSUPPORTED_SCHEMA"
+    },
+    {
+      "name": "schema missing",
+      "body": {
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "schema as a string",
+      "body": {
+        "schema": "1",
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "revision negative",
+      "body": {
+        "schema": 1,
+        "revision": -1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "revision fractional",
+      "body": {
+        "schema": 1,
+        "revision": 1.5,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "generation 0",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 0,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "generation missing",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "salt missing",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "settings missing",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {}
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "settings is an array",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": []
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segments is an array",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": [],
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "unknown setting type",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "enum",
+            "value": "a"
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "boolean value as a string",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": "true"
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "integer value fractional",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "integer",
+            "value": 1.5
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "integer value beyond int53",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "integer",
+            "value": 9007199254740992
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "json value not JSON text",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "json",
+            "value": "{max:5}"
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "json value as an object",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "json",
+            "value": {
+              "max": 5
+            }
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "value missing",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "string"
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "rule with serve and percentages",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [],
+                "serve": true,
+                "percentages": [
+                  {
+                    "percentage": 100,
+                    "value": true
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "rule with neither serve nor percentages",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": []
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "serve of the wrong type",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [],
+                "serve": "yes"
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "percentages add up to 99",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "percentages": [
+              {
+                "percentage": 49,
+                "value": true
+              },
+              {
+                "percentage": 50,
+                "value": false
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "fractional percentage",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "percentages": [
+              {
+                "percentage": 50.5,
+                "value": true
+              },
+              {
+                "percentage": 49.5,
+                "value": false
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "empty percentages",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "percentages": []
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "percentage option value of the wrong type",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "integer",
+            "value": 1,
+            "percentages": [
+              {
+                "percentage": 100,
+                "value": "1"
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "condition of no known kind",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "regex": {
+                      "attribute": "a"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "user condition without values",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "eq"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "user condition with empty attribute",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "",
+                      "comparator": "eq",
+                      "values": [
+                        "a"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "eq with two values",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "eq",
+                      "values": [
+                        "a",
+                        "b"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "one_of with a number",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "one_of",
+                      "values": [
+                        "a",
+                        1
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "semver value with a leading v",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "semver_gte",
+                      "values": [
+                        "v1.0.0"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "number comparator with a string value",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "num_gt",
+                      "values": [
+                        "5"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "date comparator with an ISO value",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "before",
+                      "values": [
+                        "2026-01-01T00:00:00Z"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "hashed value not hex",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "one_of_hashed",
+                      "values": [
+                        "ada@acme.com"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "hashed value in uppercase hex",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "eq_hashed",
+                      "values": [
+                        "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "sliced hash without a length",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "starts_with_any_hashed",
+                      "values": [
+                        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "sliced hash of length 0",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "user": {
+                      "attribute": "a",
+                      "comparator": "ends_with_any_hashed",
+                      "values": [
+                        "0_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                      ]
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "unknown segment",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "segment": {
+                      "segment": "missing",
+                      "comparator": "in"
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "prerequisite value is an object",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {},
+        "settings": {
+          "bad": {
+            "type": "boolean",
+            "value": false,
+            "rules": [
+              {
+                "conditions": [
+                  {
+                    "prerequisite": {
+                      "setting": "ok",
+                      "comparator": "eq",
+                      "value": {
+                        "a": 1
+                      }
+                    }
+                  }
+                ],
+                "serve": true
+              }
+            ]
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segment holding a segment condition",
+      "body": {
+        "schema": 1,
+        "revision": 1,
+        "generation": 1,
+        "published_at": "2026-11-08T14:02:11Z",
+        "config_id": "11111111-1111-4111-8111-111111111111",
+        "environment_id": "22222222-2222-4222-8222-222222222222",
+        "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+        "delivery": {
+          "base_urls": [
+            "https://api.flags.productcraft.co"
+          ],
+          "mode": "hint"
+        },
+        "segments": {
+          "s": {
+            "conditions": [
+              {
+                "segment": {
+                  "segment": "s",
+                  "comparator": "in"
+                }
+              }
+            ]
+          }
+        },
+        "settings": {
+          "ok": {
+            "type": "boolean",
+            "value": true
+          }
+        }
+      },
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segment reference __proto__ with no such segment",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"bad\":{\"type\":\"boolean\",\"value\":false,\"rules\":[{\"conditions\":[{\"segment\":{\"segment\":\"__proto__\",\"comparator\":\"in\"}}],\"serve\":true}]}}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segment reference constructor with no such segment",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"bad\":{\"type\":\"boolean\",\"value\":false,\"rules\":[{\"conditions\":[{\"segment\":{\"segment\":\"constructor\",\"comparator\":\"in\"}}],\"serve\":true}]}}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segment reference toString with no such segment",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"bad\":{\"type\":\"boolean\",\"value\":false,\"rules\":[{\"conditions\":[{\"segment\":{\"segment\":\"toString\",\"comparator\":\"in\"}}],\"serve\":true}]}}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "setting __proto__ with a value of the wrong type",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"__proto__\":{\"type\":\"boolean\",\"value\":\"yes\"}}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "setting hasOwnProperty with no type",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"hasOwnProperty\":{\"value\":true}}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "setting valueOf that is not an object",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{},\"settings\":{\"valueOf\":true}}",
+      "expect_error": "PARSE_ERROR"
+    },
+    {
+      "name": "segment __proto__ that is not an object",
+      "body": "{\"schema\":1,\"revision\":1,\"generation\":1,\"published_at\":\"2026-11-08T14:02:11Z\",\"config_id\":\"11111111-1111-4111-8111-111111111111\",\"environment_id\":\"22222222-2222-4222-8222-222222222222\",\"salt\":\"c2FsdC1mb3ItdmVjdG9ycw\",\"delivery\":{\"base_urls\":[\"https://api.flags.productcraft.co\"],\"mode\":\"hint\"},\"segments\":{\"__proto__\":\"x\"},\"settings\":{}}",
+      "expect_error": "PARSE_ERROR"
+    }
+  ]
+}

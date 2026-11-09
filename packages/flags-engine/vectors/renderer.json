@@ -1,0 +1,662 @@
+{
+  "format": 1,
+  "engine_schema": 1,
+  "description": "Configs rendered by flags-api (monorepo apps/flags-api/src/publish/__fixtures__, task 006, the `expected` of each fixture) evaluated by the engine: API rendering plus engine evaluation, end to end. Regenerate the configs from those fixtures when the renderer changes.",
+  "suites": [
+    {
+      "name": "flags-api: design section 5 example",
+      "config_ref": "configs/flags-api-design-5-example.json",
+      "cases": [
+        {
+          "name": "segment acme_staff (seed acme_staff_old) matches",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "identifier": "u",
+            "email": "ada@acme.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "semver rule split, account acct-20 buckets 6 under seed checkout_v2",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "app_version": "2.1.0",
+            "custom": {
+              "account_id": "acct-20"
+            }
+          },
+          "expect": {
+            "value": true,
+            "reason": "SPLIT",
+            "rule_index": 1,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:1/pct:0",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "semver rule split, account acct-0 buckets 43",
+          "key": "new_checkout",
+          "default": true,
+          "user": {
+            "app_version": "2.1.0",
+            "custom": {
+              "account_id": "acct-0"
+            }
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": 1,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:1/pct:1",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "semver rule matches but account_id is missing: split skipped, prerequisite rule serves",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "identifier": "u",
+            "app_version": "2.1.0"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 2,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:2",
+            "warnings": [
+              "missing_attribute",
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "old app version: prerequisite kill_all eq false serves",
+          "key": "new_checkout",
+          "default": false,
+          "user": {
+            "app_version": "1.9.0"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 2,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:2",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "banner_text is STATIC",
+          "key": "banner_text",
+          "default": "",
+          "user": null,
+          "expect": {
+            "value": "Welcome",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "limits serves JSON text",
+          "key": "limits",
+          "default": "{}",
+          "user": null,
+          "expect": {
+            "value": "{\"max\":5}",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "kill_all is STATIC",
+          "key": "kill_all",
+          "default": true,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: every type",
+      "config_ref": "configs/flags-api-every-type.json",
+      "cases": [
+        {
+          "name": "number rule: num_gte 1e21 and before 1762560000.5",
+          "key": "num_setting",
+          "default": 0,
+          "user": {
+            "age": 1e+21,
+            "signup": 1762560000
+          },
+          "expect": {
+            "value": -0.25,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "number rule: second condition false",
+          "key": "num_setting",
+          "default": 0,
+          "user": {
+            "age": "1e21",
+            "signup": 1762560001
+          },
+          "expect": {
+            "value": 1.5,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "integer max safe",
+          "key": "int_setting",
+          "default": 0,
+          "user": null,
+          "expect": {
+            "value": 9007199254740991,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "non-ASCII string",
+          "key": "str_setting",
+          "default": "",
+          "user": null,
+          "expect": {
+            "value": "héllo ☃ \"quoted\"",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "json text untouched",
+          "key": "json_setting",
+          "default": "{}",
+          "user": null,
+          "expect": {
+            "value": "{\"b\":1,\"a\":[true,null]}",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "setting named __proto__",
+          "key": "__proto__",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "setting named constructor, own attribute toString",
+          "key": "constructor",
+          "default": "",
+          "user": {
+            "toString": "y"
+          },
+          "expect": {
+            "value": "z",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "setting named constructor, inherited toString is missing",
+          "key": "constructor",
+          "default": "",
+          "user": {},
+          "expect": {
+            "value": "x",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: hashed conditions (placeholder hashes match nobody)",
+      "config_ref": "configs/flags-api-hashed-conditions.json",
+      "cases": [
+        {
+          "name": "no hash matches",
+          "key": "secret_feature",
+          "default": true,
+          "user": {
+            "email": "ada@acme.com"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "no user: three soft misses",
+          "key": "secret_feature",
+          "default": true,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_user",
+              "missing_user",
+              "missing_user"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: prerequisite chain",
+      "config_ref": "configs/flags-api-prerequisite-chain.json",
+      "cases": [
+        {
+          "name": "c_mode",
+          "key": "c_mode",
+          "default": "",
+          "user": null,
+          "expect": {
+            "value": "off",
+            "reason": "STATIC",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "b_flag: c_mode neq off is false",
+          "key": "b_flag",
+          "default": true,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "a_flag: b_flag eq true is false",
+          "key": "a_flag",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": true,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: segment seed differs",
+      "config_ref": "configs/flags-api-segment-seed-differs.json",
+      "cases": [
+        {
+          "name": "beta tester, not internal",
+          "key": "dark_mode",
+          "default": false,
+          "user": {
+            "identifier": "u1",
+            "email": "x@gmail.com"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "beta tester and internal",
+          "key": "dark_mode",
+          "default": false,
+          "user": {
+            "identifier": "u1",
+            "email": "x@productcraft.co",
+            "plan": "pro"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "internal on the free plan is not internal",
+          "key": "dark_mode",
+          "default": false,
+          "user": {
+            "identifier": "u2",
+            "email": "x@productcraft.co",
+            "plan": "free"
+          },
+          "expect": {
+            "value": true,
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "not a beta tester",
+          "key": "dark_mode",
+          "default": false,
+          "user": {
+            "identifier": "u4"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        },
+        {
+          "name": "beta tester without email: not_in is a soft miss",
+          "key": "dark_mode",
+          "default": false,
+          "user": {
+            "identifier": "u1"
+          },
+          "expect": {
+            "value": false,
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_attribute"
+            ]
+          }
+        },
+        {
+          "name": "beta banner",
+          "key": "beta_banner",
+          "default": "",
+          "user": {
+            "identifier": "u2"
+          },
+          "expect": {
+            "value": "Hello beta",
+            "reason": "TARGETING_MATCH",
+            "rule_index": 0,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "rule:0"
+          }
+        },
+        {
+          "name": "beta banner default is the empty string",
+          "key": "beta_banner",
+          "default": "x",
+          "user": {
+            "identifier": "u9"
+          },
+          "expect": {
+            "value": "",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: flag-level split on a custom attribute",
+      "config_ref": "configs/flags-api-flag-level-split-custom-attribute.json",
+      "cases": [
+        {
+          "name": "account acct-4 buckets 11: a",
+          "key": "pricing_test",
+          "default": "",
+          "user": {
+            "custom": {
+              "account_id": "acct-4"
+            }
+          },
+          "expect": {
+            "value": "a",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 0,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:0"
+          }
+        },
+        {
+          "name": "account acct-0 buckets 64: b",
+          "key": "pricing_test",
+          "default": "",
+          "user": {
+            "account_id": "acct-0"
+          },
+          "expect": {
+            "value": "b",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        },
+        {
+          "name": "account acct-1 buckets 87: control",
+          "key": "pricing_test",
+          "default": "",
+          "user": {
+            "custom": {
+              "account_id": "acct-1"
+            }
+          },
+          "expect": {
+            "value": "control",
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 2,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:2"
+          }
+        },
+        {
+          "name": "identifier is not the percentage attribute here",
+          "key": "pricing_test",
+          "default": "",
+          "user": {
+            "identifier": "u1"
+          },
+          "expect": {
+            "value": "control",
+            "reason": "DEFAULT",
+            "rule_index": null,
+            "percentage_index": null,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "default",
+            "warnings": [
+              "missing_percentage_attribute"
+            ]
+          }
+        },
+        {
+          "name": "0% option never chosen",
+          "key": "rollout",
+          "default": true,
+          "user": {
+            "identifier": "user-1"
+          },
+          "expect": {
+            "value": false,
+            "reason": "SPLIT",
+            "rule_index": null,
+            "percentage_index": 1,
+            "error_code": null,
+            "is_default_value": false,
+            "variant": "pct:1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "flags-api: empty config",
+      "config_ref": "configs/flags-api-empty-config.json",
+      "cases": [
+        {
+          "name": "any key is FLAG_NOT_FOUND",
+          "key": "anything",
+          "default": false,
+          "user": null,
+          "expect": {
+            "value": false,
+            "reason": "ERROR",
+            "error_code": "FLAG_NOT_FOUND",
+            "is_default_value": true,
+            "rule_index": null,
+            "percentage_index": null,
+            "variant": null
+          }
+        }
+      ]
+    }
+  ]
+}

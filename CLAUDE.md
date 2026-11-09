@@ -13,6 +13,7 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | `@productcraft/social` | `packages/social` | Social API (feeds, communities) |
 | `@productcraft/trawl` | `packages/trawl` | Trawl API (AI web extraction — jobs + webhooks) |
 | `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
+| `@productcraft/flags-engine` | `packages/flags-engine` | Flags evaluation engine: parses a config JSON and evaluates flags locally (hand-written, zero dependencies; `SPEC.md`, JSON Schema and test vectors ship in the package). Not an API surface. |
 | `@productcraft/auth-passport` | `packages/auth-passport` | Passport-JWT adapter for Auth (not a surface; wraps `@productcraft/auth`) |
 | `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all six surface packages. |
 

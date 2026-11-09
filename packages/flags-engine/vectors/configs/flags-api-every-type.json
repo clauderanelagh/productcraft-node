@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "generation": 1,
+  "published_at": "2026-11-08T14:02:11Z",
+  "config_id": "11111111-1111-4111-8111-111111111111",
+  "environment_id": "22222222-2222-4222-8222-222222222222",
+  "salt": "c2FsdC1mb3ItdmVjdG9ycw",
+  "delivery": {
+    "base_urls": [
+      "https://api.flags.productcraft.co"
+    ],
+    "mode": "hint"
+  },
+  "segments": {},
+  "settings": {
+    "bool_flag": {
+      "type": "boolean",
+      "value": true
+    },
+    "str_setting": {
+      "type": "string",
+      "value": "héllo ☃ \"quoted\""
+    },
+    "int_setting": {
+      "type": "integer",
+      "value": 9007199254740991
+    },
+    "num_setting": {
+      "type": "number",
+      "value": 1.5,
+      "rules": [
+        {
+          "conditions": [
+            {
+              "user": {
+                "attribute": "age",
+                "comparator": "num_gte",
+                "values": [
+                  1e+21
+                ]
+              }
+            },
+            {
+              "user": {
+                "attribute": "signup",
+                "comparator": "before",
+                "values": [
+                  1762560000.5
+                ]
+              }
+            }
+          ],
+          "serve": -0.25
+        }
+      ]
+    },
+    "json_setting": {
+      "type": "json",
+      "value": "{\"b\":1,\"a\":[true,null]}"
+    },
+    "__proto__": {
+      "type": "boolean",
+      "value": true
+    },
+    "constructor": {
+      "type": "string",
+      "value": "x",
+      "rules": [
+        {
+          "conditions": [
+            {
+              "user": {
+                "attribute": "toString",
+                "comparator": "eq",
+                "values": [
+                  "y"
+                ]
+              }
+            }
+          ],
+          "serve": "z"
+        }
+      ]
+    }
+  }
+}
