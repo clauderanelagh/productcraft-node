@@ -1,0 +1,83 @@
+{
+  "name": "@productcraft/notify",
+  "version": "0.0.0",
+  "description": "Node.js / TypeScript client for ProductCraft Notify: one call notifies a user across an in-app inbox, email, web push, APNs and FCM, with preferences, fallbacks, quiet hours, templates, delivery history and signed webhooks. Includes the browser-safe recipient-token client scope.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./testing": {
+      "import": {
+        "types": "./dist/testing.d.ts",
+        "default": "./dist/testing.js"
+      },
+      "require": {
+        "types": "./dist/testing.d.cts",
+        "default": "./dist/testing.cjs"
+      }
+    },
+    "./manifest.json": "./manifest.json"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "./dist/testing.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/**",
+    "manifest.json",
+    "api.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
+    "test": "tsc -p tests/tsconfig.json && vitest run"
+  },
+  "keywords": [
+    "productcraft",
+    "sdk",
+    "notifications",
+    "push-notifications",
+    "in-app-inbox",
+    "apns",
+    "fcm",
+    "web-push"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/notify"
+  },
+  "homepage": "https://productcraft.co/docs/notify",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/core": "workspace:^",
+    "openapi-fetch": "^0.13.0"
+  }
+}

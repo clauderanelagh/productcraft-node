@@ -55,6 +55,7 @@ export const PC_BASE_URL = {
   social: "https://social.productcraft.co",
   trawl: "https://api.trawl.productcraft.co",
   flags: "https://api.flags.productcraft.co",
+  notify: "https://api.notify.productcraft.co",
 } as const;
 
 /** Environment variable holding the `pcft_` workspace API key. */

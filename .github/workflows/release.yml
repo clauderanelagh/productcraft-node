@@ -103,8 +103,8 @@ jobs:
           # preferred it over OIDC. Every package (productcraft and
           # @productcraft/{auth,auth-passport,core,mail,waitlist,social,trawl,
           # platform-auth} since 2026-10-23, flags-engine since 2026-11-09,
-          # flags since 2026-11-10) has a GitHub Actions trusted publisher for
-          # THIS workflow file, and their publishing access is
+          # flags since 2026-11-10, notify since 2026-11-10) has a GitHub
+          # Actions trusted publisher for THIS workflow file, and their publishing access is
           # "require 2FA and disallow tokens". A new package needs the same
           # one-time setup on npmjs.com before its first publish from here.
           NPM_CONFIG_PROVENANCE: "true"

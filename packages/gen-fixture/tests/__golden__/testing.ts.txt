@@ -15,11 +15,18 @@ export { signWebhook } from "@productcraft/core";
 export type { SignWebhookParams, SignedWebhook } from "@productcraft/core";
 
 /** Every operation name, as `resource.method`. */
-export type OperationName = "entries.create" | "posts.comments.create" | "posts.create" | "posts.delete" | "posts.list" | "regions.list" | "settings.retrieve" | "settings.update" | "webhooks.endpoints.list" | "widgets.archive" | "widgets.bulkDelete" | "widgets.count" | "widgets.create" | "widgets.delete" | "widgets.erase" | "widgets.export" | "widgets.history" | "widgets.list" | "widgets.paint" | "widgets.parts.create" | "widgets.parts.delete" | "widgets.parts.list" | "widgets.retrieve" | "widgets.timeline" | "widgets.update" | "widgets.updateStatus";
+export type OperationName = "entries.create" | "me.inbox.delete" | "me.inbox.list" | "me.inbox.mark" | "posts.comments.create" | "posts.create" | "posts.delete" | "posts.list" | "regions.list" | "settings.retrieve" | "settings.update" | "webhooks.endpoints.list" | "widgets.archive" | "widgets.bulkDelete" | "widgets.count" | "widgets.create" | "widgets.delete" | "widgets.erase" | "widgets.export" | "widgets.history" | "widgets.list" | "widgets.paint" | "widgets.parts.create" | "widgets.parts.delete" | "widgets.parts.list" | "widgets.retrieve" | "widgets.timeline" | "widgets.update" | "widgets.updateStatus";
 
 interface Route { op: OperationName; method: string; pattern: RegExp; status: number; contentType: string | null; body: unknown }
 
 const ROUTES: Route[] = [
+  { op: "me.inbox.mark", method: "POST", pattern: /^\/v1\/client\/inbox\/mark$/, status: 200, contentType: "application/json", body: { updated: 1 } },
+  { op: "me.inbox.list", method: "GET", pattern: /^\/v1\/client\/inbox$/, status: 200, contentType: "application/json", body: {
+    data: [
+      { id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", title: "Your export is ready", read: false },
+    ],
+    pagination: { next_cursor: null, has_more: false },
+  } },
   { op: "regions.list", method: "GET", pattern: /^\/v1\/regions$/, status: 200, contentType: "application/json", body: [{ code: "fra1", name: "Frankfurt" }] },
   { op: "widgets.bulkDelete", method: "POST", pattern: /^\/v1\/workspaces\/[^\/]+\/widgets\/bulk-delete$/, status: 200, contentType: "application/json", body: { deleted: 2 } },
   { op: "widgets.export", method: "GET", pattern: /^\/v1\/workspaces\/[^\/]+\/widgets\/export\.csv$/, status: 200, contentType: "text/csv", body: "id,name\n" },
@@ -69,6 +76,7 @@ const ROUTES: Route[] = [
     ],
     pagination: { next_cursor: null, has_more: false },
   } },
+  { op: "me.inbox.delete", method: "DELETE", pattern: /^\/v1\/client\/inbox\/[^\/]+$/, status: 204, contentType: null, body: null },
   { op: "widgets.timeline", method: "GET", pattern: /^\/v1\/workspaces\/[^\/]+\/widgets\/[^\/]+\/timeline$/, status: 200, contentType: "application/json", body: [{ at: "2026-01-01T00:00:00.000Z", status: "draft" }] },
   { op: "posts.comments.create", method: "POST", pattern: /^\/v1\/communities\/[^\/]+\/posts\/[^\/]+\/comments$/, status: 201, contentType: "application/json", body: {
     id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",

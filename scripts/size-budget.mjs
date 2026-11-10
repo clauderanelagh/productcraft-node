@@ -16,7 +16,7 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const budgetPath = join(root, "scripts", "size-budget.json");
 
-// One consumer per package: the smallest realistic program that uses it.
+// One consumer per package (or per entry point, with `pkg`): the smallest realistic program that uses it.
 const consumers = {
   "@productcraft/core": {
     dir: "packages/core",
@@ -80,6 +80,20 @@ export const run = () => flags.getValue("k", false);`,
 const provider = new ProductCraftFlagsProvider({ sdkKey: "pcf_sdk_x" });
 export const run = () => provider.resolveBooleanEvaluation("k", false, { targetingKey: "u" });`,
   },
+  // Notify: a server send, and the browser-side recipient-token scope (task 017). Both bundle the
+  // generated client; the second entry measures what a browser app ships for the inbox.
+  "@productcraft/notify": {
+    dir: "packages/notify",
+    code: `import { Notify } from "@productcraft/notify";
+const notify = new Notify({ apiKey: "pcft_live_x", workspaceId: "ws" });
+export const run = () => notify.notifications.send({ type: "comment_created", recipients: ["user_123"] });`,
+  },
+  "@productcraft/notify (client scope)": {
+    pkg: "@productcraft/notify",
+    dir: "packages/notify",
+    code: `import { Notify } from "@productcraft/notify";
+export const run = (token) => new Notify().client({ token }).inbox.list();`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";
@@ -92,7 +106,7 @@ const record = process.argv.includes("--record");
 const budget = JSON.parse(readFileSync(budgetPath, "utf8"));
 let failed = false;
 
-for (const [name, { dir, code, external = [] }] of Object.entries(consumers)) {
+for (const [name, { dir, code, external = [], pkg = name }] of Object.entries(consumers)) {
   const result = await build({
     stdin: { contents: code, resolveDir: join(root, dir), loader: "js" },
     bundle: true,
@@ -103,7 +117,7 @@ for (const [name, { dir, code, external = [] }] of Object.entries(consumers)) {
     logLevel: "silent",
     external: ["node:*", ...external],
     // Resolve the package to its own built dist, as a consumer would.
-    alias: { [name]: join(root, dir) },
+    alias: { [pkg]: join(root, dir) },
   });
   const bytes = result.outputFiles[0].contents;
   const gz = gzipSync(bytes, { level: 9 }).length;

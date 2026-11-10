@@ -159,6 +159,7 @@ jobs:
             - `https://api.waitlist.productcraft.co/docs-json`
             - `https://api.trawl.productcraft.co/docs-json`
             - `https://api.flags.productcraft.co/docs-json`
+            - `https://api.notify.productcraft.co/docs-json`
           branch: chore/refresh-specs
           delete-branch: true
           labels: ${{ steps.breaking.outputs.breaking == 'true' && 'breaking' || '' }}

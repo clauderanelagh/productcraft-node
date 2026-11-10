@@ -294,6 +294,7 @@ export const PC_BASE_URL: {
     readonly social: "https://social.productcraft.co";
     readonly trawl: "https://api.trawl.productcraft.co";
     readonly flags: "https://api.flags.productcraft.co";
+    readonly notify: "https://api.notify.productcraft.co";
 };
 
 // @public (undocumented)

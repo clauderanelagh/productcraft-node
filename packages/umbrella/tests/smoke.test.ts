@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { ProductCraft, Auth, Flags, Mail, Waitlist, Social, PlatformAuth, Trawl } from "../src/index.js";
+import { ProductCraft, Auth, Flags, Mail, Notify, Waitlist, Social, PlatformAuth, Trawl } from "../src/index.js";
 
 describe("ProductCraft umbrella", () => {
   it("constructs every product from a single config", () => {
@@ -11,6 +11,7 @@ describe("ProductCraft umbrella", () => {
     expect(pc.platform).toBeInstanceOf(PlatformAuth);
     expect(pc.trawl).toBeInstanceOf(Trawl);
     expect(pc.flags).toBeInstanceOf(Flags);
+    expect(pc.notify).toBeInstanceOf(Notify);
   });
 
   it("exposes the generated resources and keeps .client", () => {
@@ -22,6 +23,9 @@ describe("ProductCraft umbrella", () => {
     expect(typeof pc.social.communities.list).toBe("function");
     expect(typeof pc.trawl.jobs.create).toBe("function");
     expect(typeof pc.flags.projects.create).toBe("function");
+    expect(typeof pc.notify.notifications.send).toBe("function");
+    expect(typeof pc.notify.client({ token: "rt_x" }).inbox.list).toBe("function");
+    expect(typeof pc.notify.client.POST).toBe("function");
     expect(typeof pc.platform.apiKeys.self).toBe("function");
     expect(typeof pc.mail.client.POST).toBe("function");
   });

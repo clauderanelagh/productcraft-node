@@ -1,5 +1,50 @@
 {
   "operations": {
+    "ClientInboxController_delete": {
+      "actor": null,
+      "deprecated": false,
+      "http": "DELETE /v1/client/inbox/{item_id}",
+      "idempotent": false,
+      "method": "delete",
+      "paginated": false,
+      "params": null,
+      "poll": null,
+      "public": false,
+      "resource": "inbox",
+      "scope": "client",
+      "signature": "fixture.client({ token }).inbox.delete(itemId, options?): void",
+      "snippet": "await fixture.client({ token: \"rt_example_recipient_token\" }).inbox.delete(\"3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b\");"
+    },
+    "ClientInboxController_list": {
+      "actor": null,
+      "deprecated": false,
+      "http": "GET /v1/client/inbox",
+      "idempotent": false,
+      "method": "list",
+      "paginated": true,
+      "params": "Fixture.MeInboxListParams",
+      "poll": null,
+      "public": false,
+      "resource": "inbox",
+      "scope": "client",
+      "signature": "fixture.client({ token }).inbox.list(params?, options?): PagePromise<Fixture.InboxItem>",
+      "snippet": "for await (const inbox of fixture.client({ token: \"rt_example_recipient_token\" }).inbox.list()) {\n  console.log(inbox);\n}\nconst page = await fixture.client({ token: \"rt_example_recipient_token\" }).inbox.list({}, { timeout: 5_000 });"
+    },
+    "ClientInboxController_mark": {
+      "actor": null,
+      "deprecated": false,
+      "http": "POST /v1/client/inbox/mark",
+      "idempotent": false,
+      "method": "mark",
+      "paginated": false,
+      "params": "Fixture.MeInboxMarkParams",
+      "poll": null,
+      "public": false,
+      "resource": "inbox",
+      "scope": "client",
+      "signature": "fixture.client({ token }).inbox.mark(params, options?): Fixture.MarkInboxResult",
+      "snippet": "const markInboxResult = await fixture.client({ token: \"rt_example_recipient_token\" }).inbox.mark({ ids: [\"9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b\"], action: \"read\" });"
+    },
     "CommentController_create": {
       "actor": "body",
       "deprecated": false,

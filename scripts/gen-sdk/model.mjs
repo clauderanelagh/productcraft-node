@@ -69,8 +69,15 @@ export function buildModel(spec, config) {
   };
 
   // Scope config: { name: { bind: [...], args: "positional" | { field: param }, actor?: bool, doc } }
-  const scopes = Object.entries(config.scopes ?? {}).map(([name, s]) => ({ name, ...s, key: [...s.bind].sort().join(",") }));
-  const scopeByKey = new Map(scopes.map((s) => [s.key, s]));
+  // Token scopes ({ token: { resource, scheme } }) bind no path parameter: they take the operations
+  // under one resource prefix (`me.*`) and send their own bearer token (Notify's `client({ token })`).
+  const scopes = Object.entries(config.scopes ?? {}).map(([name, s]) => ({ name, bind: [], ...s, key: s.token ? null : [...s.bind].sort().join(",") }));
+  const scopeByKey = new Map(scopes.filter((s) => !s.token).map((s) => [s.key, s]));
+  const tokenScopes = new Map(scopes.filter((s) => s.token).map((s) => [s.token.resource, s]));
+  for (const s of scopes.filter((x) => x.token)) {
+    if (!s.token.resource || !IDENT.test(s.token.resource)) problems.push(`scope ${s.name}: token.resource must be one camelCase resource segment`);
+    if (!s.token.scheme || !spec.components?.securitySchemes?.[s.token.scheme]) problems.push(`scope ${s.name}: token.scheme ${JSON.stringify(s.token.scheme)} is not a security scheme in the spec`);
+  }
 
   const ops = [];
   const seenNames = new Map();
@@ -111,6 +118,20 @@ export function buildModel(spec, config) {
       if (scopeBind.length) {
         scope = scopeByKey.get([...scopeBind].sort().join(",")) ?? null;
         if (!scope) problems.push(`${w}: bind ${JSON.stringify(scopeBind)} has no scope in this surface's gen-sdk config`);
+      }
+      // A token scope takes every operation under its resource prefix; the prefix is not part of the call.
+      let callSegs = segs;
+      const tokenScope = tokenScopes.get(segs[0]);
+      const schemes = Array.isArray(op.security) ? op.security.flatMap((r) => Object.keys(r ?? {})) : [];
+      if (tokenScope) {
+        if (scope) problems.push(`${w}: resource "${segs[0]}" belongs to the token scope ${tokenScope.name}(…), which binds no path parameter, but this operation binds ${JSON.stringify(scopeBind)}`);
+        else if (!schemes.includes(tokenScope.token.scheme)) problems.push(`${w}: resource "${segs[0]}" is the token scope ${tokenScope.name}(…), but the operation does not declare the ${tokenScope.token.scheme} security scheme`);
+        else {
+          scope = tokenScope;
+          callSegs = segs.slice(1);
+        }
+      } else {
+        for (const s of tokenScopes.values()) if (schemes.includes(s.token.scheme)) problems.push(`${w}: declares the ${s.token.scheme} security scheme but its resource is not under "${s.token.resource}" (the token scope ${s.name}(…))`);
       }
       if (!segs.length && !scope) problems.push(`${w}: an empty x-pc-sdk resource is only valid inside a bound scope`);
       // Names the surface's hand-written code owns on this scope (or the client root): SURFACES `members`.
@@ -196,6 +217,21 @@ export function buildModel(spec, config) {
           success = { status: Number(okCode), kind: "json", contentKey: jsonType, schema, ref: refName(schema), example: r.content[jsonType].example };
         } else success = { status: Number(okCode), kind: "raw", contentType: types[0], example: r.content[types[0]].schema?.example };
       }
+      // Further 2xx JSON responses with a different schema (Notify's send: 202 accepted, 200 for
+      // `dry_run`) make the result a union of every success shape.
+      if (success.kind === "json") {
+        const alts = [];
+        for (const c of codes.filter((x) => /^2\d\d$/.test(x) && x !== okCode)) {
+          const r = deref(op.responses[c]) ?? {};
+          const ct = Object.keys(r.content ?? {}).find(isJson);
+          if (!ct) continue;
+          const schema = r.content[ct].schema ?? {};
+          if (refName(schema) && refName(schema) === success.ref) continue;
+          if (!refName(schema) && JSON.stringify(schema) === JSON.stringify(success.schema)) continue;
+          alts.push({ status: Number(c), contentKey: ct, schema, ref: refName(schema) });
+        }
+        if (alts.length) success.union = [{ status: success.status, contentKey: success.contentKey, schema: success.schema, ref: success.ref }, ...alts];
+      }
       for (const c of codes) for (const v of Object.values(deref(op.responses[c])?.content ?? {})) walk(v.schema, w, () => {});
 
       const errors = codes
@@ -239,7 +275,10 @@ export function buildModel(spec, config) {
 
       const stem = typeStem(resource);
       ops.push({
-        operationId: op.operationId, http: m.toUpperCase(), path, resource, segs, method, name, call: name,
+        // `name` keeps the spec's full name (mocks, manifest); `resource`, `segs` and `call` are what the
+        // caller writes inside the scope (a token scope drops its resource prefix: `client({ token }).inbox.list`).
+        operationId: op.operationId, http: m.toUpperCase(), path, resource: callSegs.join("."), segs: callSegs, method, name,
+        call: callSegs.length ? `${callSegs.join(".")}.${method}` : method,
         summary: op.summary ?? "", description: op.description && op.description !== op.summary ? op.description : "",
         deprecated: !!op.deprecated || typeof x.deprecated === "string", public: x.public === true,
         // x-pc-sdk.deprecated (`@SdkDeprecated(note)`): the route stays, the SDK method is deprecated with this note.
@@ -335,6 +374,11 @@ export function buildModel(spec, config) {
         const im = refName(items) && models.find((x) => x.schema === refName(items));
         o.itemType = im ? im.name : `${o.stem}${pascal(o.method)}Item`;
         if (!im) claim(o.itemType, `item of ${o.name}`);
+      } else if (o.success.union) {
+        if (o.poll) problems.push(`${o.http} ${o.path} (${o.operationId}): poll needs one success shape, but the operation declares ${o.success.union.length}`);
+        o.success.union = o.success.union.map((u) => ({ ...u, model: (u.ref && models.find((x) => x.schema === u.ref)?.name) || null }));
+        o.responseType = `${o.stem}${pascal(o.method)}Response`;
+        claim(o.responseType, `response of ${o.name}`);
       } else if (mdl) o.responseType = mdl.name;
       else {
         o.responseType = `${o.stem}${pascal(o.method)}Response`;

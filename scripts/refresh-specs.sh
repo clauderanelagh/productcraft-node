@@ -23,6 +23,7 @@ declare -A surfaces=(
   [waitlist]="https://api.waitlist.productcraft.co/docs-json"
   [trawl]="https://api.trawl.productcraft.co/docs-json"
   [flags]="https://api.flags.productcraft.co/docs-json"
+  [notify]="https://api.notify.productcraft.co/docs-json"
 )
 
 tmp="$(mktemp -d)"

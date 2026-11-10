@@ -17,7 +17,7 @@ function signature(o, cfg) {
     ? `PagePromise<${cfg.className}.${o.itemType}>`
     : o.success.kind === "void" ? "void" : o.success.kind === "raw" ? "Response" : `${cfg.className}.${o.responseType}`;
   const acc = o.scope?.accessor || o.scope?.name;
-  const scope = o.scope ? (o.scope.args === "positional" ? `.${acc}(${o.scope.bind.map(() => "…").join(", ")})` : `.${acc}({ … })`) : "";
+  const scope = o.scope ? (o.scope.token ? `.${acc}({ token })` : o.scope.args === "positional" ? `.${acc}(${o.scope.bind.map(() => "…").join(", ")})` : `.${acc}({ … })`) : "";
   return { call: `${cfg.clientVar}${scope}.${o.call}(${args.join(", ")})`, ret };
 }
 
