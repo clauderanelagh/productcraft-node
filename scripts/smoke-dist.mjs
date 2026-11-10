@@ -122,6 +122,42 @@ await check("@productcraft/flags: FlagsClient, createTestClient and Configuratio
   }
 });
 
+await check("@productcraft/flags: the browser build (ESM + CJS) has the main build's exports and evaluates a bootstrap", async () => {
+  const dir = join(root, "packages", "flags");
+  const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+  const names = (m) => Object.keys(m).filter((k) => k !== "default" && k !== "__esModule").sort();
+  const main = await import(pathToFileURL(join(dir, "dist/index.js")).href);
+  const bootstrap = { schema: 1, revision: 1, generation: 1, salt: "", settings: { on: { type: "boolean", value: true } } };
+  for (const cond of ["browser", "react-native"]) {
+    for (const sub of [".", "./testing"]) {
+      const e = pkg.exports[sub][cond];
+      const esm = await import(pathToFileURL(join(dir, e.import.default)).href);
+      const cjs = require(join(dir, e.require.default));
+      assert.deepEqual(names(esm), names(cjs));
+      if (sub === ".") {
+        assert.deepEqual(names(esm), names(main));
+        for (const m of [esm, cjs]) assert.equal(await new m.FlagsClient({ bootstrap, offline: true, logger: null }).getValue("on", false), true);
+      } else for (const m of [esm, cjs]) assert.equal(m.createTestClient({ values: { on: true } }).snapshot().getValue("on", false), true);
+    }
+  }
+});
+
+await check("@productcraft/flags-react: renderToString through the ESM and CJS builds (\"use client\" kept on both)", async () => {
+  const dir = join(root, "packages", "flags-react");
+  const req = createRequire(join(dir, "package.json"));
+  const { createElement } = req("react");
+  const { renderToString } = req("react-dom/server");
+  const flags = req("@productcraft/flags");
+  const builds = [await import(pathToFileURL(join(dir, "dist/index.js")).href), require(join(dir, "dist/index.cjs"))];
+  const bootstrap = { schema: 1, revision: 1, generation: 1, salt: "", settings: { banner: { type: "string", value: "Hi" } } };
+  for (const [i, m] of builds.entries()) {
+    assert.match(readFileSync(join(dir, i ? "dist/index.cjs" : "dist/index.js"), "utf8"), /^"use client";/);
+    const App = () => createElement("p", null, m.useFlag("banner", "x"));
+    const client = new flags.FlagsClient({ bootstrap, offline: true, logger: null });
+    assert.equal(renderToString(createElement(m.FlagsProvider, { client }, createElement(App))), "<p>Hi</p>");
+  }
+});
+
 await check("@productcraft/flags-openfeature: the provider through the ESM and CJS builds, with a client from either build", async () => {
   const dir = join(root, "packages", "flags-openfeature");
   const flagsDir = join(root, "packages", "flags");

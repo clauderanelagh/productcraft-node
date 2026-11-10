@@ -40,11 +40,15 @@
     },
     {
       "glob": "packages/flags/src/client/**",
-      "why": "Flags local evaluation: FlagsClient's delivery fetch loop, cache, overrides and hooks run in the customer's process, not over HTTP (task 015)."
+      "why": "Flags local evaluation: FlagsClient's delivery fetch loop, cache, overrides and hooks run in the customer's process, not over HTTP (task 015); platform.browser.ts is the browser / React Native build's swap for platform.ts (task 019)."
     },
     {
       "glob": "packages/flags-openfeature/src/**",
       "why": "OpenFeature provider over FlagsClient; not an API surface (task 016)."
+    },
+    {
+      "glob": "packages/flags-react/src/**",
+      "why": "React bindings over FlagsClient (provider, hooks, SSR bootstrap); not an API surface (task 019)."
     }
   ],
   "indexLineExceptions": {

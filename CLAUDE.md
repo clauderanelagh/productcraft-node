@@ -13,10 +13,11 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | `@productcraft/social` | `packages/social` | Social API (feeds, communities) |
 | `@productcraft/trawl` | `packages/trawl` | Trawl API (AI web extraction — jobs + webhooks) |
 | `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
-| `@productcraft/flags` | `packages/flags` | Flags management API (generated) plus the hand-written `FlagsClient` (`src/client/**`: download loop, cache, overrides, hooks) over `@productcraft/flags-engine`; `./testing` adds `createTestClient`. |
+| `@productcraft/flags` | `packages/flags` | Flags management API (generated) plus the hand-written `FlagsClient` (`src/client/**`: download loop, cache, overrides, hooks) over `@productcraft/flags-engine`; `./testing` adds `createTestClient`. The `browser` / `react-native` export conditions point at `dist/browser/` (tsup swaps `src/client/platform.ts` for `platform.browser.ts`). |
 | `@productcraft/flags-engine` | `packages/flags-engine` | Flags evaluation engine: parses a config JSON and evaluates flags locally (hand-written, zero dependencies; `SPEC.md`, JSON Schema and test vectors ship in the package). Not an API surface. |
 | `@productcraft/flags-openfeature` | `packages/flags-openfeature` | OpenFeature server provider over `FlagsClient` (hand-written, allowlisted; peers `@openfeature/server-sdk` and `@productcraft/flags`). Not an API surface. |
 | `@productcraft/notify` | `packages/notify` | Notify API (generated): recipients, preferences, notification types and templates, sends, deliveries, channels, webhooks, plus the browser-safe recipient-token scope `notify.client({ token })` (the `me.*` client routes, a generator token scope). |
+| `@productcraft/flags-react` | `packages/flags-react` | React bindings over `FlagsClient` (`FlagsProvider`, `useFlag`, `useFlagDetails`, `useFlagsClient`, `useFlagsReady`; SSR bootstrap). Hand-written, allowlisted; peers `react` >= 18 and `@productcraft/flags`. Not an API surface. |
 | `@productcraft/auth-passport` | `packages/auth-passport` | Passport-JWT adapter for Auth (not a surface; wraps `@productcraft/auth`) |
 | `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all six surface packages. |
 

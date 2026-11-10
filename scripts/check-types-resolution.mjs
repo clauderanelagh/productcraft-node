@@ -60,7 +60,9 @@ for (const p of pkgs) {
 
 // 2. a real consumer
 writeFileSync(join(CONSUMER, "package.json"), JSON.stringify({ name: "consumer", private: true, version: "0.0.0" }, null, 2));
-execFileSync("npm", ["install", "--no-audit", "--no-fund", "--ignore-scripts", "--loglevel=error", ...pkgs.map((p) => p.tgz)], { cwd: CONSUMER, stdio: "inherit" });
+// A React consumer also has @types/react (flags-react's declarations import React's types).
+const reactTypes = JSON.parse(readFileSync(join(ROOT, "packages/flags-react/package.json"), "utf8")).devDependencies["@types/react"];
+execFileSync("npm", ["install", "--no-audit", "--no-fund", "--ignore-scripts", "--loglevel=error", ...pkgs.map((p) => p.tgz), `@types/react@${reactTypes}`], { cwd: CONSUMER, stdio: "inherit" });
 
 const imports = pkgs.flatMap((p, i) => [`import * as m${i} from "${p.name}";`, ...(p.testing ? [`import * as t${i} from "${p.name}/testing";`] : [])]);
 const uses = pkgs.flatMap((p, i) => [`void m${i};`, ...(p.testing ? [`void t${i};`] : [])]);
