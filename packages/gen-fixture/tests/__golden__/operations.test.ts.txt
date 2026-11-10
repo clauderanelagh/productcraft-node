@@ -12,6 +12,43 @@ function setup(overrides: Parameters<typeof createMockFetch>[0] = {}) {
 }
 
 describe("generated operations (gen-fixture)", () => {
+  it("me.inbox.list: GET /v1/client/inbox", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.client({ token: "rt_example_recipient_token" }).inbox.list({ limit: 25 });
+    expect(Array.isArray(result.data)).toBe(true);
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("me.inbox.list");
+    expect(call.method).toBe("GET");
+    expect(call.url.pathname).toBe("/v1/client/inbox");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([["limit", "25"]]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.get("authorization")).toBe("Bearer rt_example_recipient_token");
+  });
+  it("me.inbox.mark: POST /v1/client/inbox/mark", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.client({ token: "rt_example_recipient_token" }).inbox.mark({ ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"], action: "read" });
+    expect(result).toBeDefined();
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("me.inbox.mark");
+    expect(call.method).toBe("POST");
+    expect(call.url.pathname).toBe("/v1/client/inbox/mark");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.get("authorization")).toBe("Bearer rt_example_recipient_token");
+    expect(call.body).toEqual({ ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"], action: "read" });
+  });
+  it("me.inbox.delete: DELETE /v1/client/inbox/{item_id}", async () => {
+    const { fetch, fixture } = setup();
+    const result = await fixture.client({ token: "rt_example_recipient_token" }).inbox.delete("item-id-1");
+    expect(result).toBeUndefined();
+    const call = fetch.calls[0]!;
+    expect(call.operation).toBe("me.inbox.delete");
+    expect(call.method).toBe("DELETE");
+    expect(call.url.pathname).toBe("/v1/client/inbox/item-id-1");
+    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual([]);
+    expect(call.headers.has("idempotency-key")).toBe(false);
+    expect(call.headers.get("authorization")).toBe("Bearer rt_example_recipient_token");
+  });
   it("posts.list: GET /v1/communities/{community_id}/posts", async () => {
     const { fetch, fixture } = setup();
     const result = await fixture.community("community-id-1").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").posts.list({ limit: 20 });

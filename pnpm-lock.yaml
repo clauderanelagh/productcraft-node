@@ -151,6 +151,15 @@ importers:
         specifier: ^0.13.0
         version: 0.13.8
 
+  packages/notify:
+    dependencies:
+      '@productcraft/core':
+        specifier: workspace:^
+        version: link:../core
+      openapi-fetch:
+        specifier: ^0.13.0
+        version: 0.13.8
+
   packages/platform-auth:
     dependencies:
       '@productcraft/core':
@@ -192,6 +201,9 @@ importers:
       '@productcraft/mail':
         specifier: workspace:^
         version: link:../mail
+      '@productcraft/notify':
+        specifier: workspace:^
+        version: link:../notify
       '@productcraft/platform-auth':
         specifier: workspace:^
         version: link:../platform-auth

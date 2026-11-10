@@ -31,6 +31,8 @@ export const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
  * Packages switched to the generator. Product identity lives here (class name,
  * base URL, scope accessors), so nothing per endpoint is hand-written.
  * scopes: { accessor: { bind: [path params], args: "positional" | { field: param }, actor?: true, doc } }
+ *   or a token scope { accessor: { token: { resource, scheme }, doc } }: the operations under x-pc-sdk
+ *   resource `<resource>.*` that declare security `<scheme>`, called as `accessor({ token })`.
  */
 export const SURFACES = {
   trawl: {
@@ -140,6 +142,23 @@ export const SURFACES = {
     webhookSecretEnv: "PRODUCTCRAFT_FLAGS_WEBHOOK_SECRET",
     scopes: {},
   },
+  notify: {
+    spec: "Specs/notify.json",
+    packageDir: "packages/notify",
+    packageName: "@productcraft/notify",
+    sdkName: "notify",
+    className: "Notify",
+    clientVar: "notify",
+    title: "ProductCraft Notify API client (recipients, preferences, notification types, sends, deliveries, inbox, channels and webhooks)",
+    baseUrlKey: "notify",
+    docsUrl: "https://productcraft.co/docs/notify",
+    webhookSecretEnv: "PRODUCTCRAFT_NOTIFY_WEBHOOK_SECRET",
+    readme: { list: "recipients.list", create: "notifications.send" },
+    scopes: {
+      // The client API (`/v1/client/*`, x-pc-sdk resource `me.*`) with a recipient token.
+      client: { token: { resource: "me", scheme: "recipient_token" }, doc: "Browser- and app-safe calls for one recipient (inbox, devices, preferences), authenticated by the short-lived recipient token your backend mints with `recipientTokens.mint`. Sends only that token, never an API key." },
+    },
+  },
   "gen-fixture": {
     spec: "packages/gen-fixture/fixture.openapi.json",
     packageDir: "packages/gen-fixture",
@@ -154,6 +173,7 @@ export const SURFACES = {
     scopes: {
       community: { bind: ["community_id"], args: "positional", actor: true, doc: "Calls scoped to one community. Chain `.as(actorId)` to act as a user." },
       public: { bind: ["workspace_slug", "waitlist_slug"], args: { workspace: "workspace_slug", waitlist: "waitlist_slug" }, doc: "Keyless, browser-safe calls for one public waitlist." },
+      client: { token: { resource: "me", scheme: "recipient_token" }, doc: "Calls for one recipient, with the recipient token as the only credential." },
     },
   },
 };

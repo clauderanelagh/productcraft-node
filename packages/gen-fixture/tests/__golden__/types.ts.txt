@@ -23,6 +23,10 @@ export const WidgetStatus = { values: ["draft", "active", "archived"] as const }
 
 export interface Comment extends Open<components["schemas"]["CommentResponseDto"]> {}
 export interface Entry extends Open<components["schemas"]["EntryResponseDto"]> {}
+export interface InboxItemList extends Open<components["schemas"]["InboxItemListResponseDto"]> {}
+export interface InboxItem extends Open<components["schemas"]["InboxItemResponseDto"]> {}
+export interface MarkInboxParams extends Open<components["schemas"]["MarkInboxDto"]> {}
+export interface MarkInboxResult extends Open<components["schemas"]["MarkInboxResponseDto"]> {}
 export interface Pagination extends Open<components["schemas"]["PaginationDto"]> {}
 export interface PartList extends Open<components["schemas"]["PartListResponseDto"]> {}
 export interface Part extends Open<components["schemas"]["PartResponseDto"]> {}
@@ -40,6 +44,10 @@ export interface WidgetList extends Open<components["schemas"]["WidgetListRespon
  */
 export interface Widget extends Open<components["schemas"]["WidgetResponseDto"]> {}
 
+/** Params for `me.inbox.list` (GET /v1/client/inbox). */
+export type MeInboxListParams = NonNullable<paths["/v1/client/inbox"]["get"]["parameters"]["query"]>;
+/** Params for `me.inbox.mark` (POST /v1/client/inbox/mark). */
+export type MeInboxMarkParams = NonNullable<paths["/v1/client/inbox/mark"]["post"]["requestBody"]>["content"]["application/json"];
 /** Params for `posts.list` (GET /v1/communities/{community_id}/posts). */
 export type PostListParams = NonNullable<paths["/v1/communities/{community_id}/posts"]["get"]["parameters"]["query"]>;
 /** Params for `posts.create` (POST /v1/communities/{community_id}/posts). */

@@ -68,6 +68,7 @@ export function exampleParams(o, deref, { full = false } = {}) {
  */
 export function scopeExpr(o, deref, given = undefined, { alwaysAs = false } = {}) {
   if (!o.scope) return "";
+  if (o.scope.token) return `.${o.scope.accessor || o.scope.name}({ token: ${lit(given?.token ?? TOKEN_EXAMPLE)} })`;
   const vals = given ?? Object.fromEntries(o.scope.bind.map((b, i) => [b, pathValue({ name: b, schema: o.pathParamSchemas?.[b] ?? { type: "string" }, example: o.pathParamExamples?.[b] }, i + 4, deref)]));
   let expr;
   const acc = o.scope.accessor || o.scope.name;
@@ -76,6 +77,9 @@ export function scopeExpr(o, deref, given = undefined, { alwaysAs = false } = {}
   if (o.scope.actor && (o.actor || alwaysAs)) expr += `.as(${lit(placeholderUuid(3))})`;
   return expr;
 }
+
+/** The placeholder recipient token in docs, examples and the per-op test. */
+export const TOKEN_EXAMPLE = "rt_example_recipient_token";
 
 /** JS words that cannot name a variable in an example (`for await (const import of …)`). */
 const JS_KEYWORDS = new Set("break case catch class const continue debugger default delete do else enum export extends false finally for function if import in instanceof let new null package private protected public return static super switch this throw true try typeof var void while with yield await implements interface".split(" "));
@@ -204,7 +208,10 @@ export function emitTypes(model, cfg) {
       L.push(`/** One item of \`${o.name}\`. */`, `export type ${o.itemType} = Open<${okType(o)}["data"][number]>;`);
     }
     if (o.responseType && !model.models.some((m) => m.name === o.responseType)) {
-      L.push(`/** Response of \`${o.name}\`. */`, `export type ${o.responseType} = Open<${okType(o)}>;`);
+      if (o.success.union) {
+        const member = (u) => u.model ?? `Open<${opType(o)}["responses"][${u.status}]["content"][${lit(u.contentKey)}]>`;
+        L.push(`/** Response of \`${o.name}\`: one of ${o.success.union.length} success shapes (HTTP ${o.success.union.map((u) => u.status).join(", ")}). */`, `export type ${o.responseType} = ${o.success.union.map(member).join(" | ")};`);
+      } else L.push(`/** Response of \`${o.name}\`. */`, `export type ${o.responseType} = Open<${okType(o)}>;`);
     }
   }
   for (const a of model.compat?.aliases ?? []) {
@@ -623,9 +630,15 @@ export function emitClient(model, cfg) {
   const rootBase = cfg.root;
   const imports = [...(rootBase ? [] : [`${cfg.className}Resources`]), ...scopes.map((s) => `${cfg.className}${pascal(s.name)}`)].sort();
   const base = cfg.baseUrlKey ? `PC_BASE_URL.${cfg.baseUrlKey}` : lit(cfg.baseUrl);
+  // A token scope (`notify.client({ token })`) builds its own APIClient from the product's options,
+  // with the token as its only credential. One named `client` shares the name with the escape hatch:
+  // `client` is then callable and still carries the openapi-fetch methods.
+  const tokenScopes = scopes.filter((s) => s.token);
+  if (tokenScopes.length && rootBase) throw new Error(`gen-sdk: ${cfg.surface}: a token scope needs the generated constructor (no SURFACES root)`);
+  const hybrid = tokenScopes.find((s) => s.name === "client" && !s.accessor);
   const L = [
     banner(cfg),
-    `import { APIClient, createOpenAPIClient${cfg.baseUrlKey ? ", PC_BASE_URL" : ""}, type ClientOptions, type ClientOptions as CoreClientOptions, type PollOptions as CorePollOptions, type RequestOptions as CoreRequestOptions } from "@productcraft/core";`,
+    `import { APIClient, ${tokenScopes.length ? "ConfigurationError, " : ""}createOpenAPIClient${cfg.baseUrlKey ? ", PC_BASE_URL" : ""}, type ClientOptions, type ClientOptions as CoreClientOptions, type PollOptions as CorePollOptions, type RequestOptions as CoreRequestOptions } from "@productcraft/core";`,
     `import type { APIPromise as CoreAPIPromise, LastResponse as CoreLastResponse, Page as CorePage, PagePromise as CorePagePromise, RateLimitInfo as CoreRateLimitInfo, WithResponse as CoreWithResponse } from "@productcraft/core";`,
     `import type { Client } from "openapi-fetch";`,
     `import type * as E from "./errors.js";`,
@@ -640,7 +653,6 @@ export function emitClient(model, cfg) {
     "",
     jsdoc([`${cfg.title}. Every method is generated from the API's OpenAPI document.`, "", "@example", "```ts", `import { ${cfg.className} } from ${lit(cfg.packageName)};`, `const ${cfg.clientVar} = new ${cfg.className}({ apiKey: process.env.PRODUCTCRAFT_API_KEY });`, "```"], ""),
     `export class ${cfg.className} extends ${rootBase ? rootBase.base : `${cfg.className}Resources`} {`,
-    "  #openapi?: Client<paths>;",
     ...(rootBase
       ? [
           `  constructor(options: ${rootBase.options} = {}) {`,
@@ -648,16 +660,73 @@ export function emitClient(model, cfg) {
           `    super(new APIClient(options, ${base}, sdk), options, (o: ClientOptions) => new APIClient(o, ${base}, sdk));`,
           "  }",
         ]
-      : [
-          "  constructor(options: ClientOptions = {}) {",
-          `    super(new APIClient(options, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
-          "  }",
-        ]),
-    "  /** The typed `openapi-fetch` escape hatch over the same credential and base URL. It does not retry. */",
-    "  get client(): Client<paths> {",
-    "    return (this.#openapi ??= createOpenAPIClient<paths>(this._client));",
-    "  }",
+      : tokenScopes.length
+        ? [
+            "  /** The options this client was built with, for the token scopes' own clients. Never enumerable. */",
+            "  readonly #options: ClientOptions;",
+            "  constructor(options: ClientOptions = {}) {",
+            `    super(new APIClient(options, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
+            "    this.#options = options;",
+            "  }",
+          ]
+        : [
+            "  constructor(options: ClientOptions = {}) {",
+            `    super(new APIClient(options, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
+            "  }",
+          ]),
   ];
+  if (hybrid) {
+    const cls = `${cfg.className}${pascal(hybrid.name)}`;
+    L.push(
+      "  #openapi?: Client<paths> & ((scope: { token: string }) => " + cls + ");",
+      jsdoc([
+        hybrid.doc ?? "Calls made with a token instead of the client's credential.",
+        "",
+        `Call it: \`${cfg.clientVar}.client({ token })\` returns the scope. Read it: \`${cfg.clientVar}.client.GET(…)\` is the typed`,
+        "`openapi-fetch` escape hatch over this client's credential and base URL (it does not retry).",
+        "",
+        "@example",
+        "```ts",
+        `const inbox = await ${cfg.clientVar}.client({ token }).inbox.list();`,
+        "```",
+      ], "  ").trimEnd(),
+      `  get client(): Client<paths> & ((scope: { token: string }) => ${cls}) {`,
+      `    return (this.#openapi ??= Object.assign((scope: { token: string }) => this.#tokenScope(scope), createOpenAPIClient<paths>(this._client)));`,
+      "  }",
+    );
+  } else {
+    L.push(
+      "  #openapi?: Client<paths>;",
+      "  /** The typed `openapi-fetch` escape hatch over the same credential and base URL. It does not retry. */",
+      "  get client(): Client<paths> {",
+      "    return (this.#openapi ??= createOpenAPIClient<paths>(this._client));",
+      "  }",
+    );
+  }
+  for (const s of tokenScopes) {
+    const cls = `${cfg.className}${pascal(s.name)}`;
+    if (s !== hybrid) {
+      L.push(jsdoc([s.doc ?? "Calls made with a token instead of the client's credential.", "@param scope - `token`: the token to send as `Authorization: Bearer`."], "  ").trimEnd());
+      L.push(`  ${s.accessor || s.name}(scope: { token: string }): ${cls} {`, `    return this.#tokenScope(scope);`, "  }");
+    }
+  }
+  if (tokenScopes.length) {
+    const cls = (s) => `${cfg.className}${pascal(s.name)}`;
+    const ret = tokenScopes.map(cls).join(" & ");
+    if (tokenScopes.length > 1) throw new Error(`gen-sdk: ${cfg.surface}: one token scope per surface`);
+    L.push(
+      `  #tokenScope(scope: { token: string }): ${ret} {`,
+      `    const token = scope?.token;`,
+      `    if (typeof token !== "string" || token.trim() === "") throw new ConfigurationError(${lit(`${tokenScopes[0].accessor || tokenScopes[0].name}({ token }) needs a non-empty token.`)});`,
+      `    if (token.startsWith("pcft_")) {`,
+      `      throw new ConfigurationError(${lit(`${tokenScopes[0].accessor || tokenScopes[0].name}({ token }) was given a workspace API key. Pass the short-lived token your backend minted; never ship an API key to a browser or an app.`)});`,
+      "    }",
+      "    // Only the token: no API key, no environment fallback, no workspace (the token names it).",
+      "    const { apiKey: _apiKey, auth: _auth, workspaceId: _workspaceId, credentialFromEnv: _env, dangerouslyAllowBrowser: _browser, ...rest } = this.#options;",
+      `    return new ${ret}(new APIClient({ ...rest, auth: { type: "bearer", token }, credentialFromEnv: false }, ${base}, { name: ${lit(cfg.sdkName)}, version: VERSION }));`,
+      "  }",
+    );
+  }
   // Scopes behind a namespace (`accessor: "admin.app"` is `auth.admin.app(id)`), grouped per namespace.
   const nested = new Map();
   for (const s of scopes.filter((x) => x.accessor?.includes("."))) {
@@ -681,7 +750,7 @@ export function emitClient(model, cfg) {
       L.push(jsdoc([`Alias of \`${cfg.clientVar}.${s.accessor}(…)\`.`, ...s.bind.map((b) => `@param ${camel(b)} - \`{${b}}\``)], "  ").trimEnd());
       L.push(`  ${alias}(${args}): ${cls} {`, `    return new ${cls}(this._client, { ${s.bind.map((b) => `${b}: ${camel(b)}`).join(", ")} });`, "  }");
     }
-    if (s.accessor?.includes(".")) continue;
+    if (s.accessor?.includes(".") || s.token) continue;
     if (s.args === "positional") {
       const args = s.bind.map((b) => `${camel(b)}: string`).join(", ");
       L.push(jsdoc([s.doc ?? `Calls scoped to one ${s.bind.join(", ")}.`, ...s.bind.map((b) => `@param ${camel(b)} - \`{${b}}\``)], "  ").trimEnd());
@@ -928,7 +997,9 @@ export function emitOpsTest(model, cfg) {
       `    expect(call.url.pathname).toBe(${lit(expectedPath)});`,
       `    expect([...call.url.searchParams].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))).toEqual(${tsLiteral(query, "    ")});`,
       `    expect(call.headers.has("idempotency-key")).toBe(${o.idempotent});`,
-      `    expect(call.headers.has("authorization")).toBe(${!o.public});`,
+      o.scope?.token
+        ? `    expect(call.headers.get("authorization")).toBe(${lit(`Bearer ${TOKEN_EXAMPLE}`)});`
+        : `    expect(call.headers.has("authorization")).toBe(${!o.public});`,
     );
     if (o.body?.json) L.push(`    expect(call.body).toEqual(${tsLiteral(bodyExpect, "    ")});`);
     if (o.body?.multipart) {

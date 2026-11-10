@@ -366,6 +366,60 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/client/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List the recipient's inbox
+         * @description Called from a browser or an app with a recipient token.
+         */
+        get: operations["ClientInboxController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/client/inbox/mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark inbox items */
+        post: operations["ClientInboxController_mark"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/client/inbox/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete one inbox item */
+        delete: operations["ClientInboxController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 };
 export type webhooks = Record<string, never>;
 export type components = {
@@ -639,6 +693,38 @@ export type components = {
                 /** @example user_1 */
                 archived_by: string;
             };
+        };
+        InboxItemResponseDto: {
+            /**
+             * Format: uuid
+             * @example 9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b
+             */
+            id: string;
+            /** @example Your export is ready */
+            title: string;
+            /** @example false */
+            read: boolean;
+        };
+        InboxItemListResponseDto: {
+            data: components["schemas"]["InboxItemResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        MarkInboxDto: {
+            /**
+             * @example [
+             *       "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+             *     ]
+             */
+            ids: string[];
+            /**
+             * @example read
+             * @enum {string}
+             */
+            action: "read" | "unread";
+        };
+        MarkInboxResponseDto: {
+            /** @example 1 */
+            updated: number;
         };
     };
     responses: never;
@@ -1680,6 +1766,76 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponseDto"];
                 };
+            };
+        };
+    };
+    ClientInboxController_list: {
+        parameters: {
+            query?: {
+                /** @description Cursor from the previous page. */
+                cursor?: string;
+                /** @description Page size. */
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of inbox items. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InboxItemListResponseDto"];
+                };
+            };
+        };
+    };
+    ClientInboxController_mark: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkInboxDto"];
+            };
+        };
+        responses: {
+            /** @description How many items changed. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MarkInboxResponseDto"];
+                };
+            };
+        };
+    };
+    ClientInboxController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Inbox item id. */
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

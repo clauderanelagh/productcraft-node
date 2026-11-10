@@ -10,29 +10,29 @@
  */
 import { Auth, type AuthOptions } from "@productcraft/auth";
 import { Flags } from "@productcraft/flags";
-import { Mail } from "@productcraft/mail";
+import { Mail } from "@productcraft/mail"; import { Notify } from "@productcraft/notify";
 import { PlatformAuth } from "@productcraft/platform-auth";
 import { Social } from "@productcraft/social";
 import { Trawl } from "@productcraft/trawl"; import { Waitlist } from "@productcraft/waitlist";
 import { PC_WORKSPACE_ID_ENV, readEnv, type ClientOptions } from "@productcraft/core";
 
-export { Auth, Flags, Mail, PlatformAuth, Social, Trawl, Waitlist };
+export { Auth, Flags, Mail, Notify, PlatformAuth, Social, Trawl, Waitlist };
 export type { AuthErrorCode, AuthOptions } from "@productcraft/auth"; export type { MailErrorCode } from "@productcraft/mail"; export type { FlagsErrorCode } from "@productcraft/flags";
-export type { PlatformAuthErrorCode } from "@productcraft/platform-auth"; export type { SocialErrorCode } from "@productcraft/social";
+export type { PlatformAuthErrorCode } from "@productcraft/platform-auth"; export type { SocialErrorCode } from "@productcraft/social"; export type { NotifyErrorCode } from "@productcraft/notify";
 export type { TrawlErrorCode } from "@productcraft/trawl"; export type { WaitlistErrorCode } from "@productcraft/waitlist";
 export { APIConnectionError, APIError, APITimeoutError, APIUserAbortError, AuthenticationError, BadRequestError, ConfigurationError, ConflictError, IdempotencyKeyReuseError, InternalServerError, NotFoundError, PaymentRequiredError, PermissionDeniedError, ProductCraftError, RateLimitError, UnprocessableEntityError, WebhookVerificationError } from "@productcraft/core";
 export { PC_BASE_URL, signWebhook, verifyWebhook, type APIPromise, type ClientOptions, type Logger, type LogLevel, type Page, type PagePromise, type PCAuth, type PCClientConfig, type RequestOptions, type SignedWebhook, type SignWebhookParams, type VerifyWebhookParams } from "@productcraft/core";
 
 /** Per-product settings merged over the shared ones. Nested because a flat `auth` key would collide with the credential field. */
 export interface ProductCraftOverrides {
-  auth?: AuthOptions; mail?: ClientOptions; waitlist?: ClientOptions; social?: ClientOptions; trawl?: ClientOptions; flags?: ClientOptions; platform?: ClientOptions;
+  auth?: AuthOptions; mail?: ClientOptions; waitlist?: ClientOptions; social?: ClientOptions; trawl?: ClientOptions; flags?: ClientOptions; notify?: ClientOptions; platform?: ClientOptions;
   /** Same as `platform` (its 0.x name); `platform` wins where both set a field. */
   platformAuth?: ClientOptions;
 }
 
 /** Shared config for every product (`apiKey` or `auth`, `workspaceId`, retries, timeout, fetch, logging), plus `overrides`. */
 export interface ProductCraftOptions extends AuthOptions { overrides?: ProductCraftOverrides }
-const PRODUCTS = { auth: Auth, mail: Mail, waitlist: Waitlist, social: Social, trawl: Trawl, flags: Flags, platform: PlatformAuth };
+const PRODUCTS = { auth: Auth, mail: Mail, waitlist: Waitlist, social: Social, trawl: Trawl, flags: Flags, notify: Notify, platform: PlatformAuth };
 type Products = { [K in keyof typeof PRODUCTS]: InstanceType<(typeof PRODUCTS)[K]> };
 
 export class ProductCraft {
@@ -54,7 +54,7 @@ export class ProductCraft {
   get social(): Social { return this.#get("social"); }
   get trawl(): Trawl { return this.#get("trawl"); }
   /** Flags management API; evaluate flags with `FlagsClient` from `@productcraft/flags`. */ get flags(): Flags { return this.#get("flags"); }
+  /** Notify (server side); browsers and apps use `new Notify().client({ token })` with a recipient token. */ get notify(): Notify { return this.#get("notify"); }
   get platform(): PlatformAuth { return this.#get("platform"); }
-  /** Same instance as `platform` (its 0.x name). */
-  get platformAuth(): PlatformAuth { return this.#get("platform"); }
+  /** Same instance as `platform` (its 0.x name). */ get platformAuth(): PlatformAuth { return this.#get("platform"); }
 }

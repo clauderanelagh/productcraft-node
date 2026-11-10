@@ -59,8 +59,10 @@ describe("shared config", () => {
     await expect(pc.trawl.jobs.list()).rejects.toBeInstanceOf(NotFoundError);
     await expect(pc.mail.domains.list()).rejects.toBeInstanceOf(NotFoundError);
     await expect(pc.flags.projects.list()).rejects.toBeInstanceOf(NotFoundError);
-    expect(r.seen).toHaveLength(3);
+    await expect(pc.notify.categories.list()).rejects.toBeInstanceOf(NotFoundError);
+    expect(r.seen).toHaveLength(4);
     expect(r.seen[2]!.url).toMatch(/^https:\/\/api\.flags\.productcraft\.co\//);
+    expect(r.seen[3]!.url).toMatch(/^https:\/\/api\.notify\.productcraft\.co\//);
     for (const q of r.seen) {
       expect(q.url).toContain(`/v1/workspaces/${WS}/`);
       expect(q.headers.get("x-trace")).toBe("t1");

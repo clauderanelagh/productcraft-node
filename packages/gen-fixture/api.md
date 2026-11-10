@@ -544,6 +544,58 @@ const entry = await fixture.public({ workspace: "acme", waitlist: "beta" }).entr
 
 [HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-public-workspace-slug-waitlist-slug-entries)
 
+## client(…).inbox
+
+### `fixture.client({ token }).inbox.delete(itemId, options?)`
+
+`DELETE /v1/client/inbox/{item_id}` → `void`
+
+Delete one inbox item.
+
+- Credential: [`recipient_token`](#recipient_token)
+
+```ts
+await fixture.client({ token: "rt_example_recipient_token" }).inbox.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#delete-v1-client-inbox-item-id)
+
+### `fixture.client({ token }).inbox.list(params?, options?)`
+
+`GET /v1/client/inbox` → `PagePromise<Fixture.InboxItem>`
+
+List the recipient's inbox.
+
+Called from a browser or an app with a recipient token.
+
+- Params: `Fixture.MeInboxListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`recipient_token`](#recipient_token)
+
+```ts
+for await (const inbox of fixture.client({ token: "rt_example_recipient_token" }).inbox.list()) {
+  console.log(inbox);
+}
+const page = await fixture.client({ token: "rt_example_recipient_token" }).inbox.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#get-v1-client-inbox)
+
+### `fixture.client({ token }).inbox.mark(params, options?)`
+
+`POST /v1/client/inbox/mark` → `Fixture.MarkInboxResult`
+
+Mark inbox items.
+
+- Params: `Fixture.MeInboxMarkParams`
+- Credential: [`recipient_token`](#recipient_token)
+
+```ts
+const markInboxResult = await fixture.client({ token: "rt_example_recipient_token" }).inbox.mark({ ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"], action: "read" });
+```
+
+[HTTP reference](https://productcraft.co/docs/fixture/api-reference#post-v1-client-inbox-mark)
+
 ## Credentials
 
 Routes take different credentials; each method above says which. Every one is sent as `Authorization: Bearer`. A workspace API key is the client's `apiKey` (or `PRODUCTCRAFT_API_KEY`); pass any other as `new Fixture({ auth: { type: "bearer", token } })`. The wrong one answers 401.
@@ -555,6 +607,10 @@ A workspace API key.
 ### `end_user_token`
 
 An end user's access token.
+
+### `recipient_token`
+
+A short-lived token your backend mints for one recipient.
 
 ## Error codes
 

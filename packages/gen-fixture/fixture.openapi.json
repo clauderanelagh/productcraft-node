@@ -2175,6 +2175,141 @@
           "paginated": false
         }
       }
+    },
+    "/v1/client/inbox": {
+      "get": {
+        "security": [
+          {
+            "recipient_token": []
+          }
+        ],
+        "operationId": "ClientInboxController_list",
+        "summary": "List the recipient's inbox",
+        "description": "Called from a browser or an app with a recipient token.",
+        "tags": [
+          "client"
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "Cursor from the previous page.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Page size.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of inbox items.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxItemListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "me.inbox",
+          "method": "list",
+          "bind": [],
+          "paginated": true
+        }
+      }
+    },
+    "/v1/client/inbox/mark": {
+      "post": {
+        "security": [
+          {
+            "recipient_token": []
+          }
+        ],
+        "operationId": "ClientInboxController_mark",
+        "summary": "Mark inbox items",
+        "tags": [
+          "client"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkInboxDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "How many items changed.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkInboxResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "me.inbox",
+          "method": "mark",
+          "bind": [],
+          "paginated": false
+        }
+      }
+    },
+    "/v1/client/inbox/{item_id}": {
+      "delete": {
+        "security": [
+          {
+            "recipient_token": []
+          }
+        ],
+        "operationId": "ClientInboxController_delete",
+        "summary": "Delete one inbox item",
+        "tags": [
+          "client"
+        ],
+        "parameters": [
+          {
+            "name": "item_id",
+            "in": "path",
+            "required": true,
+            "description": "Inbox item id.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          }
+        },
+        "x-pc-sdk": {
+          "resource": "me.inbox",
+          "method": "delete",
+          "bind": [],
+          "paginated": false
+        }
+      }
     }
   },
   "x-webhooks": {
@@ -2827,6 +2962,90 @@
             }
           }
         }
+      },
+      "InboxItemResponseDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "read"
+        ],
+        "x-pc-sdk-model": "InboxItem",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+          },
+          "title": {
+            "type": "string",
+            "example": "Your export is ready"
+          },
+          "read": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "InboxItemListResponseDto": {
+        "type": "object",
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "x-pc-sdk-model": "InboxItemList",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxItemResponseDto"
+            }
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        }
+      },
+      "MarkInboxDto": {
+        "type": "object",
+        "required": [
+          "ids",
+          "action"
+        ],
+        "x-pc-sdk-model": "MarkInboxParams",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [
+              "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+            ]
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "read",
+              "unread"
+            ],
+            "example": "read"
+          }
+        }
+      },
+      "MarkInboxResponseDto": {
+        "type": "object",
+        "required": [
+          "updated"
+        ],
+        "x-pc-sdk-model": "MarkInboxResult",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "example": 1
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -2840,6 +3059,12 @@
         "scheme": "bearer",
         "bearerFormat": "JWT",
         "description": "An end user's access token."
+      },
+      "recipient_token": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "A short-lived token your backend mints for one recipient."
       }
     }
   }

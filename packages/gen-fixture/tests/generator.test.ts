@@ -435,3 +435,49 @@ describe("scope roots, accessors and compat aliases", () => {
     expect(p.join()).toMatch(/compat community:posts\.create: collides with a generated name/);
   });
 });
+
+describe("token scopes (Notify's client({ token }) over the me.* client API)", () => {
+  it("maps me.* to fixture.client({ token }) without the prefix; client stays callable and the escape hatch", async () => {
+    const { files } = await generate("gen-fixture", fresh());
+    const res = files["packages/gen-fixture/src/_generated/resources.ts"] as string;
+    const client = files["packages/gen-fixture/src/_generated/client.ts"] as string;
+    expect(res).toMatch(/export class FixtureClient extends APIResource \{[\s\S]*?get inbox\(\): ClientInboxResource/);
+    expect(client).toContain("get client(): Client<paths> & ((scope: { token: string }) => FixtureClient)");
+    expect(client).toContain('auth: { type: "bearer", token }, credentialFromEnv: false');
+    expect(files["packages/gen-fixture/api.md"]).toContain("fixture.client({ token }).inbox.list(");
+    const test = files["packages/gen-fixture/tests/_generated/operations.test.ts"] as string;
+    expect(test).toContain('fixture.client({ token: "rt_example_recipient_token" }).inbox.list(');
+    expect(test).toContain('expect(call.headers.get("authorization")).toBe("Bearer rt_example_recipient_token");');
+  });
+
+  it("a me.* operation without the token's security scheme fails", async () => {
+    const p = await problems((s) => (s.paths["/v1/client/inbox"]!.get!.security = [{ bearer: [] }]));
+    expect(p.join()).toMatch(/ClientInboxController_list\): resource "me" is the token scope client\(…\), but the operation does not declare the recipient_token security scheme/);
+  });
+
+  it("an operation with the token's scheme outside me.* fails", async () => {
+    const p = await problems((s) => (s.paths["/v1/regions"]!.get!.security = [{ recipient_token: [] }]));
+    expect(p.join()).toMatch(/RegionController_list\): declares the recipient_token security scheme but its resource is not under "me"/);
+  });
+});
+
+describe("several 2xx JSON responses (Notify's send: 202 accepted, 200 dry run)", () => {
+  it("types the result as a union of every success shape", async () => {
+    const spec = fresh();
+    const create = spec.paths[`${W}/widgets`]!.post! as { responses: Record<string, unknown> };
+    create.responses["200"] = { description: "Dry run.", content: { "application/json": { schema: { $ref: "#/components/schemas/RegionResponseDto" } } } };
+    const { files } = await generate("gen-fixture", spec);
+    const types = files["packages/gen-fixture/src/_generated/types.ts"] as string;
+    expect(types).toMatch(/export type WidgetCreateResponse = Region \| Widget;/);
+    expect(files["packages/gen-fixture/src/_generated/resources.ts"]).toContain("APIPromise<T.WithLastResponse<T.WidgetCreateResponse>>");
+  });
+
+  it("keeps one type when the 2xx responses share a schema (200 replay, 201 created)", async () => {
+    const spec = fresh();
+    const create = spec.paths[`${W}/widgets`]!.post! as { responses: Record<string, Record<string, unknown>> };
+    const created = Object.entries(create.responses).find(([c]) => c.startsWith("2"))!;
+    create.responses["200"] = created[1];
+    const { files } = await generate("gen-fixture", spec);
+    expect(files["packages/gen-fixture/src/_generated/types.ts"]).not.toContain("WidgetCreateResponse");
+  });
+});

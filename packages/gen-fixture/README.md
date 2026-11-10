@@ -16,6 +16,7 @@ await fixture.widgets.updateStatus(widget.id, { status: "active" });
 
 Full reference: [api.md](./api.md).
 
+- `fixture.client(…).inbox`: `delete`, `list`, `mark`
 - `fixture.community(…).posts`: `comments.create`, `create`, `delete`, `list`
 - `fixture.public(…).entries`: `create`
 - `fixture.regions`: `list`

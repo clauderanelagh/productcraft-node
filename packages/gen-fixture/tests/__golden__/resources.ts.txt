@@ -710,3 +710,74 @@ export class FixturePublic extends APIResource {
     return (this.#entries ??= new PublicEntriesResource(this._client, this._b));
   }
 }
+
+/** `inbox` */
+export class ClientInboxResource extends APIResource {
+  /**
+   * Delete one inbox item
+   *
+   * Credential: `recipient_token`.
+   * - `recipient_token`: A short-lived token your backend mints for one recipient.
+   *
+   * @param itemId - Inbox item id.
+   * @param options - Per-request options.
+   * @see DELETE /v1/client/inbox/{item_id}
+   * @see https://productcraft.co/docs/fixture/api-reference#delete-v1-client-inbox-item-id
+   * @example
+   * ```ts
+   * await fixture.client({ token: "rt_example_recipient_token" }).inbox.delete("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
+   * ```
+   */
+  delete(itemId: string, options?: RequestOptions): APIPromise<void> {
+    return this._client.request({ method: "DELETE", path: "/v1/client/inbox/{item_id}", pathParams: { item_id: itemId } }, options);
+  }
+  /**
+   * List the recipient's inbox
+   *
+   * Called from a browser or an app with a recipient token.
+   *
+   * Credential: `recipient_token`.
+   * - `recipient_token`: A short-lived token your backend mints for one recipient.
+   *
+   * @param params - `Fixture.MeInboxListParams`.
+   * @param options - Per-request options.
+   * @see GET /v1/client/inbox
+   * @see https://productcraft.co/docs/fixture/api-reference#get-v1-client-inbox
+   * @example
+   * ```ts
+   * for await (const inbox of fixture.client({ token: "rt_example_recipient_token" }).inbox.list()) {
+   *   console.log(inbox);
+   * }
+   * const page = await fixture.client({ token: "rt_example_recipient_token" }).inbox.list({}, { timeout: 5_000 });
+   * ```
+   */
+  list(params?: T.MeInboxListParams, options?: RequestOptions): PagePromise<T.InboxItem> {
+    return this._client.list({ method: "GET", path: "/v1/client/inbox", query: params }, options);
+  }
+  /**
+   * Mark inbox items
+   *
+   * Credential: `recipient_token`.
+   * - `recipient_token`: A short-lived token your backend mints for one recipient.
+   *
+   * @param params - `Fixture.MeInboxMarkParams`.
+   * @param options - Per-request options.
+   * @see POST /v1/client/inbox/mark
+   * @see https://productcraft.co/docs/fixture/api-reference#post-v1-client-inbox-mark
+   * @example
+   * ```ts
+   * const markInboxResult = await fixture.client({ token: "rt_example_recipient_token" }).inbox.mark({ ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"], action: "read" });
+   * ```
+   */
+  mark(params: T.MeInboxMarkParams, options?: RequestOptions): APIPromise<T.WithLastResponse<T.MarkInboxResult>> {
+    return this._client.request({ method: "POST", path: "/v1/client/inbox/mark", body: params }, options);
+  }
+}
+
+/** `fixture.client(…)`: Calls for one recipient, with the recipient token as the only credential. */
+export class FixtureClient extends APIResource {
+  #inbox?: ClientInboxResource;
+  get inbox(): ClientInboxResource {
+    return (this.#inbox ??= new ClientInboxResource(this._client, this._b));
+  }
+}

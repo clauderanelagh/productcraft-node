@@ -26,6 +26,8 @@ import { LogLevel } from '@productcraft/core';
 import { Mail } from '@productcraft/mail';
 import { MailErrorCode } from '@productcraft/mail';
 import { NotFoundError } from '@productcraft/core';
+import { Notify } from '@productcraft/notify';
+import { NotifyErrorCode } from '@productcraft/notify';
 import { Page } from '@productcraft/core';
 import { PagePromise } from '@productcraft/core';
 import { PaymentRequiredError } from '@productcraft/core';
@@ -96,6 +98,10 @@ export { MailErrorCode }
 
 export { NotFoundError }
 
+export { Notify }
+
+export { NotifyErrorCode }
+
 export { Page }
 
 export { PagePromise }
@@ -122,6 +128,7 @@ export class ProductCraft {
     get flags(): Flags;
     // (undocumented)
     get mail(): Mail;
+    get notify(): Notify;
     // (undocumented)
     get platform(): PlatformAuth;
     get platformAuth(): PlatformAuth;
@@ -149,6 +156,8 @@ export interface ProductCraftOverrides {
     flags?: ClientOptions;
     // (undocumented)
     mail?: ClientOptions;
+    // (undocumented)
+    notify?: ClientOptions;
     // (undocumented)
     platform?: ClientOptions;
     platformAuth?: ClientOptions;

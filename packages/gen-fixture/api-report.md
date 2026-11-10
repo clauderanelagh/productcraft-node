@@ -178,6 +178,22 @@ export type components = {
                 archived_by: string;
             };
         };
+        InboxItemResponseDto: {
+            id: string;
+            title: string;
+            read: boolean;
+        };
+        InboxItemListResponseDto: {
+            data: components["schemas"]["InboxItemResponseDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        MarkInboxDto: {
+            ids: string[];
+            action: "read" | "unread";
+        };
+        MarkInboxResponseDto: {
+            updated: number;
+        };
     };
     responses: never;
     parameters: never;
@@ -193,7 +209,9 @@ export { ConflictError }
 // @public
 class Fixture extends FixtureResources {
     constructor(options?: ClientOptions);
-    get client(): Client<paths>;
+    get client(): Client<paths> & ((scope: {
+        token: string;
+    }) => FixtureClient);
     community(communityId: string): FixtureCommunity;
     public(scope: {
         workspace: string;
@@ -218,15 +236,27 @@ namespace Fixture {
     // (undocumented)
     type ErrorCode = __ErrorCode;
     // (undocumented)
+    type InboxItem = __InboxItem;
+    // (undocumented)
+    type InboxItemList = __InboxItemList;
+    // (undocumented)
     type LastResponse = __LastResponse;
-    // (undocumented)
-    type Page<T> = __Page<T>;
-    // (undocumented)
-    type PagePromise<T> = __PagePromise<T>;
     const // (undocumented)
     WidgetStatus: {
         values: readonly ["draft", "active", "archived"];
     };
+    // (undocumented)
+    type MarkInboxParams = __MarkInboxParams;
+    // (undocumented)
+    type MarkInboxResult = __MarkInboxResult;
+    // (undocumented)
+    type MeInboxListParams = __MeInboxListParams;
+    // (undocumented)
+    type MeInboxMarkParams = __MeInboxMarkParams;
+    // (undocumented)
+    type Page<T> = __Page<T>;
+    // (undocumented)
+    type PagePromise<T> = __PagePromise<T>;
     // (undocumented)
     type Pagination = __Pagination;
     // (undocumented)
@@ -660,6 +690,54 @@ export type paths = {
         put?: never;
         post?: never;
         delete: operations["PostController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/client/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ClientInboxController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/client/inbox/mark": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ClientInboxController_mark"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/client/inbox/{item_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["ClientInboxController_delete"];
         options?: never;
         head?: never;
         patch?: never;
