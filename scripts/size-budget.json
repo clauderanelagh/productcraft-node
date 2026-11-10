@@ -56,7 +56,19 @@
     "limitGzipBytes": 14312
   },
   "@productcraft/notify-js": {
-    "measuredGzipBytes": 5016,
+    "measuredGzipBytes": 5385,
     "limitGzipBytes": 6144
+  },
+  "@productcraft/notify-react (NotifyInbox)": {
+    "measuredGzipBytes": 6211,
+    "limitGzipBytes": 12288
+  },
+  "@productcraft/notify-react (NotifyPreferences)": {
+    "measuredGzipBytes": 4436,
+    "limitGzipBytes": 6144
+  },
+  "@productcraft/notify-react (hooks)": {
+    "measuredGzipBytes": 1737,
+    "limitGzipBytes": 3072
   }
 }

@@ -19,6 +19,6 @@ Open backlog for the Node SDK workspace. Same conventions as `monorepo/tasks/`:
 **Notify (2026-11-08).** A new product, ProductCraft Notify (notifications: in-app inbox, email via Mail, web push, APNs, FCM). Spec: `monorepo/internal_docs/notify/prd.md` and `design.md`; the cross-repo build order is design section 17.2. The SDK tasks here are:
 
 - `017-notify-sdk.md`: `@productcraft/notify` (generated, with the recipient-token `client()` scope). Needs monorepo notify-api/012 deployed.
-- `020-notify-react.md`: `@productcraft/notify-react` (`<NotifyInbox/>`, `<NotifyPreferences/>`, hooks), a thin wrapper over `@productcraft/notify-js` (shipped in 018; 019 is Flags).
+- 018 and 020 (shipped 2026-11-10): `@productcraft/notify-js` (browser core) and `@productcraft/notify-react` (`<NotifyInbox/>`, `<NotifyPreferences/>`, hooks).
 
 The previous program (Stripe-grade SDKs, 2026-11) is complete: task 012 shipped the last stable releases on 2026-11-07; its build order is in [`docs/sdk-standard.md`](../docs/sdk-standard.md) section 11. 013 (local webhook loop) is independent.

@@ -8,6 +8,8 @@ export type { NotifyBrowserClient, NotifyClientOptions, NotifyClientScope } from
 export { InboxStore } from "./inbox.js";
 export type { InboxFilters, InboxState } from "./inbox.js";
 export type { RealtimeStatus, VisibilitySource } from "./realtime.js";
+export { PreferencesStore, resolvePreference } from "./preferences.js";
+export type { PreferenceCellPatch, PreferenceChannel, PreferencesState, ResolvedCell } from "./preferences.js";
 export { registerWebPush } from "./webpush.js";
 export type { RegisterWebPushOptions, WebPushRegistration } from "./webpush.js";
 export { NotifyClientError } from "./errors.js";

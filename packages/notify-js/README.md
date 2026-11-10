@@ -96,6 +96,20 @@ await notify.devices.unregister("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 notify.close();
 ```
 
+For a preference screen, `notify.preferences` is also a store: `subscribe` (loads on the first subscriber; the listener runs at once) and `getState()` give `{ data, status, error }`, `update` changes the cache at once and rolls it back if the save fails, and `resolvePreference(data, category, channel)` gives what a category × channel switch shows (and whether it is locked as mandatory):
+
+```ts
+import { createNotifyClient, resolvePreference } from "@productcraft/notify-js";
+
+const notify = createNotifyClient({ getToken: () => fetch("/api/notify-token").then((r) => r.text()) });
+const stop = notify.preferences.subscribe(({ data }) => {
+  if (data) console.log(resolvePreference(data, "billing", "email")); // { enabled, mandatory, source }
+});
+stop();
+```
+
+React apps get all of this ready-made from [`@productcraft/notify-react`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/notify-react#readme) (`<NotifyInbox/>`, `<NotifyPreferences/>`).
+
 `notify.call((scope) => scope.inbox.counts())` runs any other client-scope call with the same token handling.
 
 ## Web push

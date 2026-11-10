@@ -131,3 +131,24 @@ jobs:
       - run: pnpm --filter "@productcraft/notify-js..." run build
       - run: pnpm --filter @productcraft/notify-js exec playwright-core install --with-deps --only-shell chromium
       - run: pnpm --filter @productcraft/notify-js run test:browser
+
+  # @productcraft/notify-react (task 020): headless Chromium against a local SSE mock, and the Next.js
+  # App Router fixture (a Server Component renders the components, so it only builds with "use client").
+  notify-react-browser:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run codegen
+      - run: pnpm --filter "@productcraft/notify-react..." run build
+      - run: pnpm --filter @productcraft/notify-react exec playwright-core install --with-deps --only-shell chromium
+      - run: pnpm --filter @productcraft/notify-react run test:browser
+      - name: Next.js App Router build fixture
+        run: node examples/notify-react-next/run.mjs --local --build-only

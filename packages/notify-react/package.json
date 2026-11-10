@@ -1,0 +1,84 @@
+{
+  "name": "@productcraft/notify-react",
+  "version": "0.0.0",
+  "description": "React components and hooks for ProductCraft Notify: a drop-in notification inbox (bell, unread badge, accessible popover, action buttons, real-time updates) and preference centre (category × channel switches with required ones locked, time zone and quiet hours), plus useInbox and usePreferences. A thin binding over @productcraft/notify-js; localised, themeable with CSS variables, \"use client\" for the Next.js App Router.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./styles.css": "./dist/styles.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/copy-css.mjs",
+    "test": "tsc -p tests/tsconfig.json && vitest run --exclude \"tests/browser/**\" --exclude \"tests/next/**\"",
+    "test:browser": "node tests/browser/run.mjs",
+    "test:next": "node tests/next/run.mjs"
+  },
+  "keywords": [
+    "productcraft",
+    "react",
+    "nextjs",
+    "notifications",
+    "in-app-inbox",
+    "notification-center",
+    "notification-preferences",
+    "preference-center"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/notify-react"
+  },
+  "homepage": "https://productcraft.co/docs/notify",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/notify-js": "workspace:^"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@productcraft/notify": "workspace:*",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "axe-core": "4.14.0",
+    "jsdom": "31.0.0",
+    "playwright-core": "1.58.0",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

@@ -87,11 +87,7 @@ export interface NotifyBrowserClient {
         unregister(deviceId: string): Promise<void>;
     };
     readonly inbox: InboxStore;
-    // (undocumented)
-    readonly preferences: {
-        get(): Promise<Notify.ClientPreferences>;
-        update(cells: NonNullable<Notify.MePreferenceUpdateParams["preferences"]>, extra?: Omit<Notify.MePreferenceUpdateParams, "preferences">): Promise<Notify.ClientPreferences>;
-    };
+    readonly preferences: PreferencesStore;
     // (undocumented)
     readonly realtime: {
         readonly status: RealtimeStatus;
@@ -126,6 +122,30 @@ export interface NotifyClientOptions {
 export type NotifyClientScope = ReturnType<Notify["client"]>;
 
 // @public
+export type PreferenceCellPatch = NonNullable<Notify.MePreferenceUpdateParams["preferences"]>[number];
+
+// @public
+export type PreferenceChannel = "inbox" | "email" | "push" | "webpush";
+
+// @public
+export interface PreferencesState {
+    readonly data: Notify.ClientPreferences | undefined;
+    readonly error: unknown;
+    readonly status: "idle" | "loading" | "ready" | "error";
+}
+
+// @public
+export class PreferencesStore {
+    // @internal
+    constructor(call: Call);
+    get(): Promise<Notify.ClientPreferences>;
+    getState(): PreferencesState;
+    refresh(): Promise<Notify.ClientPreferences>;
+    subscribe(listener: (state: PreferencesState) => void): () => void;
+    update(cells: readonly PreferenceCellPatch[], extra?: Omit<Notify.MePreferenceUpdateParams, "preferences">): Promise<Notify.ClientPreferences>;
+}
+
+// @public
 export type RealtimeStatus = "idle" | "connecting" | "open" | "polling" | "paused";
 
 // @public
@@ -136,6 +156,16 @@ export interface RegisterWebPushOptions {
     scope?: string;
     serviceWorkerPath: string;
 }
+
+// @public
+export interface ResolvedCell {
+    readonly enabled: boolean;
+    readonly mandatory: boolean;
+    readonly source: "category" | "category_all_channels" | "all" | "default";
+}
+
+// @public
+export function resolvePreference(prefs: Notify.ClientPreferences, category: string, channel: PreferenceChannel): ResolvedCell;
 
 // @public
 export const SW_MESSAGE: {

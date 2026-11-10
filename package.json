@@ -14,7 +14,7 @@
     "refresh-specs": "bash scripts/refresh-specs.sh",
     "build": "pnpm -r --filter \"./packages/**\" run build",
     "test": "pnpm -r --filter \"./packages/**\" run test",
-    "lint": "eslint \"packages/*/src/**/*.ts\" \"packages/*/tests/**/*.ts\" --max-warnings 0",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\" \"packages/*/tests/**/*.{ts,tsx}\" --max-warnings 0",
     "format": "prettier --write \"packages/**/src/**/*.ts\"",
     "changeset": "changeset",
     "version-packages": "changeset version",
