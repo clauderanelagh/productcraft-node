@@ -101,6 +101,27 @@ await check("@productcraft/flags-engine: evaluation vectors through the ESM and 
   assert.throws(() => builds[1].parseConfig("{"), (e) => e instanceof builds[1].ConfigParseError && e.code === "PARSE_ERROR");
 });
 
+await check("@productcraft/flags: FlagsClient, createTestClient and ConfigurationError through the ESM and CJS builds", async () => {
+  const dir = join(root, "packages", "flags");
+  const builds = [
+    [await import(pathToFileURL(join(dir, "dist/index.js")).href), await import(pathToFileURL(join(dir, "dist/testing.js")).href)],
+    [require(join(dir, "dist/index.cjs")), require(join(dir, "dist/testing.cjs"))],
+  ];
+  const bootstrap = { schema: 1, revision: 1, generation: 1, salt: "", settings: { on: { type: "boolean", value: true }, limits: { type: "json", value: '{"max":5}' } } };
+  for (const [main, testing] of builds) {
+    const flags = new main.FlagsClient({ bootstrap, offline: true, logger: null });
+    assert.equal(await flags.getValue("on", false), true);
+    assert.deepEqual(await flags.getJson("limits", {}), { max: 5 });
+    flags.close();
+    const t = testing.createTestClient({ values: { on: false } });
+    assert.equal(t.snapshot().getValue("on", true), false);
+    t.set("on", true);
+    assert.equal(await t.getValue("on", false), true);
+    assert.equal(typeof main.Flags, "function");
+    for (const [other] of builds) assert.throws(() => new main.FlagsClient({ sdkKey: "pcf_sdk_typo" }), (e) => e instanceof other.ConfigurationError);
+  }
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);

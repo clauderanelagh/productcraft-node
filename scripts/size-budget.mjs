@@ -61,6 +61,16 @@ export const run = () => auth.consumer("my-app").signin({ identifier: "ada@examp
     code: `import { parseConfig, evaluate } from "@productcraft/flags-engine";
 export const run = (body, user) => evaluate(parseConfig(body), "new_checkout", false, user).value;`,
   },
+  // FlagsClient's one-call program (task 015): the download loop, cache, overrides and the engine.
+  // Fixed limit of 11 KB gzip: the design's 10 KB target is missed by about 0.5 KB (decision log,
+  // 2026-11-10). The Node-only override-file module imports node:fs lazily and stays external, as a
+  // browser bundler leaves it.
+  "@productcraft/flags": {
+    dir: "packages/flags",
+    code: `import { FlagsClient } from "@productcraft/flags";
+const flags = new FlagsClient({ sdkKey: "pcf_sdk_x" });
+export const run = () => flags.getValue("k", false);`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";
@@ -82,6 +92,7 @@ for (const [name, { dir, code }] of Object.entries(consumers)) {
     platform: "browser",
     write: false,
     logLevel: "silent",
+    external: ["node:*"],
     // Resolve the package to its own built dist, as a consumer would.
     alias: { [name]: join(root, dir) },
   });

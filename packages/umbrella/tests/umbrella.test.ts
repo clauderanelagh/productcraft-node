@@ -58,7 +58,9 @@ describe("shared config", () => {
     const pc = new ProductCraft({ apiKey: "k", workspaceId: WS, fetch: r.fetch, maxRetries: 0, defaultHeaders: { "x-trace": "t1" } });
     await expect(pc.trawl.jobs.list()).rejects.toBeInstanceOf(NotFoundError);
     await expect(pc.mail.domains.list()).rejects.toBeInstanceOf(NotFoundError);
-    expect(r.seen).toHaveLength(2);
+    await expect(pc.flags.projects.list()).rejects.toBeInstanceOf(NotFoundError);
+    expect(r.seen).toHaveLength(3);
+    expect(r.seen[2]!.url).toMatch(/^https:\/\/api\.flags\.productcraft\.co\//);
     for (const q of r.seen) {
       expect(q.url).toContain(`/v1/workspaces/${WS}/`);
       expect(q.headers.get("x-trace")).toBe("t1");

@@ -91,6 +91,18 @@ importers:
         specifier: ^0.13.0
         version: 0.13.8
 
+  packages/flags:
+    dependencies:
+      '@productcraft/core':
+        specifier: workspace:^
+        version: link:../core
+      '@productcraft/flags-engine':
+        specifier: workspace:^
+        version: link:../flags-engine
+      openapi-fetch:
+        specifier: ^0.13.0
+        version: 0.13.8
+
   packages/flags-engine:
     devDependencies:
       ajv:
@@ -153,6 +165,9 @@ importers:
       '@productcraft/core':
         specifier: workspace:^
         version: link:../core
+      '@productcraft/flags':
+        specifier: workspace:^
+        version: link:../flags
       '@productcraft/mail':
         specifier: workspace:^
         version: link:../mail

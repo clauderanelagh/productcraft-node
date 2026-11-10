@@ -17,6 +17,8 @@ import { BadRequestError } from '@productcraft/core';
 import { ClientOptions } from '@productcraft/core';
 import { ConfigurationError } from '@productcraft/core';
 import { ConflictError } from '@productcraft/core';
+import { Flags } from '@productcraft/flags';
+import { FlagsErrorCode } from '@productcraft/flags';
 import { IdempotencyKeyReuseError } from '@productcraft/core';
 import { InternalServerError } from '@productcraft/core';
 import { Logger } from '@productcraft/core';
@@ -76,6 +78,10 @@ export { ConfigurationError }
 
 export { ConflictError }
 
+export { Flags }
+
+export { FlagsErrorCode }
+
 export { IdempotencyKeyReuseError }
 
 export { InternalServerError }
@@ -113,6 +119,7 @@ export class ProductCraft {
     constructor(options?: ProductCraftOptions);
     // (undocumented)
     get auth(): Auth;
+    get flags(): Flags;
     // (undocumented)
     get mail(): Mail;
     // (undocumented)
@@ -138,6 +145,8 @@ export interface ProductCraftOptions extends AuthOptions {
 export interface ProductCraftOverrides {
     // (undocumented)
     auth?: AuthOptions;
+    // (undocumented)
+    flags?: ClientOptions;
     // (undocumented)
     mail?: ClientOptions;
     // (undocumented)

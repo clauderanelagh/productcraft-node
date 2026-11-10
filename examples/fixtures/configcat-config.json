@@ -1,0 +1,26 @@
+{
+  "p": { "u": "https://cdn-global.configcat.com", "r": 0, "s": "c2FsdA" },
+  "f": {
+    "bool_flag": {
+      "t": 0,
+      "v": { "b": false },
+      "r": [{ "c": [{ "u": { "a": "Email", "c": 32, "l": ["@example.com"] } }], "s": { "v": { "b": true } } }],
+      "p": [{ "p": 30, "v": { "b": true } }, { "p": 70, "v": { "b": false } }]
+    },
+    "banner": {
+      "t": 1,
+      "v": { "s": "world" },
+      "r": [{ "c": [{ "u": { "a": "Country", "c": 0, "l": ["NL", "DE"] } }], "s": { "v": { "s": "eu" } } }]
+    },
+    "limit": {
+      "t": 2,
+      "v": { "i": 10 },
+      "r": [{ "c": [{ "u": { "a": "plan", "c": 28, "s": "pro" } }], "s": { "v": { "i": 100 } } }]
+    },
+    "app_gate": {
+      "t": 0,
+      "v": { "b": false },
+      "r": [{ "c": [{ "u": { "a": "app_version", "c": 9, "s": "2.0.0" } }], "p": [{ "p": 50, "v": { "b": true } }, { "p": 50, "v": { "b": false } }] }]
+    }
+  }
+}

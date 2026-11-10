@@ -1,6 +1,6 @@
 # ProductCraft Node SDK
 
-Node.js and TypeScript SDKs for the [ProductCraft](https://productcraft.co) APIs: Auth, Mail, Waitlist, Social, Trawl and Platform. Resources and verbs you can guess (`mail.emails.send()`, `waitlist.lists.list()`, `trawl.jobs.createAndPoll()`), every parameter and response typed, and the plumbing built in: retries, timeouts, auto-pagination, idempotency keys, typed errors and webhook verification.
+Node.js and TypeScript SDKs for the [ProductCraft](https://productcraft.co) APIs: Auth, Mail, Waitlist, Social, Trawl, Flags and Platform. Resources and verbs you can guess (`mail.emails.send()`, `waitlist.lists.list()`, `trawl.jobs.createAndPoll()`), every parameter and response typed, and the plumbing built in: retries, timeouts, auto-pagination, idempotency keys, typed errors and webhook verification.
 
 Every package is generated from its API's live OpenAPI document, so the SDK and the API cannot drift apart. The contract every package is built to is [docs/sdk-standard.md](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/sdk-standard.md).
 
@@ -9,7 +9,7 @@ Every package is generated from its API's live OpenAPI document, so the SDK and 
 Install one product, or the umbrella for all of them:
 
 ```sh
-npm install @productcraft/mail      # or auth, waitlist, social, trawl, platform-auth
+npm install @productcraft/mail      # or auth, waitlist, social, trawl, flags, platform-auth
 npm install productcraft            # every product from one import
 ```
 
@@ -74,6 +74,7 @@ try {
 | [`@productcraft/waitlist`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/waitlist#readme) | Waitlists, public signup forms, variants, referrals and leaderboards | [api.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/waitlist/api.md) | [guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/waitlist-1.0.0.md) |
 | [`@productcraft/social`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/social#readme) | Communities, posts, feeds, stories, conversations, moderation | [api.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/social/api.md) | [1.1 guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/social-1.1.0.md) |
 | [`@productcraft/trawl`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/trawl#readme) | AI web extraction jobs | [api.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/trawl/api.md) | [guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/trawl-1.0.0.md) |
+| [`@productcraft/flags`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/flags#readme) | Feature flags: `FlagsClient` (local evaluation) and the management API | [api.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/flags/api.md) | new in 0.1 |
 | [`@productcraft/platform-auth`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/platform-auth#readme) | Your ProductCraft workspaces: members, roles, IAM policies, API keys, services | [api.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/platform-auth/api.md) | [guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/platform-auth-1.0.0.md) |
 | [`@productcraft/flags-engine`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/flags-engine#readme) | Flags evaluation engine: local, synchronous evaluation of a Flags config; the spec and test vectors | [SPEC.md](https://github.com/clauderanelagh/productcraft-node/blob/main/packages/flags-engine/SPEC.md) | new (0.x preview) |
 | [`@productcraft/auth-passport`](https://github.com/clauderanelagh/productcraft-node/tree/main/packages/auth-passport#readme) | Passport JWT strategy that verifies Auth access tokens | README | API unchanged; peer `@productcraft/auth` ^1 |

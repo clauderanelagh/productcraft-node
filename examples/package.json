@@ -1,0 +1,12 @@
+{
+  "name": "productcraft-node-examples",
+  "private": true,
+  "description": "Runnable examples. configcat-node is a dependency of configcat-dual-run.mjs only, never of a published package.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test configcat-dual-run.test.mjs"
+  },
+  "dependencies": {
+    "configcat-node": "11.4.1"
+  }
+}
