@@ -122,6 +122,33 @@ await check("@productcraft/flags: FlagsClient, createTestClient and Configuratio
   }
 });
 
+await check("@productcraft/flags-openfeature: the provider through the ESM and CJS builds, with a client from either build", async () => {
+  const dir = join(root, "packages", "flags-openfeature");
+  const flagsDir = join(root, "packages", "flags");
+  const fromProvider = createRequire(join(dir, "package.json"));
+  const builds = [
+    [await import(pathToFileURL(join(dir, "dist/index.js")).href), await import(pathToFileURL(fromProvider.resolve("@openfeature/server-sdk")).href)],
+    [require(join(dir, "dist/index.cjs")), fromProvider("@openfeature/server-sdk")],
+  ];
+  const clients = [await import(pathToFileURL(join(flagsDir, "dist/index.js")).href), require(join(flagsDir, "dist/index.cjs"))];
+  const bootstrap = { schema: 1, revision: 7, generation: 1, salt: "", settings: { on: { type: "boolean", value: true }, limits: { type: "json", value: '{"max":5}' } } };
+  let n = 0;
+  for (const [mod, of] of builds) {
+    for (const flags of clients) {
+      const provider = new mod.ProductCraftFlagsProvider({ client: new flags.FlagsClient({ bootstrap, offline: true, logger: null }), logger: null });
+      const domain = `smoke-${n++}`;
+      await of.OpenFeature.setProviderAndWait(domain, provider);
+      const client = of.OpenFeature.getClient(domain);
+      const d = await client.getBooleanDetails("on", false, { targetingKey: "u" });
+      assert.equal(d.value, true);
+      assert.equal(d.flagMetadata.revision, 7);
+      assert.deepEqual(await client.getObjectValue("limits", {}), { max: 5 });
+      assert.equal((await client.getStringDetails("missing", "d")).errorCode, "FLAG_NOT_FOUND");
+    }
+    await of.OpenFeature.close();
+  }
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);
