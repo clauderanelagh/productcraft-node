@@ -1,0 +1,86 @@
+{
+  "name": "@productcraft/notify-js",
+  "version": "0.0.0",
+  "description": "Framework-agnostic browser and React Native client for ProductCraft Notify: an in-app inbox store with a cache, real-time updates over a fetch-stream SSE reader, unread counts, optimistic mark read/seen/archive, per-cell preference updates, device unregister on logout, and a web push helper with a ready-made service worker. Recipient tokens stay in memory.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./sw": {
+      "import": {
+        "types": "./dist/sw.d.ts",
+        "default": "./dist/sw.js"
+      },
+      "require": {
+        "types": "./dist/sw.d.cts",
+        "default": "./dist/sw.cjs"
+      }
+    },
+    "./notify-sw.js": "./dist/notify-sw.js",
+    "./package.json": "./package.json"
+  },
+  "typesVersions": {
+    "*": {
+      "sw": [
+        "./dist/sw.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist/**",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20.3"
+  },
+  "scripts": {
+    "build": "tsup && node scripts/write-sw.mjs",
+    "test": "tsc -p tests/tsconfig.json && vitest run --exclude \"tests/browser/**\"",
+    "test:browser": "node tests/browser/run.mjs"
+  },
+  "keywords": [
+    "productcraft",
+    "notifications",
+    "in-app-inbox",
+    "notification-center",
+    "web-push",
+    "service-worker",
+    "server-sent-events",
+    "react-native"
+  ],
+  "author": "ProductCraft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/clauderanelagh/productcraft-node.git",
+    "directory": "packages/notify-js"
+  },
+  "homepage": "https://productcraft.co/docs/notify",
+  "bugs": {
+    "url": "https://github.com/clauderanelagh/productcraft-node/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "dependencies": {
+    "@productcraft/notify": "workspace:^"
+  },
+  "devDependencies": {
+    "jsdom": "31.0.0",
+    "playwright-core": "1.58.0"
+  }
+}

@@ -41,7 +41,9 @@ for (const d of readdirSync(join(ROOT, "packages"))) {
   const before = new Set(readdirSync(TARBALLS));
   execFileSync("pnpm", ["pack", "--pack-destination", TARBALLS], { cwd: dir, stdio: "ignore" });
   const tgz = readdirSync(TARBALLS).find((f) => !before.has(f));
-  pkgs.push({ name: pkg.name, tgz: join(TARBALLS, tgz), testing: Boolean(pkg.exports?.["./testing"]), className: null });
+  // Plain-file exports (a service worker to copy, not a module to import) have no types by design.
+  const assets = Object.entries(pkg.exports ?? {}).filter(([k, v]) => typeof v === "string" && !k.endsWith(".json")).map(([k]) => k);
+  pkgs.push({ name: pkg.name, tgz: join(TARBALLS, tgz), testing: Boolean(pkg.exports?.["./testing"]), className: null, assets });
 }
 
 let failed = false;
@@ -50,7 +52,8 @@ let failed = false;
 const attw = join(ROOT, "node_modules/.bin/attw");
 for (const p of pkgs) {
   try {
-    execFileSync(attw, [p.tgz, "--format", "table-flipped"], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+    const exclude = p.assets.length ? ["--exclude-entrypoints", ...p.assets] : [];
+    execFileSync(attw, [p.tgz, "--format", "table-flipped", ...exclude], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
     console.log(`✓ attw ${p.name}: node10, node16 (CJS + ESM) and bundler resolve every subpath`);
   } catch (e) {
     failed = true;

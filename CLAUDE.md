@@ -18,6 +18,7 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | `@productcraft/flags-openfeature` | `packages/flags-openfeature` | OpenFeature server provider over `FlagsClient` (hand-written, allowlisted; peers `@openfeature/server-sdk` and `@productcraft/flags`). Not an API surface. |
 | `@productcraft/notify` | `packages/notify` | Notify API (generated): recipients, preferences, notification types and templates, sends, deliveries, channels, webhooks, plus the browser-safe recipient-token scope `notify.client({ token })` (the `me.*` client routes, a generator token scope). |
 | `@productcraft/flags-react` | `packages/flags-react` | React bindings over `FlagsClient` (`FlagsProvider`, `useFlag`, `useFlagDetails`, `useFlagsClient`, `useFlagsReady`; SSR bootstrap). Hand-written, allowlisted; peers `react` >= 18 and `@productcraft/flags`. Not an API surface. |
+| `@productcraft/notify-js` | `packages/notify-js` | Notify browser / React Native core (hand-written, allowlisted): `createNotifyClient({ getToken })` with inbox stores, the fetch-stream SSE reader, preferences, devices, `registerWebPush` and the `notify-sw.js` service worker. Depends on `@productcraft/notify` for every call. Not an API surface. |
 | `@productcraft/auth-passport` | `packages/auth-passport` | Passport-JWT adapter for Auth (not a surface; wraps `@productcraft/auth`) |
 | `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all six surface packages. |
 
