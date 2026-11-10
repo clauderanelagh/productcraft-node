@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/notify",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Node.js / TypeScript client for ProductCraft Notify: one call notifies a user across an in-app inbox, email, web push, APNs and FCM, with preferences, fallbacks, quiet hours, templates, delivery history and signed webhooks. Includes the browser-safe recipient-token client scope.",
   "type": "module",
   "main": "./dist/index.cjs",
