@@ -8,6 +8,7 @@ import { EvaluationDetails } from '@productcraft/flags';
 import { FlagsClient } from '@productcraft/flags';
 import { FlagsClientOptions } from '@productcraft/flags';
 import { FlagValue } from '@productcraft/flags';
+import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { SettingValue } from '@productcraft/flags';
 import { User } from '@productcraft/flags';
@@ -16,7 +17,7 @@ import { User } from '@productcraft/flags';
 export type FlagDefault = SettingValue | object | null;
 
 // @public
-export function FlagsProvider(props: FlagsProviderProps): ReactNode;
+export function FlagsProvider(props: FlagsProviderProps): ReactElement;
 
 // @public (undocumented)
 export interface FlagsProviderProps {
