@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/flags-react",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "React bindings for ProductCraft Flags: FlagsProvider, useFlag and SSR bootstrap (Next.js App and Pages Router) over FlagsClient's local evaluation. A key used in a browser or mobile app makes its whole config public, so client flags belong in their own config with no internal rules.",
   "type": "module",
   "main": "./dist/index.cjs",
