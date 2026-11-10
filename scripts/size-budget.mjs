@@ -71,6 +71,15 @@ export const run = (body, user) => evaluate(parseConfig(body), "new_checkout", f
 const flags = new FlagsClient({ sdkKey: "pcf_sdk_x" });
 export const run = () => flags.getValue("k", false);`,
   },
+  // The OpenFeature provider over FlagsClient (task 016). @openfeature/server-sdk is the app's own
+  // dependency (a peer), so it stays external: this measures the provider plus FlagsClient.
+  "@productcraft/flags-openfeature": {
+    dir: "packages/flags-openfeature",
+    external: ["@openfeature/server-sdk"],
+    code: `import { ProductCraftFlagsProvider } from "@productcraft/flags-openfeature";
+const provider = new ProductCraftFlagsProvider({ sdkKey: "pcf_sdk_x" });
+export const run = () => provider.resolveBooleanEvaluation("k", false, { targetingKey: "u" });`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";
@@ -83,7 +92,7 @@ const record = process.argv.includes("--record");
 const budget = JSON.parse(readFileSync(budgetPath, "utf8"));
 let failed = false;
 
-for (const [name, { dir, code }] of Object.entries(consumers)) {
+for (const [name, { dir, code, external = [] }] of Object.entries(consumers)) {
   const result = await build({
     stdin: { contents: code, resolveDir: join(root, dir), loader: "js" },
     bundle: true,
@@ -92,7 +101,7 @@ for (const [name, { dir, code }] of Object.entries(consumers)) {
     platform: "browser",
     write: false,
     logLevel: "silent",
-    external: ["node:*"],
+    external: ["node:*", ...external],
     // Resolve the package to its own built dist, as a consumer would.
     alias: { [name]: join(root, dir) },
   });

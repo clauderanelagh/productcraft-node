@@ -15,6 +15,7 @@ A pnpm workspace holding the Node.js / TypeScript SDKs for the ProductCraft plat
 | `@productcraft/platform-auth` | `packages/platform-auth` | Platform-Auth (workspaces) |
 | `@productcraft/flags` | `packages/flags` | Flags management API (generated) plus the hand-written `FlagsClient` (`src/client/**`: download loop, cache, overrides, hooks) over `@productcraft/flags-engine`; `./testing` adds `createTestClient`. |
 | `@productcraft/flags-engine` | `packages/flags-engine` | Flags evaluation engine: parses a config JSON and evaluates flags locally (hand-written, zero dependencies; `SPEC.md`, JSON Schema and test vectors ship in the package). Not an API surface. |
+| `@productcraft/flags-openfeature` | `packages/flags-openfeature` | OpenFeature server provider over `FlagsClient` (hand-written, allowlisted; peers `@openfeature/server-sdk` and `@productcraft/flags`). Not an API surface. |
 | `@productcraft/auth-passport` | `packages/auth-passport` | Passport-JWT adapter for Auth (not a surface; wraps `@productcraft/auth`) |
 | `productcraft` (umbrella) | `packages/umbrella` | Convenience class that instantiates one of each. Depends on all six surface packages. |
 

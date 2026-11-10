@@ -123,10 +123,11 @@ describe("downloads", () => {
     expect(calls).toBe(1);
     await vi.advanceTimersByTimeAsync(2_000);
     expect(calls).toBe(2);
-    // Then the interval with ±10% jitter: nothing before 27 s, a poll by 33 s.
-    await vi.advanceTimersByTimeAsync(26_900);
+    // Then the interval with ±10% jitter after the second call (at ~300 s, and the clock is now at
+    // ~301 s): nothing before 27 s, a poll by 33 s.
+    await vi.advanceTimersByTimeAsync(25_900);
     expect(calls).toBe(2);
-    await vi.advanceTimersByTimeAsync(6_200);
+    await vi.advanceTimersByTimeAsync(7_200);
     expect(calls).toBe(3);
     flags.close();
     await vi.advanceTimersByTimeAsync(600_000);
