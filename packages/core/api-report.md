@@ -185,6 +185,9 @@ export class InternalServerError extends APIError {
 }
 
 // @public
+export function isBrowser(): boolean;
+
+// @public
 export interface LastResponse {
     // (undocumented)
     headers: Headers;
@@ -290,6 +293,7 @@ export const PC_BASE_URL: {
     readonly waitlist: "https://api.waitlist.productcraft.co";
     readonly social: "https://social.productcraft.co";
     readonly trawl: "https://api.trawl.productcraft.co";
+    readonly flags: "https://api.flags.productcraft.co";
 };
 
 // @public (undocumented)
@@ -422,6 +426,9 @@ export function _resetWorkspaceCache(): void;
 export function resolveAuth(auth: PCAuth | undefined): PCAuth | undefined;
 
 // @public
+export function runtimeTag(): string;
+
+// @public
 export interface SDKIdentity {
     // (undocumented)
     name: string;
@@ -445,6 +452,9 @@ export interface SignWebhookParams {
     secret: string;
     timestamp?: number;
 }
+
+// @public
+export function sleep(ms: number, signal?: AbortSignal): Promise<void>;
 
 // @public
 export function timingSafeEqual(a: Uint8Array, b: Uint8Array): boolean;

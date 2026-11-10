@@ -100,10 +100,11 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           # Tokenless publish via npm trusted publishing (runner OIDC,
           # `id-token: write`). No NPM_TOKEN: when one was passed, the action
-          # preferred it over OIDC. All nine packages (productcraft and
+          # preferred it over OIDC. Every package (productcraft and
           # @productcraft/{auth,auth-passport,core,mail,waitlist,social,trawl,
-          # platform-auth}) have a GitHub Actions trusted publisher for THIS
-          # workflow file (2026-10-23), and their publishing access is
+          # platform-auth} since 2026-10-23, flags-engine since 2026-11-09,
+          # flags since 2026-11-10) has a GitHub Actions trusted publisher for
+          # THIS workflow file, and their publishing access is
           # "require 2FA and disallow tokens". A new package needs the same
           # one-time setup on npmjs.com before its first publish from here.
           NPM_CONFIG_PROVENANCE: "true"

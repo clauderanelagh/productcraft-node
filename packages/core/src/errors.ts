@@ -198,7 +198,8 @@ export class APIError extends ProductCraftError {
         return new RateLimitError(status, body, headers);
     }
     if (status >= 500) return new InternalServerError(status, body, headers);
-    return new APIError(status, body, headers);
+    // `this`, not `APIError`: a class body that names itself is renamed by bundlers (`_APIError`).
+    return new this(status, body, headers);
   }
 }
 
@@ -267,26 +268,6 @@ export function parseRetryAfterMs(headers: Headers, now: number): number | undef
   return Math.max(0, date - now);
 }
 
-// The bundler renames classes that reference themselves (`_APIError`); give
-// each its public name back so `err.constructor.name` reads right in logs.
-for (const ctor of [
-  ProductCraftError,
-  ConfigurationError,
-  WebhookVerificationError,
-  APIConnectionError,
-  APITimeoutError,
-  APIUserAbortError,
-  APIError,
-  BadRequestError,
-  AuthenticationError,
-  PaymentRequiredError,
-  PermissionDeniedError,
-  NotFoundError,
-  ConflictError,
-  IdempotencyKeyReuseError,
-  UnprocessableEntityError,
-  RateLimitError,
-  InternalServerError,
-]) {
-  Object.defineProperty(ctor, "name", { value: ctor.brandName, configurable: true });
-}
+// No class in this file names itself in its own body, so bundlers keep every class name
+// (`err.constructor.name`); tests/errors.test.ts and scripts/smoke-dist.mjs check it. With no
+// top-level statement here, an app that imports one error class does not bundle the others.

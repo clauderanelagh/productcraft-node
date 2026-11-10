@@ -30,5 +30,9 @@
   "@productcraft/flags-engine": {
     "measuredGzipBytes": 5968,
     "limitGzipBytes": 6144
+  },
+  "@productcraft/flags": {
+    "measuredGzipBytes": 10781,
+    "limitGzipBytes": 11264
   }
 }

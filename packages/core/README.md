@@ -2,7 +2,7 @@
 
 The shared runtime behind the ProductCraft Node.js SDKs: requests with retries, timeouts, automatic idempotency keys, typed errors, pagination, polling and webhook verification.
 
-You **don't usually install this directly**. Every product SDK (`@productcraft/auth`, `@productcraft/mail`, `@productcraft/waitlist`, `@productcraft/social`, `@productcraft/trawl`, `@productcraft/platform-auth`) and the `productcraft` umbrella depend on it. You import from it for two things: the error classes (each product package and the umbrella re-export them too) and `verifyWebhook`.
+You **don't usually install this directly**. Every product SDK (`@productcraft/auth`, `@productcraft/mail`, `@productcraft/waitlist`, `@productcraft/social`, `@productcraft/trawl`, `@productcraft/flags`, `@productcraft/platform-auth`) and the `productcraft` umbrella depend on it. You import from it for two things: the error classes (each product package and the umbrella re-export them too) and `verifyWebhook`.
 
 Upgrading from 0.x? Nothing was removed in 1.0; see the [1.0 migration guide](https://github.com/clauderanelagh/productcraft-node/blob/main/docs/migrations/core-1.0.0.md).
 

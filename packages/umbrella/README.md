@@ -1,6 +1,6 @@
 # productcraft
 
-All-in-one Node.js / TypeScript SDK for the [ProductCraft](https://productcraft.co) platform: Auth, Mail, Waitlist, Social, Trawl and Platform from one import, one key and one shared config.
+All-in-one Node.js / TypeScript SDK for the [ProductCraft](https://productcraft.co) platform: Auth, Mail, Waitlist, Social, Trawl, Flags and Platform from one import, one key and one shared config.
 
 ```bash
 npm install productcraft
@@ -19,6 +19,7 @@ Install **`productcraft`** when one backend calls more than one ProductCraft pro
 - [`@productcraft/waitlist`](https://www.npmjs.com/package/@productcraft/waitlist): waitlists, signups, variants, referrals, leaderboards
 - [`@productcraft/social`](https://www.npmjs.com/package/@productcraft/social): communities, posts, feeds, stories, conversations, moderation
 - [`@productcraft/trawl`](https://www.npmjs.com/package/@productcraft/trawl): AI web extraction jobs
+- [`@productcraft/flags`](https://www.npmjs.com/package/@productcraft/flags): feature flags (the management API here; evaluate flags with its `FlagsClient`)
 - [`@productcraft/platform-auth`](https://www.npmjs.com/package/@productcraft/platform-auth): workspaces, members, roles, IAM policies, API keys
 
 ## Quick start
@@ -56,7 +57,7 @@ if (session.result === "session") {
 }
 ```
 
-`pc.auth`, `pc.mail`, `pc.waitlist`, `pc.social`, `pc.trawl` and `pc.platform` (also reachable as `pc.platformAuth`, its 0.x name) are the same classes the per-product packages export, each built on first access, so an app that only uses `pc.mail` never constructs the others. Each product's README lists its resources and methods.
+`pc.auth`, `pc.mail`, `pc.waitlist`, `pc.social`, `pc.trawl`, `pc.flags` and `pc.platform` (also reachable as `pc.platformAuth`, its 0.x name) are the same classes the per-product packages export, each built on first access, so an app that only uses `pc.mail` never constructs the others. `pc.flags` is the Flags management client (projects, flags, targeting, SDK keys); to evaluate flags in your app, use `FlagsClient` from `@productcraft/flags` with an SDK key. Each product's README lists its resources and methods.
 
 ## Configuration
 

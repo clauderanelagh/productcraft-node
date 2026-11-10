@@ -65,6 +65,13 @@ jobs:
         run: node scripts/check-dts.mjs
       - name: Size budget (esbuild one-call bundle, gzip)
         run: node scripts/size-budget.mjs
+      - name: ConfigCat dual-run example (both SDKs offline over equivalent fixtures)
+        working-directory: examples
+        run: |
+          npm install --no-audit --no-fund --no-package-lock
+          mkdir -p node_modules/@productcraft
+          ln -sfn ../../../packages/flags node_modules/@productcraft/flags
+          npm test
       - name: Report final status on the head commit
         if: always() && github.event_name == 'workflow_dispatch'
         env:

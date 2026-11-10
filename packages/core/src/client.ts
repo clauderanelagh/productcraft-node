@@ -150,12 +150,14 @@ export function backoffMs(attempt: number): number {
   return Math.random() * Math.min(8_000, 500 * 2 ** attempt);
 }
 
-function isBrowser(): boolean {
+/** True in a browser page (a `window` with a `document`, and a `navigator`); false in Node, workers and edge runtimes. */
+export function isBrowser(): boolean {
   const g = globalThis as { window?: { document?: unknown }; navigator?: unknown };
   return typeof g.window !== "undefined" && typeof g.window?.document !== "undefined" && typeof g.navigator !== "undefined";
 }
 
-function runtimeTag(): string {
+/** `node/<v>`, `bun/<v>`, `deno/<v>` or `runtime/unknown`: the runtime part of every SDK `User-Agent`. */
+export function runtimeTag(): string {
   const g = globalThis as {
     Bun?: { version?: string };
     Deno?: { version?: { deno?: string } };
@@ -167,7 +169,8 @@ function runtimeTag(): string {
   return "runtime/unknown";
 }
 
-function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+/** Resolves after `ms`; rejects with `APIUserAbortError` when `signal` fires first. */
+export function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new APIUserAbortError());
     const timer = setTimeout(() => {

@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "revision": 1,
+  "generation": 1,
+  "salt": "c2FsdA",
+  "segments": {},
+  "settings": {
+    "bool_flag": {
+      "type": "boolean",
+      "value": false,
+      "rules": [{ "conditions": [{ "user": { "attribute": "email", "comparator": "ends_with_any", "values": ["@example.com"] } }], "serve": true }],
+      "percentages": [{ "percentage": 30, "value": true }, { "percentage": 70, "value": false }]
+    },
+    "banner": {
+      "type": "string",
+      "value": "world",
+      "rules": [{ "conditions": [{ "user": { "attribute": "country", "comparator": "one_of", "values": ["NL", "DE"] } }], "serve": "eu" }]
+    },
+    "limit": {
+      "type": "integer",
+      "value": 10,
+      "rules": [{ "conditions": [{ "user": { "attribute": "plan", "comparator": "eq", "values": ["pro"] } }], "serve": 100 }]
+    },
+    "app_gate": {
+      "type": "boolean",
+      "value": false,
+      "rules": [{ "conditions": [{ "user": { "attribute": "app_version", "comparator": "semver_gte", "values": ["2.0.0"] } }], "percentages": [{ "percentage": 50, "value": true }, { "percentage": 50, "value": false }] }]
+    }
+  }
+}
