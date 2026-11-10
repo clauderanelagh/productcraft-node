@@ -5,16 +5,14 @@
 // -> `bootstrap` -> the caller's default. `getValue` and friends never throw after construction.
 // Kept small on purpose: the one-call bundle (this file, the engine and core) has a 10 KB gzip budget.
 
-import { backoffMs, ConfigurationError, isBrowser, parseRetryAfterMs, ProductCraftError, runtimeTag, type Logger } from "@productcraft/core";
+import { backoffMs, ConfigurationError, parseRetryAfterMs, ProductCraftError, type Logger } from "@productcraft/core";
 import { ConfigParseError, hashConfidential, isNewerConfig, parseConfig, type EvaluationDetails, type ParsedConfig, type SettingValue, type User } from "@productcraft/flags-engine";
 import { isWellFormedSdkKey } from "./key.js";
-import { combine, overrideSettings, parseOverrideText, put } from "./overrides.js";
-import { envText, readText, watchFile } from "./platform.js";
+import { combine, overrideSettings, put } from "./overrides.js";
+import { deliveryHeaders, envOverrides, fileOverrides, watchVisibility } from "./platform.js";
 import { resolve, resolveAll, toValues, type Layer } from "./resolve.js";
 import type { ClientState, ConfigSource, FlagsClientErrorCode, FlagsClientEvents, FlagsClientOptions, FlagValue, OverrideBehaviour } from "./types.js";
 
-declare const __PC_SDK_VERSION__: string | undefined;
-const VERSION = typeof __PC_SDK_VERSION__ === "string" ? __PC_SDK_VERSION__ : "0.0.0-dev";
 /** The delivery host (`PC_BASE_URL.flags` in `@productcraft/core`). */
 const DEFAULT_BASE = "https://api.flags.productcraft.co";
 
@@ -141,7 +139,10 @@ export class FlagsClient {
   #abort: AbortController | null = null;
   #offline: boolean;
   #closed = false;
+  /** Browser build: the page is hidden, so auto polling waits for it to come back (6.3, task 019). */
+  #hidden = false;
   #unwatch: (() => void) | undefined;
+  #unwatchVisibility: (() => void) | undefined;
   readonly #init: Promise<void>;
 
   constructor(options: FlagsClientOptions = {}) {
@@ -174,8 +175,15 @@ export class FlagsClient {
     // Synchronous sources first, so a value is available before the first await.
     if (o.bootstrap !== undefined) this.#adopt(o.bootstrap, "bootstrap", null, 0);
     if (ov && "values" in ov) this.#setOverrides(ov.values);
-    else if (ov && "env" in ov) this.#overrideText(() => envText(ov.env) ?? "{}", `$${ov.env}`);
+    else if (ov && "env" in ov) {
+      try {
+        this.#setOverrides(envOverrides(ov.env));
+      } catch (e) {
+        this.#error("overrides", (e as Error).message, e);
+      }
+    }
     this.#recompute(false);
+    if (this.#mode === "auto" && this.#key) this.#unwatchVisibility = watchVisibility((hidden) => this.#visibility(hidden));
     this.#init = this.#start();
   }
 
@@ -260,6 +268,15 @@ export class FlagsClient {
     this.#state = "closed";
     this.#stop();
     this.#unwatch?.();
+    this.#unwatchVisibility?.();
+  }
+
+  /** Hidden: no further polls (a download in flight finishes). Visible again: download now, then poll as usual. */
+  #visibility(hidden: boolean): void {
+    const was = this.#hidden;
+    this.#hidden = hidden;
+    if (hidden) clearTimeout(this.#timer);
+    else if (was && this.#state !== "initializing") void this.forceRefresh();
   }
 
   async #eval<T>(key: string, def: T, user: User | null | undefined, json: boolean): Promise<EvaluationDetails<T>> {
@@ -277,13 +294,11 @@ export class FlagsClient {
     await 0;
     const ov = this.#o.overrides;
     if (ov && "file" in ov) {
-      await this.#loadFile(ov.file);
-      try {
-        if (ov.watch && !this.#closed) this.#unwatch = await watchFile(ov.file, () => void this.#loadFile(ov.file));
-        if (this.#closed) this.#unwatch?.();
-      } catch (e) {
-        this.#error("overrides", "overrides file watch failed", e);
-      }
+      const apply = (values: Obj | null): void => {
+        if (values) this.#setOverrides(values);
+        this.#recompute(true);
+      };
+      this.#unwatch = await fileOverrides(ov.file, ov.watch, apply, (m, e) => this.#error("overrides", m, e), () => this.#closed);
     }
     await this.#readCache();
     if (this.#closed) {
@@ -322,7 +337,7 @@ export class FlagsClient {
   /** Auto polling: the next download after the jittered interval, later after errors (at most 4x) or when the server asks (Retry-After). */
   #schedule(): void {
     clearTimeout(this.#timer);
-    if (this.#closed || this.#offline || this.#mode !== "auto" || !this.#key) return;
+    if (this.#closed || this.#offline || this.#hidden || this.#mode !== "auto" || !this.#key) return;
     const i = this.#interval;
     let delay = i * (0.9 + 0.2 * Math.random());
     if (this.#failures) delay = Math.min(4 * i, delay + backoffMs(this.#failures));
@@ -338,12 +353,7 @@ export class FlagsClient {
       const abort = (this.#abort = new AbortController());
       const timer = setTimeout(() => abort.abort(), this.#timeout);
       try {
-        const headers: Record<string, string> = { Accept: "application/json" };
-        // Browsers rely on their HTTP cache: a hand-set If-None-Match would force a CORS preflight (design 6.3).
-        if (!isBrowser()) {
-          headers["User-Agent"] = `productcraft-node/flags/${VERSION} ${runtimeTag()}`;
-          if (this.#etag) headers["If-None-Match"] = this.#etag;
-        }
+        const headers = deliveryHeaders(this.#etag);
         const res = await this.#fetch(`${base}/v1/configs/${encodeURIComponent(this.#key)}/config.json`, { headers, signal: abort.signal });
         if (res.status < 500) return await this.#handle(res);
         cancel(res);
@@ -433,24 +443,6 @@ export class FlagsClient {
     const { settings, skipped } = overrideSettings(values, (k) => this.#remote?.settingType(k));
     if (skipped.length) this.#error("overrides", `overrides skipped: ${skipped}`);
     this.#overrides = settings;
-  }
-
-  #overrideText(read: () => string, source: string): void {
-    try {
-      this.#setOverrides(parseOverrideText(read(), source));
-    } catch (e) {
-      this.#error("overrides", (e as Error).message, e);
-    }
-  }
-
-  async #loadFile(path: string): Promise<void> {
-    try {
-      const text = await readText(path);
-      this.#overrideText(() => text, "the overrides file");
-      this.#recompute(true);
-    } catch (e) {
-      this.#error("overrides", "overrides file unreadable", e);
-    }
   }
 
   /** Rebuilds the evaluated config from the remote one and the overrides. */

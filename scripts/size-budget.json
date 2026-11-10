@@ -32,8 +32,16 @@
     "limitGzipBytes": 6144
   },
   "@productcraft/flags": {
-    "measuredGzipBytes": 10781,
+    "measuredGzipBytes": 10886,
     "limitGzipBytes": 11264
+  },
+  "@productcraft/flags (browser)": {
+    "measuredGzipBytes": 10603,
+    "limitGzipBytes": 11264
+  },
+  "@productcraft/flags-react": {
+    "measuredGzipBytes": 1027,
+    "limitGzipBytes": 2048
   },
   "@productcraft/flags-openfeature": {
     "measuredGzipBytes": 11865,

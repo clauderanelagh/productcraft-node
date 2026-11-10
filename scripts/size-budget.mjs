@@ -71,6 +71,26 @@ export const run = (body, user) => evaluate(parseConfig(body), "new_checkout", f
 const flags = new FlagsClient({ sdkKey: "pcf_sdk_x" });
 export const run = () => flags.getValue("k", false);`,
   },
+  // The browser / React Native build of the same program (task 019): dist/browser, as a bundler that
+  // honours the package's `browser` export condition resolves it. Fixed limit of 11 KB gzip: the design's
+  // 10 KB target is missed by about 0.35 KB (decision log, 2026-11-10, task 019).
+  "@productcraft/flags (browser)": {
+    dir: "packages/flags",
+    entry: "dist/browser/index.js",
+    code: `import { FlagsClient } from "@productcraft/flags";
+const flags = new FlagsClient({ sdkKey: "pcf_sdk_x" });
+export const run = () => flags.getValue("k", false);`,
+  },
+  // The React bindings on top of the browser FlagsClient (task 019): react and @productcraft/flags are
+  // the app's own (peers), so they stay external and this measures the provider and hooks. Fixed 2 KB.
+  "@productcraft/flags-react": {
+    dir: "packages/flags-react",
+    external: ["react", "@productcraft/flags"],
+    code: `import { createElement } from "react";
+import { FlagsProvider, useFlag, useFlagDetails, useFlagsClient, useFlagsReady } from "@productcraft/flags-react";
+const App = () => createElement("p", null, String(useFlag("k", false)), useFlagDetails("b", "x").reason, String(useFlagsReady()), String(!!useFlagsClient()));
+export const run = () => createElement(FlagsProvider, { options: { sdkKey: "pcf_sdk_x" } }, createElement(App));`,
+  },
   // The OpenFeature provider over FlagsClient (task 016). @openfeature/server-sdk is the app's own
   // dependency (a peer), so it stays external: this measures the provider plus FlagsClient.
   "@productcraft/flags-openfeature": {
@@ -106,7 +126,7 @@ const record = process.argv.includes("--record");
 const budget = JSON.parse(readFileSync(budgetPath, "utf8"));
 let failed = false;
 
-for (const [name, { dir, code, external = [], pkg = name }] of Object.entries(consumers)) {
+for (const [label, { dir, code, external = [], entry: file, pkg = label.replace(/ \(.*\)$/, "") }] of Object.entries(consumers)) {
   const result = await build({
     stdin: { contents: code, resolveDir: join(root, dir), loader: "js" },
     bundle: true,
@@ -117,19 +137,19 @@ for (const [name, { dir, code, external = [], pkg = name }] of Object.entries(co
     logLevel: "silent",
     external: ["node:*", ...external],
     // Resolve the package to its own built dist, as a consumer would.
-    alias: { [pkg]: join(root, dir) },
+    alias: { [pkg]: join(root, dir, file ?? "") },
   });
   const bytes = result.outputFiles[0].contents;
   const gz = gzipSync(bytes, { level: 9 }).length;
-  const entry = budget[name];
+  const entry = budget[label];
   if (record || !entry) {
-    budget[name] = { measuredGzipBytes: gz, limitGzipBytes: Math.ceil(gz * 1.1) };
-    console.log(`${name}: ${gz} B gzip (${bytes.length} B min) recorded, limit ${budget[name].limitGzipBytes} B`);
+    budget[label] = { measuredGzipBytes: gz, limitGzipBytes: Math.ceil(gz * 1.1) };
+    console.log(`${label}: ${gz} B gzip (${bytes.length} B min) recorded, limit ${budget[label].limitGzipBytes} B`);
     continue;
   }
   const status = gz <= entry.limitGzipBytes ? "ok  " : "FAIL";
   if (gz > entry.limitGzipBytes) failed = true;
-  console.log(`${status} ${name}: ${gz} B gzip (${bytes.length} B min); baseline ${entry.measuredGzipBytes} B, limit ${entry.limitGzipBytes} B`);
+  console.log(`${status} ${label}: ${gz} B gzip (${bytes.length} B min); baseline ${entry.measuredGzipBytes} B, limit ${entry.limitGzipBytes} B`);
 }
 
 if (record) writeFileSync(budgetPath, JSON.stringify(budget, null, 2) + "\n");

@@ -1,11 +1,11 @@
 # @productcraft/flags
 
-Feature flags and remote settings for Node.js and TypeScript, from [ProductCraft Flags](https://productcraft.co/docs/flags).
+Feature flags and remote settings for Node.js, browsers and React Native, from [ProductCraft Flags](https://productcraft.co/docs/flags).
 
 - **`FlagsClient`** downloads one small config JSON per environment and evaluates flags **locally** with [`@productcraft/flags-engine`](https://www.npmjs.com/package/@productcraft/flags-engine). User attributes never leave your app, and an evaluation is a function call, not a request.
 - **`Flags`** is the management API client (projects, configs, environments, flags, targeting rules, segments, SDK keys, history, webhooks), generated from the production OpenAPI spec like every ProductCraft SDK.
 
-Free during the preview. Requires Node.js 20.3 or later.
+Free during the preview. Requires Node.js 20.3 or later on the server; in a browser or React Native app, see [Browsers and React Native](#browsers-and-react-native).
 
 ```sh
 npm install @productcraft/flags
@@ -179,6 +179,29 @@ describe("checkout", () => {
 ```
 
 The same subpath exports `createMockFetch()` for the management client.
+
+## Browsers and React Native
+
+Bundlers that honour the `browser` or `react-native` export condition (Vite, webpack, esbuild, Rollup, Metro, Next.js client bundles) get a build of the same `FlagsClient` without the Node-only parts, so nothing changes in your code:
+
+- **No `node:` import and no `process.env` read.** `overrides.file` and `overrides.env` are Node-only and report an `overrides` error; use `overrides.values`.
+- **The browser HTTP cache revalidates the config.** A page sends no `If-None-Match` (it would force a CORS preflight on every poll); the delivery endpoint allows any origin.
+- **Auto polling pauses while the tab is hidden** and downloads once when it is shown again.
+- `cache` takes any `{ get, set }`, for example over `localStorage`, so a returning visitor starts with the last config.
+
+```ts
+import { FlagsClient } from "@productcraft/flags";
+
+const store = { get: (k: string) => localStorage.getItem(k), set: (k: string, v: string) => localStorage.setItem(k, v) };
+const flags = new FlagsClient({ sdkKey: "pcf_sdk_…", cache: store, defaultUser: { identifier: "user-123" } });
+flags.on("configChanged", () => render());
+const showBanner = await flags.getValue("show_banner", false);
+declare function render(): void;
+```
+
+For React (hooks, a provider and SSR without a flash) use [`@productcraft/flags-react`](https://www.npmjs.com/package/@productcraft/flags-react). The management client `Flags` keeps refusing to run in a browser with a workspace key.
+
+**A key used in a browser or mobile app makes its whole config public** (next section).
 
 ## Server and client configs
 

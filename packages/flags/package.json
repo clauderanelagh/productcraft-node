@@ -1,13 +1,33 @@
 {
   "name": "@productcraft/flags",
   "version": "0.1.0",
-  "description": "Feature flags and remote settings for Node.js (ProductCraft Flags): FlagsClient downloads one config per environment and evaluates flags locally, so user attributes never leave your app; plus the generated management client for projects, flags, targeting, segments and SDK keys.",
+  "description": "Feature flags and remote settings for Node.js, browsers and React Native (ProductCraft Flags): FlagsClient downloads one config per environment and evaluates flags locally, so user attributes never leave your app; plus the generated management client for projects, flags, targeting, segments and SDK keys. A key used in a browser or mobile app makes its whole config public.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "browser": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/browser/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/browser/index.cjs"
+        }
+      },
+      "react-native": {
+        "import": {
+          "types": "./dist/index.d.ts",
+          "default": "./dist/browser/index.js"
+        },
+        "require": {
+          "types": "./dist/index.d.cts",
+          "default": "./dist/browser/index.cjs"
+        }
+      },
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
@@ -18,6 +38,26 @@
       }
     },
     "./testing": {
+      "browser": {
+        "import": {
+          "types": "./dist/testing.d.ts",
+          "default": "./dist/browser/testing.js"
+        },
+        "require": {
+          "types": "./dist/testing.d.cts",
+          "default": "./dist/browser/testing.cjs"
+        }
+      },
+      "react-native": {
+        "import": {
+          "types": "./dist/testing.d.ts",
+          "default": "./dist/browser/testing.js"
+        },
+        "require": {
+          "types": "./dist/testing.d.cts",
+          "default": "./dist/browser/testing.cjs"
+        }
+      },
       "import": {
         "types": "./dist/testing.d.ts",
         "default": "./dist/testing.js"
@@ -48,7 +88,7 @@
     "node": ">=20.3"
   },
   "scripts": {
-    "build": "tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
+    "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsup && node -e \"require('node:fs').copyFileSync('src/_generated/manifest.json','manifest.json')\"",
     "test": "tsc -p tests/tsconfig.json && vitest run"
   },
   "keywords": [
@@ -78,5 +118,8 @@
     "@productcraft/core": "workspace:^",
     "@productcraft/flags-engine": "workspace:^",
     "openapi-fetch": "^0.13.0"
+  },
+  "devDependencies": {
+    "jsdom": "31.0.0"
   }
 }
