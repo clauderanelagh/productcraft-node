@@ -1,5 +1,11 @@
 # @productcraft/flags-openfeature
 
+## 0.1.1
+
+### Patch Changes
+
+- e87256b: Accepts `@productcraft/flags` 0.2 as a peer.
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/flags",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Feature flags and remote settings for Node.js, browsers and React Native (ProductCraft Flags): FlagsClient downloads one config per environment and evaluates flags locally, so user attributes never leave your app; plus the generated management client for projects, flags, targeting, segments and SDK keys. A key used in a browser or mobile app makes its whole config public.",
   "type": "module",
   "main": "./dist/index.cjs",
