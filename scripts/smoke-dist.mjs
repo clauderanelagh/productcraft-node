@@ -185,6 +185,23 @@ await check("@productcraft/flags-openfeature: the provider through the ESM and C
   }
 });
 
+await check("@productcraft/notify-js: both builds load in Node, refuse an API key token, share error identity; notify-sw.js equals NOTIFY_SW_SOURCE", async () => {
+  const dir = join(root, "packages", "notify-js");
+  const builds = [await import(pathToFileURL(join(dir, "dist/index.js")).href), require(join(dir, "dist/index.cjs"))];
+  const sws = [await import(pathToFileURL(join(dir, "dist/sw.js")).href), require(join(dir, "dist/sw.cjs"))];
+  for (const m of builds) {
+    // No document, no navigator.serviceWorker: Node and React Native load it without browser globals.
+    const client = m.createNotifyClient({ getToken: () => "pcft_live_not_a_token", document: null, fetch: () => Promise.reject(new Error("no network in smoke")) });
+    const err = await client.preferences.get().catch((e) => e);
+    for (const other of builds) assert.ok(err instanceof other.NotifyClientError, "NotifyClientError across builds");
+    assert.equal(err.code, "TOKEN_INVALID");
+    client.close();
+  }
+  const file = readFileSync(join(dir, "dist/notify-sw.js"), "utf8");
+  for (const sw of sws) assert.equal(sw.NOTIFY_SW_SOURCE, file);
+  new Function("self", file)({ location: { origin: "https://x" }, addEventListener() {} });
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);

@@ -114,6 +114,15 @@ export const run = () => notify.notifications.send({ type: "comment_created", re
     code: `import { Notify } from "@productcraft/notify";
 export const run = (token) => new Notify().client({ token }).inbox.list();`,
   },
+  // The Notify browser core (task 018): the inbox store, stream reader and web push helper. Its own code only:
+  // @productcraft/notify (the generated client scope, measured above) stays external. Fixed limit of 6 KB gzip.
+  "@productcraft/notify-js": {
+    dir: "packages/notify-js",
+    external: ["@productcraft/notify"],
+    code: `import { createNotifyClient, registerWebPush } from "@productcraft/notify-js";
+const notify = createNotifyClient({ getToken: () => fetch("/api/notify-token").then((r) => r.text()) });
+export const run = () => { notify.inbox.subscribe(() => {}); return registerWebPush(notify, { serviceWorkerPath: "/notify-sw.js" }); };`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

@@ -49,10 +49,15 @@
     {
       "glob": "packages/flags-react/src/**",
       "why": "React bindings over FlagsClient (provider, hooks, SSR bootstrap); not an API surface (task 019)."
+    },
+    {
+      "glob": "packages/notify-js/src/**",
+      "why": "Notify browser core: the real-time stream reader, client state (inbox store, token refresh, optimistic marks), the web push helper and the service worker are not HTTP operations; the calls go through the generated client scope of @productcraft/notify (sdk-standard section 6, task 018)."
     }
   ],
   "indexLineExceptions": {
     "packages/core/src/index.ts": "The runtime's barrel, not a product shell.",
-    "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface."
+    "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface.",
+    "packages/notify-js/src/index.ts": "Hand-written package; its entry is a barrel, not a generated product shell."
   }
 }

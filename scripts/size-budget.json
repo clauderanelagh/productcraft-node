@@ -54,5 +54,9 @@
   "@productcraft/notify (client scope)": {
     "measuredGzipBytes": 13010,
     "limitGzipBytes": 14312
+  },
+  "@productcraft/notify-js": {
+    "measuredGzipBytes": 5016,
+    "limitGzipBytes": 6144
   }
 }
