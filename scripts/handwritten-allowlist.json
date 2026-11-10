@@ -53,11 +53,16 @@
     {
       "glob": "packages/notify-js/src/**",
       "why": "Notify browser core: the real-time stream reader, client state (inbox store, token refresh, optimistic marks), the web push helper and the service worker are not HTTP operations; the calls go through the generated client scope of @productcraft/notify (sdk-standard section 6, task 018)."
+    },
+    {
+      "glob": "packages/notify-react/src/**",
+      "why": "React components and hooks over the Notify browser core (provider, useInbox, usePreferences, NotifyInbox, NotifyPreferences, strings, the Markdown subset renderer); not an API surface, all state stays in @productcraft/notify-js (sdk-standard section 6, task 020)."
     }
   ],
   "indexLineExceptions": {
     "packages/core/src/index.ts": "The runtime's barrel, not a product shell.",
     "packages/auth-passport/src/index.ts": "Passport adapter; not an API surface.",
-    "packages/notify-js/src/index.ts": "Hand-written package; its entry is a barrel, not a generated product shell."
+    "packages/notify-js/src/index.ts": "Hand-written package; its entry is a barrel, not a generated product shell.",
+    "packages/notify-react/src/index.ts": "Hand-written package; its entry is a barrel, not a generated product shell."
   }
 }

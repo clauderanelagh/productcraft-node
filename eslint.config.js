@@ -11,10 +11,10 @@ export default [
     ],
   },
   {
-    files: ["packages/*/src/**/*.ts", "packages/*/tests/**/*.ts"],
+    files: ["packages/*/src/**/*.{ts,tsx}", "packages/*/tests/**/*.{ts,tsx}"],
     languageOptions: {
       parser: tsparser,
-      parserOptions: { ecmaVersion: 2022, sourceType: "module" },
+      parserOptions: { ecmaVersion: 2022, sourceType: "module", ecmaFeatures: { jsx: true } },
     },
     plugins: { "@typescript-eslint": tseslint },
     rules: {

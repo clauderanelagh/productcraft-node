@@ -123,6 +123,34 @@ export const run = (token) => new Notify().client({ token }).inbox.list();`,
 const notify = createNotifyClient({ getToken: () => fetch("/api/notify-token").then((r) => r.text()) });
 export const run = () => { notify.inbox.subscribe(() => {}); return registerWebPush(notify, { serviceWorkerPath: "/notify-sw.js" }); };`,
   },
+  // @productcraft/notify-react (task 020): its own code only (react, notify-js and notify stay external),
+  // per surface, with the fixed limits of design 11.3: the inbox (12 KB gzip), the preference centre (6 KB)
+  // and the hooks alone (3 KB; "on top of the core", which is notify-js's own entry above).
+  "@productcraft/notify-react (NotifyInbox)": {
+    dir: "packages/notify-react",
+    pkg: "@productcraft/notify-react",
+    external: ["react", "react-dom", "@productcraft/notify-js", "@productcraft/notify"],
+    code: `import { createElement } from "react";
+import { NotifyProvider, NotifyInbox } from "@productcraft/notify-react";
+export const run = () => createElement(NotifyProvider, { getToken: () => "t" }, createElement(NotifyInbox, { tenant: "org" }));`,
+  },
+  "@productcraft/notify-react (NotifyPreferences)": {
+    dir: "packages/notify-react",
+    pkg: "@productcraft/notify-react",
+    external: ["react", "react-dom", "@productcraft/notify-js", "@productcraft/notify"],
+    code: `import { createElement } from "react";
+import { NotifyProvider, NotifyPreferences } from "@productcraft/notify-react";
+export const run = () => createElement(NotifyProvider, { getToken: () => "t" }, createElement(NotifyPreferences));`,
+  },
+  "@productcraft/notify-react (hooks)": {
+    dir: "packages/notify-react",
+    pkg: "@productcraft/notify-react",
+    external: ["react", "react-dom", "@productcraft/notify-js", "@productcraft/notify"],
+    code: `import { createElement } from "react";
+import { NotifyProvider, useInbox, usePreferences, useNotifyClient } from "@productcraft/notify-react";
+const App = () => { const i = useInbox({ onNew() {} }); const p = usePreferences(); useNotifyClient(); return createElement("p", null, i.counts.unread, p.status); };
+export const run = () => createElement(NotifyProvider, { getToken: () => "t" }, createElement(App));`,
+  },
   "@productcraft/trawl": {
     dir: "packages/trawl",
     code: `import { Trawl } from "@productcraft/trawl";

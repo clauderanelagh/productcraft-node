@@ -2,6 +2,7 @@ import { Notify } from "@productcraft/notify";
 import { InboxStore, type InboxFilters } from "./inbox.js";
 import { Realtime, type RealtimeStatus, type VisibilitySource } from "./realtime.js";
 import { isTokenError, TokenManager } from "./tokens.js";
+import { PreferencesStore } from "./preferences.js";
 
 /** The generated recipient-token scope of `@productcraft/notify` (`notify.client({ token })`). */
 export type NotifyClientScope = ReturnType<Notify["client"]>;
@@ -31,14 +32,11 @@ export interface NotifyBrowserClient {
   readonly inbox: InboxStore;
   /** Another inbox view (say one per tenant) sharing this client's token and stream. */
   createInbox(filters?: InboxFilters): InboxStore;
-  readonly preferences: {
-    get(): Promise<Notify.ClientPreferences>;
-    /** Sets (or with `enabled: null` removes) only these cells, so two open tabs never overwrite each other. */
-    update(
-      cells: NonNullable<Notify.MePreferenceUpdateParams["preferences"]>,
-      extra?: Omit<Notify.MePreferenceUpdateParams, "preferences">,
-    ): Promise<Notify.ClientPreferences>;
-  };
+  /**
+   * The recipient's preferences: `get()`, per-cell `update(cells, extra?)` (only those cells change, so two
+   * open tabs never overwrite each other), and a cached, subscribable state for preference screens.
+   */
+  readonly preferences: PreferencesStore;
   readonly devices: {
     register(params: Notify.MeDeviceRegisterParams): Promise<Notify.Device>;
     /** Call on sign-out so the device stops receiving this recipient's pushes. */
@@ -147,10 +145,7 @@ export function createNotifyClient(options: NotifyClientOptions): NotifyBrowserC
   const client: NotifyBrowserClient = {
     inbox: createInbox(options.inbox),
     createInbox,
-    preferences: {
-      get: () => call((s) => s.preferences.retrieve()),
-      update: (cells, extra) => call((s) => s.preferences.update({ ...extra, preferences: cells })),
-    },
+    preferences: new PreferencesStore(call),
     devices: {
       register: (params) => call((s) => s.devices.register(params)),
       unregister: (id) => call((s) => s.devices.delete(id)).then(() => undefined),

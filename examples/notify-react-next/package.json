@@ -1,0 +1,24 @@
+{
+  "name": "notify-react-next-example",
+  "private": true,
+  "description": "Next.js App Router app with the ProductCraft Notify inbox and preference centre (@productcraft/notify-react) and a token route (@productcraft/notify). run.mjs builds it (the \"use client\" fixture) and drives it live against testing-environment.",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@productcraft/notify": "^0.1.0",
+    "@productcraft/notify-react": "^0.1.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "playwright-core": "1.58.0",
+    "typescript": "5.9.3"
+  }
+}

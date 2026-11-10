@@ -202,6 +202,25 @@ await check("@productcraft/notify-js: both builds load in Node, refuse an API ke
   new Function("self", file)({ location: { origin: "https://x" }, addEventListener() {} });
 });
 
+await check("@productcraft/notify-react: renderToString through the ESM and CJS builds (\"use client\" kept on both); styles.css ships", async () => {
+  const dir = join(root, "packages", "notify-react");
+  const req = createRequire(join(dir, "package.json"));
+  const { createElement } = req("react");
+  const { renderToString } = req("react-dom/server");
+  const builds = [await import(pathToFileURL(join(dir, "dist/index.js")).href), require(join(dir, "dist/index.cjs"))];
+  for (const [i, m] of builds.entries()) {
+    assert.match(readFileSync(join(dir, i ? "dist/index.cjs" : "dist/index.js"), "utf8"), /^"use client";/);
+    // Server render: no token is fetched, the bell renders closed with no count.
+    const getToken = () => {
+      throw new Error("getToken must not run on the server");
+    };
+    const html = renderToString(createElement(m.NotifyProvider, { getToken, locale: "de", document: null }, createElement(m.NotifyInbox), createElement(m.NotifyPreferences)));
+    assert.match(html, /aria-label="Benachrichtigungen"/);
+    assert.match(html, /Wird geladen/);
+  }
+  assert.match(readFileSync(join(dir, "dist/styles.css"), "utf8"), /--pcn-accent/);
+});
+
 // 2. @productcraft/core: cross-build behaviour.
 const coreDir = join(root, "packages", "core");
 const esm = await import(pathToFileURL(join(coreDir, "dist/index.js")).href);
