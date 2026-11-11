@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/notify-react",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "React components and hooks for ProductCraft Notify: a drop-in notification inbox (bell, unread badge, accessible popover, action buttons, real-time updates) and preference centre (category × channel switches with required ones locked, time zone and quiet hours), plus useInbox and usePreferences. A thin binding over @productcraft/notify-js; localised, themeable with CSS variables, \"use client\" for the Next.js App Router.",
   "type": "module",
   "main": "./dist/index.cjs",
