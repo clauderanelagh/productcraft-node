@@ -283,3 +283,15 @@ describe("<NotifyPreferences/>", () => {
     expect(screen.getByRole("switch", { name: "Security: In der App" })).toBeTruthy();
   });
 });
+
+describe("viewportShift (popover collision)", () => {
+  it("moves a popover that hangs off the left edge right, one off the right edge left, and leaves a fitting one", async () => {
+    const { viewportShift } = await import("../src/inbox.js");
+    // A 380 px popover pinned to a bell at x 0..48: it starts at -334 (the QA report).
+    expect(viewportShift({ left: -334, right: 46 }, 1280)).toBe(350);
+    expect(viewportShift({ left: 900, right: 1290 }, 1280)).toBe(-26);
+    expect(viewportShift({ left: 880, right: 1260 }, 1280)).toBe(0);
+    // Wider than the viewport allows: the left edge wins.
+    expect(viewportShift({ left: 10, right: 400 }, 380)).toBe(6);
+  });
+});

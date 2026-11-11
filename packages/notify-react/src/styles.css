@@ -97,6 +97,7 @@
   right: 0;
   top: calc(100% + 8px);
   z-index: 50;
+  box-sizing: border-box;
   width: min(var(--pcn-width), calc(100vw - 32px));
   max-height: min(560px, 80vh);
   overflow: auto;
@@ -109,6 +110,7 @@
 .pcn-popover:focus { outline: none; }
 @media (prefers-reduced-motion: no-preference) {
   .pcn-popover { animation: pcn-in 140ms cubic-bezier(0.2, 0.8, 0.2, 1); transform-origin: top right; }
+  .pcn-popover[data-shifted="right"] { transform-origin: top left; }
   @keyframes pcn-in { from { opacity: 0; transform: translateY(-4px) scale(0.98); } }
 }
 .pcn-header {

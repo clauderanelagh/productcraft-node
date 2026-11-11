@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactElement } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactElement } from "react";
 import { useInbox, useNotifyContext, type NotifyInboxItem } from "./provider.js";
 import { renderMarkdown, safeUrl } from "./markdown.js";
 import { fill, notifyStrings, relativeTime, type NotifyStrings } from "./strings.js";
@@ -31,6 +31,17 @@ const initials = (name: string): string =>
     .slice(0, 2)
     .map((w) => w[0]!.toUpperCase())
     .join("");
+
+/** Space kept between the popover and the viewport edges (matches the CSS width cap, 100vw - 32px). */
+const VIEWPORT_GUTTER = 16;
+const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
+
+/** How far to move a box right (positive) or left (negative) so it sits inside the viewport gutter. */
+export function viewportShift(rect: { left: number; right: number }, viewportWidth: number, gutter = VIEWPORT_GUTTER): number {
+  if (rect.left < gutter) return gutter - rect.left;
+  if (rect.right > viewportWidth - gutter) return Math.max(gutter - rect.left, viewportWidth - gutter - rect.right);
+  return 0;
+}
 
 /**
  * A bell button with the unread count and a popover inbox: real-time list, mark read / unread / all,
@@ -86,6 +97,28 @@ export function NotifyInbox(props: NotifyInboxProps): ReactElement {
       document.removeEventListener("pointerdown", outside);
       document.removeEventListener("keydown", escape);
     };
+  }, [open]);
+
+  // While open, keep the popover inside the viewport: it hangs from the bell's right edge, so a bell
+  // near the left edge (a sidebar, a left-aligned header) would push it off-screen. Shift it
+  // horizontally to keep a 16 px gutter, before paint and again on resize.
+  useIsoLayoutEffect(() => {
+    if (!open) return;
+    const fit = (): void => {
+      const el = panel.current;
+      if (!el) return;
+      el.style.right = "";
+      el.removeAttribute("data-shifted");
+      // The open animation scales from the top right corner: the right edge and the layout width are exact.
+      const { right } = el.getBoundingClientRect();
+      const shift = viewportShift({ left: right - el.offsetWidth, right }, document.documentElement.clientWidth || window.innerWidth);
+      if (shift === 0) return;
+      el.style.right = `${parseFloat(getComputedStyle(el).right) - shift}px`;
+      el.setAttribute("data-shifted", shift > 0 ? "right" : "left");
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
   }, [open]);
 
   // While open, what is shown is seen.
