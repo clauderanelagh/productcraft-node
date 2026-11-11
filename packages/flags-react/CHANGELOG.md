@@ -1,5 +1,11 @@
 # @productcraft/flags-react
 
+## 0.1.2
+
+### Patch Changes
+
+- d25ba4a: Accept `@productcraft/flags` 0.4 as a peer.
+
 ## 0.1.1
 
 ### Patch Changes

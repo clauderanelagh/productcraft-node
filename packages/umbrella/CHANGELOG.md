@@ -1,5 +1,13 @@
 # productcraft
 
+## 1.4.3
+
+### Patch Changes
+
+- Updated dependencies [9640994]
+  - @productcraft/flags@0.4.0
+  - @productcraft/platform-auth@1.4.0
+
 ## 1.4.2
 
 ### Patch Changes
