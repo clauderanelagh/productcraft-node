@@ -22,7 +22,8 @@ At most 50 categories per workspace during the preview. Channels left out of `de
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `CATEGORY_KEY_TAKEN`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `CATEGORY_KEY_TAKEN`: the key is in use; `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the workspace already has 50 categories. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -45,7 +46,8 @@ Only when no notification type uses it. Recipients' preferences for the category
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CATEGORY_NOT_FOUND` | `CATEGORY_NOT_FOUND`: no category with this id in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `CATEGORY_IN_USE` | `CATEGORY_IN_USE`: a notification type still uses the category. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -71,7 +73,8 @@ By `ordinal`, then oldest first.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad parameter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -93,7 +96,8 @@ Get a category.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CATEGORY_NOT_FOUND` | `CATEGORY_NOT_FOUND`: no category with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -117,7 +121,8 @@ Changes the fields you send. `defaults` merges per channel. The key cannot chang
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CATEGORY_NOT_FOUND` | `CATEGORY_NOT_FOUND`: no category with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -141,7 +146,8 @@ Whether each channel (inbox, email, push, web push) can deliver now, and the met
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -164,7 +170,8 @@ Deletes an APNs credential and erases its key immediately. Push to devices of it
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CREDENTIAL_NOT_FOUND` | `CREDENTIAL_NOT_FOUND`: no APNs credential with this id in the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -189,7 +196,8 @@ Uploads an APNs authentication key (`.p8`, token auth) for one bundle id. You st
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is malformed (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `CONFLICT`: another upload for the same bundle id ran at the same time; `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CREDENTIAL_INVALID`, `CREDENTIAL_MISMATCH` | `CREDENTIAL_INVALID`: the `.p8` is not a P-256 private key, or Apple rejected it (wrong `key_id`/`team_id`, revoked key); `CREDENTIAL_MISMATCH`: Apple accepted the key but not for this `bundle_id`. Nothing was stored. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -221,7 +229,8 @@ Deletes an FCM credential and erases its private key immediately. Push to Androi
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CREDENTIAL_NOT_FOUND` | `CREDENTIAL_NOT_FOUND`: no FCM credential with this id in the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -246,7 +255,8 @@ Uploads the JSON key of a Google service account for one Firebase project (FCM H
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is malformed (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `CONFLICT`: another upload for the same project ran at the same time; `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CREDENTIAL_INVALID` | `CREDENTIAL_INVALID`: the JSON is not a service-account key file, or Google rejected it (deleted account or key, missing Firebase Cloud Messaging role, FCM API not enabled, unknown project). Nothing was stored. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -275,7 +285,8 @@ Generates a P-256 key pair for web push (RFC 8292) and returns its public key; t
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `CONFIRMATION_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `CONFIRMATION_REQUIRED`: the workspace already has a VAPID key and the body has no `confirm: "rotate"`; `CONFLICT`: another request changed the key at the same time; `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -299,7 +310,8 @@ Imports an existing VAPID key pair (for example from another push provider) so s
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `CONFIRMATION_REQUIRED` | `CONFIRMATION_REQUIRED`: a different key is active and the body has no `confirm: "rotate"`; `CONFLICT`: another request changed the key at the same time. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CREDENTIAL_INVALID` | `CREDENTIAL_INVALID`: the keys are not base64url P-256 keys, or they are not a matching pair. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -325,7 +337,8 @@ The VAPID public key browsers subscribe with (`applicationServerKey`), or `confi
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -351,7 +364,8 @@ Newest first. Filter by `notification_id`, `recipient` (external id), `state` or
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -375,7 +389,8 @@ With every provider attempt (status, code, duration; no message content).
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `DELIVERY_NOT_FOUND` | `DELIVERY_NOT_FOUND`: no delivery with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -399,7 +414,8 @@ Categories, notification types with every template, and settings, in the shapes 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -422,7 +438,8 @@ Archived types cannot be sent (`NOTIFICATION_TYPE_ARCHIVED`); history stays. Arc
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no notification type with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -447,7 +464,8 @@ At most 200 types per workspace during the preview. Add templates with `PUT …/
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `NOTIFICATION_TYPE_KEY_TAKEN`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `NOTIFICATION_TYPE_KEY_TAKEN`: the key is in use; `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND`, `VALIDATION_ERROR`, `LIMIT_EXCEEDED` | `CATEGORY_NOT_FOUND`: no category with `category_key`; `VALIDATION_ERROR`: the routing is invalid; `LIMIT_EXCEEDED`: the workspace already has 200 types. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -473,7 +491,8 @@ Newest first; archived types only with `include_archived=true`.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad parameter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -499,7 +518,8 @@ Renders every routed channel with sample `data`, or as a real `recipient` (its l
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`, or `RECIPIENT_NOT_FOUND`: no recipient with this external id. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -523,7 +543,8 @@ Types as code: sets the type and its complete template set in one transaction (t
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field or template entry is invalid. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND`, `VALIDATION_ERROR`, `TEMPLATE_INVALID`, `UNSAFE_URL`, `LIMIT_EXCEEDED` | `CATEGORY_NOT_FOUND`, `VALIDATION_ERROR` (routing), `TEMPLATE_INVALID`, `UNSAFE_URL` or `LIMIT_EXCEEDED` (200 types, 32 KB per template). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -543,7 +564,8 @@ Get a notification type.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no notification type with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -567,7 +589,8 @@ Changes the fields you send; `routing` is replaced whole. The key cannot change.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no notification type with this id in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND`, `VALIDATION_ERROR` | `CATEGORY_NOT_FOUND`: no category with `category_key`; `VALIDATION_ERROR`: the routing is invalid. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -593,7 +616,8 @@ Deletes the template and its versions. Sends to that channel and locale fall bac
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: unknown channel or malformed locale. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `TEMPLATE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`, or `TEMPLATE_NOT_FOUND`: the type has no template for this channel and locale. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -614,7 +638,8 @@ Get a template.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: unknown channel or malformed locale. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `TEMPLATE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`, or `TEMPLATE_NOT_FOUND`: the type has no template for this channel and locale. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -638,7 +663,8 @@ Restores an earlier version as a new version (audited as `notify.template.revert
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: unknown channel, malformed locale or version. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `TEMPLATE_NOT_FOUND`, `TEMPLATE_VERSION_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`, `TEMPLATE_NOT_FOUND`, or `TEMPLATE_VERSION_NOT_FOUND`: that version is not kept. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -662,7 +688,8 @@ Sets the template of one channel and locale. Every change is kept as a version (
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: unknown channel or malformed locale. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no notification type with this id in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `TEMPLATE_INVALID`, `UNSAFE_URL`, `LIMIT_EXCEEDED` | `TEMPLATE_INVALID`: a field is missing, unknown or does not parse (the message names it); `UNSAFE_URL`: a URL field is not https; `LIMIT_EXCEEDED`: the template is over 32 KB or the type has 100 templates. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -686,7 +713,8 @@ The last 20 versions, newest first.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: unknown channel or malformed locale. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `TEMPLATE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`, or `TEMPLATE_NOT_FOUND`: the type has no template for this channel and locale. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -710,7 +738,8 @@ Deliveries still pending, scheduled or retrying end `skipped: cancelled`, and re
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_NOT_FOUND` | `NOTIFICATION_NOT_FOUND`: no notification with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -734,7 +763,8 @@ Cancels every live notification sent with this `cancellation_key`: deliveries st
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `cancellation_key` is missing. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -758,7 +788,8 @@ Newest first. Filter by `type`, `tag` (`key:value` or `key`), `tenant` or `cance
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -782,7 +813,8 @@ Archives the notification's inbox items for every recipient (for example once an
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_NOT_FOUND` | `NOTIFICATION_NOT_FOUND`: no notification with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -804,7 +836,8 @@ With its data and the number of deliveries per channel and state.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_NOT_FOUND` | `NOTIFICATION_NOT_FOUND`: no notification with this id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -829,7 +862,8 @@ Notifies up to 1,000 recipients with one notification type, across the type's ch
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_REQUIRED`, `TOO_MANY_RECIPIENTS` | `IDEMPOTENCY_KEY_REQUIRED`: no `Idempotency-Key`; `TOO_MANY_RECIPIENTS`: over 1,000; `VALIDATION_ERROR`: a field is invalid. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE`, `DATA_TOO_LARGE` | `DATA_TOO_LARGE`: `data` is over 16 KB. |
@@ -861,7 +895,8 @@ Returns a short-lived token (default 1 hour, at most 24 hours) that lets one rec
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `RECIPIENT_ERASED` | `RECIPIENT_ERASED`: the recipient was erased in the last 24 hours (its linked Auth user was deleted). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over the mint limit; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -888,7 +923,8 @@ Upserts each row like `PUT /recipients/{external_id}`, with its devices. Rows ar
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `recipients` is missing, empty or longer than 1,000. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: more than 20 bulk calls in a minute; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -910,7 +946,8 @@ Deletes the recipient and everything Notify holds for it: devices now, and prefe
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -934,7 +971,8 @@ Creates the recipient with this external id, or updates it. Fields you leave out
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `AUTH_USER_ALREADY_LINKED` | `AUTH_USER_ALREADY_LINKED`: the Auth end user is linked to another recipient of the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -959,7 +997,8 @@ Newest first. Filter by `email` (case-insensitive), `auth_user_id`, or `updated_
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -983,7 +1022,8 @@ The profile; devices are under `…/devices`.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1005,7 +1045,8 @@ Every recipient token minted for this recipient so far stops working on its next
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1030,7 +1071,8 @@ Every delivery to this recipient across notifications, newest first, with the re
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1057,7 +1099,8 @@ Changes the fields you send on an existing recipient (404 when there is none; us
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `AUTH_USER_ALREADY_LINKED` | `AUTH_USER_ALREADY_LINKED`: the Auth end user is linked to another recipient of the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1085,7 +1128,8 @@ Registers an APNs or FCM token, or a browser web push subscription, for the reci
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id; create it with `PUT` first. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `DEVICE_TOKEN_INVALID`, `WEBPUSH_ENDPOINT_NOT_ALLOWED` | `DEVICE_TOKEN_INVALID`: the token or subscription is malformed for its channel (or `environment` is missing for APNs); `WEBPUSH_ENDPOINT_NOT_ALLOWED`: the endpoint is not https on a known push service, or resolves to a private address. |
@@ -1109,7 +1153,8 @@ Deletes the device (call it when the user signs out on that device). Pushes stop
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND`, `DEVICE_NOT_FOUND` | `RECIPIENT_NOT_FOUND`, or `DEVICE_NOT_FOUND`: the recipient has no device with this id. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1131,7 +1176,8 @@ Most recently seen first: the active ones (at most 20) and any invalid or pruned
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1158,7 +1204,8 @@ What the recipient sees in their in-app inbox, newest first, with their unseen a
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1187,7 +1234,8 @@ Sets the complete set of cells: cells you leave out are removed. Most specific w
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a cell is malformed or repeated. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `PREFERENCE_LOCKED` | `CATEGORY_NOT_FOUND` / `NOTIFICATION_TYPE_NOT_FOUND`: a cell names an unknown key; `PREFERENCE_LOCKED`: the channel is mandatory for that category and cannot be turned off. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1210,7 +1258,8 @@ The cells the recipient set, unsubscribe-all, time zone and quiet hours. Anythin
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1234,7 +1283,8 @@ Sets or removes (`enabled: null`) the cells you send and keeps the others; also 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a cell is malformed or repeated. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND`, `PREFERENCE_LOCKED` | `CATEGORY_NOT_FOUND` / `NOTIFICATION_TYPE_NOT_FOUND`: a cell names an unknown key; `PREFERENCE_LOCKED`: the channel is mandatory for that category and cannot be turned off. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1259,7 +1309,8 @@ Email on/off and, after an automatic pause, when and why email was paused; the d
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1280,7 +1331,8 @@ Every recipient token of the workspace stops working on its next call (`401 RECI
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1303,7 +1355,8 @@ Turn email on or off, set the default time zone and quiet hours (`null` clears e
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1326,7 +1379,8 @@ Rows, in order: `notification_type` (not_set until an active type exists), `emai
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks `notify.channel.read`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks `notify.channel.read`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1351,7 +1405,8 @@ Daily delivery counts per channel for a range of UTC days (default the last 30, 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a date is invalid, `from` is after `to`, or the range is longer than 90 days. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks `notify.message.read`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks `notify.message.read`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1387,8 +1442,8 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `WEBHOOK_EVENT_TYPE_UNKNOWN` | Validation failure: URL not https with a public host, or an unknown event type (`WEBHOOK_EVENT_TYPE_UNKNOWN`). |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 409 | `ConflictError` | `CONFLICT`, `WEBHOOK_ENDPOINT_LIMIT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The URL points at a private, loopback or internal address. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1412,8 +1467,8 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1437,8 +1492,8 @@ At most 10, so this is always one page. Signing secrets are never returned here,
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The scope id in the path is malformed. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1462,8 +1517,8 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1488,8 +1543,8 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `grace_hours` out of range, or `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1515,8 +1570,8 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown `event_type`, or `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1542,8 +1597,8 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure, or `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The new URL points at a private, loopback or internal address. |
@@ -1569,8 +1624,8 @@ Each type with a plain description, its group and an example `data` object (what
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1596,8 +1651,8 @@ Every event logged while at least one endpoint existed, with the latest state pe
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid filter value or cursor. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1624,8 +1679,8 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `event_id` is not `evt_<uuid>`, or `endpoint_id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_EVENT_NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1649,8 +1704,8 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `event_id` is not `evt_<uuid>`. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | `UNAUTHORIZED`: Missing or invalid bearer token. A recipient token is refused with `RECIPIENT_TOKEN_INVALID` (it works only on `/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `notify.webhook.read` (reads) or `notify.webhook.manage` (changes, Send test, replay), or Notify is not enabled for the workspace (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_EVENT_NOT_FOUND` | No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1675,7 +1730,7 @@ Call it when the user signs out on the device: pushes to it stop at once.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `DEVICE_NOT_FOUND` | `DEVICE_NOT_FOUND`: the recipient has no device with this id. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1700,7 +1755,7 @@ Registers the app's APNs or FCM token, or the browser's web push subscription, f
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `DEVICE_TOKEN_INVALID`, `WEBPUSH_ENDPOINT_NOT_ALLOWED` | `DEVICE_TOKEN_INVALID`: the token or subscription is malformed for its channel (or `environment` is missing for APNs); `WEBPUSH_ENDPOINT_NOT_ALLOWED`: the endpoint is not https on a known push service. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1725,7 +1780,7 @@ Unseen and unread counts for the badge, cheap enough to poll every 30 seconds or
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1748,7 +1803,7 @@ Call it when the recipient presses the item or one of its buttons (`action_key`)
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `INBOX_ITEM_NOT_FOUND` | `INBOX_ITEM_NOT_FOUND`: the recipient has no item with this id (or it was retracted). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: the item has no button with this `action_key`. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1775,7 +1830,7 @@ The recipient's in-app inbox, newest first, with the unseen and unread counts fo
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a query parameter is invalid, or the cursor is not one this route returned. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1802,7 +1857,7 @@ Marks up to 100 items (`ids`), or every item up to and including `before_id` ("m
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid, or not exactly one of `ids` and `before_id` was given. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1826,7 +1881,7 @@ The workspace's categories with their per-channel defaults (`mandatory` channels
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `preferences:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `preferences:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1850,7 +1905,7 @@ Sets or (with `enabled: null`) removes individual cells, and the time zone, quie
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid (`errors` names it). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `preferences:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `preferences:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `PREFERENCE_LOCKED`, `CATEGORY_NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `PREFERENCE_LOCKED`: the channel is mandatory for the category; `CATEGORY_NOT_FOUND` / `NOTIFICATION_TYPE_NOT_FOUND`: no category or type with that key. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1875,7 +1930,7 @@ The VAPID public key the browser subscribes with (`pushManager.subscribe({ appli
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `devices:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CHANNEL_NOT_CONFIGURED` | `CHANNEL_NOT_CONFIGURED`: the workspace has no web push key yet (generate one in the console or with `POST /channels/webpush/vapid-keys`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1951,7 +2006,6 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `CREDENTIAL_MISMATCH` | The credential belongs to a different app (bundle id or Firebase project id differs). |
 | `DEVICE_TOKEN_INVALID` | The device token or web push subscription is malformed for its platform. |
 | `WEBPUSH_ENDPOINT_NOT_ALLOWED` | The web push subscription endpoint is not a known push service. |
-| `MAIL_NOT_ENABLED` | The email channel needs the Mail product enabled with a verified sender. |
 | `RECIPIENT_TOKEN_INVALID` | The recipient token is malformed, has a bad signature or was revoked. |
 | `RECIPIENT_TOKEN_EXPIRED` | The recipient token has expired; mint a new one from your backend. |
 | `RECIPIENT_TOKEN_SCOPE` | The recipient token does not allow this operation. |
@@ -1959,8 +2013,6 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `STREAM_LIMIT` | The recipient has the maximum number of open real-time streams. |
 | `LIMIT_EXCEEDED` | A preview limit of the workspace was reached. |
 | `SEND_AT_OUT_OF_RANGE` | `send_at` or `delay_seconds` is in the past or beyond the type TTL. |
-| `EMAIL_PAUSED` | Email sending is paused for this workspace. |
-| `EMAIL_BACKLOG_FULL` | The workspace email backlog is full; retry later. |
 | `UNSAFE_URL` | A URL field does not use https (http is accepted only for localhost). |
 | `AUTH_USER_ALREADY_LINKED` | The Auth end user is already linked to another recipient in this workspace. |
 | `DEVICE_NOT_FOUND` | The recipient has no device with this id. |
