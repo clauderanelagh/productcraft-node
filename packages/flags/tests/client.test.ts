@@ -104,6 +104,26 @@ describe("downloads", () => {
     flags.on("evaluated", () => { throw new Error("listener boom"); });
     await flags.forceRefresh();
     await expect(flags.getValue("x", "fallback")).resolves.toBe("fallback");
+    expect(flags.state).toBe("unavailable");
+  });
+
+  it("reports unavailable (not stale) when no config was ever held, stale once one was", async () => {
+    let up = false;
+    const flags = client({
+      fetch: async () => {
+        if (!up) throw new TypeError("fetch failed");
+        return new Response(JSON.stringify(config(1, { x: BOOL(true) })), { status: 200, headers: { etag: '"r1"' } });
+      },
+    });
+    await flags.forceRefresh();
+    expect(flags.state).toBe("unavailable");
+    const d = await flags.getValueDetails("x", false);
+    expect([d.reason, d.errorCode, d.isDefaultValue]).toEqual(["ERROR", "PROVIDER_NOT_READY", true]);
+    up = true;
+    await flags.forceRefresh();
+    expect(flags.state).toBe("ready");
+    up = false;
+    await flags.forceRefresh();
     expect(flags.state).toBe("stale");
   });
 

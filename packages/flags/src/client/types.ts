@@ -77,10 +77,12 @@ export interface FlagsClientOptions {
 
 /**
  * `initializing` until the first fetch settles; `ready` after a successful fetch or 304; `stale` when the last
- * fetch failed and an older config is being served; `key_invalid` after a 404 (the key is unknown, revoked or
- * expired: the held config is kept); `offline` after `setOffline()`; `closed` after `close()`.
+ * fetch failed and an older config (downloaded earlier, cached or bootstrapped) is being served; `unavailable`
+ * when the last fetch failed and no config has ever been held (evaluations return your defaults, or local
+ * overrides); `key_invalid` after a 404 (the key is unknown, revoked or expired: the held config is kept);
+ * `offline` after `setOffline()`; `closed` after `close()`.
  */
-export type ClientState = "initializing" | "ready" | "stale" | "key_invalid" | "offline" | "closed";
+export type ClientState = "initializing" | "ready" | "stale" | "unavailable" | "key_invalid" | "offline" | "closed";
 
 /** Where the config in use came from. */
 export type ConfigSource = "fetch" | "cache" | "bootstrap" | "overrides" | "none";
