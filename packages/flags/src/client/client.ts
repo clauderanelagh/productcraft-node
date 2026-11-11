@@ -402,7 +402,8 @@ export class FlagsClient {
 
   #failed(code: FlagsClientErrorCode, message: string, cause?: unknown): void {
     this.#failures++;
-    if (!this.#closed && !this.#offline) this.#state = "stale";
+    // `stale` promises an older config is being served; with none held, say so instead.
+    if (!this.#closed && !this.#offline) this.#state = this.#remote ? "stale" : "unavailable";
     this.#error(code, message, cause);
   }
 

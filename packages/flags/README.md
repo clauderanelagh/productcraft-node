@@ -91,7 +91,7 @@ flags.setOnline();
 flags.close(); // stop timers (call it on shutdown)
 ```
 
-`flags.state` is `initializing`, `ready`, `stale` (the last download failed), `key_invalid` (the key was revoked or expired: the client keeps the config it holds), `offline` or `closed`. Errors back off up to 4× the interval and honour `Retry-After`.
+`flags.state` is `initializing`, `ready`, `stale` (the last download failed; an older config is served), `unavailable` (the last download failed and no config was ever held: evaluations return your defaults), `key_invalid` (the key was revoked or expired: the client keeps the config it holds), `offline` or `closed`. Errors back off up to 4× the interval and honour `Retry-After`.
 
 ## Fail-safe: cache and bootstrap
 

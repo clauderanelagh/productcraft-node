@@ -72,7 +72,7 @@ export { BadRequestError }
 export { ClientOptions }
 
 // @public
-export type ClientState = "initializing" | "ready" | "stale" | "key_invalid" | "offline" | "closed";
+export type ClientState = "initializing" | "ready" | "stale" | "unavailable" | "key_invalid" | "offline" | "closed";
 
 // @public (undocumented)
 export type components = {
