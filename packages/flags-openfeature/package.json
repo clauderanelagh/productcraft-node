@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/flags-openfeature",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "OpenFeature server provider for ProductCraft Flags: plug FlagsClient (local evaluation, user attributes never leave your app) into @openfeature/server-sdk.",
   "type": "module",
   "main": "./dist/index.cjs",
