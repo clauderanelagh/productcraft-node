@@ -56,7 +56,7 @@ const ids = page.data.map((item) => item.id);
 if (ids.length) await me.inbox.mark({ ids, action: "read" });
 ```
 
-`client({ token })` sends `Authorization: Bearer <token>` and nothing else: no API key, no environment fallback. It refuses a `pcft_` key. Tokens expire (one hour by default); fetch a new one when a call fails with `RECIPIENT_TOKEN_EXPIRED`. For a stateful inbox with real-time updates, use `@productcraft/notify-js` or `@productcraft/notify-react` once they ship.
+`client({ token })` sends `Authorization: Bearer <token>` and nothing else: no API key, no environment fallback. It refuses a `pcft_` key. Tokens expire (one hour by default); fetch a new one when a call fails with `RECIPIENT_TOKEN_EXPIRED`. For a stateful inbox with real-time updates, web push and preferences, use [`@productcraft/notify-js`](https://www.npmjs.com/package/@productcraft/notify-js) (browser and React Native) or [`@productcraft/notify-react`](https://www.npmjs.com/package/@productcraft/notify-react) (ready-made inbox and preference components); both are built on this package.
 
 ## Credentials
 
