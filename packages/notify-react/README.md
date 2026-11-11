@@ -75,7 +75,7 @@ export function Badge() {
 ## Safety
 
 - **Links.** Every `href` and image `src` (the item's `action_url`, action buttons, Markdown links, avatars) is checked again in the browser: only `https:`, or `http:` on `localhost`. Anything else (`javascript:`, `data:`, relative paths) is not rendered as a link. Notify already refuses such URLs when a template is saved and when it renders.
-- **Markdown subset, no HTML.** Item bodies render paragraphs, line breaks, `**strong**`, `*emphasis*`, `~~strikethrough~~`, `` `code` ``, `[links](https://…)` and `\` escapes as React elements. Raw HTML is shown as text, never parsed. Headings, lists and images are not part of the subset.
+- **Markdown subset, no HTML.** Item bodies render paragraphs, line breaks, lists (`- item`, `* item` or `1. item`, one level), `**strong**`, `*emphasis*` or `_emphasis_`, `~~strikethrough~~`, `` `code` ``, `[links](https://…)` and `\` escapes as React elements. Raw HTML is shown as text, never parsed. Headings, nested lists and images are not part of the subset.
 - **Tokens** live in memory only; the provider never sees your API key. A `getToken` that returns a workspace key (`pcft_…`) is refused.
 
 ## Accessibility

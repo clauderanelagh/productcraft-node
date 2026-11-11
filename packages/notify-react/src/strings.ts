@@ -18,6 +18,8 @@ export interface NotifyStrings {
   newItem: string;
   justNow: string;
   preferencesTitle: string;
+  /** Shown by `<NotifyPreferences>` when the preferences cannot be loaded. */
+  preferencesLoadError: string;
   category: string;
   channelInbox: string;
   channelEmail: string;
@@ -56,6 +58,7 @@ const en: NotifyStrings = {
   newItem: "New notification: {title}",
   justNow: "just now",
   preferencesTitle: "Notification preferences",
+  preferencesLoadError: "Couldn't load your notification settings.",
   category: "Category",
   channelInbox: "In-app",
   channelEmail: "Email",
@@ -94,6 +97,7 @@ const ptPT: NotifyStrings = {
   newItem: "Nova notificação: {title}",
   justNow: "agora mesmo",
   preferencesTitle: "Preferências de notificações",
+  preferencesLoadError: "Não foi possível carregar as suas definições de notificações.",
   category: "Categoria",
   channelInbox: "Na aplicação",
   channelEmail: "Email",
@@ -128,6 +132,7 @@ const ptBR: NotifyStrings = {
   quietHours: "Horário de silêncio",
   quietHoursHint: "As notificações push esperam o fim do horário de silêncio.",
   saveError: "Não foi possível salvar a alteração. Tente novamente.",
+  preferencesLoadError: "Não foi possível carregar suas configurações de notificação.",
   noCategories: "Ainda não há nada para configurar.",
   retry: "Tentar de novo",
 };
@@ -150,6 +155,7 @@ const es: NotifyStrings = {
   newItem: "Nueva notificación: {title}",
   justNow: "ahora mismo",
   preferencesTitle: "Preferencias de notificaciones",
+  preferencesLoadError: "No se pudo cargar tu configuración de notificaciones.",
   category: "Categoría",
   channelInbox: "En la app",
   channelEmail: "Correo",
@@ -188,6 +194,7 @@ const fr: NotifyStrings = {
   newItem: "Nouvelle notification : {title}",
   justNow: "à l'instant",
   preferencesTitle: "Préférences de notification",
+  preferencesLoadError: "Impossible de charger vos réglages de notification.",
   category: "Catégorie",
   channelInbox: "Dans l'app",
   channelEmail: "E-mail",
@@ -226,6 +233,7 @@ const de: NotifyStrings = {
   newItem: "Neue Benachrichtigung: {title}",
   justNow: "gerade eben",
   preferencesTitle: "Benachrichtigungseinstellungen",
+  preferencesLoadError: "Deine Benachrichtigungseinstellungen konnten nicht geladen werden.",
   category: "Kategorie",
   channelInbox: "In der App",
   channelEmail: "E-Mail",
