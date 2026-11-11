@@ -41,6 +41,40 @@ describe("notify-sw.js", () => {
     expect(opts.actions).toEqual([{ action: "accept", title: "Accept" }, { action: "no", title: "Decline" }]);
   });
 
+  it("contract with notify-api's web push payload: item_id and buttons with an action_key or a url", async () => {
+    // The exact shape notify-api sends (apps/notify-api webPushPayload: inbox item_id plus its buttons).
+    const payload = {
+      title: "Ana invited you",
+      body: "Join Acme",
+      url: "https://app.example.com/invites/1",
+      notification_id: "n1",
+      delivery_id: "d1",
+      item_id: "i1",
+      actions: [
+        { label: "Accept", action_key: "accept" },
+        { label: "View", url: "https://app.example.com/invites/1/details" },
+      ],
+    };
+    const w = worker([{ url: "https://app.example.com/" }]);
+    await w.dispatch("push", pushEvent(payload));
+    const opts = (w.self.registration.showNotification.mock.calls[0] as unknown[])[1] as { actions: unknown[] };
+    expect(opts.actions).toEqual([{ action: "accept", title: "Accept" }, { action: "open:1", title: "View" }]);
+
+    // The key button: interact with its action_key, open the payload url.
+    await w.dispatch("notificationclick", { action: "accept", notification: { close() {}, data: payload } });
+    expect(w.posted[0]).toEqual([{ type: "productcraft-notify:action", item_id: "i1", action_key: "accept", notification_id: "n1" }]);
+    expect(w.self.clients.openWindow).toHaveBeenLastCalledWith("https://app.example.com/invites/1");
+
+    // The link button: a press on the item (no action_key), opens the button's url.
+    await w.dispatch("notificationclick", { action: "open:1", notification: { close() {}, data: payload } });
+    expect(w.posted[0]![1]).toEqual({ type: "productcraft-notify:action", item_id: "i1", action_key: null, notification_id: "n1" });
+    expect(w.self.clients.openWindow).toHaveBeenLastCalledWith("https://app.example.com/invites/1/details");
+
+    // The body: a press on the item.
+    await w.dispatch("notificationclick", { action: "", notification: { close() {}, data: payload } });
+    expect(w.posted[0]![2]).toEqual({ type: "productcraft-notify:action", item_id: "i1", action_key: null, notification_id: "n1" });
+  });
+
   it("shows plain text when the payload is not JSON", async () => {
     const w = worker();
     await w.dispatch("push", { data: { json: () => { throw new Error("x"); }, text: () => "hello" } });
