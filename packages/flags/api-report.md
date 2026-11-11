@@ -356,7 +356,7 @@ export type components = {
         FlagsErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "PROJECT_NOT_FOUND" | "ENVIRONMENT_NOT_FOUND" | "CONFIG_NOT_FOUND" | "SETTING_NOT_FOUND" | "SEGMENT_NOT_FOUND" | "CHANGE_NOT_FOUND" | "REVISION_NOT_FOUND" | "SDK_KEY_NOT_FOUND" | "KEY_ALREADY_EXISTS" | "LAST_ENVIRONMENT" | "VERSION_CONFLICT" | "SETTING_IN_USE" | "SEGMENT_IN_USE" | "CIRCULAR_PREREQUISITE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_TYPE_MISMATCH" | "INVALID_VALUE" | "INVALID_TARGETING" | "PERCENTAGES_MUST_SUM_TO_100" | "CONFIG_TOO_LARGE" | "LIMIT_EXCEEDED" | "CONFIRMATION_REQUIRED" | "NOTE_REQUIRED" | "CONFIDENTIAL_LIST_NOT_EDITABLE" | "REVERT_NOT_SUPPORTED" | "NOTHING_TO_RESTORE" | "EVALUATION_BUDGET_EXCEEDED" | "MANAGEMENT_UNAVAILABLE" | "IMPORT_CREDENTIALS_INVALID" | "IMPORT_SOURCE_UNAVAILABLE" | "IMPORT_SOURCE_NOT_FOUND" | "IMPORT_UNSUPPORTED" | "IMPORT_EXCEEDS_LIMITS" | "OWNER_NOT_A_MEMBER" | "SETTING_TYPE_IMMUTABLE") | string;
         FlagsEvaluationErrorCode: "FLAG_NOT_FOUND" | "TYPE_MISMATCH" | "PREREQUISITE_CYCLE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_DEPTH" | "GENERAL";
         FlagsEvaluationReason: "STATIC" | "TARGETING_MATCH" | "SPLIT" | "DEFAULT" | "ERROR";
-        FlagsEvaluationWarningCode: "missing_user" | "missing_attribute" | "invalid_attribute" | "unknown_comparator" | "missing_percentage_attribute";
+        FlagsEvaluationWarningCode: "missing_user" | "missing_attribute" | "invalid_attribute" | "unknown_comparator" | "missing_percentage_attribute" | "iso_date_converted";
         FlagsHistoryExportFormat: "csv" | "json";
         FlagsHistoryUsageDto: {
             bytes: number;
@@ -1025,7 +1025,7 @@ namespace Flags {
     type ConfigCompareParams = __ConfigCompareParams;
     const // (undocumented)
     FlagsEvaluationWarningCode: {
-        values: readonly ["missing_user", "missing_attribute", "invalid_attribute", "unknown_comparator", "missing_percentage_attribute"];
+        values: readonly ["missing_user", "missing_attribute", "invalid_attribute", "unknown_comparator", "missing_percentage_attribute", "iso_date_converted"];
     };
     // (undocumented)
     type ConfigDeleteParams = __ConfigDeleteParams;
