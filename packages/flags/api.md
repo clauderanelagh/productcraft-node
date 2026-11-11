@@ -17,9 +17,11 @@ One change with `before`, `after`, a JSON Patch `diff` (RFC 6902) and the summar
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_NOT_FOUND` | `CHANGE_NOT_FOUND`: no such change in this workspace (or it was pruned). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const changeDetail = await flags.changes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -41,11 +43,13 @@ Writes the change's `before` back as a new change (`reverts_change_id` points to
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `version` is missing (value and segment restores) or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). A restore needs the actions of the original edit too. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_NOT_FOUND`, `SETTING_NOT_FOUND`, `SEGMENT_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CHANGE_NOT_FOUND`; `SETTING_NOT_FOUND`, `SEGMENT_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND` when the entity was deleted since. |
 | 409 | `ConflictError` | `CONFLICT`, `VERSION_CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `VERSION_CONFLICT`: the entity changed since you read it (`details.current_version`), or the setting no longer matches this change. `KEY_ALREADY_EXISTS`: the restored key is taken. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `REVERT_NOT_SUPPORTED`, `NOTHING_TO_RESTORE`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE`, `OWNER_NOT_A_MEMBER` | `REVERT_NOT_SUPPORTED`: this kind of change cannot be restored. `NOTHING_TO_RESTORE`: it already matches the version before this change. The restored or copied targeting is refused by the normal write checks: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND` (a segment it used was deleted), `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED` (the environment requires a `note`), `CONFIG_TOO_LARGE`, or `OWNER_NOT_A_MEMBER` (a restored owner left the workspace). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const changeDetail = await flags.changes.revert("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll back FLAG-142" });
@@ -69,9 +73,11 @@ Each setting's value and targeting side by side in 2-5 environments, with `diffe
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `environment_ids` is not 2-5 environment ids. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const config of flags.configs.compare("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
@@ -95,9 +101,11 @@ Deletes the config with its flags, values and SDK keys in every environment. Nee
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND` | `CONFIG_NOT_FOUND`: no such config in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.configs.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -113,9 +121,11 @@ Get a config.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND` | `CONFIG_NOT_FOUND`: no such config in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const config = await flags.configs.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -136,10 +146,12 @@ Key, name, description or order. Only the fields you send change. Needs `flags.p
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND` | `CONFIG_NOT_FOUND`: no such config in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS` | `KEY_ALREADY_EXISTS`: the project already has a config with this key. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const config = await flags.configs.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
@@ -163,11 +175,13 @@ Copies value and targeting (rules, splits, split attribute) of `setting_ids`, or
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: neither or both of `setting_ids` / `all_differing`, the source is the target, or a bad `versions` entry. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). Copies need `flags.value.update` on the environment and every setting, and `flags.protected.update` into a protected environment. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND`, `SETTING_NOT_FOUND` | `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` (target or source is not of this project) or `SETTING_NOT_FOUND`. |
 | 409 | `ConflictError` | `CONFLICT`, `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `VERSION_CONFLICT`: a setting changed in the target since you read it, or has no entry in `versions` (`details.conflicts[]`: `setting_id`, `key`, `current_version`, `sent_version`); nothing was copied. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE`, `OWNER_NOT_A_MEMBER` | The restored or copied targeting is refused by the normal write checks: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND` (a segment it used was deleted), `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED` (the environment requires a `note`), `CONFIG_TOO_LARGE`, or `OWNER_NOT_A_MEMBER` (a restored owner left the workspace). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const copyEnvironment = await flags.configs.environments.copy("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
@@ -191,10 +205,12 @@ Evaluates a sample user against the published config of this environment (the cu
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `user` is not an object or null, it has more than 200 attributes, more than 200 `keys`, or a bad `revision`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND`, `REVISION_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. `REVISION_NOT_FOUND`: the requested revision was pruned or never published. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `EVALUATION_BUDGET_EXCEEDED`, `INVALID_TARGETING` | `EVALUATION_BUDGET_EXCEEDED`: the evaluation ran over 250 ms; ask for fewer keys. `INVALID_TARGETING`: the stored revision is not a config the engine accepts. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const testEvaluation = await flags.configs.environments.evaluate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { keys: ["new_checkout", "banner_text"] });
@@ -218,9 +234,11 @@ Published revisions of the config in one environment, newest first. Every write 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const revision of flags.configs.environments.revisions.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -242,9 +260,11 @@ The config JSON (schema 1) of one revision, byte for byte what SDKs download: ke
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `revision` is not a positive integer. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND`, `REVISION_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. `REVISION_NOT_FOUND`: no such revision (never published, or pruned). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const result = await flags.configs.environments.revisions.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "1");
@@ -264,9 +284,11 @@ Revokes the secondary key now instead of at its `expires_at`. SDK servers still 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND`, `SDK_KEY_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. `SDK_KEY_NOT_FOUND`: there is no secondary key. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const sdkKeyList = await flags.configs.environments.sdkKeys.endGracePeriod("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -284,9 +306,11 @@ The SDK keys of this config in this environment, masked (prefix and last four ch
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const sdkKeyList = await flags.configs.environments.sdkKeys.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -304,9 +328,11 @@ The full primary key, and the secondary key while a grace period runs. Needs `fl
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const revealedSdkKeyList = await flags.configs.environments.sdkKeys.reveal("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -328,10 +354,12 @@ Mints a new primary key. The current primary becomes the secondary key and keeps
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `grace_hours` is not an integer from 0 to 168, or `note` is too long. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const sdkKeyList = await flags.configs.environments.sdkKeys.rotate("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
@@ -355,9 +383,11 @@ Every setting of the config with its value and targeting in one environment (the
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor, `limit` or `include`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND` (not an environment of the config's project). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const value of flags.configs.environments.values.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -384,12 +414,13 @@ Adds a feature flag (`boolean`) or a typed setting to the config, with a value i
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND` | `CONFIG_NOT_FOUND`: no such config in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: the config already has a setting with this key. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `LIMIT_EXCEEDED`, `OWNER_NOT_A_MEMBER`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE` | `INVALID_VALUE`: `initial_value` does not match the type; `LIMIT_EXCEEDED`: the config has the maximum number of settings; `OWNER_NOT_A_MEMBER`: `owner_id` is not a workspace member; `NOTE_REQUIRED`. Publishing: `CONFIG_TOO_LARGE` (the rendered config would exceed 1 MiB; `details.size_bytes`, `max_bytes`) or `LIMIT_EXCEEDED` with `details.limit: comparison_values_per_config` (over 20,000 comparison values in the config); the write is not applied. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
-| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | `SERVICE_UNAVAILABLE`: the member lookup for `owner_id` is unavailable; retry. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | `SERVICE_UNAVAILABLE`: the member lookup for `owner_id` is unavailable; retry. Or `MANAGEMENT_UNAVAILABLE`: the whole management API is temporarily unavailable, for example while its database is unreachable; wait `Retry-After` seconds and retry. |
 
 ```ts
 const settingDetail = await flags.configs.settings.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { key: "new_checkout", type: "boolean" });
@@ -411,9 +442,11 @@ The config's feature flags and settings, in `ordinal` order, with filters.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter, cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND` | `CONFIG_NOT_FOUND`: no such config in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const settings of flags.configs.settings.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -439,12 +472,14 @@ Reads a ConfigCat product through ConfigCat's Public Management API with credent
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid (`source` must be `configcat`, `configcat_product_id` a uuid). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `IMPORT_SOURCE_NOT_FOUND` | `IMPORT_SOURCE_NOT_FOUND`: the ConfigCat product does not exist, or the credentials cannot see it. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS` | `KEY_ALREADY_EXISTS`: a project with the target name already exists (pass `target_project_name`). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `IMPORT_CREDENTIALS_INVALID`, `IMPORT_UNSUPPORTED`, `IMPORT_EXCEEDS_LIMITS` | `IMPORT_CREDENTIALS_INVALID`: ConfigCat rejected the credentials. `IMPORT_UNSUPPORTED`: a real run while the report lists unsupported items (`details.items`); send `skip_unsupported: true` to import without them. `IMPORT_EXCEEDS_LIMITS`: the product is larger than the Flags limits, or reading it ran over the 120 s budget (`details`: `limit`, `max`, `current`). Nothing was imported. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 | 502 | `InternalServerError` | `BAD_GATEWAY`, `IMPORT_SOURCE_UNAVAILABLE` | `IMPORT_SOURCE_UNAVAILABLE`: ConfigCat answered 5xx, timed out or could not be reached. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const importResult = await flags.imports.create({
@@ -469,8 +504,10 @@ The preview limits that apply to this workspace and how much of the counted ones
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const flagsLimits = await flags.limits.retrieve();
@@ -494,10 +531,12 @@ Creates the project with the environments of `environment_preset` (default `dev_
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: another project has this name, or a key repeats in `environments` / `configs`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the workspace already has the maximum number of projects (`details`: `limit`, `max`, `current`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const project = await flags.projects.create({ name: "Storefront" });
@@ -517,10 +556,12 @@ Deletes the project with all of its environments, configs, flags, segments, SDK 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CONFIRMATION_REQUIRED` | `CONFIRMATION_REQUIRED`: `confirm` is missing or is not the exact project name. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.projects.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { confirm: "Storefront" });
@@ -542,8 +583,10 @@ The workspace's projects, oldest first, each with its environments and configs.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor or a `limit` outside 1-100. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const project of flags.projects.list()) {
@@ -564,9 +607,11 @@ The project with its environments and configs.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const project = await flags.projects.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -587,10 +632,12 @@ Rename, describe or reorder the project. Only the fields you send change. Needs 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS` | `KEY_ALREADY_EXISTS`: another project has this name. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const project = await flags.projects.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
@@ -613,9 +660,11 @@ The filtered history as a file, newest first, at most 50,000 rows, streamed. `cs
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter or `format`, or `since` is not before `until`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const response = await flags.projects.changes.export("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -638,9 +687,11 @@ The history of a project, newest first: every write with who made it (user, API 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter, cursor or `limit`, or `since` is not before `until`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const change of flags.projects.changes.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -667,11 +718,13 @@ Adds a config to the project, with a published state in every environment. Each 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: the project already has a config with this key. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the project already has the maximum number of configs (`details`: `limit`, `max`, `current`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const config = await flags.projects.configs.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { key: "checkout", name: "Checkout" });
@@ -693,9 +746,11 @@ The project's configs, in `ordinal` order.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor or a `limit` outside 1-100. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const config of flags.projects.configs.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -722,11 +777,13 @@ Adds an environment to every config of the project. The key `production` starts 
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: the project already has an environment with this key. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the project already has the maximum number of environments (`details`: `limit`, `max`, `current`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const environment = await flags.projects.environments.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { key: "staging", name: "Staging" });
@@ -746,10 +803,12 @@ Deletes the environment with its values in every config, and its SDK keys. A pro
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `ENVIRONMENT_NOT_FOUND`: no such environment in this project. |
 | 409 | `ConflictError` | `CONFLICT`, `LAST_ENVIRONMENT` | `LAST_ENVIRONMENT`: this is the project's only environment. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.projects.environments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -767,9 +826,11 @@ Every environment of the project, in `ordinal` order.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const environmentList = await flags.projects.environments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -785,9 +846,11 @@ Get an environment.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `ENVIRONMENT_NOT_FOUND`: no such environment in this project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const environment = await flags.projects.environments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -808,9 +871,11 @@ Name, color, order, `protected` and `require_note`; the key never changes. Chang
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `ENVIRONMENT_NOT_FOUND`: no such environment in this project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const environment = await flags.projects.environments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { color: "#e67700" });
@@ -834,11 +899,13 @@ A reusable set of ANDed user conditions that any config of the project can targe
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: the project already has a segment with this key. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_TARGETING`, `LIMIT_EXCEEDED`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `NOTE_REQUIRED` | The conditions are invalid; `details.errors` lists every problem (`param`, `code`, `message`) and `code` is the first one: `INVALID_TARGETING` (shape, comparator or value), `LIMIT_EXCEEDED` (conditions, values or segments per project), `CONFIDENTIAL_LIST_NOT_EDITABLE` (`values_add` / `values_remove` on a list sent pre-hashed), or `NOTE_REQUIRED` (the segment is used in an environment that requires a `note`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const segmentDetail = await flags.projects.segments.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
@@ -867,9 +934,11 @@ The project's segments, oldest first, with `usage_count`.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const segment of flags.projects.segments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -894,10 +963,12 @@ Deletes an unused segment. Needs `flags.delete`.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | `SEGMENT_NOT_FOUND`: no such segment in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `SEGMENT_IN_USE` | `SEGMENT_IN_USE`: a rule uses it (`details.used_by` lists where). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.segments.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -915,9 +986,11 @@ The segment with its conditions and every (setting, environment) that uses it (`
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | `SEGMENT_NOT_FOUND`: no such segment in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const segmentDetail = await flags.segments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -935,10 +1008,12 @@ The cleartext of the segment's confidential lists, decrypted. Needs `flags.confi
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | `SEGMENT_NOT_FOUND`: no such segment in this workspace. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CONFIDENTIAL_LIST_NOT_EDITABLE` | `CONFIDENTIAL_LIST_NOT_EDITABLE`: every confidential list was sent pre-hashed, so there is no cleartext. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const confidentialReveal = await flags.segments.revealConfidential("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -959,11 +1034,13 @@ Key, name, description or conditions; only the fields you send change. Edit a co
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). A segment used in a protected environment also needs `flags.protected.update` on it. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | `SEGMENT_NOT_FOUND`: no such segment in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `VERSION_CONFLICT` | `KEY_ALREADY_EXISTS`: the project already has a segment with this key; `VERSION_CONFLICT`: `version` is stale (`details.current_version`). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_TARGETING`, `LIMIT_EXCEEDED`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE` | The conditions are invalid; `details.errors` lists every problem (`param`, `code`, `message`) and `code` is the first one: `INVALID_TARGETING` (shape, comparator or value), `LIMIT_EXCEEDED` (conditions, values or segments per project), `CONFIDENTIAL_LIST_NOT_EDITABLE` (`values_add` / `values_remove` on a list sent pre-hashed), or `NOTE_REQUIRED` (the segment is used in an environment that requires a `note`). Publishing (every config that uses the segment): `CONFIG_TOO_LARGE` (a rendered config would exceed 1 MiB) or `LIMIT_EXCEEDED` with `details.limit: comparison_values_per_config`; the edit is not applied. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const segmentDetail = await flags.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
@@ -996,10 +1073,12 @@ Deletes the setting and its values in every environment. Needs `flags.delete`.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND` | `SETTING_NOT_FOUND`: no such setting in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `SETTING_IN_USE` | `SETTING_IN_USE`: another setting uses it as a prerequisite (`details.used_by`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.settings.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1017,9 +1096,11 @@ The setting with its value and targeting in every environment, and what depends 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND` | `SETTING_NOT_FOUND`: no such setting in this workspace. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const settingDetail = await flags.settings.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1040,12 +1121,13 @@ Key, name, description, hint, tags, lifecycle, owner or order; only the fields y
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND` | `SETTING_NOT_FOUND`: no such setting in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS` | `KEY_ALREADY_EXISTS`: the config already has a setting with this key. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `SETTING_TYPE_IMMUTABLE`, `OWNER_NOT_A_MEMBER`, `CONFIG_TOO_LARGE`, `LIMIT_EXCEEDED` | `SETTING_TYPE_IMMUTABLE`: `type` differs from the current one; `OWNER_NOT_A_MEMBER`: `owner_id` is not a workspace member. Publishing: `CONFIG_TOO_LARGE` (the rendered config would exceed 1 MiB; `details.size_bytes`, `max_bytes`) or `LIMIT_EXCEEDED` with `details.limit: comparison_values_per_config` (over 20,000 comparison values in the config); the write is not applied. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
-| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | `SERVICE_UNAVAILABLE`: the member lookup for `owner_id` is unavailable; retry. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | `SERVICE_UNAVAILABLE`: the member lookup for `owner_id` is unavailable; retry. Or `MANAGEMENT_UNAVAILABLE`: the whole management API is temporarily unavailable, for example while its database is unreachable; wait `Retry-After` seconds and retry. |
 
 ```ts
 const settingDetail = await flags.settings.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
@@ -1068,11 +1150,13 @@ Replaces the value and the whole targeting (rules, flag-level split, split attri
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `version` or `note` is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). Value writes need `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
 | 409 | `ConflictError` | `CONFLICT`, `VERSION_CONFLICT` | `VERSION_CONFLICT`: the value changed since you read it (`details.current_version`, `updated_at`, `updated_by`). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE` | The value or targeting is invalid; `details.errors` lists every problem (`param`, `code`, `message`) and `code` is the first one: `INVALID_VALUE` (type mismatch, over 100 KB, json that does not parse), `INVALID_TARGETING` (shape, comparator or comparison value), `SEGMENT_NOT_FOUND` (a segment condition names no segment of this project), `CONFIDENTIAL_LIST_NOT_EDITABLE` (`values_add` / `values_remove` on a list sent pre-hashed), `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE` (`details.cycle` lists the keys), `LIMIT_EXCEEDED` (rules, conditions, values or prerequisite depth), or `NOTE_REQUIRED` (the environment requires a `note`). Publishing: `CONFIG_TOO_LARGE` (the rendered config would exceed 1 MiB; `details.size_bytes`, `max_bytes`) or `LIMIT_EXCEEDED` with `details.limit: comparison_values_per_config` (over 20,000 comparison values in the config); the write is not applied. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const settingValue = await flags.settings.values.replace("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { value: false, version: 3 });
@@ -1090,9 +1174,11 @@ The setting's value and targeting in one environment, with its `version`.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const settingValue = await flags.settings.values.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1110,10 +1196,12 @@ The cleartext of this value's confidential lists, decrypted. Needs `flags.confid
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CONFIDENTIAL_LIST_NOT_EDITABLE` | `CONFIDENTIAL_LIST_NOT_EDITABLE`: every confidential list was sent pre-hashed, so there is no cleartext. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const confidentialReveal = await flags.settings.values.revealConfidential("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1134,11 +1222,13 @@ The quick edits: `value` (the toggle), `percentage_attribute`, and `clear_rules:
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: nothing to change, or `version` is missing. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). Value writes need `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
 | 409 | `ConflictError` | `CONFLICT`, `VERSION_CONFLICT` | `VERSION_CONFLICT`: the value changed since you read it (`details.current_version`, `updated_at`, `updated_by`). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `NOTE_REQUIRED`, `CONFIG_TOO_LARGE`, `LIMIT_EXCEEDED` | `INVALID_VALUE`, `INVALID_TARGETING` or `NOTE_REQUIRED`; `details.errors` lists each problem. Publishing: `CONFIG_TOO_LARGE` (the rendered config would exceed 1 MiB; `details.size_bytes`, `max_bytes`) or `LIMIT_EXCEEDED` with `details.limit: comparison_values_per_config` (over 20,000 comparison values in the config); the write is not applied. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const settingValue = await flags.settings.values.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { version: 3 });
@@ -1158,8 +1248,10 @@ Counts for the workspace: projects, configs, flags and settings, segments, chang
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const flagsStats = await flags.stats.retrieve();
@@ -1198,6 +1290,7 @@ Deliveries are signed with the Standard Webhooks headers `webhook-id`, `webhook-
 | 409 | `ConflictError` | `CONFLICT`, `WEBHOOK_ENDPOINT_LIMIT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Already 10 endpoints (`WEBHOOK_ENDPOINT_LIMIT`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The URL points at a private, loopback or internal address. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEndpoint = await flags.webhooks.endpoints.create({ url: "https://api.acme.com/webhooks" });
@@ -1220,6 +1313,7 @@ Queued retries are dropped. Its past attempts stay in the event log until the ev
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 await flags.webhooks.endpoints.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1243,6 +1337,7 @@ At most 10, so this is always one page. Signing secrets are never returned here,
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const endpoint of flags.webhooks.endpoints.list()) {
@@ -1267,6 +1362,7 @@ The endpoint's URL, subscription, on/off state, failure streak and the last 4 ch
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEndpoint = await flags.webhooks.endpoints.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1293,6 +1389,7 @@ For `grace_hours` (default 24) the previous secret keeps signing too: `webhook-s
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEndpoint = await flags.webhooks.endpoints.rotateSecret("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
@@ -1319,6 +1416,7 @@ Delivers the catalogue example of `event_type`, signed like any delivery, with `
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookDeliveryAttempt = await flags.webhooks.endpoints.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { event_type: "config.published" });
@@ -1346,6 +1444,7 @@ Only the fields sent change. `enabled: true` (or a new URL) also clears an autom
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The new URL points at a private, loopback or internal address. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEndpoint = await flags.webhooks.endpoints.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { config_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
@@ -1368,6 +1467,7 @@ Each type with a plain description, its group and an example `data` object (what
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEventTypeList = await flags.webhooks.eventTypes.list();
@@ -1394,6 +1494,7 @@ Every event logged while at least one endpoint existed, with the latest state pe
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 for await (const event of flags.webhooks.events.list()) {
@@ -1423,6 +1524,7 @@ Same body and `webhook-id`, freshly signed, to every switched-on endpoint that r
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_EVENT_NOT_FOUND`, `WEBHOOK_ENDPOINT_NOT_FOUND` | No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. Or No such endpoint here (`WEBHOOK_ENDPOINT_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `endpoint_id` is switched off or does not receive this event type (`WEBHOOK_ENDPOINT_NOT_SUBSCRIBED`), or Idempotency-Key reused with a different body (`IDEMPOTENCY_KEY_REUSE`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEventReplay = await flags.webhooks.events.replay("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");
@@ -1445,6 +1547,7 @@ The event as it was sent (`type`, `data`) and every delivery attempt to every en
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Caller lacks `flags.webhook.read` (reads) or `flags.webhook.manage` (changes, Send test, replay), or Flags is not enabled for the workspace (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WEBHOOK_EVENT_NOT_FOUND` | No such event here (`WEBHOOK_EVENT_NOT_FOUND`); events are kept for 30 days. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
 const webhookEventDetail = await flags.webhooks.events.retrieve("3f0c1a2b-4c5d-4e6f-8a9b-0c1d2e3f4a5b");

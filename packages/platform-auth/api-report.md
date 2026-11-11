@@ -55,7 +55,7 @@ export type components = {
         AcceptWorkspaceInviteDto: {
             code: string;
         };
-        ApiKeyPresetKey: "mail-send" | "waitlist-write" | "trawl-jobs" | "readonly" | "full";
+        ApiKeyPresetKey: "mail-send" | "waitlist-write" | "trawl-jobs" | "flags" | "flags-dev" | "notify-send" | "notify-readonly" | "readonly" | "full";
         ApiKeySelfResponseDto: {
             actions: string[];
             allowed: string[];
@@ -179,7 +179,7 @@ export type components = {
         ConsentDecisionDto: {
             approved: boolean;
             policy?: components["schemas"]["PolicyStatementDto"][];
-            products?: ("auth" | "mail" | "waitlist" | "social" | "trawl")[] | null;
+            products?: ("auth" | "mail" | "waitlist" | "social" | "trawl" | "flags" | "notify")[] | null;
             workspace_id?: string;
         };
         ConsentDecisionResponseDto: {
@@ -192,7 +192,7 @@ export type components = {
         };
         ConsentProductDto: {
             label: string;
-            product: "auth" | "mail" | "waitlist" | "social" | "trawl";
+            product: "auth" | "mail" | "waitlist" | "social" | "trawl" | "flags" | "notify";
         };
         ConsentRequestDto: {
             client_id: string;
@@ -205,13 +205,13 @@ export type components = {
             products: components["schemas"]["ConsentProductDto"][];
             request_id: string;
             requested_policy: components["schemas"]["PolicyStatementDto"][];
-            requested_products: ("auth" | "mail" | "waitlist" | "social" | "trawl")[] | null;
+            requested_products: ("auth" | "mail" | "waitlist" | "social" | "trawl" | "flags" | "notify")[] | null;
             resource: string;
             workspaces: components["schemas"]["ConsentWorkspaceDto"][];
         };
         ConsentWorkspaceDto: {
             display_name: string;
-            enabled_products: ("auth" | "mail" | "waitlist" | "social" | "trawl")[];
+            enabled_products: ("auth" | "mail" | "waitlist" | "social" | "trawl" | "flags" | "notify")[];
             id: string;
             role: string;
             slug: string;
@@ -221,7 +221,7 @@ export type components = {
             expires_in_days?: 30 | 90 | 365 | null;
             name: string;
             policy_ids?: string[];
-            preset?: "mail-send" | "waitlist-write" | "trawl-jobs" | "readonly" | "full";
+            preset?: "mail-send" | "waitlist-write" | "trawl-jobs" | "flags" | "flags-dev" | "notify-send" | "notify-readonly" | "readonly" | "full";
         } & ({
             policy_ids?: never;
             preset: string;
@@ -462,7 +462,7 @@ export type components = {
             updated_at: string;
             workspace_id: string;
         };
-        McpProduct: "auth" | "mail" | "waitlist" | "social" | "trawl";
+        McpProduct: "auth" | "mail" | "waitlist" | "social" | "trawl" | "flags" | "notify";
         MeProfileDto: {
             avatar_url: string | null;
             display_name: string | null;
@@ -524,7 +524,7 @@ export type components = {
         };
         PreviewPakDto: {
             policy_ids?: string[];
-            preset?: "mail-send" | "waitlist-write" | "trawl-jobs" | "readonly" | "full";
+            preset?: "mail-send" | "waitlist-write" | "trawl-jobs" | "flags" | "flags-dev" | "notify-send" | "notify-readonly" | "readonly" | "full";
         } & ({
             policy_ids?: never;
             preset: string;
@@ -773,6 +773,7 @@ export type components = {
             enabled: boolean;
             enabled_at: string | null;
             enabled_by: string | null;
+            prelaunch: boolean;
             service: string;
             settings: {
                 [key: string]: unknown;
@@ -1984,7 +1985,7 @@ namespace PlatformAuth {
     type AuthorizationServerMetadata = __AuthorizationServerMetadata;
     const // (undocumented)
     ApiKeyPresetKey: {
-        values: readonly ["mail-send", "waitlist-write", "trawl-jobs", "readonly", "full"];
+        values: readonly ["mail-send", "waitlist-write", "trawl-jobs", "flags", "flags-dev", "notify-send", "notify-readonly", "readonly", "full"];
     };
     // (undocumented)
     type AuthPasswordRequestResetParams = __AuthPasswordRequestResetParams;
@@ -2008,7 +2009,7 @@ namespace PlatformAuth {
     type AuthSigninParams = __AuthSigninParams;
     const // (undocumented)
     McpProduct: {
-        values: readonly ["auth", "mail", "waitlist", "social", "trawl"];
+        values: readonly ["auth", "mail", "waitlist", "social", "trawl", "flags", "notify"];
     };
     // (undocumented)
     type AuthSignupParams = __AuthSignupParams;
