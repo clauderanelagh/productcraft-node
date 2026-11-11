@@ -13,6 +13,9 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 import { build } from "esbuild";
 import { chromium } from "playwright-core";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
 
 const PKG = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const bundle = await build({
@@ -144,6 +147,21 @@ try {
   assert.deepEqual(await page.evaluate(() => window.__navigated), ["https://example.com/accept"]);
   assert.deepEqual(requests.find((r) => r.url.endsWith("/interact")).body, { action_key: "accept" });
   console.log("ok   streamed item rendered and announced, onNew fired, action button recorded and navigated");
+
+  // Contrast on unread items (real layout and theme) and the row tools' target size.
+  await page.addScriptTag({ path: require.resolve("axe-core/axe.min.js") });
+  const contrast = await page.evaluate(async () => (await window.axe.run(".pcn-popover", { runOnly: ["color-contrast"] })).violations.flatMap((v) => v.nodes.map((n) => n.html)));
+  assert.deepEqual(contrast, [], "color-contrast inside the open inbox");
+  const toolSize = (p) => p.evaluate(() => [...document.querySelectorAll(".pcn-tools button")].map((b) => { const r = b.getBoundingClientRect(); return Math.min(r.width, r.height); }));
+  assert.ok((await toolSize(page)).every((s) => s >= 32), `row tools under 32 px: ${await toolSize(page)}`);
+  const phone = await browser.newPage({ reducedMotion: "reduce", viewport: { width: 390, height: 800 }, hasTouch: true, isMobile: true });
+  await phone.goto(origin + "/");
+  await phone.locator(".pcn-bell").click();
+  await phone.waitForFunction(() => document.querySelectorAll(".pcn-tools button").length > 0);
+  const phoneSizes = await toolSize(phone);
+  assert.ok(phoneSizes.every((s) => s >= 44), `row tools on a touch screen under 44 px: ${phoneSizes}`);
+  await phone.close();
+  console.log("ok   unread rows pass color-contrast; row tools 32 px, 44 px on touch screens");
 
   await page.getByRole("button", { name: "Mark all as read" }).click();
   await page.getByRole("button", { name: "Notifications", exact: true }).waitFor();

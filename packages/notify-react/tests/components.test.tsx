@@ -276,6 +276,26 @@ describe("<NotifyPreferences/>", () => {
     expect(push.checked).toBe(true);
   });
 
+  it("a load failure names the settings, not the notifications", async () => {
+    const { api, wrap } = setup();
+    api.on("GET /v1/client/preferences", () => json({ code: "INTERNAL", message: "no", status: 500 }, 500));
+    render(wrap(<NotifyPreferences />));
+    const alert = await screen.findByRole("alert", {}, { timeout: 5000 });
+    expect(alert.textContent).toContain("Couldn't load your notification settings.");
+    expect(alert.textContent).not.toContain("Couldn't load notifications");
+  });
+
+  it("the bell is there before the token resolves", () => {
+    const api = fakeApi();
+    // getToken never resolves: the provider is still waiting for the customer's backend.
+    render(
+      <NotifyProvider getToken={() => new Promise<string>(() => undefined)} baseUrl={BASE} fetch={api.fetch} document={null} realtime={false}>
+        <NotifyInbox />
+      </NotifyProvider>,
+    );
+    expect(screen.getByRole("button", { name: "Notifications" })).toBeTruthy();
+  });
+
   it("German strings", async () => {
     const { wrap } = setup();
     render(wrap(<NotifyPreferences />, { locale: "de" }));

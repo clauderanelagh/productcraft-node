@@ -96,19 +96,58 @@ function inline(s: string, key: string): ReactNode[] {
   return out;
 }
 
+const BULLET = /^ {0,3}[-*+][ \t]+(.*)$/;
+const ORDERED = /^ {0,3}(\d{1,9})[.)][ \t]+(.*)$/;
+
 /**
  * Renders the inbox body's Markdown subset as React elements, never as HTML: paragraphs (blank
- * line), line breaks, escapes, strong, emphasis, strikethrough, inline code and https links. Raw
- * HTML stays text, and so do headings, lists and images (their markers are shown as written).
+ * line), line breaks, lists (`- item`, `* item`, `+ item` and `1. item`, one level), escapes, strong,
+ * emphasis, strikethrough, inline code and https links. Raw HTML stays text, and so do headings and
+ * images (their markers are shown as written). Notify escapes interpolated data (`\- item`), so
+ * template data can never start a list.
  */
 export function renderMarkdown(src: string): ReactNode {
-  return src
+  const out: ReactNode[] = [];
+  src
     .replace(/\r\n?/g, "\n")
     .split(/\n{2,}/)
     .filter((p) => p.trim() !== "")
-    .map((para, p) => (
-      <p key={p}>
-        {para.split("\n").flatMap((line, l) => (l === 0 ? inline(line, `${p}.${l}`) : [<br key={`br${l}`} />, ...inline(line, `${p}.${l}`)]))}
-      </p>
-    ));
+    .forEach((block, b) => {
+      // A block is runs of text lines (one paragraph, lines joined by <br>) and runs of list items.
+      let text: string[] = [];
+      let list: { ordered: boolean; start: number; items: string[] } | null = null;
+      let n = 0;
+      const flushText = (): void => {
+        if (!text.length) return;
+        const key = `${b}.${n++}`;
+        out.push(
+          <p key={key}>{text.flatMap((line, l) => (l === 0 ? inline(line, `${key}.${l}`) : [<br key={`br${l}`} />, ...inline(line, `${key}.${l}`)]))}</p>,
+        );
+        text = [];
+      };
+      const flushList = (): void => {
+        if (!list) return;
+        const key = `${b}.${n++}`;
+        const items = list.items.map((item, i) => <li key={i}>{inline(item, `${key}.${i}`)}</li>);
+        out.push(list.ordered ? <ol key={key} start={list.start === 1 ? undefined : list.start}>{items}</ol> : <ul key={key}>{items}</ul>);
+        list = null;
+      };
+      for (const line of block.split("\n")) {
+        const bullet = BULLET.exec(line);
+        const ordered = bullet ? null : ORDERED.exec(line);
+        if (bullet || ordered) {
+          const isOrdered = Boolean(ordered);
+          if (list && list.ordered !== isOrdered) flushList();
+          flushText();
+          if (!list) list = { ordered: isOrdered, start: ordered ? Number(ordered[1]) : 1, items: [] };
+          list.items.push(bullet ? bullet[1]! : ordered![2]!);
+        } else {
+          flushList();
+          text.push(line);
+        }
+      }
+      flushText();
+      flushList();
+    });
+  return out;
 }

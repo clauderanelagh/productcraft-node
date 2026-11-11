@@ -53,7 +53,7 @@ export function NotifyPreferences(props: NotifyPreferencesProps): ReactElement {
       <div className={cls}>
         {prefs.status === "error" ? (
           <div className="pcn-state pcn-error" role="alert">
-            <p>{t.loadError}</p>
+            <p>{t.preferencesLoadError}</p>
             <button type="button" className="pcn-retry" onClick={() => void prefs.refresh().catch(() => undefined)}>
               {t.retry}
             </button>

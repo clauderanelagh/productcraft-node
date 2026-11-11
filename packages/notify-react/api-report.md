@@ -106,6 +106,7 @@ export interface NotifyStrings {
     newItem: string;
     // (undocumented)
     noCategories: string;
+    preferencesLoadError: string;
     // (undocumented)
     preferencesTitle: string;
     // (undocumented)
