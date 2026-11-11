@@ -163,6 +163,32 @@ try {
   assert.deepEqual(patch.map((p) => p.body), [{ preferences: [{ scope: "category", key: "comments", channel: "email", enabled: true }] }]);
   console.log("ok   preference cell saved alone; mandatory cell locked");
 
+  // Viewport collision: the popover stays inside the viewport (16 px gutter) whatever side the bell is on.
+  const fits = async (p) => {
+    await p.locator(".pcn-bell").click();
+    await p.locator(".pcn-popover").waitFor();
+    return p.evaluate(() => {
+      const r = document.querySelector(".pcn-popover").getBoundingClientRect();
+      const b = document.querySelector(".pcn-mark-all").getBoundingClientRect();
+      const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+      return { left: r.left, right: r.right, vw: document.documentElement.clientWidth, bellRight: document.querySelector(".pcn-bell").getBoundingClientRect().right, hit: hit?.className ?? null };
+    });
+  };
+  const rightSide = await fits(page);
+  assert.ok(Math.abs(rightSide.right - rightSide.bellRight) < 1, `right-aligned bell: popover moved ${JSON.stringify(rightSide)}`);
+  assert.equal(rightSide.hit, "pcn-mark-all");
+  await page.keyboard.press("Escape");
+  for (const width of [1280, 360]) {
+    const left = await browser.newPage({ reducedMotion: "reduce", viewport: { width, height: 720 } });
+    left.on("pageerror", (e) => errors.push(e.message));
+    await left.goto(origin + "/?left");
+    const r = await fits(left);
+    assert.ok(r.left >= 15.5 && r.right <= r.vw - 15.5, `left-aligned bell at ${width}px: popover off-screen ${JSON.stringify(r)}`);
+    assert.equal(r.hit, "pcn-mark-all", `left-aligned bell at ${width}px: Mark all as read not clickable`);
+    await left.close();
+  }
+  console.log("ok   popover stays inside the viewport with the bell on the left (1280 and 360 px) and on the right");
+
   const storage = await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length, cookie: document.cookie }));
   assert.deepEqual(storage, { local: 0, session: 0, cookie: "" });
   for (const r of requests) assert.ok(!r.url.includes("rt_browser"), `token in URL: ${r.url}`);

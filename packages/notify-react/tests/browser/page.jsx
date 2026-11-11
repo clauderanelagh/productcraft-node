@@ -6,7 +6,7 @@ window.__toasts = [];
 window.__navigated = [];
 createRoot(document.getElementById("root")).render(
   <NotifyProvider baseUrl={location.origin} getToken={() => fetch("/token").then((r) => r.text())}>
-    <header style={{ display: "flex", justifyContent: "flex-end", padding: 16 }}>
+    <header style={{ display: "flex", justifyContent: location.search === "?left" ? "flex-start" : "flex-end", padding: 16 }}>
       <NotifyInbox onNew={(i) => window.__toasts.push(i.title)} onNavigate={(url) => window.__navigated.push(url)} />
     </header>
     <main style={{ padding: 16, maxWidth: 720 }}>
