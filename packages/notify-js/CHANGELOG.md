@@ -1,5 +1,13 @@
 # @productcraft/notify-js
 
+## 0.2.1
+
+### Patch Changes
+
+- 01bee2f: `notify-sw.js` shows link buttons too: a web push button with only a `url` opens it, and the press is recorded on the inbox item. Notify now sends the inbox `item_id` and its buttons with every web push, so the worker's buttons and `interact` work end to end.
+- Updated dependencies [01bee2f]
+  - @productcraft/notify@0.1.1
+
 ## 0.2.0
 
 ### Minor Changes
