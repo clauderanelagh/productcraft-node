@@ -1,5 +1,12 @@
 # productcraft
 
+## 1.4.2
+
+### Patch Changes
+
+- Updated dependencies [30d8323]
+  - @productcraft/flags@0.3.0
+
 ## 1.4.1
 
 ### Patch Changes
