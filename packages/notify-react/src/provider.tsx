@@ -24,12 +24,28 @@ export interface NotifyProviderProps extends Partial<Omit<NotifyClientOptions, "
   locale?: string;
   /** Your own wording for any component string. */
   strings?: Partial<NotifyStrings>;
+  /**
+   * The components' colour scheme with the default stylesheet. `auto` (default) follows your app's
+   * theme when an ancestor says so (`.dark` / `.light` as Tailwind and next-themes set them,
+   * `data-theme="dark|light"`, `.pcn-dark` / `.pcn-light`), else the OS. Pass your app's resolved theme
+   * (`"light"` or `"dark"`) to pin it. A component's own `theme` prop wins over this.
+   */
+  theme?: NotifyTheme;
   children?: ReactNode;
+}
+
+/** Colour scheme of the default stylesheet: `auto` follows the app's theme class, else the OS. */
+export type NotifyTheme = "auto" | "light" | "dark";
+
+/** @internal Root class names for a component: `pcn-light` / `pcn-dark` when a theme is pinned. */
+export function rootClass(base: string, theme: NotifyTheme | undefined, className: string | undefined): string {
+  return [base, theme === "light" ? "pcn-light" : theme === "dark" ? "pcn-dark" : null, className].filter(Boolean).join(" ");
 }
 
 interface Ctx {
   client: NotifyBrowserClient;
   locale: string;
+  theme: NotifyTheme;
   strings: Partial<NotifyStrings> | undefined;
   inbox(filters: InboxFilters): InboxStore;
 }
@@ -47,7 +63,7 @@ const NotifyContext = createContext<Ctx | null>(null);
  * ```
  */
 export function NotifyProvider(props: NotifyProviderProps): ReactElement {
-  const { getToken, client: given, locale = "en", strings, children, ...options } = props;
+  const { getToken, client: given, locale = "en", strings, theme = "auto", children, ...options } = props;
   if (!given && !getToken) throw new Error("<NotifyProvider> needs `getToken` or `client`");
   const tokenRef = useRef(getToken);
   tokenRef.current = getToken;
@@ -69,6 +85,7 @@ export function NotifyProvider(props: NotifyProviderProps): ReactElement {
     return {
       client,
       locale,
+      theme,
       strings,
       inbox(filters) {
         const key = JSON.stringify([filters.status, filters.category, filters.tenant, filters.archived, filters.limit]);
@@ -78,7 +95,7 @@ export function NotifyProvider(props: NotifyProviderProps): ReactElement {
         return s;
       },
     };
-  }, [client, locale, strings]);
+  }, [client, locale, strings, theme]);
   return <NotifyContext.Provider value={value}>{children}</NotifyContext.Provider>;
 }
 

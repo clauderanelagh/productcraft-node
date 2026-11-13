@@ -762,13 +762,13 @@ Cancels every live notification sent with this `cancellation_key`: deliveries st
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `cancellation_key` is missing. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `cancellation_key` is missing or not 1-255 characters of `A-Z a-z 0-9 . _ : @ \| -`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const cancelByKey = await notify.notifications.cancelByKey({ cancellation_key: "invite:inv_77" });
+const cancelByKey = await notify.notifications.cancelByKey({ cancellation_key: "invite.sent:inv_77" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-notifications-cancel)
@@ -853,7 +853,7 @@ const notification = await notify.notifications.retrieve("0193a5f2-7c1e-7b3a-9f1
 
 Send a notification.
 
-Notifies up to 1,000 recipients with one notification type, across the type's channels (in-app inbox, email, push, web push), honouring each recipient's preferences. Returns 202 as soon as the send is stored; delivery happens in the background (see `GET /deliveries`). Unknown external ids do not fail the call: they are listed in `skipped` (`create_missing: true` creates them instead); the call fails only when no recipient can be notified. An `Idempotency-Key` is **required** (a deterministic one such as `invoice.paid:inv_123` is best): the same key and body return the same notification, even when retried much later; the same key with a different body is a 409. `dry_run: true` returns the plan per recipient and channel with the reason for every skip, and stores nothing (200, no key needed). Limits: 3,000 recipients per minute per workspace; 30 notifications per minute per recipient (critical types have a separate 30), beyond which deliveries are skipped as `rate_limited`.
+Notifies up to 1,000 recipients with one notification type, across the type's channels (in-app inbox, email, push, web push), honouring each recipient's preferences. Returns 202 as soon as the send is stored; delivery happens in the background (see `GET /deliveries`). Unknown external ids do not fail the call: they are listed in `skipped` (`create_missing: true` creates them instead); the call fails only when no recipient can be notified. An `Idempotency-Key` is **required** (a deterministic one built from your event, such as `invoice.paid:inv_123`, is best; dots are fine): the same key and body return the same notification, even when retried much later; the same key with a different body is a 409. `dry_run: true` returns the plan per recipient and channel with the reason for every skip, and stores nothing (200, no key needed). Limits: 3,000 recipients per minute per workspace; 30 notifications per minute per recipient (critical types have a separate 30), beyond which deliveries are skipped as `rate_limited`.
 
 - Params: `Notify.NotificationSendParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -861,7 +861,7 @@ Notifies up to 1,000 recipients with one notification type, across the type's ch
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_REQUIRED`, `TOO_MANY_RECIPIENTS` | `IDEMPOTENCY_KEY_REQUIRED`: no `Idempotency-Key`; `TOO_MANY_RECIPIENTS`: over 1,000; `VALIDATION_ERROR`: a field is invalid. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_REQUIRED`, `TOO_MANY_RECIPIENTS` | `IDEMPOTENCY_KEY_REQUIRED`: no `Idempotency-Key`; `BAD_REQUEST`: the `Idempotency-Key` is over 256 characters or has a character outside `A-Z a-z 0-9 . _ : -` (the message names it); `TOO_MANY_RECIPIENTS`: over 1,000; `VALIDATION_ERROR`: a field is invalid (an invalid `cancellation_key` included). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |

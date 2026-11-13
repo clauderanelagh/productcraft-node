@@ -192,6 +192,7 @@ export type components = {
         ClientInboxStatusFilter: "all" | "unread" | "unseen";
         ClientPreferencesDto: {
             categories: components["schemas"]["ClientCategoryDto"][];
+            effective_quiet_hours: components["schemas"]["EffectiveQuietHoursDto"] | null;
             preferences: components["schemas"]["PreferenceCellDto"][];
             quiet_hours: components["schemas"]["QuietHoursDto"] | null;
             timezone: string | null;
@@ -394,6 +395,12 @@ export type components = {
             plan: components["schemas"]["PlanRowDto"][];
             skipped: components["schemas"]["SkippedRecipientDto"][];
             type: string;
+        };
+        EffectiveQuietHoursDto: {
+            end: string;
+            source: components["schemas"]["NotifyQuietHoursSource"];
+            start: string;
+            timezone: string | null;
         };
         EmailAutoPausedEvent: {
             created_at: string;
@@ -673,7 +680,7 @@ export type components = {
             state: components["schemas"]["NotifyWebhookDeliveryState"];
             type_key: string;
         };
-        NotifyDeliveryReason: "suppressed_preference" | "unsubscribed_all" | "held_quiet_hours" | "scheduled_send" | "no_device" | "no_address" | "email_invalid" | "email_complained" | "email_paused" | "email_budget" | "email_backlog_full" | "channel_not_configured" | "channel_restricted" | "type_archived" | "credential_invalid" | "template_missing" | "rate_limited" | "throttled" | "read_in_inbox" | "awaiting_unread" | "actor_excluded" | "recipient_not_found" | "recipient_erased" | "mail_suppressed" | "mail_refused" | "pruned" | "payload_too_large" | "credential_error" | "circuit_open" | "expired" | "cancelled" | "provider_error";
+        NotifyDeliveryReason: "suppressed_preference" | "default_off" | "unsubscribed_all" | "held_quiet_hours" | "scheduled_send" | "no_device" | "no_address" | "email_invalid" | "email_complained" | "email_paused" | "email_budget" | "email_backlog_full" | "channel_not_configured" | "channel_restricted" | "type_archived" | "credential_invalid" | "template_missing" | "rate_limited" | "throttled" | "read_in_inbox" | "awaiting_unread" | "actor_excluded" | "recipient_not_found" | "recipient_erased" | "mail_suppressed" | "mail_refused" | "pruned" | "payload_too_large" | "credential_error" | "circuit_open" | "expired" | "cancelled" | "provider_error";
         NotifyDeviceEventDataDto: {
             channel: components["schemas"]["NotifyWebhookDeviceChannel"];
             device_id: string;
@@ -706,6 +713,7 @@ export type components = {
             tenant: string | null;
             type_key: string;
         };
+        NotifyQuietHoursSource: "recipient" | "workspace";
         NotifyRecipientDeletedDataDto: {
             cause: components["schemas"]["NotifyRecipientDeletionCause"];
             external_id: string;
@@ -790,6 +798,7 @@ export type components = {
         PreferenceChannel: "inbox" | "email" | "push" | "webpush" | "*";
         PreferenceScope: "all" | "category" | "type";
         PreferenceSetDto: {
+            effective_quiet_hours: components["schemas"]["EffectiveQuietHoursDto"] | null;
             external_id: string;
             preferences: components["schemas"]["PreferenceCellDto"][];
             quiet_hours: components["schemas"]["QuietHoursDto"] | null;
@@ -1457,7 +1466,7 @@ namespace Notify {
     type ClientOptions = __ClientOptions;
     const // (undocumented)
     NotifyDeliveryReason: {
-        values: readonly ["suppressed_preference", "unsubscribed_all", "held_quiet_hours", "scheduled_send", "no_device", "no_address", "email_invalid", "email_complained", "email_paused", "email_budget", "email_backlog_full", "channel_not_configured", "channel_restricted", "type_archived", "credential_invalid", "template_missing", "rate_limited", "throttled", "read_in_inbox", "awaiting_unread", "actor_excluded", "recipient_not_found", "recipient_erased", "mail_suppressed", "mail_refused", "pruned", "payload_too_large", "credential_error", "circuit_open", "expired", "cancelled", "provider_error"];
+        values: readonly ["suppressed_preference", "default_off", "unsubscribed_all", "held_quiet_hours", "scheduled_send", "no_device", "no_address", "email_invalid", "email_complained", "email_paused", "email_budget", "email_backlog_full", "channel_not_configured", "channel_restricted", "type_archived", "credential_invalid", "template_missing", "rate_limited", "throttled", "read_in_inbox", "awaiting_unread", "actor_excluded", "recipient_not_found", "recipient_erased", "mail_suppressed", "mail_refused", "pruned", "payload_too_large", "credential_error", "circuit_open", "expired", "cancelled", "provider_error"];
     };
     // (undocumented)
     type ClientPreferences = __ClientPreferences;
@@ -1468,119 +1477,123 @@ namespace Notify {
     // (undocumented)
     type CredentialEnvironment = __CredentialEnvironment;
     const // (undocumented)
+    NotifyQuietHoursSource: {
+        values: readonly ["recipient", "workspace"];
+    };
+    // (undocumented)
+    type CredentialInvalidEvent = __CredentialInvalidEvent;
+    const // (undocumented)
     NotifyRecipientDeletionCause: {
         values: readonly ["api", "auth_user_deleted"];
     };
     // (undocumented)
-    type CredentialInvalidEvent = __CredentialInvalidEvent;
+    type CredentialOrigin = __CredentialOrigin;
     const // (undocumented)
     NotifyStatsChannel: {
         values: readonly ["inbox", "email", "push", "webpush"];
     };
     // (undocumented)
-    type CredentialOrigin = __CredentialOrigin;
+    type CredentialProvider = __CredentialProvider;
     const // (undocumented)
     NotifyWebhookChannel: {
         values: readonly ["inbox", "email", "push", "webpush"];
     };
     // (undocumented)
-    type CredentialProvider = __CredentialProvider;
+    type CredentialStatus = __CredentialStatus;
     const // (undocumented)
     NotifyWebhookCredentialProvider: {
         values: readonly ["apns", "fcm", "vapid"];
     };
     // (undocumented)
-    type CredentialStatus = __CredentialStatus;
+    type Delivery = __Delivery;
     const // (undocumented)
     NotifyWebhookDeliveryState: {
         values: readonly ["sent", "delivered", "failed", "bounced", "skipped", "pruned"];
     };
     // (undocumented)
-    type Delivery = __Delivery;
+    type DeliveryAttempt = __DeliveryAttempt;
     const // (undocumented)
     NotifyWebhookDeviceChannel: {
         values: readonly ["apns", "fcm", "webpush"];
     };
     // (undocumented)
-    type DeliveryAttempt = __DeliveryAttempt;
+    type DeliveryBouncedEvent = __DeliveryBouncedEvent;
     const // (undocumented)
     PlanDecision: {
         values: readonly ["deliver", "schedule", "skip"];
     };
     // (undocumented)
-    type DeliveryBouncedEvent = __DeliveryBouncedEvent;
+    type DeliveryDeliveredEvent = __DeliveryDeliveredEvent;
     const // (undocumented)
     PreferenceChannel: {
         values: readonly ["inbox", "email", "push", "webpush", "*"];
     };
     // (undocumented)
-    type DeliveryDeliveredEvent = __DeliveryDeliveredEvent;
+    type DeliveryDetail = __DeliveryDetail;
     const // (undocumented)
     PreferenceScope: {
         values: readonly ["all", "category", "type"];
     };
     // (undocumented)
-    type DeliveryDetail = __DeliveryDetail;
+    type DeliveryFailedEvent = __DeliveryFailedEvent;
     const // (undocumented)
     RecipientErasureStatus: {
         values: readonly ["erased"];
     };
     // (undocumented)
-    type DeliveryFailedEvent = __DeliveryFailedEvent;
+    type DeliveryList = __DeliveryList;
     const // (undocumented)
     RecipientInclude: {
         values: readonly ["preferences"];
     };
     // (undocumented)
-    type DeliveryList = __DeliveryList;
+    type DeliveryListParams = __DeliveryListParams;
     const // (undocumented)
     RecipientTokenScope: {
         values: readonly ["inbox:read", "inbox:write", "devices:write", "preferences:read", "preferences:write", "stream"];
     };
     // (undocumented)
-    type DeliveryListParams = __DeliveryListParams;
+    type DeliverySentEvent = __DeliverySentEvent;
     const // (undocumented)
     SendStatus: {
         values: readonly ["accepted", "scheduled"];
     };
     // (undocumented)
-    type DeliverySentEvent = __DeliverySentEvent;
+    type DeliverySkippedEvent = __DeliverySkippedEvent;
     const // (undocumented)
     SetupRowState: {
         values: readonly ["pass", "attention", "not_set", "blocked"];
     };
     // (undocumented)
-    type DeliverySkippedEvent = __DeliverySkippedEvent;
+    type DeliveryState = __DeliveryState;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type DeliveryState = __DeliveryState;
+    type Device = __Device;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type Device = __Device;
+    type DeviceChannel = __DeviceChannel;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DeviceChannel = __DeviceChannel;
+    type DeviceList = __DeviceList;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type DeviceList = __DeviceList;
+    type DeviceMove = __DeviceMove;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["notification.accepted", "delivery.sent", "delivery.delivered", "delivery.failed", "delivery.bounced", "delivery.skipped", "inbox_item.read", "inbox_item.archived", "inbox_item.interacted", "device.pruned", "device.moved", "credential.invalid", "email.auto_paused", "recipient.deleted"];
     };
-    // (undocumented)
-    type DeviceMove = __DeviceMove;
     // (undocumented)
     type DeviceMovedEvent = __DeviceMovedEvent;
     // (undocumented)
@@ -1593,6 +1606,8 @@ namespace Notify {
     type DeviceState = __DeviceState;
     // (undocumented)
     type DryRun = __DryRun;
+    // (undocumented)
+    type EffectiveQuietHours = __EffectiveQuietHours;
     // (undocumented)
     type EmailAutoPausedEvent = __EmailAutoPausedEvent;
     // (undocumented)
@@ -1701,6 +1716,8 @@ namespace Notify {
     type NotifyInboxItemEventData = __NotifyInboxItemEventData;
     // (undocumented)
     type NotifyNotificationAcceptedData = __NotifyNotificationAcceptedData;
+    // (undocumented)
+    type NotifyQuietHoursSource = __NotifyQuietHoursSource;
     // (undocumented)
     type NotifyRecipientDeletedData = __NotifyRecipientDeletedData;
     // (undocumented)

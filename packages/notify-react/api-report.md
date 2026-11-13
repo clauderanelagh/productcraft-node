@@ -32,6 +32,7 @@ export interface NotifyInboxProps {
     onNavigate?: (url: string, item: NotifyInboxItem) => void;
     onNew?: (item: NotifyInboxItem) => void;
     tenant?: string;
+    theme?: NotifyTheme;
 }
 
 // @public
@@ -48,6 +49,7 @@ export interface NotifyPreferencesProps {
     channels?: readonly PreferenceChannel[];
     className?: string;
     quietHours?: boolean;
+    theme?: NotifyTheme;
     unsubscribeAll?: boolean;
 }
 
@@ -62,6 +64,7 @@ export interface NotifyProviderProps extends Partial<Omit<NotifyClientOptions, "
     getToken?: () => string | Promise<string>;
     locale?: string;
     strings?: Partial<NotifyStrings>;
+    theme?: NotifyTheme;
 }
 
 // @public (undocumented)
@@ -113,6 +116,8 @@ export interface NotifyStrings {
     quietFrom: string;
     // (undocumented)
     quietHours: string;
+    quietHoursCustomise: string;
+    quietHoursDefault: string;
     // (undocumented)
     quietHoursHint: string;
     // (undocumented)
@@ -141,6 +146,9 @@ export interface NotifyStrings {
 
 // @public
 export function notifyStrings(locale: string | undefined, overrides?: Partial<NotifyStrings>): NotifyStrings;
+
+// @public
+export type NotifyTheme = "auto" | "light" | "dark";
 
 // @public
 export function renderMarkdown(src: string): ReactNode;

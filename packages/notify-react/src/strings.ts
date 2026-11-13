@@ -34,6 +34,10 @@ export interface NotifyStrings {
   timezoneNone: string;
   quietHours: string;
   quietHoursHint: string;
+  /** The workspace's default window applies; `{start}` and `{end}` are `HH:MM`. */
+  quietHoursDefault: string;
+  /** The button that replaces the workspace default with the recipient's own window. */
+  quietHoursCustomise: string;
   quietFrom: string;
   quietTo: string;
   saveError: string;
@@ -73,6 +77,8 @@ const en: NotifyStrings = {
   timezoneNone: "Not set",
   quietHours: "Quiet hours",
   quietHoursHint: "Push notifications wait until quiet hours end.",
+  quietHoursDefault: "Quiet hours {start}–{end} (default)",
+  quietHoursCustomise: "Change",
   quietFrom: "From",
   quietTo: "To",
   saveError: "Couldn't save your change. Try again.",
@@ -112,6 +118,8 @@ const ptPT: NotifyStrings = {
   timezoneNone: "Não definido",
   quietHours: "Horas de silêncio",
   quietHoursHint: "As notificações push esperam pelo fim das horas de silêncio.",
+  quietHoursDefault: "Horas de silêncio {start}–{end} (predefinição)",
+  quietHoursCustomise: "Alterar",
   quietFrom: "Das",
   quietTo: "Às",
   saveError: "Não foi possível guardar a alteração. Tente novamente.",
@@ -131,6 +139,8 @@ const ptBR: NotifyStrings = {
   timezone: "Fuso horário",
   quietHours: "Horário de silêncio",
   quietHoursHint: "As notificações push esperam o fim do horário de silêncio.",
+  quietHoursDefault: "Horário de silêncio {start}–{end} (padrão)",
+  quietHoursCustomise: "Alterar",
   saveError: "Não foi possível salvar a alteração. Tente novamente.",
   preferencesLoadError: "Não foi possível carregar suas configurações de notificação.",
   noCategories: "Ainda não há nada para configurar.",
@@ -170,6 +180,8 @@ const es: NotifyStrings = {
   timezoneNone: "Sin definir",
   quietHours: "Horas de silencio",
   quietHoursHint: "Las notificaciones push esperan al final de las horas de silencio.",
+  quietHoursDefault: "Horas de silencio {start}–{end} (predeterminado)",
+  quietHoursCustomise: "Cambiar",
   quietFrom: "Desde",
   quietTo: "Hasta",
   saveError: "No se pudo guardar el cambio. Inténtalo de nuevo.",
@@ -209,6 +221,8 @@ const fr: NotifyStrings = {
   timezoneNone: "Non défini",
   quietHours: "Heures calmes",
   quietHoursHint: "Les notifications push attendent la fin des heures calmes.",
+  quietHoursDefault: "Heures calmes {start}–{end} (par défaut)",
+  quietHoursCustomise: "Modifier",
   quietFrom: "De",
   quietTo: "À",
   saveError: "Impossible d'enregistrer la modification. Réessayez.",
@@ -248,6 +262,8 @@ const de: NotifyStrings = {
   timezoneNone: "Nicht festgelegt",
   quietHours: "Ruhezeiten",
   quietHoursHint: "Push-Benachrichtigungen warten bis zum Ende der Ruhezeiten.",
+  quietHoursDefault: "Ruhezeiten {start}–{end} (Standard)",
+  quietHoursCustomise: "Ändern",
   quietFrom: "Von",
   quietTo: "Bis",
   saveError: "Die Änderung konnte nicht gespeichert werden. Versuch es erneut.",

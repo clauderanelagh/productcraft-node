@@ -381,7 +381,9 @@
         "properties": {
           "cancellation_key": {
             "description": "The `cancellation_key` given at send.",
-            "example": "invite:inv_77",
+            "example": "invite.sent:inv_77",
+            "maxLength": 255,
+            "pattern": "^[A-Za-z0-9._:@|-]{1,255}$",
             "type": "string"
           }
         },
@@ -887,6 +889,15 @@
             },
             "type": "array"
           },
+          "effective_quiet_hours": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EffectiveQuietHoursDto"
+              }
+            ],
+            "description": "The quiet window that applies: the recipient's own (`source: recipient`), else the workspace default (`source: workspace`). Null: no quiet hours apply. Show this, not `quiet_hours`, as the current state; setting `quiet_hours` replaces the default for this recipient.",
+            "nullable": true
+          },
           "preferences": {
             "description": "Cells the recipient set (anything else follows the category defaults).",
             "items": {
@@ -900,7 +911,7 @@
                 "$ref": "#/components/schemas/QuietHoursDto"
               }
             ],
-            "description": "Quiet window.",
+            "description": "The recipient's own quiet window; null when they set none (the workspace default then applies, see `effective_quiet_hours`).",
             "nullable": true
           },
           "timezone": {
@@ -918,7 +929,8 @@
           "preferences",
           "unsubscribed_all",
           "timezone",
-          "quiet_hours"
+          "quiet_hours",
+          "effective_quiet_hours"
         ],
         "type": "object",
         "x-pc-sdk-model": "ClientPreferences"
@@ -2318,6 +2330,42 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "DryRun"
+      },
+      "EffectiveQuietHoursDto": {
+        "properties": {
+          "end": {
+            "description": "End of the window, `HH:MM`. An end before the start spans midnight.",
+            "example": "08:00",
+            "type": "string"
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyQuietHoursSource"
+              }
+            ],
+            "description": "`recipient`: their own window (`quiet_hours`). `workspace`: they set none, so the workspace default applies; setting their own window replaces it."
+          },
+          "start": {
+            "description": "Start of the window, `HH:MM` 24-hour.",
+            "example": "22:00",
+            "type": "string"
+          },
+          "timezone": {
+            "description": "The time zone the window is read in: the recipient's, else the workspace default. Null: none is known, so only devices that registered a time zone are held.",
+            "example": "Europe/Lisbon",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "start",
+          "end",
+          "timezone",
+          "source"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EffectiveQuietHours"
       },
       "EmailAutoPausedEvent": {
         "description": "Notify paused email for the workspace: more than 0.1 % complaints or 5 % hard bounces among recent emails. Fix the cause, then resume it in the settings.",
@@ -3989,9 +4037,10 @@
         "x-pc-sdk-model": "NotifyDeliveryEventData"
       },
       "NotifyDeliveryReason": {
-        "description": "Why a delivery was skipped, held, retried or failed. Open enum: new reasons may be added.\n\n- `suppressed_preference`: The recipient turned this channel off for this type or its category. Fix: Nothing to fix: the recipient chose this. Mark the category channel `mandatory` only for messages they must receive.\n- `unsubscribed_all`: The recipient unsubscribed from all non-critical notifications. Fix: Only types marked `critical` still reach them; otherwise the recipient has to opt back in.\n- `held_quiet_hours`: Held until the recipient's quiet hours end. Fix: It is sent when the window ends. Mark the type `critical` if it must not wait.\n- `scheduled_send`: Waiting for the send time given in `send_at` or `delay_seconds`. Fix: It is sent at that time. Cancel it with the notification id or its `cancellation_key`.\n- `no_device`: The recipient has no active device for this channel. Fix: Register the device token from your app (`POST …/devices`) after the user grants permission.\n- `no_address`: The recipient has no email address. Fix: Set `email` on the recipient, or pass it inline in the send.\n- `email_invalid`: An earlier email to this address hard-bounced. Fix: Update the recipient's email address; a new address clears the bounce.\n- `email_complained`: The recipient marked an earlier email as spam. Fix: Email stays off for this recipient; reach them through another channel.\n- `email_paused`: Email is paused for this workspace (high bounce or complaint rate). Fix: Check your sending in the console and resume email in Notify settings.\n- `email_budget`: The workspace email budget is spent for now; the email waits for the next window. Fix: It is sent automatically when the budget allows. Ask us to raise the budget if this is routine.\n- `email_backlog_full`: The workspace already holds 10,000 emails waiting for budget, so this one was not queued. Fix: Send fewer emails or spread them out; ask us to raise the budget if this volume is routine.\n- `channel_not_configured`: The channel is not set up in this workspace. Fix: Upload APNs or FCM credentials, generate web push keys, or enable Mail with a verified sender.\n- `channel_restricted`: The send's `channels` list left this channel out. Fix: Add the channel to `channels`, or omit `channels` to use every channel of the type.\n- `type_archived`: The notification type is archived. Fix: Unarchive the type or send a different one.\n- `credential_invalid`: No valid credential matches this device's app or environment. Fix: Upload the APNs key or FCM service account for this bundle id or project, in the right environment.\n- `template_missing`: The type has no template for this channel. Fix: Add a template for the channel (any locale) to the notification type.\n- `rate_limited`: The recipient already received the per-minute maximum of notifications. Fix: Send fewer notifications to one person, or batch them; critical types have their own budget.\n- `throttled`: The type's own throttle for this recipient was reached. Fix: Raise or remove `throttle` on the notification type if every message must go out.\n- `read_in_inbox`: The recipient read the inbox item first, so the follow-up was not needed. Fix: Nothing to fix: this is how `after_unread_seconds` works.\n- `awaiting_unread`: A follow-up step waiting to see whether the recipient reads the inbox item first. Fix: Nothing to fix: it is sent when the `after_unread_seconds` timer ends and the item is still unread, and skipped as `read_in_inbox` otherwise.\n- `actor_excluded`: The recipient is the actor who caused the notification. Fix: Pass `exclude_actor: false` to notify the actor too.\n- `recipient_not_found`: No recipient with this external id exists in the workspace. Fix: Create the recipient first (`PUT /recipients/{external_id}`), pass it inline with an email, or send `create_missing: true`.\n- `recipient_erased`: The recipient was erased in the last 24 hours and cannot be recreated by a send yet. Fix: Wait 24 hours after the erasure, then create the recipient again.\n- `mail_suppressed`: ProductCraft Mail suppressed the address (earlier bounces or complaints). Fix: Check the suppression list in Mail; remove the address only if you know it is valid.\n- `mail_refused`: ProductCraft Mail refused the message (the code after the colon says why). Fix: Look up the Mail error code; usually the template name or sender needs fixing.\n- `pruned`: The push provider said the device token is no longer valid; the device was removed. Fix: Nothing to fix: the app registers a fresh token the next time it opens.\n- `payload_too_large`: The rendered push payload is over the provider's size limit. Fix: Shorten the template or move data out of the push payload.\n- `credential_error`: The push provider rejected the workspace credential. Fix: Upload a fresh APNs key or FCM service account; the channel resumes as soon as it validates.\n- `circuit_open`: The provider is failing for this credential, so sends are paused briefly and retried. Fix: Nothing to fix: it retries on its own. Check the provider's status page if it lasts.\n- `expired`: The notification's time to live passed before it could be delivered. Fix: Raise `ttl_seconds` on the type if late delivery is still useful.\n- `cancelled`: The notification was cancelled, or the recipient was erased, before delivery. Fix: Nothing to fix.\n- `provider_error`: The provider kept failing until retries ran out. Fix: Check the attempts for the provider status and code.",
+        "description": "Why a delivery was skipped, held, retried or failed. Open enum: new reasons may be added.\n\n- `suppressed_preference`: The recipient turned this channel off for this type or its category. Fix: Nothing to fix: the recipient chose this. Mark the category channel `mandatory` only for messages they must receive.\n- `default_off`: This channel is off by default for the category, and the recipient has not turned it on. Fix: Nothing to fix if the channel is opt-in by design: it is sent once the recipient turns it on in their preferences. Set the category default to `on` to send it without an opt-in.\n- `unsubscribed_all`: The recipient unsubscribed from all non-critical notifications. Fix: Only types marked `critical` still reach them; otherwise the recipient has to opt back in.\n- `held_quiet_hours`: Held until the recipient's quiet hours end. Fix: It is sent when the window ends. Mark the type `critical` if it must not wait.\n- `scheduled_send`: Waiting for the send time given in `send_at` or `delay_seconds`. Fix: It is sent at that time. Cancel it with the notification id or its `cancellation_key`.\n- `no_device`: The recipient has no active device for this channel. Fix: Register the device token from your app (`POST …/devices`) after the user grants permission.\n- `no_address`: The recipient has no email address. Fix: Set `email` on the recipient, or pass it inline in the send.\n- `email_invalid`: An earlier email to this address hard-bounced. Fix: Update the recipient's email address; a new address clears the bounce.\n- `email_complained`: The recipient marked an earlier email as spam. Fix: Email stays off for this recipient; reach them through another channel.\n- `email_paused`: Email is paused for this workspace (high bounce or complaint rate). Fix: Check your sending in the console and resume email in Notify settings.\n- `email_budget`: The workspace email budget is spent for now; the email waits for the next window. Fix: It is sent automatically when the budget allows. Ask us to raise the budget if this is routine.\n- `email_backlog_full`: The workspace already holds 10,000 emails waiting for budget, so this one was not queued. Fix: Send fewer emails or spread them out; ask us to raise the budget if this volume is routine.\n- `channel_not_configured`: The channel is not set up in this workspace. Fix: Upload APNs or FCM credentials, generate web push keys, or enable Mail with a verified sender.\n- `channel_restricted`: The send's `channels` list left this channel out. Fix: Add the channel to `channels`, or omit `channels` to use every channel of the type.\n- `type_archived`: The notification type is archived. Fix: Unarchive the type or send a different one.\n- `credential_invalid`: No valid credential matches this device's app or environment. Fix: Upload the APNs key or FCM service account for this bundle id or project, in the right environment.\n- `template_missing`: The type has no template for this channel. Fix: Add a template for the channel (any locale) to the notification type.\n- `rate_limited`: The recipient already received the per-minute maximum of notifications. Fix: Send fewer notifications to one person, or batch them; critical types have their own budget.\n- `throttled`: The type's own throttle for this recipient was reached. Fix: Raise or remove `throttle` on the notification type if every message must go out.\n- `read_in_inbox`: The recipient read the inbox item first, so the follow-up was not needed. Fix: Nothing to fix: this is how `after_unread_seconds` works.\n- `awaiting_unread`: A follow-up step waiting to see whether the recipient reads the inbox item first. Fix: Nothing to fix: it is sent when the `after_unread_seconds` timer ends and the item is still unread, and skipped as `read_in_inbox` otherwise.\n- `actor_excluded`: The recipient is the actor who caused the notification. Fix: Pass `exclude_actor: false` to notify the actor too.\n- `recipient_not_found`: No recipient with this external id exists in the workspace. Fix: Create the recipient first (`PUT /recipients/{external_id}`), pass it inline with an email, or send `create_missing: true`.\n- `recipient_erased`: The recipient was erased in the last 24 hours and cannot be recreated by a send yet. Fix: Wait 24 hours after the erasure, then create the recipient again.\n- `mail_suppressed`: ProductCraft Mail suppressed the address (earlier bounces or complaints). Fix: Check the suppression list in Mail; remove the address only if you know it is valid.\n- `mail_refused`: ProductCraft Mail refused the message (the code after the colon says why). Fix: Look up the Mail error code; usually the template name or sender needs fixing.\n- `pruned`: The push provider said the device token is no longer valid; the device was removed. Fix: Nothing to fix: the app registers a fresh token the next time it opens.\n- `payload_too_large`: The rendered push payload is over the provider's size limit. Fix: Shorten the template or move data out of the push payload.\n- `credential_error`: The push provider rejected the workspace credential. Fix: Upload a fresh APNs key or FCM service account; the channel resumes as soon as it validates.\n- `circuit_open`: The provider is failing for this credential, so sends are paused briefly and retried. Fix: Nothing to fix: it retries on its own. Check the provider's status page if it lasts.\n- `expired`: The notification's time to live passed before it could be delivered. Fix: Raise `ttl_seconds` on the type if late delivery is still useful.\n- `cancelled`: The notification was cancelled, or the recipient was erased, before delivery. Fix: Nothing to fix.\n- `provider_error`: The provider kept failing until retries ran out. Fix: Check the attempts for the provider status and code.",
         "enum": [
           "suppressed_preference",
+          "default_off",
           "unsubscribed_all",
           "held_quiet_hours",
           "scheduled_send",
@@ -4057,6 +4106,10 @@
           "credential_invalid": {
             "fix": "Upload the APNs key or FCM service account for this bundle id or project, in the right environment.",
             "sentence": "No valid credential matches this device's app or environment."
+          },
+          "default_off": {
+            "fix": "Nothing to fix if the channel is opt-in by design: it is sent once the recipient turns it on in their preferences. Set the category default to `on` to send it without an opt-in.",
+            "sentence": "This channel is off by default for the category, and the recipient has not turned it on."
           },
           "email_backlog_full": {
             "fix": "Send fewer emails or spread them out; ask us to raise the budget if this volume is routine.",
@@ -4519,6 +4572,13 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "NotifyNotificationAcceptedData"
+      },
+      "NotifyQuietHoursSource": {
+        "enum": [
+          "recipient",
+          "workspace"
+        ],
+        "type": "string"
       },
       "NotifyRecipientDeletedDataDto": {
         "properties": {
@@ -5049,6 +5109,15 @@
       },
       "PreferenceSetDto": {
         "properties": {
+          "effective_quiet_hours": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EffectiveQuietHoursDto"
+              }
+            ],
+            "description": "The quiet window that applies: the recipient's own, else the workspace default. Null: no quiet hours apply.",
+            "nullable": true
+          },
           "external_id": {
             "description": "The recipient external id.",
             "type": "string"
@@ -5066,7 +5135,7 @@
                 "$ref": "#/components/schemas/QuietHoursDto"
               }
             ],
-            "description": "Quiet window.",
+            "description": "The recipient's own quiet window; null when they set none (the workspace default then applies, see `effective_quiet_hours`).",
             "nullable": true
           },
           "timezone": {
@@ -5084,6 +5153,7 @@
           "unsubscribed_all",
           "timezone",
           "quiet_hours",
+          "effective_quiet_hours",
           "preferences"
         ],
         "type": "object",
@@ -5897,9 +5967,10 @@
             "description": "Who caused the notification."
           },
           "cancellation_key": {
-            "description": "Your key for cancelling later without storing our id (`POST /notifications/cancel`).",
-            "example": "invite:inv_77",
+            "description": "Your key for cancelling later without storing our id (`POST /notifications/cancel`): 1-255 characters of `A-Z a-z 0-9 . _ : @ | -`, so it can embed a type key and an id (`invite.sent:inv_77`).",
+            "example": "invite.sent:inv_77",
             "maxLength": 255,
+            "pattern": "^[A-Za-z0-9._:@|-]{1,255}$",
             "type": "string"
           },
           "channels": {
@@ -9735,7 +9806,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10634,7 +10705,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -11040,7 +11111,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -11581,7 +11652,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -12710,7 +12781,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -15244,7 +15315,7 @@
         }
       },
       "post": {
-        "description": "Notifies up to 1,000 recipients with one notification type, across the type's channels (in-app inbox, email, push, web push), honouring each recipient's preferences. Returns 202 as soon as the send is stored; delivery happens in the background (see `GET /deliveries`). Unknown external ids do not fail the call: they are listed in `skipped` (`create_missing: true` creates them instead); the call fails only when no recipient can be notified. An `Idempotency-Key` is **required** (a deterministic one such as `invoice.paid:inv_123` is best): the same key and body return the same notification, even when retried much later; the same key with a different body is a 409. `dry_run: true` returns the plan per recipient and channel with the reason for every skip, and stores nothing (200, no key needed). Limits: 3,000 recipients per minute per workspace; 30 notifications per minute per recipient (critical types have a separate 30), beyond which deliveries are skipped as `rate_limited`.",
+        "description": "Notifies up to 1,000 recipients with one notification type, across the type's channels (in-app inbox, email, push, web push), honouring each recipient's preferences. Returns 202 as soon as the send is stored; delivery happens in the background (see `GET /deliveries`). Unknown external ids do not fail the call: they are listed in `skipped` (`create_missing: true` creates them instead); the call fails only when no recipient can be notified. An `Idempotency-Key` is **required** (a deterministic one built from your event, such as `invoice.paid:inv_123`, is best; dots are fine): the same key and body return the same notification, even when retried much later; the same key with a different body is a 409. `dry_run: true` returns the plan per recipient and channel with the reason for every skip, and stores nothing (200, no key needed). Limits: 3,000 recipients per minute per workspace; 30 notifications per minute per recipient (critical types have a separate 30), beyond which deliveries are skipped as `rate_limited`.",
         "operationId": "NotificationsController_send",
         "parameters": [
           {
@@ -15259,7 +15330,7 @@
             }
           },
           {
-            "description": "Required unless `dry_run` is true. 1..256 chars of [A-Za-z0-9_\\-:]; the same key with the same body returns the original notification.",
+            "description": "Required unless `dry_run` is true. 1 to 256 characters of `A-Z a-z 0-9 . _ : -` (`invoice.paid:inv_123`); the same key with the same body returns the original notification. Any other character is a 400 that names it: a send is never dropped silently.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": true,
@@ -15371,7 +15442,7 @@
                 }
               }
             },
-            "description": "`IDEMPOTENCY_KEY_REQUIRED`: no `Idempotency-Key`; `TOO_MANY_RECIPIENTS`: over 1,000; `VALIDATION_ERROR`: a field is invalid.",
+            "description": "`IDEMPOTENCY_KEY_REQUIRED`: no `Idempotency-Key`; `BAD_REQUEST`: the `Idempotency-Key` is over 256 characters or has a character outside `A-Z a-z 0-9 . _ : -` (the message names it); `TOO_MANY_RECIPIENTS`: over 1,000; `VALIDATION_ERROR`: a field is invalid (an invalid `cancellation_key` included).",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -15626,7 +15697,7 @@
                 }
               }
             },
-            "description": "`VALIDATION_ERROR`: `cancellation_key` is missing.",
+            "description": "`VALIDATION_ERROR`: `cancellation_key` is missing or not 1-255 characters of `A-Z a-z 0-9 . _ : @ | -`.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -16642,7 +16713,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original result for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original result for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -17788,7 +17859,7 @@
             }
           },
           {
-            "description": "A key (1..256 chars, [A-Za-z0-9_\\-:]) makes retries safe: a replay returns the original response for 24 h.",
+            "description": "A key (1..256 chars, [A-Za-z0-9._:-]) makes retries safe: a replay returns the original response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -20353,7 +20424,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -20952,7 +21023,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -21209,7 +21280,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -21448,7 +21519,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -22269,7 +22340,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,

@@ -1,6 +1,6 @@
 import { useId, useMemo, useState, type ReactElement } from "react";
 import { resolvePreference, type PreferenceChannel } from "@productcraft/notify-js";
-import { useNotifyContext, usePreferences, type NotifyPreferencesData } from "./provider.js";
+import { rootClass, useNotifyContext, usePreferences, type NotifyPreferencesData, type NotifyTheme } from "./provider.js";
 import { fill, notifyStrings, type NotifyStrings } from "./strings.js";
 
 export interface NotifyPreferencesProps {
@@ -12,6 +12,8 @@ export interface NotifyPreferencesProps {
   unsubscribeAll?: boolean;
   /** Extra class on the root element. */
   className?: string;
+  /** Pins the colour scheme (`light` / `dark`) or follows the app, then the OS (`auto`). Default: the provider's `theme`. */
+  theme?: NotifyTheme;
 }
 
 const ALL: readonly PreferenceChannel[] = ["inbox", "email", "push", "webpush"];
@@ -36,12 +38,12 @@ const zones = (current: string | null): string[] => {
  */
 export function NotifyPreferences(props: NotifyPreferencesProps): ReactElement {
   const { channels = ALL, quietHours = true, unsubscribeAll = true, className } = props;
-  const { locale, strings: overrides } = useNotifyContext("<NotifyPreferences>");
+  const { locale, strings: overrides, theme } = useNotifyContext("<NotifyPreferences>");
   const t = useMemo(() => notifyStrings(locale, overrides), [locale, overrides]);
   const prefs = usePreferences();
   const [failed, setFailed] = useState(false);
   const id = useId();
-  const cls = className ? `pcn-prefs ${className}` : "pcn-prefs";
+  const cls = rootClass("pcn-prefs", props.theme ?? theme, className);
   const save = (p: Promise<unknown>): void => {
     setFailed(false);
     void p.catch(() => setFailed(true));
@@ -76,6 +78,9 @@ export function NotifyPreferences(props: NotifyPreferencesProps): ReactElement {
 
   const hasMandatory = data.categories.some((c) => channels.some((ch) => resolvePreference(data, c.key, ch).mandatory));
   const qh = data.quiet_hours;
+  // The workspace's default window when the recipient set none (notify-api 022). Older APIs omit the field.
+  const effective = (data as { effective_quiet_hours?: { start: string; end: string; source: string } | null }).effective_quiet_hours;
+  const inherited = !qh && effective?.source === "workspace" ? effective : null;
   const setQuiet = (next: { start: string; end: string } | null): void => {
     const extra: { quiet_hours: typeof next; timezone?: string } = { quiet_hours: next };
     // Quiet hours need a time zone: take the device's when none is set.
@@ -142,11 +147,21 @@ export function NotifyPreferences(props: NotifyPreferencesProps): ReactElement {
       )}
       {unsubscribeAll && (
         <label className="pcn-field pcn-unsubscribe-all">
-          <input type="checkbox" role="switch" className="pcn-switch" checked={data.unsubscribed_all} aria-describedby={`${id}-unsub`} onChange={(e) => save(prefs.update([], { unsubscribed_all: e.currentTarget.checked }))} />
+          <input
+            type="checkbox"
+            role="switch"
+            className="pcn-switch"
+            checked={data.unsubscribed_all}
+            aria-describedby={hasMandatory ? `${id}-unsub` : undefined}
+            onChange={(e) => save(prefs.update([], { unsubscribed_all: e.currentTarget.checked }))}
+          />
           <span>{t.unsubscribeAll}</span>
-          <span id={`${id}-unsub`} className="pcn-hint">
-            {t.unsubscribeAllHint}
-          </span>
+          {/* Only true when a shown channel is required: otherwise nothing "still arrives". */}
+          {hasMandatory && (
+            <span id={`${id}-unsub`} className="pcn-hint">
+              {t.unsubscribeAllHint}
+            </span>
+          )}
         </label>
       )}
       {quietHours && (
@@ -163,10 +178,20 @@ export function NotifyPreferences(props: NotifyPreferencesProps): ReactElement {
               ))}
             </select>
           </label>
-          <label className="pcn-field">
-            <input type="checkbox" role="switch" className="pcn-switch pcn-quiet-toggle" checked={!!qh} aria-describedby={`${id}-quiet`} onChange={(e) => setQuiet(e.currentTarget.checked ? { start: "22:00", end: "08:00" } : null)} />
-            <span>{t.quietHours}</span>
-          </label>
+          {inherited ? (
+            // The workspace default applies (the recipient set no window): say so, never "off".
+            <div className="pcn-field pcn-quiet-default">
+              <span>{fill(t.quietHoursDefault, { start: inherited.start, end: inherited.end })}</span>
+              <button type="button" className="pcn-quiet-customise" aria-describedby={`${id}-quiet`} onClick={() => setQuiet({ start: inherited.start, end: inherited.end })}>
+                {t.quietHoursCustomise}
+              </button>
+            </div>
+          ) : (
+            <label className="pcn-field">
+              <input type="checkbox" role="switch" className="pcn-switch pcn-quiet-toggle" checked={!!qh} aria-describedby={`${id}-quiet`} onChange={(e) => setQuiet(e.currentTarget.checked ? { start: "22:00", end: "08:00" } : null)} />
+              <span>{t.quietHours}</span>
+            </label>
+          )}
           <span id={`${id}-quiet`} className="pcn-hint">
             {t.quietHoursHint}
           </span>

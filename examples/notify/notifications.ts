@@ -11,7 +11,7 @@ const notify = new Notify();
 
 // notifications.cancelByKey: Cancel notifications by cancellation key
 {
-  const cancelByKey = await notify.notifications.cancelByKey({ cancellation_key: "invite:inv_77" });
+  const cancelByKey = await notify.notifications.cancelByKey({ cancellation_key: "invite.sent:inv_77" });
 }
 
 // notifications.list: List notifications (message log)
