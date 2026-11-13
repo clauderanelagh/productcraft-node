@@ -76,6 +76,26 @@ describe("registerWebPush", () => {
     await expect(registerWebPush(none.client, { serviceWorkerPath: "/sw.js" })).rejects.toMatchObject({ code: "WEBPUSH_UNSUPPORTED" });
   });
 
+  it("waits for a first-visit worker to activate before subscribing", async () => {
+    const b = browser();
+    let state = "installing";
+    const listeners: (() => void)[] = [];
+    const worker = { get state() { return state; }, addEventListener: (_: string, cb: () => void) => listeners.push(cb), removeEventListener: vi.fn() };
+    const subscribe = b.pushManager.subscribe;
+    b.pushManager.subscribe = vi.fn(async (...args: Parameters<typeof subscribe>) => {
+      if (state !== "activated") throw new DOMException("Subscription failed - no active Service Worker", "AbortError");
+      return subscribe(...args);
+    });
+    b.serviceWorker.register.mockImplementationOnce(async () => ({ pushManager: b.pushManager, installing: worker }) as never);
+    const pending = registerWebPush(b.client, { serviceWorkerPath: "/notify-sw.js" });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(b.pushManager.subscribe).not.toHaveBeenCalled();
+    state = "activated";
+    for (const cb of listeners) cb();
+    const { device } = await pending;
+    expect(device.id).toBe("dev_1");
+  });
+
   it("re-registers on the worker's subscription change and records action presses", async () => {
     const b = browser({ permission: "granted" });
     expect(b.swListeners).toHaveLength(1);

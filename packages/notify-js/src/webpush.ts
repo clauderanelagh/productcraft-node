@@ -50,6 +50,9 @@ export async function registerWebPush(client: NotifyBrowserClient, options: Regi
   if (permission !== "granted") throw new NotifyClientError("PERMISSION_DENIED", "Notification permission was not granted.");
 
   const reg = await nav.serviceWorker.register(options.serviceWorkerPath, options.scope ? { scope: options.scope } : undefined);
+  // On a first visit the worker is still installing; Chrome refuses
+  // pushManager.subscribe() until it is active ("no active Service Worker").
+  await untilActive(reg);
   const { public_key } = await client.call((s) => s.webpush.vapidPublicKey());
   const key = toBytes(public_key);
   let sub = await reg.pushManager.getSubscription();
@@ -73,4 +76,21 @@ export async function registerWebPush(client: NotifyBrowserClient, options: Regi
     ...(timezone ? { timezone } : {}),
   });
   return { device, subscription: sub };
+}
+
+/** Resolves once this registration's worker is active (or can never be). */
+function untilActive(reg: ServiceWorkerRegistration): Promise<void> {
+  if (reg.active) return Promise.resolve();
+  const worker = reg.installing ?? reg.waiting;
+  if (!worker) return Promise.resolve();
+  return new Promise((resolve) => {
+    const done = () => {
+      if (worker.state === "activated" || worker.state === "redundant") {
+        worker.removeEventListener("statechange", done);
+        resolve();
+      }
+    };
+    worker.addEventListener("statechange", done);
+    done();
+  });
 }
