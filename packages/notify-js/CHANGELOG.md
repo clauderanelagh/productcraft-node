@@ -1,5 +1,12 @@
 # @productcraft/notify-js
 
+## 0.2.3
+
+### Patch Changes
+
+- Updated dependencies [810d5ac]
+  - @productcraft/notify@0.2.0
+
 ## 0.2.2
 
 ### Patch Changes

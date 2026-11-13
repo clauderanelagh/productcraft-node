@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/notify-js",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Framework-agnostic browser and React Native client for ProductCraft Notify: an in-app inbox store with a cache, real-time updates over a fetch-stream SSE reader, unread counts, optimistic mark read/seen/archive, per-cell preference updates, device unregister on logout, and a web push helper with a ready-made service worker. Recipient tokens stay in memory.",
   "type": "module",
   "main": "./dist/index.cjs",
