@@ -207,6 +207,38 @@ try {
   }
   console.log("ok   popover stays inside the viewport with the bell on the left (1280 and 360 px) and on the right");
 
+  // Theme (task 014): the app's theme on <html> wins over the OS, and the theme prop wins over both.
+  const DARK = "#18181b";
+  const LIGHT = "#ffffff";
+  const themeCases = [
+    ["dark", "", DARK, "no app theme: follows a dark OS"],
+    ["light", "", LIGHT, "no app theme: follows a light OS"],
+    ["dark", "?html=light", LIGHT, ".light on <html> beats a dark OS"],
+    ["dark", "?data-theme=light", LIGHT, 'data-theme="light" beats a dark OS'],
+    ["light", "?html=dark", DARK, ".dark on <html> beats a light OS"],
+    ["light", "?data-theme=dark", DARK, 'data-theme="dark" beats a light OS'],
+    ["dark", "?html=dark&theme=light", LIGHT, "theme=light prop beats .dark and the OS"],
+    ["light", "?html=light&theme=dark", DARK, "theme=dark prop beats .light and the OS"],
+    ["dark", "?html=light&theme=auto", LIGHT, "theme=auto follows the app"],
+  ];
+  for (const [colorScheme, query, want, label] of themeCases) {
+    const p = await browser.newPage({ reducedMotion: "reduce", colorScheme });
+    p.on("pageerror", (e) => errors.push(e.message));
+    await p.goto(origin + "/" + query);
+    await p.waitForFunction(() => document.querySelector(".pcn-switch") !== null);
+    await p.locator(".pcn-bell").click();
+    await p.locator(".pcn-popover").waitFor();
+    const got = await p.evaluate(() => ({
+      inbox: getComputedStyle(document.querySelector(".pcn-inbox")).getPropertyValue("--pcn-bg").trim(),
+      prefs: getComputedStyle(document.querySelector(".pcn-prefs")).getPropertyValue("--pcn-bg").trim(),
+      popover: getComputedStyle(document.querySelector(".pcn-popover")).backgroundColor,
+    }));
+    assert.deepEqual([label, got.inbox, got.prefs], [label, want, want]);
+    assert.equal(got.popover, want === DARK ? "rgb(24, 24, 27)" : "rgb(255, 255, 255)", `${label}: popover background`);
+    await p.close();
+  }
+  console.log(`ok   theme: ${themeCases.length} OS × app class × prop cases pick the expected scheme (popover painted)`);
+
   const storage = await page.evaluate(() => ({ local: localStorage.length, session: sessionStorage.length, cookie: document.cookie }));
   assert.deepEqual(storage, { local: 0, session: 0, cookie: "" });
   for (const r of requests) assert.ok(!r.url.includes("rt_browser"), `token in URL: ${r.url}`);

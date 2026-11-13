@@ -276,6 +276,65 @@ describe("<NotifyPreferences/>", () => {
     expect(push.checked).toBe(true);
   });
 
+  it("'Required notifications still arrive' only when a shown channel is required (task 014)", async () => {
+    const withRequired = setup();
+    render(withRequired.wrap(<NotifyPreferences />));
+    const unsub = await screen.findByRole("switch", { name: /^Turn off all optional notifications/ });
+    expect(document.getElementById(unsub.getAttribute("aria-describedby")!)!.textContent).toBe("Required notifications still arrive.");
+    cleanup();
+
+    const none = setup();
+    none.api.on("GET /v1/client/preferences", () => json(prefs({ categories: [prefs().categories[0]!] })));
+    render(none.wrap(<NotifyPreferences />));
+    const unsub2 = await screen.findByRole("switch", { name: /^Turn off all optional notifications/ });
+    expect(unsub2.getAttribute("aria-describedby")).toBeNull();
+    expect(screen.queryByText("Required notifications still arrive.")).toBeNull();
+    cleanup();
+
+    // Security's required channels are inbox and email: hidden columns do not count.
+    const hidden = setup();
+    render(hidden.wrap(<NotifyPreferences channels={["push", "webpush"]} />));
+    await screen.findByRole("switch", { name: /^Turn off all optional notifications/ });
+    expect(screen.queryByText("Required notifications still arrive.")).toBeNull();
+  });
+
+  it("the workspace's default quiet hours show as the default, not as off; Change sets the recipient's own (notify-api 022)", async () => {
+    const { api, wrap } = setup();
+    const def = { start: "22:00", end: "08:00", timezone: "Europe/Lisbon", source: "workspace" };
+    api.on("GET /v1/client/preferences", () => json(prefs({ effective_quiet_hours: def } as never)));
+    api.on("PATCH /v1/client/preferences", (c) => {
+      const qh = (c.body as { quiet_hours: { start: string; end: string } }).quiet_hours;
+      return json(prefs({ quiet_hours: qh, effective_quiet_hours: { ...qh, timezone: "Europe/Lisbon", source: "recipient" } } as never));
+    });
+    render(wrap(<NotifyPreferences channels={["inbox"]} />));
+    await screen.findByText("Quiet hours 22:00–08:00 (default)");
+    expect(screen.queryByRole("switch", { name: "Quiet hours" })).toBeNull();
+    await act(async () => fireEvent.click(screen.getByRole("button", { name: "Change" })));
+    await waitFor(() => expect((screen.getByLabelText("From") as HTMLInputElement).value).toBe("22:00"));
+    expect((screen.getByRole("switch", { name: "Quiet hours" }) as HTMLInputElement).checked).toBe(true);
+    expect(api.calls.filter((c) => c.method === "PATCH").map((c) => c.body)).toEqual([{ quiet_hours: { start: "22:00", end: "08:00" } }]);
+  });
+
+  it("theme prop pins the scheme class on both roots; the provider's is the default (task 014)", async () => {
+    const { wrap } = setup();
+    const { container } = render(
+      wrap(
+        <>
+          <NotifyInbox />
+          <NotifyPreferences theme="light" />
+        </>,
+        { theme: "dark" },
+      ),
+    );
+    await screen.findByRole("table");
+    expect(container.querySelector(".pcn-inbox")!.className).toBe("pcn-inbox pcn-dark");
+    expect(container.querySelector(".pcn-prefs")!.className).toBe("pcn-prefs pcn-light");
+    cleanup();
+    const auto = setup();
+    const r = render(auto.wrap(<NotifyInbox className="mine" />));
+    expect(r.container.querySelector(".pcn-inbox")!.className).toBe("pcn-inbox mine");
+  });
+
   it("a load failure names the settings, not the notifications", async () => {
     const { api, wrap } = setup();
     api.on("GET /v1/client/preferences", () => json({ code: "INTERNAL", message: "no", status: 500 }, 500));

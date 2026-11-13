@@ -1,5 +1,5 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactElement } from "react";
-import { useInbox, useNotifyContext, type NotifyInboxItem } from "./provider.js";
+import { rootClass, useInbox, useNotifyContext, type NotifyInboxItem, type NotifyTheme } from "./provider.js";
 import { renderMarkdown, safeUrl } from "./markdown.js";
 import { fill, notifyStrings, relativeTime, type NotifyStrings } from "./strings.js";
 
@@ -19,6 +19,8 @@ export interface NotifyInboxProps {
   limit?: number;
   /** Extra class on the root element. */
   className?: string;
+  /** Pins the colour scheme (`light` / `dark`) or follows the app, then the OS (`auto`). Default: the provider's `theme`. */
+  theme?: NotifyTheme;
 }
 
 const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -52,7 +54,7 @@ export function viewportShift(rect: { left: number; right: number }, viewportWid
  */
 export function NotifyInbox(props: NotifyInboxProps): ReactElement {
   const { tenant, category, onNew, onNavigate, limit, className } = props;
-  const { locale, strings: overrides } = useNotifyContext("<NotifyInbox>");
+  const { locale, strings: overrides, theme } = useNotifyContext("<NotifyInbox>");
   const t = useMemo(() => notifyStrings(locale, overrides), [locale, overrides]);
   const [open, setOpen] = useState(false);
   const [announce, setAnnounce] = useState("");
@@ -163,7 +165,7 @@ export function NotifyInbox(props: NotifyInboxProps): ReactElement {
   };
 
   return (
-    <div ref={root} className={className ? `pcn-inbox ${className}` : "pcn-inbox"}>
+    <div ref={root} className={rootClass("pcn-inbox", props.theme ?? theme, className)}>
       <button
         ref={bell}
         type="button"

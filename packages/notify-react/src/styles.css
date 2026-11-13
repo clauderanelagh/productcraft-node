@@ -20,9 +20,15 @@
   font-family: var(--pcn-font);
   color: var(--pcn-fg);
 }
+/* Theme, weakest first: the OS setting; then the host app's theme on an ancestor (`.dark` / `.light`
+   as Tailwind and next-themes set them, `data-theme`, or `.pcn-dark` / `.pcn-light`); then the
+   component's own `theme` prop (`.pcn-dark` / `.pcn-light` on the root). The app wins over the OS,
+   and the prop wins over both. Every theme rule has the specificity of one class (`:where()`), so
+   source order decides between them and your own `.pcn-inbox { --pcn-… }` overrides, loaded after
+   this file, still win; scope dark-only overrides as `.dark .pcn-inbox`. */
 @media (prefers-color-scheme: dark) {
-  .pcn-inbox:not(.pcn-light),
-  .pcn-prefs:not(.pcn-light) {
+  .pcn-inbox,
+  .pcn-prefs {
     --pcn-bg: #18181b;
     --pcn-fg: #f4f4f5;
     --pcn-muted: #a1a1aa;
@@ -35,9 +41,43 @@
     --pcn-shadow: 0 10px 30px rgb(0 0 0 / 0.5);
   }
 }
-.pcn-dark,
-[data-theme="dark"] .pcn-inbox,
-[data-theme="dark"] .pcn-prefs {
+:where(.light, [data-theme="light"], .pcn-light) :is(.pcn-inbox, .pcn-prefs) {
+  --pcn-bg: #ffffff;
+  --pcn-fg: #18181b;
+  --pcn-muted: #636369;
+  --pcn-border: #e4e4e7;
+  --pcn-hover: #f4f4f5;
+  --pcn-accent: #2563eb;
+  --pcn-accent-fg: #ffffff;
+  --pcn-unread: #eff6ff;
+  --pcn-danger: #b91c1c;
+  --pcn-shadow: 0 10px 30px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.08);
+}
+:where(.dark, [data-theme="dark"], .pcn-dark) :is(.pcn-inbox, .pcn-prefs) {
+  --pcn-bg: #18181b;
+  --pcn-fg: #f4f4f5;
+  --pcn-muted: #a1a1aa;
+  --pcn-border: #3f3f46;
+  --pcn-hover: #27272a;
+  --pcn-accent: #60a5fa;
+  --pcn-accent-fg: #0b1220;
+  --pcn-unread: #172554;
+  --pcn-danger: #f87171;
+  --pcn-shadow: 0 10px 30px rgb(0 0 0 / 0.5);
+}
+:is(.pcn-inbox, .pcn-prefs):where(.pcn-light, [data-theme="light"]) {
+  --pcn-bg: #ffffff;
+  --pcn-fg: #18181b;
+  --pcn-muted: #636369;
+  --pcn-border: #e4e4e7;
+  --pcn-hover: #f4f4f5;
+  --pcn-accent: #2563eb;
+  --pcn-accent-fg: #ffffff;
+  --pcn-unread: #eff6ff;
+  --pcn-danger: #b91c1c;
+  --pcn-shadow: 0 10px 30px rgb(0 0 0 / 0.12), 0 2px 6px rgb(0 0 0 / 0.08);
+}
+:is(.pcn-inbox, .pcn-prefs):where(.pcn-dark, [data-theme="dark"]) {
   --pcn-bg: #18181b;
   --pcn-fg: #f4f4f5;
   --pcn-muted: #a1a1aa;

@@ -4,7 +4,7 @@
  * The whole module is a client module ("use client" on both builds) for the Next.js App Router.
  */
 export { NotifyProvider, useInbox, useNotifyClient, usePreferences } from "./provider.js";
-export type { NotifyInboxItem, NotifyPreferencesData, NotifyPreferencesExtra, NotifyProviderProps, UseInboxOptions, UseInboxResult, UsePreferencesResult } from "./provider.js";
+export type { NotifyInboxItem, NotifyPreferencesData, NotifyPreferencesExtra, NotifyProviderProps, NotifyTheme, UseInboxOptions, UseInboxResult, UsePreferencesResult } from "./provider.js";
 export { NotifyInbox } from "./inbox.js";
 export type { NotifyInboxProps } from "./inbox.js";
 export { NotifyPreferences } from "./preferences.js";

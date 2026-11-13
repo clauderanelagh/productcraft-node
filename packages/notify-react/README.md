@@ -47,8 +47,8 @@ Remount the provider when the signed-in user changes (`key={userId}`); on unmoun
 | Export | What it does |
 |---|---|
 | `<NotifyProvider>` | `getToken` (called at start and when the API says the token expired) or `client` (a `createNotifyClient(...)` you own); `locale`, `strings`, and any other `createNotifyClient` option (`baseUrl`, `fetch`, `realtime`, `document`). |
-| `<NotifyInbox>` | A bell button with the unread count and a popover inbox: real-time list, mark read / unread / all, archive, up to two action buttons per item, avatars, load more. Opening it marks the shown items seen. Props: `tenant`, `category`, `onNew`, `onNavigate(url, item)` (your router's `push`; default a full page load), `limit`, `className`. |
-| `<NotifyPreferences>` | A table with a switch per category × channel (required ones locked, with the reason), "turn off all optional notifications", the time zone and quiet hours. Each switch saves just its own cell, at once, and rolls back with a message if the save fails. Props: `channels`, `quietHours`, `unsubscribeAll`, `className`. |
+| `<NotifyInbox>` | A bell button with the unread count and a popover inbox: real-time list, mark read / unread / all, archive, up to two action buttons per item, avatars, load more. Opening it marks the shown items seen. Props: `tenant`, `category`, `onNew`, `onNavigate(url, item)` (your router's `push`; default a full page load), `limit`, `className`, `theme`. |
+| `<NotifyPreferences>` | A table with a switch per category × channel (required ones locked, with the reason), "turn off all optional notifications", the time zone and quiet hours. Each switch saves just its own cell, at once, and rolls back with a message if the save fails. When the recipient set no quiet hours but the workspace has a default, it shows that window ("Quiet hours 22:00–08:00 (default)") with a button to change it, instead of an off switch. "Required notifications still arrive" only shows when a channel shown is required. Props: `channels`, `quietHours`, `unsubscribeAll`, `className`, `theme`. |
 | `useInbox({ category, tenant, status, archived, limit, onNew })` | `items`, `counts` (`unread`, `unseen`: the recipient's totals), `status`, `hasMore`, `realtime`, and `markRead`, `markSeen`, `markUnread`, `markAllRead`, `archive`, `unarchive`, `interact(id, actionKey?)`, `loadMore`, `refresh`. Hooks with the same filters share one store. |
 | `usePreferences()` | `preferences` (with the workspace's categories and their defaults), `status`, `error`, `update(cells, { timezone, quiet_hours, unsubscribed_all })`, `refresh`. |
 | `useNotifyClient()` | The provider's notify-js client (devices, `registerWebPush`). |
@@ -100,7 +100,15 @@ The default locale is `en`, not the browser's language, so the server render and
 
 ## Styling
 
-The components are unstyled apart from their class hooks (`pcn-inbox`, `pcn-bell`, `pcn-badge`, `pcn-popover`, `pcn-item`, `pcn-item[data-read]`, `pcn-actions`, `pcn-prefs`, `pcn-matrix`, `pcn-switch`, `pcn-locked`, `pcn-quiet` and more). `import "@productcraft/notify-react/styles.css"` adds a small default theme built on CSS variables, light and dark (it follows `prefers-color-scheme`; force one with the `pcn-light` / `pcn-dark` class or `data-theme="dark"` on an ancestor):
+The components are unstyled apart from their class hooks (`pcn-inbox`, `pcn-bell`, `pcn-badge`, `pcn-popover`, `pcn-item`, `pcn-item[data-read]`, `pcn-actions`, `pcn-prefs`, `pcn-matrix`, `pcn-switch`, `pcn-locked`, `pcn-quiet` and more). `import "@productcraft/notify-react/styles.css"` adds a small default theme built on CSS variables, light and dark. Which one, strongest first:
+
+1. the `theme` prop (`"light"`, `"dark"` or `"auto"`) on `<NotifyInbox>` / `<NotifyPreferences>`, or on `<NotifyProvider>` for both;
+2. your app's theme on an ancestor: the `.dark` / `.light` class that Tailwind and next-themes put on `<html>`, `data-theme="dark"` / `data-theme="light"`, or `.pcn-dark` / `.pcn-light`;
+3. the OS setting (`prefers-color-scheme`).
+
+So an app in light mode on a dark OS gets a light inbox as soon as it marks its theme (`class="light"` or `data-theme="light"`). If your app only adds `.dark` and never `.light`, pass its resolved theme instead: `<NotifyProvider theme={resolvedTheme === "dark" ? "dark" : "light"}>` (next-themes' `useTheme()`).
+
+Override variables on `.pcn-inbox, .pcn-prefs` (loaded after this file); scope dark-only values as `.dark .pcn-inbox`:
 
 ```css
 .pcn-inbox, .pcn-prefs {
