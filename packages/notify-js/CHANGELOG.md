@@ -1,5 +1,11 @@
 # @productcraft/notify-js
 
+## 0.2.2
+
+### Patch Changes
+
+- a2f5b93: `registerWebPush` waits for the service worker to activate before subscribing. On a first visit Chrome refused the subscription ("no active Service Worker"), so users had to press the button two or three times.
+
 ## 0.2.1
 
 ### Patch Changes
