@@ -116,7 +116,6 @@ export interface NotifyStrings {
     quietFrom: string;
     // (undocumented)
     quietHours: string;
-    // (undocumented)
     quietHoursCustomise: string;
     quietHoursDefault: string;
     // (undocumented)
