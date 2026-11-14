@@ -2,7 +2,7 @@
 
 import { COMPILED, type Compiled, type Cond, type Pct, type Setting, type UserCond } from "./parse.js";
 import { sha1Hex, sha256Hex, utf8 } from "./sha.js";
-import type { ConfigVersion, ErrorCode, EvaluationDetails, ParsedConfig, Reason, SettingValue, User, ValueFor, Warning, WarningCode } from "./types.js";
+import type { ConfigVersion, ErrorCode, EvaluationDetails, ParsedConfig, Reason, SettingValue, User, UserInput, ValueFor, Warning, WarningCode } from "./types.js";
 import { compareSemver, parseSemver, toArray, toDate, toNumber, toText } from "./values.js";
 
 /** Prerequisite hops allowed below the evaluated key. */
@@ -232,9 +232,9 @@ function details<D>(ctx: Ctx, config: ParsedConfig, key: string, defaultValue: D
   }
 }
 
-const context = (config: ParsedConfig, user: User | null | undefined): Ctx => ({
+const context = (config: ParsedConfig, user: UserInput | null | undefined): Ctx => ({
   compiled: compiledOf(config),
-  user: user ?? null,
+  user: (user as User | null | undefined) ?? null,
   memo: new Map(),
   stack: [],
   warnings: [],
@@ -248,12 +248,12 @@ export function evaluate<D extends SettingValue | null | undefined>(
   config: ParsedConfig,
   key: string,
   defaultValue: D,
-  user?: User | null,
+  user?: UserInput | null,
 ): EvaluationDetails<ValueFor<D>> {
   return details(context(config, user), config, key, defaultValue);
 }
 
 /** Evaluates every setting of the config for a user, in config order (no caller default: errors return null). */
-export function evaluateAll(config: ParsedConfig, user?: User | null): EvaluationDetails[] {
+export function evaluateAll(config: ParsedConfig, user?: UserInput | null): EvaluationDetails[] {
   return config.keys().map((key) => details(context(config, user), config, key, null) as EvaluationDetails);
 }

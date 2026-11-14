@@ -35,6 +35,8 @@ export type {
   SettingType,
   SettingValue,
   User,
+  UserAttributes,
+  UserInput,
   UserAttributeValue,
   Warning,
   WarningCode,

@@ -1027,13 +1027,13 @@ const confidentialReveal = await flags.segments.revealConfidential("3f0c3c1e-8a2
 
 Update a segment.
 
-Key, name, description or conditions; only the fields you send change. Edit a confidential list with `list_id` plus `values_add` / `values_remove`. A segment used in a protected environment also needs `flags.protected.update` there.
+Key, name, description or conditions; only the fields you send change. To add or remove values in one list condition without re-sending the others, send `condition_edits` (with the `version` you read). Edit a confidential list with `list_id` plus `values_add` / `values_remove`, or with `condition_edits`. A segment used in a protected environment also needs `flags.protected.update` there.
 
 - Params: `Flags.SegmentUpdateParams`
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid, an edit has no values, or both `conditions` and `condition_edits` were sent. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). A segment used in a protected environment also needs `flags.protected.update` on it. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | `SEGMENT_NOT_FOUND`: no such segment in this workspace. |
@@ -1043,18 +1043,7 @@ Key, name, description or conditions; only the fields you send change. Edit a co
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
-const segmentDetail = await flags.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
-  conditions: [
-    {
-      user: {
-        attribute: "email",
-        comparator: "ends_with_any_hashed",
-        list_id: "3f0c6a3e-0f5e-4b8e-9d1a-2c7b9f1e8a10",
-        values_add: ["@beta.test"],
-      },
-    },
-  ],
-});
+const segmentDetail = await flags.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { condition_edits: [{ condition_index: 0, values_add: ["qa-bot@example.com"] }] });
 ```
 
 [HTTP reference](https://productcraft.co/docs/flags/api-reference#patch-v1-workspaces-workspace-id-segments-segment-id)
@@ -1215,13 +1204,13 @@ const confidentialReveal = await flags.settings.values.revealConfidential("3f0c3
 
 Update a value.
 
-The quick edits: `value` (the toggle), `percentage_attribute`, and `clear_rules: true` to drop every rule and split so `value` is served to everyone (the kill switch). Send the `version` you read.
+The quick edits: `value` (the toggle), `percentage_attribute`, `rule_edits` to add or remove values in a list condition of an existing rule (a tester, a QA account) without re-sending the other rules, and `clear_rules: true` to drop every rule and split so `value` is served to everyone (the kill switch). Send the `version` you read. A protected environment needs `flags.protected.update`; one change and one revision per request, none when nothing changed.
 
 - Params: `Flags.SettingsValueUpdateParams`
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: nothing to change, or `version` is missing. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: nothing to change, `version` is missing, an edit has no values, or `rule_edits` sent with `clear_rules`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). Value writes need `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
