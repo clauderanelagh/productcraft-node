@@ -320,6 +320,47 @@ describe("values", () => {
     expect(seen).toEqual(["s:x", "s:x"]);
     expect(lines.filter((l) => l.includes("(missing_user)")).length).toBe(1);
   });
+
+  it("logs a missing attribute once per attribute for the life of the client, across flags", async () => {
+    const { lines, logger } = recordingLogger();
+    const rule = (attribute: string) => ({ conditions: [{ user: { attribute, comparator: "one_of", values: ["a@x.test"] } }], serve: true });
+    const flagsOf = (rev: number) =>
+      config(rev, { a: { type: "boolean", value: false, rules: [rule("email")] }, b: { type: "boolean", value: false, rules: [rule("email")] }, c: { type: "boolean", value: false, rules: [rule("plan")] } });
+    const f = client({ bootstrap: flagsOf(1), logger });
+    for (let i = 0; i < 50; i++) {
+      await f.getValue("a", false, { identifier: `anon-${i}` });
+      await f.getValue("b", false, { identifier: `anon-${i}` });
+    }
+    await f.getValue("c", false, { identifier: "anon" });
+    const missing = lines.filter((l) => l.includes("(missing_attribute)"));
+    expect(missing).toHaveLength(2);
+    expect(missing[0]).toContain("email is missing");
+    expect(missing[1]).toContain("plan is missing");
+    // Every evaluation still carries its warning.
+    expect((await f.getValueDetails("a", false, { identifier: "x" })).warnings.map((w) => w.code)).toEqual(["missing_attribute"]);
+  });
+
+  it("accepts an app's own named user interface without a spread", async () => {
+    interface AppUser {
+      identifier: string;
+      email?: string;
+      plan: "free" | "pro";
+    }
+    const me: AppUser = { identifier: "u1", email: "a@x.test", plan: "pro" };
+    const f = client({ bootstrap: config(1, { a: { type: "boolean", value: false, rules: [{ conditions: [{ user: { attribute: "email", comparator: "one_of", values: ["a@x.test"] } }], serve: true }] } }) });
+    expect(await f.getValue("a", false, me)).toBe(true);
+    expect(f.snapshot().getValue("a", false, me)).toBe(true);
+    f.setDefaultUser(me);
+    expect(await f.getValue("a", false)).toBe(true);
+    interface BadUser {
+      identifier: number;
+    }
+    const bad: BadUser = { identifier: 1 };
+    // @ts-expect-error identifier must be a string
+    await f.getValue("a", false, bad);
+    // Object literals with extra attributes still type-check.
+    expect(await f.getValue("a", false, { identifier: "u2", email: "a@x.test", plan: "pro", seats: 3 })).toBe(true);
+  });
 });
 
 describe("overrides", () => {

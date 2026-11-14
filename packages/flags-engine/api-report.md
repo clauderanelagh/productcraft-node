@@ -30,10 +30,10 @@ export interface ConfigVersion {
 export type ErrorCode = "FLAG_NOT_FOUND" | "TYPE_MISMATCH" | "PREREQUISITE_CYCLE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_DEPTH" | "GENERAL" | "PARSE_ERROR" | "PROVIDER_NOT_READY";
 
 // @public
-export function evaluate<D extends SettingValue | null | undefined>(config: ParsedConfig, key: string, defaultValue: D, user?: User | null): EvaluationDetails<ValueFor<D>>;
+export function evaluate<D extends SettingValue | null | undefined>(config: ParsedConfig, key: string, defaultValue: D, user?: UserInput | null): EvaluationDetails<ValueFor<D>>;
 
 // @public
-export function evaluateAll(config: ParsedConfig, user?: User | null): EvaluationDetails[];
+export function evaluateAll(config: ParsedConfig, user?: UserInput | null): EvaluationDetails[];
 
 // @public
 export interface EvaluationDetails<T = SettingValue | null> {
@@ -123,7 +123,24 @@ export interface User {
 }
 
 // @public
+export interface UserAttributes {
+    // (undocumented)
+    country?: string;
+    // (undocumented)
+    custom?: {
+        [attribute: string]: UserAttributeValue;
+    };
+    // (undocumented)
+    email?: string;
+    // (undocumented)
+    identifier?: string;
+}
+
+// @public
 export type UserAttributeValue = string | number | boolean | Date | readonly string[] | null | undefined;
+
+// @public
+export type UserInput = User | UserAttributes;
 
 // @public
 export type ValueFor<D> = D extends boolean ? boolean : D extends string ? string : D extends number ? number : SettingValue | D;

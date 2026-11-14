@@ -6,7 +6,7 @@
 // Kept small on purpose: the one-call bundle (this file, the engine and core) has a 10 KB gzip budget.
 
 import { backoffMs, ConfigurationError, parseRetryAfterMs, ProductCraftError, type Logger } from "@productcraft/core";
-import { ConfigParseError, hashConfidential, isNewerConfig, parseConfig, type EvaluationDetails, type ParsedConfig, type SettingValue, type User } from "@productcraft/flags-engine";
+import { ConfigParseError, hashConfidential, isNewerConfig, parseConfig, type EvaluationDetails, type ParsedConfig, type SettingValue, type UserInput } from "@productcraft/flags-engine";
 import { isWellFormedSdkKey } from "./key.js";
 import { combine, overrideSettings, put } from "./overrides.js";
 import { deliveryHeaders, envOverrides, fileOverrides, watchVisibility } from "./platform.js";
@@ -49,10 +49,10 @@ export function deliveryOrigins(urls: readonly string[], warn: (message: string)
 export class FlagsSnapshot {
   readonly #c: ParsedConfig | null;
   readonly #raw: Obj | null;
-  readonly #user: User | undefined;
+  readonly #user: UserInput | undefined;
   readonly #layer: Layer;
   /** @internal */
-  constructor(config: ParsedConfig | null, raw: Obj | null, user: User | undefined, layer: Layer) {
+  constructor(config: ParsedConfig | null, raw: Obj | null, user: UserInput | undefined, layer: Layer) {
     this.#c = config;
     this.#raw = raw;
     this.#user = user;
@@ -70,16 +70,16 @@ export class FlagsSnapshot {
   keys(): string[] {
     return this.#c?.keys() ?? [];
   }
-  getValue<D extends Def>(key: string, defaultValue: D, user?: User | null): FlagValue<D> {
+  getValue<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): FlagValue<D> {
     return this.getValueDetails(key, defaultValue, user).value;
   }
-  getValueDetails<D extends Def>(key: string, defaultValue: D, user?: User | null): EvaluationDetails<FlagValue<D>> {
+  getValueDetails<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): EvaluationDetails<FlagValue<D>> {
     return resolve(this.#c, key, defaultValue, user ?? this.#user, false, this.#layer) as EvaluationDetails<FlagValue<D>>;
   }
-  getJson<T = unknown>(key: string, defaultValue: T, user?: User | null): T {
+  getJson<T = unknown>(key: string, defaultValue: T, user?: UserInput | null): T {
     return resolve(this.#c, key, defaultValue, user ?? this.#user, true, this.#layer).value;
   }
-  getAllValues(user?: User | null): Record<string, unknown> {
+  getAllValues(user?: UserInput | null): Record<string, unknown> {
     return toValues(resolveAll(this.#c, user ?? this.#user, this.#layer));
   }
   /** The config JSON this snapshot evaluates (overrides included), or null: pass it as another client's `bootstrap`. */
@@ -117,6 +117,8 @@ export class FlagsClient {
   readonly #behaviour: OverrideBehaviour;
   readonly #on: { [E in keyof FlagsClientEvents]: Set<FlagsClientEvents[E]> } = { ready: new Set(), configChanged: new Set(), evaluated: new Set(), error: new Set() };
   readonly #warned = new Set<string>();
+  /** Evaluation warnings already logged; never cleared, so a soft miss logs once per client. */
+  readonly #warnedEval = new Set<string>();
   #state: ClientState = "initializing";
   #source: ConfigSource = "none";
   /** The downloaded (or cached / bootstrap) config, parsed and as JSON for combining with overrides. */
@@ -131,7 +133,7 @@ export class FlagsClient {
   #config: ParsedConfig | null = null;
   #configRaw: Obj | null = null;
   #bases: string[];
-  #user: User | undefined;
+  #user: UserInput | undefined;
   #failures = 0;
   #retryAfter = 0;
   #timer: ReturnType<typeof setTimeout> | undefined;
@@ -203,27 +205,27 @@ export class FlagsClient {
   }
 
   /** The user evaluations use when a call passes none. */
-  setDefaultUser(user: User | undefined): void {
+  setDefaultUser(user: UserInput | undefined): void {
     this.#user = user;
   }
 
   /** The value of a flag or setting for a user; the default on any failure. Never throws. */
-  async getValue<D extends Def>(key: string, defaultValue: D, user?: User | null): Promise<FlagValue<D>> {
+  async getValue<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): Promise<FlagValue<D>> {
     return (await this.getValueDetails(key, defaultValue, user)).value;
   }
 
   /** The value plus why: reason, matched rule or split, error code, warnings and revision. Never throws. */
-  async getValueDetails<D extends Def>(key: string, defaultValue: D, user?: User | null): Promise<EvaluationDetails<FlagValue<D>>> {
+  async getValueDetails<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): Promise<EvaluationDetails<FlagValue<D>>> {
     return this.#eval(key, defaultValue, user, false) as Promise<EvaluationDetails<FlagValue<D>>>;
   }
 
   /** A json (or string) setting, parsed. A parse failure, a missing key or another type returns the default. Never throws. */
-  async getJson<T = unknown>(key: string, defaultValue: T, user?: User | null): Promise<T> {
+  async getJson<T = unknown>(key: string, defaultValue: T, user?: UserInput | null): Promise<T> {
     return (await this.#eval(key, defaultValue, user, true)).value;
   }
 
   /** Every setting's value for a user (json settings parsed), as a null-prototype object. Never throws. */
-  async getAllValues(user?: User | null): Promise<Record<string, unknown>> {
+  async getAllValues(user?: UserInput | null): Promise<Record<string, unknown>> {
     await this.#ensure();
     return toValues(resolveAll(this.#config, user ?? this.#user, this.#layer()).map((d) => this.#evaluated(d)));
   }
@@ -279,7 +281,7 @@ export class FlagsClient {
     else if (was && this.#state !== "initializing") void this.forceRefresh();
   }
 
-  async #eval<T>(key: string, def: T, user: User | null | undefined, json: boolean): Promise<EvaluationDetails<T>> {
+  async #eval<T>(key: string, def: T, user: UserInput | null | undefined, json: boolean): Promise<EvaluationDetails<T>> {
     await this.#ensure();
     return this.#evaluated(resolve(this.#config, key, def, user ?? this.#user, json, this.#layer()));
   }
@@ -495,12 +497,19 @@ export class FlagsClient {
   }
 
   #evaluated<T>(d: EvaluationDetails<T>): EvaluationDetails<T> {
-    for (const w of d.warnings) this.#warn(`${d.revision}|${w.key}|${w.code}`, `flag ${JSON.stringify(w.key)} (${w.code}): ${w.message}`);
+    for (const w of d.warnings) {
+      // Soft misses are expected for some users (anonymous traffic has no email): log each code once per
+      // attribute (or key) for the life of the client. `getValueDetails().warnings` still has every one.
+      const id = `eval|${w.code}|${w.attribute ?? `key:${w.key}`}`;
+      if (this.#warnedEval.has(id)) continue;
+      this.#warnedEval.add(id);
+      this.#warn(null, `flag ${JSON.stringify(w.key)} (${w.code}): ${w.message} (logged once per ${w.attribute ? "attribute" : "flag"}; see getValueDetails().warnings)`);
+    }
     this.#emit("evaluated", d as EvaluationDetails<unknown>);
     return d;
   }
 
-  /** Logs once per id (evaluation warnings: once per key, code and revision); id null logs always. A broken logger never breaks evaluation. */
+  /** Logs once per id (cleared when the config changes); id null logs always. A broken logger never breaks evaluation. */
   #warn(id: string | null, message: string): void {
     if (id !== null && this.#warned.has(id)) return;
     if (id !== null) this.#warned.add(id);

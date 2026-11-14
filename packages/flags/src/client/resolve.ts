@@ -2,7 +2,7 @@
 // json settings parse for object, array and null defaults (and always in getJson), errors return the
 // caller's default, and the client layer marks values served from the cache or a stale copy.
 
-import { evaluate, type EvaluationDetails, type ParsedConfig, type Reason, type User } from "@productcraft/flags-engine";
+import { evaluate, type EvaluationDetails, type ParsedConfig, type Reason, type UserInput } from "@productcraft/flags-engine";
 
 export type Layer = "CACHED" | "STALE" | null;
 
@@ -19,7 +19,7 @@ const fail = <T>(base: EvaluationDetails<unknown>, def: T, code: EvaluationDetai
 });
 
 /** Evaluates one key. `json`: always parse (getJson). Never throws. */
-export function resolve<T>(config: ParsedConfig | null, key: string, def: T, user: User | null | undefined, json: boolean, layer: Layer): EvaluationDetails<T> {
+export function resolve<T>(config: ParsedConfig | null, key: string, def: T, user: UserInput | null | undefined, json: boolean, layer: Layer): EvaluationDetails<T> {
   const empty: EvaluationDetails<unknown> = {
     key, value: def, variant: null, reason: "ERROR", errorCode: null, errorMessage: null,
     ruleIndex: null, percentageIndex: null, isDefaultValue: true, revision: config?.revision ?? 0, warnings: [],
@@ -51,7 +51,7 @@ export function resolve<T>(config: ParsedConfig | null, key: string, def: T, use
 }
 
 /** Every setting's value for a user, json settings parsed (a json parse failure gives null). */
-export function resolveAll(config: ParsedConfig | null, user: User | null | undefined, layer: Layer): EvaluationDetails<unknown>[] {
+export function resolveAll(config: ParsedConfig | null, user: UserInput | null | undefined, layer: Layer): EvaluationDetails<unknown>[] {
   return config ? config.keys().map((k) => resolve<unknown>(config, k, null, user, false, layer)) : [];
 }
 

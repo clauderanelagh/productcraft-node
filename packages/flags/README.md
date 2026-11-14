@@ -45,6 +45,23 @@ await flags.getValue("new_checkout", false); // uses the default user
 await flags.getValue("new_checkout", false, { identifier: "user-456" }); // replaces it as a whole (no merge)
 ```
 
+Your own user type works as it is, no spread needed: any interface with `identifier` / `email` / `country` / `custom` (and any other attributes) is accepted (`UserInput`).
+
+```ts
+import { FlagsClient } from "@productcraft/flags";
+const flags = new FlagsClient({ sdkKey: process.env.PRODUCTCRAFT_FLAGS_SDK_KEY });
+
+interface AppUser {
+  identifier: string;
+  email?: string;
+  plan: "free" | "pro";
+}
+declare const me: AppUser;
+await flags.getValue("new_checkout", false, me);
+```
+
+A rule on an attribute the user does not have is skipped for that user (a soft miss, in `getValueDetails().warnings`). The client logs each such warning once per attribute for its lifetime, so anonymous traffic does not flood your logs; pass `logger: null` to log nothing.
+
 Text comparisons are by codepoint with no Unicode normalisation: pass emails and names in **NFC** (`email.normalize("NFC")`), or two spellings of the same address can match different rules and buckets.
 
 ### Why a value? Details, all values, snapshots
@@ -115,6 +132,24 @@ const flags = new FlagsClient({
 ```
 
 The client refuses a download over 2 MiB, never moves back to an older revision of the config, and only follows delivery hints that point at `https://*.productcraft.co`.
+
+### Your own delivery host: `baseUrl`
+
+By default the client downloads from `https://api.flags.productcraft.co` and then follows the delivery hosts the config itself names (`delivery.base_urls`). Set `baseUrl` when your servers must reach Flags somewhere else:
+
+- **in-cluster or self-hosted**: the delivery service's internal address, when your pods cannot reach the public ingress (for example a load balancer that does not hairpin);
+- **behind an egress proxy or your own CDN** in front of the delivery URL.
+
+With `baseUrl` set, the client downloads only from that host and **ignores the config's `delivery.base_urls` hint**, so it never switches to a public host your network cannot reach. Everything else (polling, cache, bootstrap, fail-safe defaults) works the same.
+
+```ts
+import { FlagsClient } from "@productcraft/flags";
+
+const flags = new FlagsClient({
+  sdkKey: process.env.PRODUCTCRAFT_FLAGS_SDK_KEY,
+  baseUrl: process.env.PRODUCTCRAFT_FLAGS_URL, // e.g. http://flags-api.flags.svc.cluster.local
+});
+```
 
 ## Serverless and edge functions
 

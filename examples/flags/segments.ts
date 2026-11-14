@@ -21,18 +21,7 @@ const flags = new Flags();
 
 // segments.update: Update a segment
 {
-  const segmentDetail = await flags.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
-    conditions: [
-      {
-        user: {
-          attribute: "email",
-          comparator: "ends_with_any_hashed",
-          list_id: "3f0c6a3e-0f5e-4b8e-9d1a-2c7b9f1e8a10",
-          values_add: ["@beta.test"],
-        },
-      },
-    ],
-  });
+  const segmentDetail = await flags.segments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { condition_edits: [{ condition_index: 0, values_add: ["qa-bot@example.com"] }] });
 }
 
 export {};

@@ -11,7 +11,7 @@ import { FlagValue } from '@productcraft/flags';
 import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 import { SettingValue } from '@productcraft/flags';
-import { User } from '@productcraft/flags';
+import { UserInput } from '@productcraft/flags';
 
 // @public
 export type FlagDefault = SettingValue | object | null;
@@ -26,14 +26,14 @@ export interface FlagsProviderProps {
     children?: ReactNode;
     client?: FlagsClient;
     options?: FlagsClientOptions;
-    user?: User;
+    user?: UserInput;
 }
 
 // @public
-export function useFlag<D extends FlagDefault>(key: string, defaultValue: D, user?: User | null): FlagValue<D>;
+export function useFlag<D extends FlagDefault>(key: string, defaultValue: D, user?: UserInput | null): FlagValue<D>;
 
 // @public
-export function useFlagDetails<D extends FlagDefault>(key: string, defaultValue: D, user?: User | null): EvaluationDetails<FlagValue<D>>;
+export function useFlagDetails<D extends FlagDefault>(key: string, defaultValue: D, user?: UserInput | null): EvaluationDetails<FlagValue<D>>;
 
 // @public
 export function useFlagsClient(): FlagsClient;

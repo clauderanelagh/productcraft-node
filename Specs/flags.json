@@ -524,6 +524,42 @@
         "type": "object",
         "x-pc-sdk-model": "CompareRow"
       },
+      "ConditionListEditDto": {
+        "properties": {
+          "condition_index": {
+            "description": "The condition to edit (0-based, in the order the conditions are listed).",
+            "example": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "values_add": {
+            "description": "Values to add. A value already in the list is ignored (no change, no new version).",
+            "example": [
+              "qa-bot@example.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "type": "array"
+          },
+          "values_remove": {
+            "description": "Values to remove, applied before `values_add`. A value not in the list is ignored. The list cannot become empty (remove the condition with a full PUT).",
+            "example": [
+              "old-bot@example.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "type": "array"
+          }
+        },
+        "required": [
+          "condition_index"
+        ],
+        "type": "object"
+      },
       "ConfidentialListDto": {
         "properties": {
           "attribute": {
@@ -2875,6 +2911,23 @@
             "nullable": true,
             "type": "string"
           },
+          "rule_edits": {
+            "description": "Add or remove values in list conditions of the existing rules without re-sending the targeting: each edit names a rule and a condition by index (as `GET` returns them, so send the `version` you read) and changes only that condition's values, with set semantics. A 422 `INVALID_TARGETING` names an index with no rule or condition, or a condition that is not a list. Re-adding a present value or removing an absent one is not a change: the current value comes back with the same `version` and no history entry. Cannot be combined with `clear_rules`.",
+            "example": [
+              {
+                "condition_index": 0,
+                "rule_index": 0,
+                "values_add": [
+                  "qa-bot@example.com"
+                ]
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/RuleListEditDto"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
           "value": {
             "description": "The new plain value (the on/off toggle for a flag). Must match the setting type: `boolean` true/false; `string` a string; `integer` a safe integer; `number` a finite number; `json` a string holding JSON text (for example `\"{\\\"limit\\\":5}\"`). At most 100 KB. Strings are stored and returned byte for byte.",
             "example": true,
@@ -3333,6 +3386,49 @@
             "type": "number"
           }
         },
+        "type": "object"
+      },
+      "RuleListEditDto": {
+        "properties": {
+          "condition_index": {
+            "description": "The condition to edit (0-based, in the order the conditions are listed).",
+            "example": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "rule_index": {
+            "description": "The rule the condition is in (0-based, in evaluation order).",
+            "example": 0,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "values_add": {
+            "description": "Values to add. A value already in the list is ignored (no change, no new version).",
+            "example": [
+              "qa-bot@example.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "type": "array"
+          },
+          "values_remove": {
+            "description": "Values to remove, applied before `values_add`. A value not in the list is ignored. The list cannot become empty (remove the condition with a full PUT).",
+            "example": [
+              "old-bot@example.com"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 1000,
+            "type": "array"
+          }
+        },
+        "required": [
+          "condition_index",
+          "rule_index"
+        ],
         "type": "object"
       },
       "SdkKeyListResponseDto": {
@@ -4556,6 +4652,22 @@
       },
       "UpdateSegmentDto": {
         "properties": {
+          "condition_edits": {
+            "description": "Instead of `conditions`: add or remove values in list conditions without re-sending the others. Each edit names a condition by index and changes only its values, with set semantics (`values_remove` first). A 422 `INVALID_TARGETING` names an index with no condition, or a condition that is not a list. Re-adding a present value or removing an absent one is not a change (same `version`, no history entry). Send `version` so an edit against a stale read is refused.",
+            "example": [
+              {
+                "condition_index": 0,
+                "values_add": [
+                  "qa-bot@example.com"
+                ]
+              }
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ConditionListEditDto"
+            },
+            "maxItems": 20,
+            "type": "array"
+          },
           "conditions": {
             "description": "Replaces the conditions. 1-20 conditions, ANDed in order; each is `{user: {attribute, comparator, values}}` (segments hold user conditions only). Confidential comparators take cleartext `values` (stored hashed with the segment's seed and the project salt, and encrypted at rest), `values_hashed`, or `list_id` with `values_add` / `values_remove` to edit a stored list. To keep a confidential list, send its `list_id` (or echo the `{hashed: true, list_id, …}` object as `values`).",
             "example": [
@@ -5906,7 +6018,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -6847,7 +6959,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -8017,7 +8129,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -8846,7 +8958,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -9600,7 +9712,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -11025,7 +11137,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -11399,7 +11511,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -12332,7 +12444,7 @@
             }
           },
           {
-            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9_-:]`). A retry with the same key and body returns the first response for 24 h.",
+            "description": "Idempotency key (1-256 characters, `[A-Za-z0-9._:-]`). A retry with the same key and body returns the first response for 24 h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -12861,7 +12973,7 @@
         }
       },
       "patch": {
-        "description": "Key, name, description or conditions; only the fields you send change. Edit a confidential list with `list_id` plus `values_add` / `values_remove`. A segment used in a protected environment also needs `flags.protected.update` there.",
+        "description": "Key, name, description or conditions; only the fields you send change. To add or remove values in one list condition without re-sending the others, send `condition_edits` (with the `version` you read). Edit a confidential list with `list_id` plus `values_add` / `values_remove`, or with `condition_edits`. A segment used in a protected environment also needs `flags.protected.update` there.",
         "operationId": "SegmentsController_update",
         "parameters": [
           {
@@ -12932,7 +13044,7 @@
             }
           },
           "400": {
-            "description": "`VALIDATION_ERROR`: a field is invalid.",
+            "description": "`VALIDATION_ERROR`: a field is invalid, an edit has no values, or both `conditions` and `condition_edits` were sent.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13908,7 +14020,7 @@
         }
       },
       "patch": {
-        "description": "The quick edits: `value` (the toggle), `percentage_attribute`, and `clear_rules: true` to drop every rule and split so `value` is served to everyone (the kill switch). Send the `version` you read.",
+        "description": "The quick edits: `value` (the toggle), `percentage_attribute`, `rule_edits` to add or remove values in a list condition of an existing rule (a tester, a QA account) without re-sending the other rules, and `clear_rules: true` to drop every rule and split so `value` is served to everyone (the kill switch). Send the `version` you read. A protected environment needs `flags.protected.update`; one change and one revision per request, none when nothing changed.",
         "operationId": "SettingsController_patchValue",
         "parameters": [
           {
@@ -13996,7 +14108,7 @@
             }
           },
           "400": {
-            "description": "`VALIDATION_ERROR`: nothing to change, or `version` is missing.",
+            "description": "`VALIDATION_ERROR`: nothing to change, `version` is missing, an edit has no values, or `rule_edits` sent with `clear_rules`.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -14811,7 +14923,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -15340,7 +15452,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -15562,7 +15674,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -15773,7 +15885,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -16545,7 +16657,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,

@@ -4,7 +4,7 @@
 // bootstrap, so the first client render matches the server HTML. Downloads start after mount.
 
 import { createContext, createElement, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
-import { FlagsClient, type EvaluationDetails, type FlagsClientOptions, type FlagsSnapshot, type FlagValue, type SettingValue, type User } from "@productcraft/flags";
+import { FlagsClient, type EvaluationDetails, type FlagsClientOptions, type FlagsSnapshot, type FlagValue, type SettingValue, type UserInput } from "@productcraft/flags";
 
 /** A default value: booleans, strings and numbers keep their type; objects, arrays and `null` read json settings. */
 export type FlagDefault = SettingValue | object | null;
@@ -17,14 +17,14 @@ export interface FlagsProviderProps {
   /** A config JSON, usually `snapshot().toJSON()` from the server: the first render (server and hydration) evaluates it. */
   bootstrap?: string | object | null;
   /** The user hooks evaluate for when a hook passes none. */
-  user?: User;
+  user?: UserInput;
   children?: ReactNode;
 }
 
 interface Ctx {
   client: FlagsClient;
   store: Store;
-  user: User | undefined;
+  user: UserInput | undefined;
 }
 
 const FlagsContext = createContext<Ctx | null>(null);
@@ -117,12 +117,12 @@ function useFlagsContext(hook: string): Ctx {
 const dep = (v: unknown): unknown => (v !== null && typeof v === "object" ? JSON.stringify(v) : v);
 
 /** The value of a flag or setting, evaluated locally; `defaultValue` until a config is there, or on any failure. Re-renders when the config changes. */
-export function useFlag<D extends FlagDefault>(key: string, defaultValue: D, user?: User | null): FlagValue<D> {
+export function useFlag<D extends FlagDefault>(key: string, defaultValue: D, user?: UserInput | null): FlagValue<D> {
   return useFlagDetails(key, defaultValue, user).value;
 }
 
 /** The value plus why (reason, matched rule or split, error code, revision). */
-export function useFlagDetails<D extends FlagDefault>(key: string, defaultValue: D, user?: User | null): EvaluationDetails<FlagValue<D>> {
+export function useFlagDetails<D extends FlagDefault>(key: string, defaultValue: D, user?: UserInput | null): EvaluationDetails<FlagValue<D>> {
   const { store, user: fallback } = useFlagsContext("useFlagDetails");
   const snap = useSyncExternalStore(store.subscribe, store.get, () => store.server);
   const u = user ?? fallback;

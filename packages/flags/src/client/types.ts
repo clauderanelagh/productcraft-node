@@ -1,7 +1,7 @@
 // Public option, event and result types of FlagsClient (design 8.2).
 
 import type { Logger } from "@productcraft/core";
-import type { EvaluationDetails, SettingValue, User } from "@productcraft/flags-engine";
+import type { EvaluationDetails, SettingValue, UserInput } from "@productcraft/flags-engine";
 
 /** Auto polling: fetch on a timer. Default 60 s, minimum 30 s, ±10% jitter. */
 export interface AutoPolling {
@@ -62,12 +62,16 @@ export interface FlagsClientOptions {
   bootstrap?: string | object;
   overrides?: FlagsOverrides;
   /** The user evaluations are for when a call passes none. A call's own user replaces it as a whole. */
-  defaultUser?: User;
-  /** Where warnings and errors are logged. Default `console`. Pass `null` to log nothing. */
+  defaultUser?: UserInput;
+  /** Where warnings and errors are logged. Default `console`. Pass `null` to log nothing. Evaluation warnings (soft misses such as a missing attribute) are logged once per attribute for the life of the client. */
   logger?: Logger | null;
   /** Custom `fetch`. Defaults to the global `fetch`. */
   fetch?: typeof fetch;
-  /** Delivery host. Defaults to `https://api.flags.productcraft.co`; when set, `delivery.base_urls` hints are ignored. */
+  /**
+   * Delivery host. Defaults to `https://api.flags.productcraft.co`. Set it for an in-cluster or self-hosted address,
+   * an egress proxy or your own CDN; when set, the config's `delivery.base_urls` hints are ignored, so the client only
+   * ever downloads from this host.
+   */
   baseUrl?: string;
   /** Start without network access (the cache, `bootstrap` and overrides still apply). `setOnline()` starts fetching. */
   offline?: boolean;

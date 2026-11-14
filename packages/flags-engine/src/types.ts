@@ -8,6 +8,21 @@ export type SettingValue = boolean | string | number;
 export type UserAttributeValue = string | number | boolean | Date | readonly string[] | null | undefined;
 
 /**
+ * The named attributes of a user, without an index signature, so an app's own interface
+ * (`interface AppUser { identifier: string; email?: string }`) is accepted as it is. Other attributes
+ * on such an object are still read from the top level.
+ */
+export interface UserAttributes {
+  identifier?: string;
+  email?: string;
+  country?: string;
+  custom?: { [attribute: string]: UserAttributeValue };
+}
+
+/** What every evaluation method accepts as the user: a `User` object literal, or a value of your own named type. */
+export type UserInput = User | UserAttributes;
+
+/**
  * The user an evaluation is for. `identifier`, `email` and `country` are read from the top level;
  * any other attribute `a` is read from `custom[a]` when present, else from the top-level `a`.
  * Only own properties are read. The object never leaves the process.

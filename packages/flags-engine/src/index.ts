@@ -12,6 +12,8 @@ export type {
   SettingType,
   SettingValue,
   User,
+  UserAttributes,
+  UserInput,
   UserAttributeValue,
   ValueFor,
   Warning,

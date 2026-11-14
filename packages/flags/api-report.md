@@ -39,7 +39,9 @@ import { SettingValue } from '@productcraft/flags-engine';
 import { SignedWebhook } from '@productcraft/core';
 import { UnprocessableEntityError } from '@productcraft/core';
 import { User } from '@productcraft/flags-engine';
+import { UserAttributes } from '@productcraft/flags-engine';
 import { UserAttributeValue } from '@productcraft/flags-engine';
+import { UserInput } from '@productcraft/flags-engine';
 import { Warning } from '@productcraft/flags-engine';
 import { WarningCode } from '@productcraft/flags-engine';
 import { WebhookHeaders } from '@productcraft/core';
@@ -152,6 +154,11 @@ export type components = {
             differs: boolean;
             setting: components["schemas"]["SettingResponseDto"];
             values: components["schemas"]["SettingValueResponseDto"][];
+        };
+        ConditionListEditDto: {
+            condition_index: number;
+            values_add?: string[];
+            values_remove?: string[];
         };
         ConfidentialListDto: {
             attribute: string;
@@ -500,6 +507,7 @@ export type components = {
             clear_rules?: boolean;
             note?: string;
             percentage_attribute?: string | null;
+            rule_edits?: components["schemas"]["RuleListEditDto"][];
             value?: boolean | string | number;
             version: number;
         };
@@ -575,6 +583,12 @@ export type components = {
         };
         RotateWebhookSecretDto: {
             grace_hours?: number;
+        };
+        RuleListEditDto: {
+            condition_index: number;
+            rule_index: number;
+            values_add?: string[];
+            values_remove?: string[];
         };
         SdkKeyListResponseDto: {
             data: components["schemas"]["SdkKeyResponseDto"][];
@@ -768,6 +782,7 @@ export type components = {
             ordinal?: number;
         };
         UpdateSegmentDto: {
+            condition_edits?: components["schemas"]["ConditionListEditDto"][];
             conditions?: components["schemas"]["UserConditionDto"][];
             description?: string;
             key?: string;
@@ -1418,14 +1433,14 @@ export class FlagsClient {
     constructor(options?: FlagsClientOptions);
     close(): void;
     forceRefresh(): Promise<void>;
-    getAllValues(user?: User | null): Promise<Record<string, unknown>>;
-    getJson<T = unknown>(key: string, defaultValue: T, user?: User | null): Promise<T>;
-    getValue<D extends Def>(key: string, defaultValue: D, user?: User | null): Promise<FlagValue<D>>;
-    getValueDetails<D extends Def>(key: string, defaultValue: D, user?: User | null): Promise<EvaluationDetails<FlagValue<D>>>;
+    getAllValues(user?: UserInput | null): Promise<Record<string, unknown>>;
+    getJson<T = unknown>(key: string, defaultValue: T, user?: UserInput | null): Promise<T>;
+    getValue<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): Promise<FlagValue<D>>;
+    getValueDetails<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): Promise<EvaluationDetails<FlagValue<D>>>;
     // (undocumented)
     off<E extends keyof FlagsClientEvents>(event: E, listener: FlagsClientEvents[E]): void;
     on<E extends keyof FlagsClientEvents>(event: E, listener: FlagsClientEvents[E]): () => void;
-    setDefaultUser(user: User | undefined): void;
+    setDefaultUser(user: UserInput | undefined): void;
     setOffline(): void;
     setOnline(): void;
     snapshot(): FlagsSnapshot;
@@ -1467,7 +1482,7 @@ export interface FlagsClientOptions {
     bootstrap?: string | object;
     // (undocumented)
     cache?: FlagsCache;
-    defaultUser?: User;
+    defaultUser?: UserInput;
     fetch?: typeof fetch;
     logger?: Logger | null;
     offline?: boolean;
@@ -1502,16 +1517,16 @@ export type FlagsOverrides = {
 // @public
 export class FlagsSnapshot {
     // @internal
-    constructor(config: ParsedConfig | null, raw: Obj | null, user: User | undefined, layer: Layer);
+    constructor(config: ParsedConfig | null, raw: Obj | null, user: UserInput | undefined, layer: Layer);
     get generation(): number;
     // (undocumented)
-    getAllValues(user?: User | null): Record<string, unknown>;
+    getAllValues(user?: UserInput | null): Record<string, unknown>;
     // (undocumented)
-    getJson<T = unknown>(key: string, defaultValue: T, user?: User | null): T;
+    getJson<T = unknown>(key: string, defaultValue: T, user?: UserInput | null): T;
     // (undocumented)
-    getValue<D extends Def>(key: string, defaultValue: D, user?: User | null): FlagValue<D>;
+    getValue<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): FlagValue<D>;
     // (undocumented)
-    getValueDetails<D extends Def>(key: string, defaultValue: D, user?: User | null): EvaluationDetails<FlagValue<D>>;
+    getValueDetails<D extends Def>(key: string, defaultValue: D, user?: UserInput | null): EvaluationDetails<FlagValue<D>>;
     keys(): string[];
     get revision(): number;
     toJSON(): Obj | null;
@@ -2211,7 +2226,11 @@ export { UnprocessableEntityError }
 
 export { User }
 
+export { UserAttributes }
+
 export { UserAttributeValue }
+
+export { UserInput }
 
 export { Warning }
 
