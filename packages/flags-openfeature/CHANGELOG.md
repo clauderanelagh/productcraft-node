@@ -1,5 +1,11 @@
 # @productcraft/flags-openfeature
 
+## 0.1.4
+
+### Patch Changes
+
+- deb7372: Accept `@productcraft/flags` 0.5 as a peer.
+
 ## 0.1.3
 
 ### Patch Changes
