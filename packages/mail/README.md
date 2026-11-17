@@ -61,6 +61,7 @@ Full reference: [api.md](./api.md).
 - `mail.domains`: `create`, `delete`, `dnsRecords.apply`, `dnsRecords.check`, `dnsRecords.export`, `dnsRecords.list`, `domainConnect.start`, `events.list`, `list`, `lookup`, `retrieve`, `shareLinks.create`, `shareLinks.delete`, `shareLinks.list`, `smtpConfig.reset`, `smtpConfig.retrieve`, `smtpConfig.update`, `smtpConfig.verifySaved`, `testSend`, `update`, `verify`
 - `mail.emails`: `attachments.retrieve`, `batch`, `cancel`, `list`, `metrics`, `retrieve`, `send`, `update`
 - `mail.integrations`: `delete`, `github.connect`, `github.repos.branches.list`, `github.repos.list`, `github.settings.update`, `github.sync.create`, `github.sync.retrieve`, `list`, `retrieve`
+- `mail.limits`: `retrieve`
 - `mail.mailboxes`: `create`, `delete`, `list`, `messages.attachments.retrieve`, `messages.delete`, `messages.list`, `messages.raw`, `messages.read`, `messages.retrieve`, `retrieve`, `update`
 - `mail.messages`: `body`, `erase`, `export`, `list`, `retrieve`, `settings.retrieve`, `settings.update`
 - `mail.received`: `attachments.retrieve`, `delete`, `export`, `list`, `raw`, `read`, `retrieve`, `timeline`
