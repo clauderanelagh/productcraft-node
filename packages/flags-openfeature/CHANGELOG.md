@@ -1,5 +1,12 @@
 # @productcraft/flags-openfeature
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [97be777]
+  - @productcraft/flags@0.6.0
+
 ## 0.1.4
 
 ### Patch Changes
