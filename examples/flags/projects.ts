@@ -63,7 +63,7 @@ const flags = new Flags();
 
 // projects.environments.update: Update an environment
 {
-  const environment = await flags.projects.environments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { color: "#e67700" });
+  const environment = await flags.projects.environments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { approval_policy: "off" });
 }
 
 // projects.list: List projects
@@ -97,6 +97,19 @@ const flags = new Flags();
     console.log(segment);
   }
   const page = await flags.projects.segments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+}
+
+// projects.staleFlags.list: List stale flags
+{
+  for await (const staleFlag of flags.projects.staleFlags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+    console.log(staleFlag);
+  }
+  const page = await flags.projects.staleFlags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+}
+
+// projects.staleFlags.sendDigest: Send the stale-flag digest now
+{
+  const staleDigest = await flags.projects.staleFlags.sendDigest("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // projects.update: Update a project

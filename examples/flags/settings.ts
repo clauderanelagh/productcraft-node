@@ -19,6 +19,16 @@ const flags = new Flags();
   const settingDetail = await flags.settings.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "string" });
 }
 
+// settings.values.changeRequests.create: Propose a change
+{
+  const changeRequest = await flags.settings.values.changeRequests.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { operation: "patch", version: 7 });
+}
+
+// settings.values.ramps.create: Start a ramp
+{
+  const ramp = await flags.settings.values.ramps.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { steps: [{ at: "2026-11-20T09:00:00.000Z", percentage: 25 }], value: true });
+}
+
 // settings.values.replace: Replace a value
 {
   const settingValue = await flags.settings.values.replace("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { value: false, version: 3 });
@@ -32,6 +42,11 @@ const flags = new Flags();
 // settings.values.revealConfidential: Reveal confidential values
 {
   const confidentialReveal = await flags.settings.values.revealConfidential("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+}
+
+// settings.values.scheduledChanges.create: Schedule a change
+{
+  const scheduledChange = await flags.settings.values.scheduledChanges.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { operation: "patch", run_at: "2026-11-20T09:00:00.000Z" });
 }
 
 // settings.values.update: Update a value
