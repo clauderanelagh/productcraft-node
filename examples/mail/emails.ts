@@ -4,6 +4,12 @@ import { Mail } from "@productcraft/mail";
 
 const mail = new Mail();
 
+// emails.attachments.retrieve: Download an attachment of a sent email
+{
+  const response = await mail.emails.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
+  const text = await response.text();
+}
+
 // emails.batch: Send up to 100 emails in one request
 {
   const result = await mail.emails.batch({
