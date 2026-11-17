@@ -886,7 +886,7 @@ const deliverability = await mail.deliverability.retrieve();
 
 Register a domain for a workspace.
 
-Accepts Resend's create-domain body as well as ours: `name` for `fqdn`, `capabilities` for `intent`, `custom_return_path` for the MAIL FROM label, and `region`, `tls`, `open_tracking`, `click_tracking`, `tracking_subdomain`. Defaults to sending only (`intent: send`), as Resend does. Options we do not offer yet are refused with 422 rather than ignored.
+Accepts Resend's create-domain body as well as ours: `name` for `fqdn`, `capabilities` for `intent`, `custom_return_path` for the MAIL FROM label, and `region`, `tls`, `open_tracking`, `click_tracking` (off by default), `tracking_subdomain`. Defaults to sending only (`intent: send`), as Resend does. Options we do not offer yet are refused with 422 rather than ignored.
 
 - Params: `Mail.DomainCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -898,7 +898,7 @@ Accepts Resend's create-domain body as well as ours: `name` for `fqdn`, `capabil
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
 | 409 | `ConflictError` | `CONFLICT`, `MAIL_FROM_HOST_IN_USE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Domain already registered (globally unique); `MAIL_FROM_HOST_IN_USE`: the `custom_return_path` host already has records that are not ours (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `REGION_NOT_AVAILABLE`, `TLS_ENFORCED_NOT_AVAILABLE`, `TRACKING_NOT_AVAILABLE` | `REGION_NOT_AVAILABLE`: `region` is not the region this deployment sends from (`details.available`); `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: open/click tracking or a tracking subdomain. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `REGION_NOT_AVAILABLE`, `TLS_ENFORCED_NOT_AVAILABLE`, `TRACKING_NOT_AVAILABLE` | `REGION_NOT_AVAILABLE`: `region` is not the region this deployment sends from (`details.available`); `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: a `tracking_subdomain` (tracking uses track.productcraft.co). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1038,7 +1038,7 @@ const result = await mail.domains.testSend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f
 
 Update domain settings: capabilities, DNS provider hint, custom MAIL FROM subdomain, DMARC recommendation.
 
-`intent` (or Resend's `capabilities`) changes what the domain is used for. A pending domain just changes; a verified domain gaining sending or receiving has the new records checked live and is refused with 409 `CAPABILITY_NOT_VERIFIED` (the records to publish in `details.records`) until they pass. Turning receiving off is refused while active mailboxes exist (409 `DOMAIN_HAS_MAILBOXES`, the mailboxes in `details.mailboxes`; deleted mailboxes do not count); turning sending off also turns the custom MAIL FROM off. `tls`, `open_tracking`, `click_tracking` and `tracking_subdomain` are accepted for Resend compatibility; only the values in effect today pass (422 otherwise). `dns_provider` is the provider the setup wizard renders host names for. `mail_from_subdomain` sets the custom MAIL FROM label (`bounce` → `bounce.<fqdn>`; `null` turns it off): the domain's record set gains the MAIL FROM MX + SPF records, and once the domain is verified its MAIL FROM is pointed there (the default return address stays in use until the MX record is found, so mail never stops). Refused with 409 when that host already carries records that are not ours. `dmarc_managed: false` hides the `_dmarc` recommendation for domains whose DMARC is managed elsewhere (the policy is still detected and graded).
+`intent` (or Resend's `capabilities`) changes what the domain is used for. A pending domain just changes; a verified domain gaining sending or receiving has the new records checked live and is refused with 409 `CAPABILITY_NOT_VERIFIED` (the records to publish in `details.records`) until they pass. Turning receiving off is refused while active mailboxes exist (409 `DOMAIN_HAS_MAILBOXES`, the mailboxes in `details.mailboxes`; deleted mailboxes do not count); turning sending off also turns the custom MAIL FROM off. `open_tracking` and `click_tracking` set the domain's tracking defaults (off; a send may override them with `tracking`). `tls` and `tracking_subdomain` are accepted for Resend compatibility; only the values in effect today pass (422 otherwise). `dns_provider` is the provider the setup wizard renders host names for. `mail_from_subdomain` sets the custom MAIL FROM label (`bounce` → `bounce.<fqdn>`; `null` turns it off): the domain's record set gains the MAIL FROM MX + SPF records, and once the domain is verified its MAIL FROM is pointed there (the default return address stays in use until the MX record is found, so mail never stops). Refused with 409 when that host already carries records that are not ours. `dmarc_managed: false` hides the `_dmarc` recommendation for domains whose DMARC is managed elsewhere (the policy is still detected and graded).
 
 - Params: `Mail.DomainUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -1050,7 +1050,7 @@ Update domain settings: capabilities, DNS provider hint, custom MAIL FROM subdom
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Domain not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `CAPABILITY_NOT_VERIFIED`, `DOMAIN_HAS_MAILBOXES`, `MAIL_FROM_HOST_IN_USE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `CAPABILITY_NOT_VERIFIED`: a verified domain cannot gain sending or receiving until the new records verify (`details.failing`, `details.records`); `DOMAIN_HAS_MAILBOXES`: receiving cannot be turned off while active mailboxes exist (`details.count`, `details.mailboxes[].id\|address`); `MAIL_FROM_HOST_IN_USE`: the MAIL FROM host already has a CNAME, a foreign MX or a foreign SPF record (listed in `details.found`); or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `TLS_ENFORCED_NOT_AVAILABLE`, `TRACKING_NOT_AVAILABLE` | `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: open/click tracking or a tracking subdomain. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `TLS_ENFORCED_NOT_AVAILABLE`, `TRACKING_NOT_AVAILABLE` | `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: a `tracking_subdomain` (tracking uses track.productcraft.co). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `mail_from_subdomain` or `intent` changed less than 10 seconds ago (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3758,7 +3758,7 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `TOPIC_EXISTS` | A topic with this name already exists. |
 | `TOPIC_LIMIT` | The workspace has the maximum number of topics. |
 | `TOPIC_NOT_FOUND` | Topic not found. |
-| `TRACKING_NOT_AVAILABLE` | Open and click tracking are not available yet. |
+| `TRACKING_NOT_AVAILABLE` | A custom tracking subdomain is not available: tracking uses track.productcraft.co. |
 | `UNKNOWN_CONTACT_PROPERTY` | The contact property is not defined; create it first. |
 | `UNSUBSCRIBE_LINK_REQUIRED` | A broadcast body must contain `{{{unsubscribe_url}}}`. |
 | `domain_not_verified_by_provider` | The From domain's DNS records have been broken for over 72 h, so it no longer sends. |

@@ -813,10 +813,14 @@ export type components = {
             workspace_id?: string;
         };
         EmailClickedEventDataDto: {
+            bot: boolean;
             clicked_at: string;
             email_id: string;
+            ip: string | null;
             link: string;
+            proxy: components["schemas"]["EngagementProxy"] | null;
             to: string;
+            user_agent: string | null;
         };
         EmailComplainedEvent: {
             created_at: string;
@@ -1017,9 +1021,13 @@ export type components = {
             workspace_id?: string;
         };
         EmailOpenedEventDataDto: {
+            bot: boolean;
             email_id: string;
+            ip: string | null;
             opened_at: string;
+            proxy: components["schemas"]["EngagementProxy"] | null;
             to: string;
+            user_agent: string | null;
         };
         EmailPaginationDto: {
             has_more: boolean;
@@ -1115,6 +1123,7 @@ export type components = {
             };
             name: string;
         };
+        EngagementProxy: "apple" | "google" | "yahoo" | "microsoft";
         ErrorParamDto: {
             code: string;
             message: string;
@@ -1434,13 +1443,17 @@ export type components = {
             occurred_at: string;
             type: components["schemas"]["MessageEventType"];
         };
-        MessageEventType: "queued" | "sent" | "delivered" | "deferred" | "bounced" | "complained" | "failed" | "suppressed";
+        MessageEventType: "queued" | "sent" | "delivered" | "deferred" | "bounced" | "complained" | "failed" | "suppressed" | "opened" | "clicked";
         MessageSource: "api_key" | "dashboard" | "platform" | "test_send";
         MessageStatus: "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "suppressed" | "deferred";
         MessageTimelineResponseDto: {
             granularity: components["schemas"]["StatsGranularity"];
             metric: components["schemas"]["TimelineMetric"];
             points: components["schemas"]["TimelinePointDto"][];
+        };
+        MessageTrackingDto: {
+            clicks: boolean;
+            opens: boolean;
         };
         MessageTransport: "smtp" | "ses";
         OutboundMessageDetailDto: {
@@ -1452,6 +1465,7 @@ export type components = {
             bounce_subtype: string | null;
             bounce_type: components["schemas"]["BounceType"] | null;
             cc: string[] | null;
+            clicked_at: string | null;
             created_at: string;
             deferral_count: number;
             deferred_at: string | null;
@@ -1464,6 +1478,7 @@ export type components = {
             from_address: string;
             id: string;
             last_event: components["schemas"]["MessageEventDto"] | null;
+            opened_at: string | null;
             reply_to: string[] | null;
             sent_at: string | null;
             smtp_transcript: string | null;
@@ -1474,6 +1489,7 @@ export type components = {
             tags: components["schemas"]["EmailTagDto"][] | null;
             template_name: string | null;
             to_address: string;
+            tracking: components["schemas"]["MessageTrackingDto"] | null;
             transport: components["schemas"]["MessageTransport"] | null;
             workspace_id: string;
         };
@@ -1485,6 +1501,7 @@ export type components = {
             bounce_subtype: string | null;
             bounce_type: components["schemas"]["BounceType"] | null;
             cc: string[] | null;
+            clicked_at: string | null;
             created_at: string;
             deferral_count: number;
             deferred_at: string | null;
@@ -1495,6 +1512,7 @@ export type components = {
             email_id: string | null;
             from_address: string;
             id: string;
+            opened_at: string | null;
             reply_to: string[] | null;
             sent_at: string | null;
             smtp_transcript: string | null;
@@ -1505,6 +1523,7 @@ export type components = {
             tags: components["schemas"]["EmailTagDto"][] | null;
             template_name: string | null;
             to_address: string;
+            tracking: components["schemas"]["MessageTrackingDto"] | null;
             transport: components["schemas"]["MessageTransport"] | null;
             workspace_id: string;
         };
@@ -1527,6 +1546,7 @@ export type components = {
             bounce_subtype: string | null;
             bounce_type: components["schemas"]["BounceType"] | null;
             cc: string[] | null;
+            clicked_at: string | null;
             created_at: string;
             deferral_count: number;
             deferred_at: string | null;
@@ -1537,6 +1557,7 @@ export type components = {
             email_id: string | null;
             from_address: string;
             id: string;
+            opened_at: string | null;
             reply_to: string[] | null;
             sent_at: string | null;
             smtp_transcript: string | null;
@@ -1547,6 +1568,7 @@ export type components = {
             tags: components["schemas"]["EmailTagDto"][] | null;
             template_name: string | null;
             to_address: string;
+            tracking: components["schemas"]["MessageTrackingDto"] | null;
             transport: components["schemas"]["MessageTransport"] | null;
             workspace_id: string;
         };
@@ -1861,6 +1883,7 @@ export type components = {
             template?: components["schemas"]["EmailTemplateRefDto"];
             text?: string;
             to: string | string[];
+            tracking?: components["schemas"]["SendTrackingDto"];
         } & ({
             html: string;
             subject: string;
@@ -1890,6 +1913,7 @@ export type components = {
             template?: components["schemas"]["EmailTemplateRefDto"];
             text?: string;
             to: string | string[];
+            tracking?: components["schemas"]["SendTrackingDto"];
         } & ({
             html: string;
             subject: string;
@@ -1923,6 +1947,11 @@ export type components = {
             tags?: components["schemas"]["EmailTagDto"][];
             to: string | string[];
             topic_id?: string;
+            tracking?: components["schemas"]["SendTrackingDto"];
+        };
+        SendTrackingDto: {
+            clicks?: boolean;
+            opens?: boolean;
         };
         SendWebhookTestDto: {
             event_type: "email.sent" | "email.delivered" | "email.delivery_delayed" | "email.bounced" | "email.complained" | "email.failed" | "email.suppressed" | "email.skipped" | "email.scheduled" | "email.canceled" | "email.opened" | "email.clicked" | "email.received" | "domain.created" | "domain.updated" | "domain.verified" | "domain.deleted" | "suppression.added" | "suppression.removed" | "sending_defaults.updated" | "contact.created" | "contact.updated" | "contact.deleted";
@@ -2631,209 +2660,213 @@ namespace Mail {
     // (undocumented)
     type ContactTopicUpdateParams = __ContactTopicUpdateParams;
     const // (undocumented)
+    EngagementProxy: {
+        values: readonly ["apple", "google", "yahoo", "microsoft"];
+    };
+    // (undocumented)
+    type ContactUpdatedEvent = __ContactUpdatedEvent;
+    const // (undocumented)
     IntegrationStatus: {
         values: readonly ["active", "error", "revoked"];
     };
     // (undocumented)
-    type ContactUpdatedEvent = __ContactUpdatedEvent;
+    type ContactUpdateParams = __ContactUpdateParams;
     const // (undocumented)
     IntegrationSyncState: {
         values: readonly ["running", "completed", "failed"];
     };
     // (undocumented)
-    type ContactUpdateParams = __ContactUpdateParams;
+    type CreatedShareLink = __CreatedShareLink;
     const // (undocumented)
     LintSeverity: {
         values: readonly ["error", "warn", "info"];
     };
     // (undocumented)
-    type CreatedShareLink = __CreatedShareLink;
+    type DefaultSender = __DefaultSender;
     const // (undocumented)
     MailboxStatus: {
         values: readonly ["active", "disabled"];
     };
     // (undocumented)
-    type DefaultSender = __DefaultSender;
+    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
     const // (undocumented)
     MessageEventType: {
-        values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed"];
+        values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed", "opened", "clicked"];
     };
-    // (undocumented)
-    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
+    // @deprecated (undocumented)
+    type DeleteByRecipient = __DeleteByRecipient;
     const // (undocumented)
     MessageSource: {
         values: readonly ["api_key", "dashboard", "platform", "test_send"];
     };
-    // @deprecated (undocumented)
-    type DeleteByRecipient = __DeleteByRecipient;
+    // (undocumented)
+    type Deliverability = __Deliverability;
     const // (undocumented)
     MessageStatus: {
         values: readonly ["queued", "sent", "delivered", "bounced", "complained", "failed", "suppressed", "deferred"];
     };
     // (undocumented)
-    type Deliverability = __Deliverability;
+    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
     const // (undocumented)
     MessageTransport: {
         values: readonly ["smtp", "ses"];
     };
     // (undocumented)
-    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
+    type DeliverabilityDomain = __DeliverabilityDomain;
     const // (undocumented)
     SegmentMatch: {
         values: readonly ["all", "any"];
     };
     // (undocumented)
-    type DeliverabilityDomain = __DeliverabilityDomain;
+    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
     const // (undocumented)
     SegmentOperator: {
         values: readonly ["equals", "contains", "exists"];
     };
     // (undocumented)
-    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
+    type DeliverabilityVerdict = __DeliverabilityVerdict;
     const // (undocumented)
     SegmentType: {
         values: readonly ["static", "rule"];
     };
     // (undocumented)
-    type DeliverabilityVerdict = __DeliverabilityVerdict;
+    type DmarcAlignmentMode = __DmarcAlignmentMode;
     const // (undocumented)
     SendBatchRowState: {
         values: readonly ["accepted", "rejected"];
     };
     // (undocumented)
-    type DmarcAlignmentMode = __DmarcAlignmentMode;
+    type DmarcGrade = __DmarcGrade;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type DmarcGrade = __DmarcGrade;
+    type DmarcPolicy = __DmarcPolicy;
     const // (undocumented)
     SesDkimStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE", "NOT_STARTED", "not_enabled"];
     };
     // (undocumented)
-    type DmarcPolicy = __DmarcPolicy;
+    type DmarcRecordLocation = __DmarcRecordLocation;
     const // (undocumented)
     SesMailFromStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE"];
     };
     // (undocumented)
-    type DmarcRecordLocation = __DmarcRecordLocation;
+    type DnsApplyAction = __DnsApplyAction;
     const // (undocumented)
     ShareLinkStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type DnsApplyAction = __DnsApplyAction;
+    type DnsApplyConflict = __DnsApplyConflict;
     const // (undocumented)
     SmtpConfigStatus: {
         values: readonly ["pending", "active", "failed"];
     };
     // (undocumented)
-    type DnsApplyConflict = __DnsApplyConflict;
+    type DnsApplyCounts = __DnsApplyCounts;
     const // (undocumented)
     SpamVerdict: {
         values: readonly ["ham", "junk", "reject"];
     };
     // (undocumented)
-    type DnsApplyCounts = __DnsApplyCounts;
+    type DnsApplyPlanItem = __DnsApplyPlanItem;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type DnsApplyPlanItem = __DnsApplyPlanItem;
+    type DnsApplyProvider = __DnsApplyProvider;
     const // (undocumented)
     StatsSeriesMetric: {
         values: readonly ["sent"];
     };
     // (undocumented)
-    type DnsApplyProvider = __DnsApplyProvider;
+    type DnsApplyRecordResult = __DnsApplyRecordResult;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type DnsApplyRecordResult = __DnsApplyRecordResult;
+    type DnsApplyResult = __DnsApplyResult;
     const // (undocumented)
     Subscription: {
         values: readonly ["opt_in", "opt_out"];
     };
     // (undocumented)
-    type DnsApplyResult = __DnsApplyResult;
+    type DnsApplyWarning = __DnsApplyWarning;
     const // (undocumented)
     SubscriptionReason: {
         values: readonly ["opted_in", "default_with_consent", "unsubscribed", "opted_out", "no_consent", "not_opted_in"];
     };
     // (undocumented)
-    type DnsApplyWarning = __DnsApplyWarning;
+    type DnsConflictCode = __DnsConflictCode;
     const // (undocumented)
     SuppressionSource: {
         values: readonly ["manual", "bounce", "complaint"];
     };
     // (undocumented)
-    type DnsConflictCode = __DnsConflictCode;
+    type DnsConflictSeverity = __DnsConflictSeverity;
     const // (undocumented)
     TemplateKind: {
         values: readonly ["template", "layout", "partial"];
     };
     // (undocumented)
-    type DnsConflictSeverity = __DnsConflictSeverity;
+    type DnsInstruction = __DnsInstruction;
     const // (undocumented)
     TemplateSource: {
         values: readonly ["manual", "github"];
     };
     // (undocumented)
-    type DnsInstruction = __DnsInstruction;
+    type DnsProviderId = __DnsProviderId;
     const // (undocumented)
     TimelineMetric: {
         values: readonly ["sent", "bounced"];
     };
     // (undocumented)
-    type DnsProviderId = __DnsProviderId;
+    type DnsProviderLookupSource = __DnsProviderLookupSource;
     const // (undocumented)
     TopicVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type DnsProviderLookupSource = __DnsProviderLookupSource;
+    type DnsProviderSource = __DnsProviderSource;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type DnsProviderSource = __DnsProviderSource;
+    type DnsRecordConflict = __DnsRecordConflict;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type DnsRecordConflict = __DnsRecordConflict;
+    type DnsRecordPurpose = __DnsRecordPurpose;
     const // (undocumented)
     WebhookEndpointLegacySlot: {
         values: readonly ["default", "domain"];
     };
     // (undocumented)
-    type DnsRecordPurpose = __DnsRecordPurpose;
+    type DnsRecordState = __DnsRecordState;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DnsRecordState = __DnsRecordState;
+    type DnsRecordStatus = __DnsRecordStatus;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type DnsRecordStatus = __DnsRecordStatus;
+    type DnsRecordType = __DnsRecordType;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained", "email.failed", "email.suppressed", "email.skipped", "email.scheduled", "email.canceled", "email.opened", "email.clicked", "email.received", "domain.created", "domain.updated", "domain.verified", "domain.deleted", "suppression.added", "suppression.removed", "sending_defaults.updated", "contact.created", "contact.updated", "contact.deleted"];
     };
-    // (undocumented)
-    type DnsRecordType = __DnsRecordType;
     // (undocumented)
     type Domain = __Domain;
     // (undocumented)
@@ -3009,6 +3042,8 @@ namespace Mail {
     // (undocumented)
     type EmailTag = __EmailTag;
     // (undocumented)
+    type EngagementProxy = __EngagementProxy;
+    // (undocumented)
     type ErrorCode = __ErrorCode;
     // (undocumented)
     type GetSmtpConfig = __GetSmtpConfig;
@@ -3152,6 +3187,8 @@ namespace Mail {
     type MessageTimeline = __MessageTimeline;
     // @deprecated (undocumented)
     type MessageTimelineParams = __MessageTimelineParams;
+    // (undocumented)
+    type MessageTracking = __MessageTracking;
     // (undocumented)
     type MessageTransport = __MessageTransport;
     // (undocumented)

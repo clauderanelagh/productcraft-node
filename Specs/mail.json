@@ -1670,7 +1670,7 @@
             "description": "Resend's shape of `intent`: `sending` defaults to `enabled`, `receiving` to `disabled`; at least one must be enabled."
           },
           "click_tracking": {
-            "description": "Only `false` for now; `true` is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Track clicks in mail from this domain by default: each http(s) link goes through track.productcraft.co and redirects to the original URL. Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -1701,7 +1701,7 @@
             "type": "string"
           },
           "open_tracking": {
-            "description": "Only `false` for now; `true` is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Track opens of mail from this domain by default (a 1x1 image). Off by default. Apple Mail Privacy Protection loads every image on arrival, so opens are inflated; see the tracking guide.",
             "example": false,
             "type": "boolean"
           },
@@ -1720,7 +1720,7 @@
             "type": "string"
           },
           "tracking_subdomain": {
-            "description": "Not available yet: any value is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Not offered: tracking uses track.productcraft.co, so any value is refused with 422 `TRACKING_NOT_AVAILABLE`.",
             "maxLength": 63,
             "type": "string"
           }
@@ -3407,7 +3407,7 @@
             "$ref": "#/components/schemas/DomainCapabilitiesDto"
           },
           "click_tracking": {
-            "description": "Click tracking. Always false: tracking is not available yet.",
+            "description": "Click tracking for mail from this domain (links go through track.productcraft.co), unless a send says otherwise (`tracking.clicks`). Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -3558,7 +3558,7 @@
             "type": "string"
           },
           "open_tracking": {
-            "description": "Open tracking. Always false: tracking is not available yet.",
+            "description": "Open tracking for mail from this domain (a 1x1 image), unless a send says otherwise (`tracking.opens`). Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -3651,7 +3651,7 @@
             "example": "opportunistic"
           },
           "tracking_subdomain": {
-            "description": "Tracking subdomain. Always null: tracking is not available yet.",
+            "description": "Always null: tracked links use track.productcraft.co; a custom tracking subdomain is not offered.",
             "example": null,
             "nullable": true,
             "type": "string"
@@ -3845,7 +3845,7 @@
             "$ref": "#/components/schemas/DomainCapabilitiesDto"
           },
           "click_tracking": {
-            "description": "Click tracking. Always false: tracking is not available yet.",
+            "description": "Click tracking for mail from this domain (links go through track.productcraft.co), unless a send says otherwise (`tracking.clicks`). Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -3989,7 +3989,7 @@
             "type": "string"
           },
           "open_tracking": {
-            "description": "Open tracking. Always false: tracking is not available yet.",
+            "description": "Open tracking for mail from this domain (a 1x1 image), unless a send says otherwise (`tracking.opens`). Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -4082,7 +4082,7 @@
             "example": "opportunistic"
           },
           "tracking_subdomain": {
-            "description": "Tracking subdomain. Always null: tracking is not available yet.",
+            "description": "Always null: tracked links use track.productcraft.co; a custom tracking subdomain is not offered.",
             "example": null,
             "nullable": true,
             "type": "string"
@@ -5027,14 +5027,18 @@
         "x-pc-sdk-model": "EmailCanceledEventData"
       },
       "EmailClickedEvent": {
-        "description": "The recipient clicked a link (click tracking; not emitted yet). Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
+        "description": "The recipient clicked a link in mail sent with click tracking. Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
         "example": {
           "created_at": "2026-11-05T09:00:00.000Z",
           "data": {
+            "bot": false,
             "clicked_at": "2026-10-17T10:11:00.000Z",
             "email_id": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
+            "ip": "203.0.113.0/24",
             "link": "https://acme.com/welcome",
-            "to": "success@simulator.amazonses.com"
+            "proxy": null,
+            "to": "success@simulator.amazonses.com",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
           },
           "domain_id": "5e1f3a2b-8c4d-4e6f-9a0b-1c2d3e4f5a6b",
           "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
@@ -5092,16 +5096,27 @@
       },
       "EmailClickedEventDataDto": {
         "properties": {
+          "bot": {
+            "description": "Looks automated: a security scanner, link preview or script (or a HEAD request).",
+            "example": false,
+            "type": "boolean"
+          },
           "clicked_at": {
-            "description": "When it was clicked.",
+            "description": "When it was clicked. A repeat of the same link within a minute is not sent again.",
             "example": "2026-10-17T10:11:00.000Z",
             "format": "date-time",
             "type": "string"
           },
           "email_id": {
-            "description": "The email. Not sent yet: an endpoint can subscribe now and receives it when the feature ships.",
+            "description": "The message (`GET /messages/{id}`).",
             "example": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
             "format": "uuid",
+            "type": "string"
+          },
+          "ip": {
+            "description": "The address it came from, truncated to its /24 (IPv4) or /48 (IPv6) network, or null.",
+            "example": "203.0.113.0/24",
+            "nullable": true,
             "type": "string"
           },
           "link": {
@@ -5110,10 +5125,26 @@
             "format": "uri",
             "type": "string"
           },
+          "proxy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EngagementProxy"
+              }
+            ],
+            "description": "A mail provider fetched it on the reader's behalf. `apple` is Mail Privacy Protection, which loads every image when mail arrives, read or not.",
+            "example": null,
+            "nullable": true
+          },
           "to": {
             "description": "The recipient who clicked.",
             "example": "success@simulator.amazonses.com",
             "format": "email",
+            "type": "string"
+          },
+          "user_agent": {
+            "description": "The User-Agent of the request (up to 512 characters), or null.",
+            "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "nullable": true,
             "type": "string"
           }
         },
@@ -5121,7 +5152,11 @@
           "email_id",
           "to",
           "link",
-          "clicked_at"
+          "clicked_at",
+          "user_agent",
+          "ip",
+          "proxy",
+          "bot"
         ],
         "type": "object",
         "x-pc-sdk-model": "EmailClickedEventData"
@@ -6306,13 +6341,17 @@
         "x-pc-sdk-model": "EmailMetrics"
       },
       "EmailOpenedEvent": {
-        "description": "The recipient opened the message (open tracking; not emitted yet). Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
+        "description": "The recipient opened the message: its first open, for mail sent with open tracking. Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
         "example": {
           "created_at": "2026-11-05T09:00:00.000Z",
           "data": {
+            "bot": false,
             "email_id": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
+            "ip": "203.0.113.0/24",
             "opened_at": "2026-10-17T10:10:00.000Z",
-            "to": "success@simulator.amazonses.com"
+            "proxy": null,
+            "to": "success@simulator.amazonses.com",
+            "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)"
           },
           "domain_id": "5e1f3a2b-8c4d-4e6f-9a0b-1c2d3e4f5a6b",
           "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
@@ -6370,29 +6409,60 @@
       },
       "EmailOpenedEventDataDto": {
         "properties": {
+          "bot": {
+            "description": "Looks automated: a security scanner, link preview or script (or a HEAD request).",
+            "example": false,
+            "type": "boolean"
+          },
           "email_id": {
-            "description": "The email. Not sent yet: an endpoint can subscribe now and receives it when the feature ships.",
+            "description": "The message (`GET /messages/{id}`).",
             "example": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
             "format": "uuid",
             "type": "string"
           },
+          "ip": {
+            "description": "The address it came from, truncated to its /24 (IPv4) or /48 (IPv6) network, or null.",
+            "example": "203.0.113.0/24",
+            "nullable": true,
+            "type": "string"
+          },
           "opened_at": {
-            "description": "When it was opened.",
+            "description": "When it was first opened. Sent once per email.",
             "example": "2026-10-17T10:10:00.000Z",
             "format": "date-time",
             "type": "string"
+          },
+          "proxy": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EngagementProxy"
+              }
+            ],
+            "description": "A mail provider fetched it on the reader's behalf. `apple` is Mail Privacy Protection, which loads every image when mail arrives, read or not.",
+            "example": null,
+            "nullable": true
           },
           "to": {
             "description": "The recipient who opened it.",
             "example": "success@simulator.amazonses.com",
             "format": "email",
             "type": "string"
+          },
+          "user_agent": {
+            "description": "The User-Agent of the request (up to 512 characters), or null.",
+            "example": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
           "email_id",
           "to",
-          "opened_at"
+          "opened_at",
+          "user_agent",
+          "ip",
+          "proxy",
+          "bot"
         ],
         "type": "object",
         "x-pc-sdk-model": "EmailOpenedEventData"
@@ -6986,6 +7056,15 @@
           "name"
         ],
         "type": "object"
+      },
+      "EngagementProxy": {
+        "enum": [
+          "apple",
+          "google",
+          "yahoo",
+          "microsoft"
+        ],
+        "type": "string"
       },
       "ErrorParamDto": {
         "properties": {
@@ -8337,7 +8416,7 @@
           "TOPIC_EXISTS": "A topic with this name already exists.",
           "TOPIC_LIMIT": "The workspace has the maximum number of topics.",
           "TOPIC_NOT_FOUND": "Topic not found.",
-          "TRACKING_NOT_AVAILABLE": "Open and click tracking are not available yet.",
+          "TRACKING_NOT_AVAILABLE": "A custom tracking subdomain is not available: tracking uses track.productcraft.co.",
           "UNAUTHORIZED": "No credentials, or the token or API key is invalid, expired or revoked.",
           "UNKNOWN_CONTACT_PROPERTY": "The contact property is not defined; create it first.",
           "UNPROCESSABLE_ENTITY": "The request is well-formed but cannot be carried out.",
@@ -9041,7 +9120,9 @@
           "bounced",
           "complained",
           "failed",
-          "suppressed"
+          "suppressed",
+          "opened",
+          "clicked"
         ],
         "type": "string"
       },
@@ -9100,6 +9181,26 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "MessageTimeline"
+      },
+      "MessageTrackingDto": {
+        "properties": {
+          "clicks": {
+            "description": "Links went through the tracking host.",
+            "example": true,
+            "type": "boolean"
+          },
+          "opens": {
+            "description": "The open pixel was added.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "opens",
+          "clicks"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MessageTracking"
       },
       "MessageTransport": {
         "enum": [
@@ -9165,6 +9266,12 @@
             },
             "nullable": true,
             "type": "array"
+          },
+          "clicked_at": {
+            "description": "First recorded click; null when none.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
           },
           "created_at": {
             "description": "When the message was accepted for delivery.",
@@ -9235,6 +9342,12 @@
             "description": "The most recent event, or null for a row that predates event recording.",
             "nullable": true
           },
+          "opened_at": {
+            "description": "First recorded open; null when never opened or not tracked. Apple Mail Privacy Protection opens every message on arrival.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "reply_to": {
             "description": "The email's Reply-To list, as sent; null when none.",
             "items": {
@@ -9298,6 +9411,15 @@
             "description": "The recipient address.",
             "type": "string"
           },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageTrackingDto"
+              }
+            ],
+            "description": "The open and click tracking it was sent with (tasks/mail-api/011); null when untracked.",
+            "nullable": true
+          },
           "transport": {
             "allOf": [
               {
@@ -9344,6 +9466,9 @@
           "bcc",
           "reply_to",
           "tags",
+          "tracking",
+          "opened_at",
+          "clicked_at",
           "attachments",
           "events",
           "last_event"
@@ -9402,6 +9527,12 @@
             "nullable": true,
             "type": "array"
           },
+          "clicked_at": {
+            "description": "First recorded click; null when none.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "created_at": {
             "description": "When the message was accepted for delivery.",
             "format": "date-time",
@@ -9453,6 +9584,12 @@
           "id": {
             "description": "The message id.",
             "format": "uuid",
+            "type": "string"
+          },
+          "opened_at": {
+            "description": "First recorded open; null when never opened or not tracked. Apple Mail Privacy Protection opens every message on arrival.",
+            "format": "date-time",
+            "nullable": true,
             "type": "string"
           },
           "reply_to": {
@@ -9518,6 +9655,15 @@
             "description": "The recipient address.",
             "type": "string"
           },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageTrackingDto"
+              }
+            ],
+            "description": "The open and click tracking it was sent with (tasks/mail-api/011); null when untracked.",
+            "nullable": true
+          },
           "transport": {
             "allOf": [
               {
@@ -9563,7 +9709,10 @@
           "cc",
           "bcc",
           "reply_to",
-          "tags"
+          "tags",
+          "tracking",
+          "opened_at",
+          "clicked_at"
         ],
         "type": "object",
         "x-pc-sdk-model": "OutboundMessage"
@@ -9674,6 +9823,12 @@
             "nullable": true,
             "type": "array"
           },
+          "clicked_at": {
+            "description": "First recorded click; null when none.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "created_at": {
             "description": "When the message was accepted for delivery.",
             "format": "date-time",
@@ -9725,6 +9880,12 @@
           "id": {
             "description": "The message id.",
             "format": "uuid",
+            "type": "string"
+          },
+          "opened_at": {
+            "description": "First recorded open; null when never opened or not tracked. Apple Mail Privacy Protection opens every message on arrival.",
+            "format": "date-time",
+            "nullable": true,
             "type": "string"
           },
           "reply_to": {
@@ -9790,6 +9951,15 @@
             "description": "The recipient address.",
             "type": "string"
           },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MessageTrackingDto"
+              }
+            ],
+            "description": "The open and click tracking it was sent with (tasks/mail-api/011); null when untracked.",
+            "nullable": true
+          },
           "transport": {
             "allOf": [
               {
@@ -9836,6 +10006,9 @@
           "bcc",
           "reply_to",
           "tags",
+          "tracking",
+          "opened_at",
+          "clicked_at",
           "attachments",
           "body_html",
           "body_text"
@@ -11776,6 +11949,14 @@
                 "type": "array"
               }
             ]
+          },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendTrackingDto"
+              }
+            ],
+            "description": "Open and click tracking for this email, overriding the From domain's `open_tracking` / `click_tracking` field by field. Off by default. Opens add a 1x1 image; clicks send each http(s) link in the html through `track.productcraft.co`, which redirects to the original URL and fires `email.clicked`. The unsubscribe link, `mailto:`/`tel:` links and any `<a data-pc-track=\"false\">` are left alone; the plain-text part is never rewritten. Apple Mail Privacy Protection and link scanners inflate the numbers: events carry `proxy` and `bot`."
           }
         },
         "required": [
@@ -11994,6 +12175,14 @@
                 "type": "array"
               }
             ]
+          },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendTrackingDto"
+              }
+            ],
+            "description": "Open and click tracking for this email, overriding the From domain's `open_tracking` / `click_tracking` field by field. Off by default. Opens add a 1x1 image; clicks send each http(s) link in the html through `track.productcraft.co`, which redirects to the original URL and fires `email.clicked`. The unsubscribe link, `mailto:`/`tel:` links and any `<a data-pc-track=\"false\">` are left alone; the plain-text part is never rewritten. Apple Mail Privacy Protection and link scanners inflate the numbers: events carry `proxy` and `bot`."
           }
         },
         "required": [
@@ -12157,12 +12346,35 @@
             "example": "3f2a1b0c-9d8e-4f7a-8b6c-5d4e3f2a1b0c",
             "format": "uuid",
             "type": "string"
+          },
+          "tracking": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SendTrackingDto"
+              }
+            ],
+            "description": "Open and click tracking for this email, overriding the From domain's `open_tracking` / `click_tracking` field by field. Off by default. Opens add a 1x1 image; clicks send each http(s) link in the html through `track.productcraft.co`, which redirects to the original URL and fires `email.clicked`. The unsubscribe link, `mailto:`/`tel:` links and any `<a data-pc-track=\"false\">` are left alone; the plain-text part is never rewritten. Apple Mail Privacy Protection and link scanners inflate the numbers: events carry `proxy` and `bot`."
           }
         },
         "required": [
           "data",
           "to"
         ],
+        "type": "object"
+      },
+      "SendTrackingDto": {
+        "properties": {
+          "clicks": {
+            "description": "Send this email's links through the tracking host. Omitted: the From domain's `click_tracking` (off unless turned on).",
+            "example": true,
+            "type": "boolean"
+          },
+          "opens": {
+            "description": "Add the open-tracking pixel to this email. Omitted: the From domain's `open_tracking` (off unless turned on).",
+            "example": false,
+            "type": "boolean"
+          }
+        },
         "type": "object"
       },
       "SendWebhookTestDto": {
@@ -13535,7 +13747,7 @@
             "description": "Resend's shape of `intent`. Omitted fields keep their current value; at least one must stay enabled."
           },
           "click_tracking": {
-            "description": "Only `false` for now; `true` is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Track clicks in mail from this domain by default: each http(s) link goes through track.productcraft.co and redirects to the original URL. Off by default.",
             "example": false,
             "type": "boolean"
           },
@@ -13566,7 +13778,7 @@
             "type": "string"
           },
           "open_tracking": {
-            "description": "Only `false` for now; `true` is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Track opens of mail from this domain by default (a 1x1 image). Off by default. Apple Mail Privacy Protection loads every image on arrival, so opens are inflated; see the tracking guide.",
             "example": false,
             "type": "boolean"
           },
@@ -13580,7 +13792,7 @@
             "type": "string"
           },
           "tracking_subdomain": {
-            "description": "Not available yet: any value is refused with 422 `TRACKING_NOT_AVAILABLE`.",
+            "description": "Not offered: tracking uses track.productcraft.co, so any value is refused with 422 `TRACKING_NOT_AVAILABLE`.",
             "maxLength": 63,
             "type": "string"
           }
@@ -23001,7 +23213,7 @@
         }
       },
       "post": {
-        "description": "Accepts Resend's create-domain body as well as ours: `name` for `fqdn`, `capabilities` for `intent`, `custom_return_path` for the MAIL FROM label, and `region`, `tls`, `open_tracking`, `click_tracking`, `tracking_subdomain`. Defaults to sending only (`intent: send`), as Resend does. Options we do not offer yet are refused with 422 rather than ignored.",
+        "description": "Accepts Resend's create-domain body as well as ours: `name` for `fqdn`, `capabilities` for `intent`, `custom_return_path` for the MAIL FROM label, and `region`, `tls`, `open_tracking`, `click_tracking` (off by default), `tracking_subdomain`. Defaults to sending only (`intent: send`), as Resend does. Options we do not offer yet are refused with 422 rather than ignored.",
         "operationId": "DomainController_createDomain",
         "parameters": [
           {
@@ -23188,7 +23400,7 @@
                 }
               }
             },
-            "description": "`REGION_NOT_AVAILABLE`: `region` is not the region this deployment sends from (`details.available`); `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: open/click tracking or a tracking subdomain.",
+            "description": "`REGION_NOT_AVAILABLE`: `region` is not the region this deployment sends from (`details.available`); `TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: a `tracking_subdomain` (tracking uses track.productcraft.co).",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -23834,7 +24046,7 @@
         }
       },
       "patch": {
-        "description": "`intent` (or Resend's `capabilities`) changes what the domain is used for. A pending domain just changes; a verified domain gaining sending or receiving has the new records checked live and is refused with 409 `CAPABILITY_NOT_VERIFIED` (the records to publish in `details.records`) until they pass. Turning receiving off is refused while active mailboxes exist (409 `DOMAIN_HAS_MAILBOXES`, the mailboxes in `details.mailboxes`; deleted mailboxes do not count); turning sending off also turns the custom MAIL FROM off. `tls`, `open_tracking`, `click_tracking` and `tracking_subdomain` are accepted for Resend compatibility; only the values in effect today pass (422 otherwise). `dns_provider` is the provider the setup wizard renders host names for. `mail_from_subdomain` sets the custom MAIL FROM label (`bounce` → `bounce.<fqdn>`; `null` turns it off): the domain's record set gains the MAIL FROM MX + SPF records, and once the domain is verified its MAIL FROM is pointed there (the default return address stays in use until the MX record is found, so mail never stops). Refused with 409 when that host already carries records that are not ours. `dmarc_managed: false` hides the `_dmarc` recommendation for domains whose DMARC is managed elsewhere (the policy is still detected and graded).",
+        "description": "`intent` (or Resend's `capabilities`) changes what the domain is used for. A pending domain just changes; a verified domain gaining sending or receiving has the new records checked live and is refused with 409 `CAPABILITY_NOT_VERIFIED` (the records to publish in `details.records`) until they pass. Turning receiving off is refused while active mailboxes exist (409 `DOMAIN_HAS_MAILBOXES`, the mailboxes in `details.mailboxes`; deleted mailboxes do not count); turning sending off also turns the custom MAIL FROM off. `open_tracking` and `click_tracking` set the domain's tracking defaults (off; a send may override them with `tracking`). `tls` and `tracking_subdomain` are accepted for Resend compatibility; only the values in effect today pass (422 otherwise). `dns_provider` is the provider the setup wizard renders host names for. `mail_from_subdomain` sets the custom MAIL FROM label (`bounce` → `bounce.<fqdn>`; `null` turns it off): the domain's record set gains the MAIL FROM MX + SPF records, and once the domain is verified its MAIL FROM is pointed there (the default return address stays in use until the MX record is found, so mail never stops). Refused with 409 when that host already carries records that are not ours. `dmarc_managed: false` hides the `_dmarc` recommendation for domains whose DMARC is managed elsewhere (the policy is still detected and graded).",
         "operationId": "DomainController_updateDomain",
         "parameters": [
           {
@@ -24034,7 +24246,7 @@
                 }
               }
             },
-            "description": "`TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: open/click tracking or a tracking subdomain.",
+            "description": "`TLS_ENFORCED_NOT_AVAILABLE`: `tls: enforced`; `TRACKING_NOT_AVAILABLE`: a `tracking_subdomain` (tracking uses track.productcraft.co).",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -48698,7 +48910,7 @@
             "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
           }
         },
-        "summary": "The recipient clicked a link (click tracking; not emitted yet).",
+        "summary": "The recipient clicked a link in mail sent with click tracking.",
         "tags": [
           "outbound-webhooks"
         ],
@@ -49053,7 +49265,7 @@
             "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
           }
         },
-        "summary": "The recipient opened the message (open tracking; not emitted yet).",
+        "summary": "The recipient opened the message: its first open, for mail sent with open tracking.",
         "tags": [
           "outbound-webhooks"
         ],
