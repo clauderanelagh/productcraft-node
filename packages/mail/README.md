@@ -59,7 +59,7 @@ Full reference: [api.md](./api.md).
 - `mail.contacts`: `create`, `delete`, `imports.create`, `imports.list`, `imports.retrieve`, `list`, `properties.create`, `properties.delete`, `properties.list`, `properties.retrieve`, `properties.update`, `retrieve`, `segments.add`, `segments.delete`, `segments.list`, `topics.list`, `topics.update`, `update`
 - `mail.deliverability`: `retrieve`
 - `mail.domains`: `create`, `delete`, `dnsRecords.apply`, `dnsRecords.check`, `dnsRecords.export`, `dnsRecords.list`, `domainConnect.start`, `events.list`, `list`, `lookup`, `retrieve`, `shareLinks.create`, `shareLinks.delete`, `shareLinks.list`, `smtpConfig.reset`, `smtpConfig.retrieve`, `smtpConfig.update`, `smtpConfig.verifySaved`, `testSend`, `update`, `verify`
-- `mail.emails`: `batch`, `list`, `metrics`, `retrieve`, `send`
+- `mail.emails`: `attachments.retrieve`, `batch`, `list`, `metrics`, `retrieve`, `send`
 - `mail.integrations`: `delete`, `github.connect`, `github.repos.branches.list`, `github.repos.list`, `github.settings.update`, `github.sync.create`, `github.sync.retrieve`, `list`, `retrieve`
 - `mail.mailboxes`: `create`, `delete`, `list`, `messages.attachments.retrieve`, `messages.delete`, `messages.list`, `messages.raw`, `messages.read`, `messages.retrieve`, `retrieve`, `update`
 - `mail.messages`: `body`, `erase`, `export`, `list`, `retrieve`, `settings.retrieve`, `settings.update`

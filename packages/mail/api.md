@@ -1427,7 +1427,7 @@ Each row is a `POST /emails` body plus an optional `idempotency_key`, processed 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW` | Validation failure (malformed row, more than 100 rows), or `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW`: the `Idempotency-Key` header equals a row `idempotency_key`. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW`, `MAIL_ATTACHMENTS_NOT_IN_BATCH` | Validation failure (malformed row, more than 100 rows), or `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW`: the `Idempotency-Key` header equals a row `idempotency_key`, or `MAIL_ATTACHMENTS_NOT_IN_BATCH`: a row has `attachments` (send those with `POST /emails`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
@@ -1537,19 +1537,20 @@ const emailDetail = await mail.emails.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d
 
 Send an email.
 
-Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipients across `to`, `cc` and `bcc`, with `reply_to`, custom `headers` and `tags`. Every recipient gets its own copy (its own message in `GET /messages`, suppression check and delivery status) showing the same `To` and `Cc` headers; `bcc` recipients appear in no header. A recipient on the suppression list (or unsubscribed, for a template with an unsubscribe link) is left out with a `suppressed` message, and the email is still accepted. Counts one send per recipient against the workspace limits. Pass an `Idempotency-Key` header to make retries safe.
+Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipients across `to`, `cc` and `bcc`, with `reply_to`, custom `headers` and `tags`. Every recipient gets its own copy (its own message in `GET /messages`, suppression check and delivery status) showing the same `To` and `Cc` headers; `bcc` recipients appear in no header. A recipient on the suppression list (or unsubscribed, for a template with an unsubscribe link) is left out with a `suppressed` message, and the email is still accepted. Counts one send per recipient against the workspace limits. Pass an `Idempotency-Key` header to make retries safe. `attachments` adds files and inline images (`content_id`, referenced as `cid:` in the html): up to 20 files, 10 MB in total, given as base64 `content` or an https `path` we fetch; executables are refused.
 
 - Params: `Mail.EmailSendParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `EMAIL_CONTENT_CONFLICT`, `RECIPIENT_LIMIT`, `MAIL_HEADER_NOT_ALLOWED` | Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `EMAIL_CONTENT_CONFLICT`, `RECIPIENT_LIMIT`, `MAIL_HEADER_NOT_ALLOWED`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers); `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED` or `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index` names the attachment). Nothing is recorded, queued or counted. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_NOT_FOUND` | `TEMPLATE_NOT_FOUND`: the `template.name` is not a template of this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `INVALID_FROM_ADDRESS`, `TEMPLATE_RENDER_FAILED`, `TEMPLATE_DATA_INVALID` | `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace (`reason: not_registered` or `not_verified`); refused before anything is recorded or queued. Or `domain_not_verified_by_provider`: the from-domain's DNS records have been broken for over 72 h, so the email provider no longer sends for it. Or `INVALID_FROM_ADDRESS`. Or `TEMPLATE_RENDER_FAILED` / `TEMPLATE_DATA_INVALID` for a template send. |
+| 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `INVALID_FROM_ADDRESS`, `TEMPLATE_RENDER_FAILED`, `TEMPLATE_DATA_INVALID`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace (`reason: not_registered` or `not_verified`); refused before anything is recorded or queued. Or `domain_not_verified_by_provider`: the from-domain's DNS records have been broken for over 72 h, so the email provider no longer sends for it. Or `INVALID_FROM_ADDRESS`. Or `TEMPLATE_RENDER_FAILED` / `TEMPLATE_DATA_INVALID` for a template send. Or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`); nothing is sent. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1562,6 +1563,31 @@ const result = await mail.emails.send({
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-emails)
+
+## emails.attachments
+
+### `mail.emails.attachments.retrieve(id, position, options?)`
+
+`GET /v1/workspaces/{workspace_id}/emails/{id}/attachments/{position}` → `Response`
+
+Download an attachment of a sent email.
+
+The file exactly as it was sent, by its `position` in the email's `attachments` (`GET /emails/{id}`). Kept as long as the email is in the log (30 days). Gated by `mail.message.body.read`, like message bodies.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a uuid or `position` is not an integer. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The policy does not grant `mail.message.body.read`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `ATTACHMENT_NOT_FOUND` | `ATTACHMENT_NOT_FOUND`: no such email in this workspace, no attachment at that position, or it is no longer stored. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const response = await mail.emails.attachments.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "0");
+const text = await response.text();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-emails-id-attachments-position)
 
 ## integrations
 
@@ -3040,19 +3066,20 @@ const template = await mail.templates.retrieve("welcome");
 
 `POST /v1/workspaces/{workspace_id}/templates/{name}/send` → `Mail.TemplateSendResponse`
 
-Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9_\-:]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
+Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9._:-]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
 
 - Params: `Mail.TemplateSendParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (malformed body or recipient). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure (malformed body or recipient), or an attachment refused: `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | IDEMPOTENCY_KEY_REUSE — same key, different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_SUPPRESSED`, `TOPIC_NOT_FOUND`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `no_default_sender` | Recipient suppressed (`RECIPIENT_SUPPRESSED`; with a `topic_id`, or a template rendering `{{{unsubscribe_url}}}`, also when the recipient unsubscribed or never opted in: `details.reason` is `unsubscribe` or `no_consent`), `TOPIC_NOT_FOUND`, render failure, or invalid from address; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it; or `no_default_sender` (body `code`): the body has no `from` and the workspace has no default sender set (nothing is queued; an `email.skipped` webhook event is logged). |
+| 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_SUPPRESSED`, `TOPIC_NOT_FOUND`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `no_default_sender`, `MAIL_ATTACHMENT_FETCH_FAILED` | Recipient suppressed (`RECIPIENT_SUPPRESSED`; with a `topic_id`, or a template rendering `{{{unsubscribe_url}}}`, also when the recipient unsubscribed or never opted in: `details.reason` is `unsubscribe` or `no_consent`), `TOPIC_NOT_FOUND`, render failure, or invalid from address; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it; or `no_default_sender` (body `code`): the body has no `from` and the workspace has no default sender set (nothing is queued; an `email.skipped` webhook event is logged); or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`), nothing is sent. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3107,12 +3134,13 @@ Send a test rendering of the template to an arbitrary recipient. Bypasses the su
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure, or an attachment refused: `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | From-address domain is not registered to this workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Cannot test-send a layout/partial, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider` | Invalid from address or render failure; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it. |
+| 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `MAIL_ATTACHMENT_FETCH_FAILED` | Invalid from address or render failure; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it. Or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3648,6 +3676,7 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
 | `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
+| `ATTACHMENT_NOT_FOUND` | No attachment at this position, or it is no longer stored (attachments are kept 30 days). |
 | `AUDIENCE_REQUIRED` | Pass segment_id, topic_id, or both. |
 | `BROADCAST_AUDIENCE_EMPTY` | Nobody in this audience can receive the broadcast. |
 | `BROADCAST_CONTENT_CONFLICT` | Use a template or inline html, not both. |
@@ -3693,6 +3722,12 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `INVALID_SEGMENT_RULE` | The segment rule is invalid (`details.problems`). |
 | `INVALID_TIMEZONE` | The time zone is not a valid IANA name. |
 | `INVALID_ZONE` | The DNS zone is not one this domain belongs to. |
+| `MAIL_ATTACHMENT_CID_UNREFERENCED` | An attachment `content_id` is not referenced as `cid:<id>` in the html (`details.index`). |
+| `MAIL_ATTACHMENT_FETCH_FAILED` | An attachment `path` could not be fetched (`details.index`, `details.reason`). |
+| `MAIL_ATTACHMENT_INVALID` | An attachment is malformed: bad base64, both or neither of `content` and `path`, or a bad file name or `content_id` (`details.index`). |
+| `MAIL_ATTACHMENT_TOO_LARGE` | More than 20 attachments, or more than 10 MB in total after decoding (`details.limit_bytes`, `details.total_bytes`). |
+| `MAIL_ATTACHMENT_TYPE_BLOCKED` | An attachment is an executable file type (by name, declared type or content) and cannot be sent (`details.index`). |
+| `MAIL_ATTACHMENTS_NOT_IN_BATCH` | Batch sends do not take attachments; send those emails one by one. |
 | `MAIL_FROM_HOST_IN_USE` | The MAIL FROM host already has records that are not ours (`details.found`). |
 | `MAIL_FROM_NOT_SENDING` | A custom MAIL FROM needs the domain to send. |
 | `MAIL_HEADER_NOT_ALLOWED` | A custom header is not allowed, or its value is invalid (`details.headers`). |

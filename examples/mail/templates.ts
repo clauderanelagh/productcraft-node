@@ -42,7 +42,7 @@ const mail = new Mail();
   const template = await mail.templates.retrieve("welcome");
 }
 
-// templates.send: Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9_\-:]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
+// templates.send: Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars, [A-Za-z0-9._:-]) to make retries safe — replays return the original response with `Idempotent-Replay: true` for 24h. Same key + different request body returns 409 IDEMPOTENCY_KEY_REUSE.
 {
   const result = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
 }
