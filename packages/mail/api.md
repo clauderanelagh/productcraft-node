@@ -1450,6 +1450,31 @@ const result = await mail.emails.batch({
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-emails-batch)
 
+### `mail.emails.cancel(id, options?)`
+
+`POST /v1/workspaces/{workspace_id}/emails/{id}/cancel` → `Mail.EmailCancel`
+
+Cancel a scheduled email.
+
+Cancels a scheduled email before it goes out: every recipient's message reads `canceled` and gets an `email.canceled` event. Nothing is sent or counted.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `EMAIL_NOT_FOUND` | `EMAIL_NOT_FOUND`: no scheduled email with this id in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_EMAIL_NOT_SCHEDULED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_EMAIL_NOT_SCHEDULED`: it was already sent, is going out right now, or was canceled. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const emailCancel = await mail.emails.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-emails-id-cancel)
+
 ### `mail.emails.list(params?, options?)`
 
 `GET /v1/workspaces/{workspace_id}/emails` → `PagePromise<Mail.Email>`
@@ -1544,7 +1569,7 @@ Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipient
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `EMAIL_CONTENT_CONFLICT`, `RECIPIENT_LIMIT`, `MAIL_HEADER_NOT_ALLOWED`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers); `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED` or `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index` names the attachment). Nothing is recorded, queued or counted. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `EMAIL_CONTENT_CONFLICT`, `RECIPIENT_LIMIT`, `MAIL_HEADER_NOT_ALLOWED`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED`, `MAIL_SCHEDULE_UNPARSEABLE`, `MAIL_SCHEDULE_OUT_OF_RANGE` | Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers); `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED` or `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index` names the attachment); `MAIL_SCHEDULE_UNPARSEABLE` / `MAIL_SCHEDULE_OUT_OF_RANGE` for `scheduled_at`. Nothing is recorded, queued or counted. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_NOT_FOUND` | `TEMPLATE_NOT_FOUND`: the `template.name` is not a template of this workspace. |
@@ -1563,6 +1588,32 @@ const result = await mail.emails.send({
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-emails)
+
+### `mail.emails.update(id, params, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/emails/{id}` → `Mail.EmailSchedule`
+
+Reschedule a scheduled email.
+
+Moves a scheduled email (sent with `scheduled_at`) to a new time, for every recipient. Same rules as `scheduled_at`: 1 minute to 7 days ahead. Only while it is still scheduled.
+
+- Params: `Mail.EmailUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_SCHEDULE_UNPARSEABLE`, `MAIL_SCHEDULE_OUT_OF_RANGE` | `MAIL_SCHEDULE_UNPARSEABLE` or `MAIL_SCHEDULE_OUT_OF_RANGE`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `EMAIL_NOT_FOUND` | `EMAIL_NOT_FOUND`: no scheduled email with this id in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const emailSchedule = await mail.emails.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { scheduled_at: "2026-11-18T09:00:00Z" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-emails-id)
 
 ## emails.attachments
 
@@ -3728,9 +3779,12 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `MAIL_ATTACHMENT_TOO_LARGE` | More than 20 attachments, or more than 10 MB in total after decoding (`details.limit_bytes`, `details.total_bytes`). |
 | `MAIL_ATTACHMENT_TYPE_BLOCKED` | An attachment is an executable file type (by name, declared type or content) and cannot be sent (`details.index`). |
 | `MAIL_ATTACHMENTS_NOT_IN_BATCH` | Batch sends do not take attachments; send those emails one by one. |
+| `MAIL_EMAIL_NOT_SCHEDULED` | The email is not scheduled any more: it was sent, is going out now, or was canceled. |
 | `MAIL_FROM_HOST_IN_USE` | The MAIL FROM host already has records that are not ours (`details.found`). |
 | `MAIL_FROM_NOT_SENDING` | A custom MAIL FROM needs the domain to send. |
 | `MAIL_HEADER_NOT_ALLOWED` | A custom header is not allowed, or its value is invalid (`details.headers`). |
+| `MAIL_SCHEDULE_OUT_OF_RANGE` | `scheduled_at` must be between 1 minute and 7 days from now (`details.earliest`, `details.latest`). |
+| `MAIL_SCHEDULE_UNPARSEABLE` | `scheduled_at` is not ISO 8601 with an offset or one of the documented phrases. |
 | `PROVIDER_ERROR` | The DNS provider returned an error. |
 | `PROVIDER_PERMISSION_DENIED` | The DNS provider token lacks permission to edit this zone. |
 | `PROVIDER_TOKEN_REJECTED` | The DNS provider rejected the token. |
