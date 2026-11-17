@@ -1488,6 +1488,7 @@ export type components = {
             events: components["schemas"]["MessageEventDto"][];
             from_address: string;
             id: string;
+            is_test: boolean;
             last_event: components["schemas"]["MessageEventDto"] | null;
             opened_at: string | null;
             reply_to: string[] | null;
@@ -1524,6 +1525,7 @@ export type components = {
             email_id: string | null;
             from_address: string;
             id: string;
+            is_test: boolean;
             opened_at: string | null;
             reply_to: string[] | null;
             scheduled_at: string | null;
@@ -1570,6 +1572,7 @@ export type components = {
             email_id: string | null;
             from_address: string;
             id: string;
+            is_test: boolean;
             opened_at: string | null;
             reply_to: string[] | null;
             scheduled_at: string | null;
