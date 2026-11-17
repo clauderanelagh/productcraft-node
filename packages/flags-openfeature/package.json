@@ -1,6 +1,6 @@
 {
   "name": "@productcraft/flags-openfeature",
-  "version": "0.1.4",
+  "version": "1.0.0",
   "description": "OpenFeature server provider for ProductCraft Flags: plug FlagsClient (local evaluation, user attributes never leave your app) into @openfeature/server-sdk.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -56,7 +56,7 @@
   },
   "peerDependencies": {
     "@openfeature/server-sdk": "^1.17.0",
-    "@productcraft/flags": "^0.1.0 || ^0.2.0 || ^0.3.0 || ^0.4.0 || ^0.5.0 || ^1.0.0"
+    "@productcraft/flags": "^0.6.0"
   },
   "devDependencies": {
     "@openfeature/core": "^1.12.0",

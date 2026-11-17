@@ -1,5 +1,12 @@
 # @productcraft/flags-react
 
+## 1.0.0
+
+### Patch Changes
+
+- Updated dependencies [97be777]
+  - @productcraft/flags@0.6.0
+
 ## 0.1.3
 
 ### Patch Changes
