@@ -788,6 +788,11 @@ export type components = {
             source?: string;
             to: string;
         };
+        EmailCancelResponseDto: {
+            id: string;
+            status: components["schemas"]["EmailCancelStatus"];
+        };
+        EmailCancelStatus: "canceled";
         EmailCanceledEvent: {
             created_at: string;
             data: components["schemas"]["EmailCanceledEventDataDto"];
@@ -914,6 +919,7 @@ export type components = {
             messages: components["schemas"]["EmailMessageSummaryDto"][];
             recipient_count: number;
             reply_to: string[];
+            scheduled_at: string | null;
             subject: string | null;
             tags: components["schemas"]["EmailTagDto"][];
             template_name: string | null;
@@ -928,6 +934,7 @@ export type components = {
             last_event: components["schemas"]["MessageStatus"];
             recipient_count: number;
             reply_to: string[];
+            scheduled_at: string | null;
             subject: string | null;
             tags: components["schemas"]["EmailTagDto"][];
             template_name: string | null;
@@ -1047,6 +1054,10 @@ export type components = {
             received_at: string;
             subject: string | null;
             to: string;
+        };
+        EmailScheduleResponseDto: {
+            id: string;
+            scheduled_at: string;
         };
         EmailScheduledEvent: {
             created_at: string;
@@ -1329,7 +1340,7 @@ export type components = {
             fqdn: string;
             reason: string;
         };
-        MailErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ATTACHMENT_NOT_FOUND" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_ATTACHMENT_CID_UNREFERENCED" | "MAIL_ATTACHMENT_FETCH_FAILED" | "MAIL_ATTACHMENT_INVALID" | "MAIL_ATTACHMENT_TOO_LARGE" | "MAIL_ATTACHMENT_TYPE_BLOCKED" | "MAIL_ATTACHMENTS_NOT_IN_BATCH" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace") | string;
+        MailErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ATTACHMENT_NOT_FOUND" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_ATTACHMENT_CID_UNREFERENCED" | "MAIL_ATTACHMENT_FETCH_FAILED" | "MAIL_ATTACHMENT_INVALID" | "MAIL_ATTACHMENT_TOO_LARGE" | "MAIL_ATTACHMENT_TYPE_BLOCKED" | "MAIL_ATTACHMENTS_NOT_IN_BATCH" | "MAIL_EMAIL_NOT_SCHEDULED" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "MAIL_SCHEDULE_OUT_OF_RANGE" | "MAIL_SCHEDULE_UNPARSEABLE" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace") | string;
         MailStatsInWindowDto: {
             bounce_rate: number | null;
             bounced: number;
@@ -1443,9 +1454,9 @@ export type components = {
             occurred_at: string;
             type: components["schemas"]["MessageEventType"];
         };
-        MessageEventType: "queued" | "sent" | "delivered" | "deferred" | "bounced" | "complained" | "failed" | "suppressed" | "opened" | "clicked";
+        MessageEventType: "queued" | "sent" | "delivered" | "deferred" | "bounced" | "complained" | "failed" | "suppressed" | "opened" | "clicked" | "scheduled" | "canceled";
         MessageSource: "api_key" | "dashboard" | "platform" | "test_send";
-        MessageStatus: "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "suppressed" | "deferred";
+        MessageStatus: "queued" | "sent" | "delivered" | "bounced" | "complained" | "failed" | "suppressed" | "deferred" | "scheduled" | "canceled";
         MessageTimelineResponseDto: {
             granularity: components["schemas"]["StatsGranularity"];
             metric: components["schemas"]["TimelineMetric"];
@@ -1480,6 +1491,7 @@ export type components = {
             last_event: components["schemas"]["MessageEventDto"] | null;
             opened_at: string | null;
             reply_to: string[] | null;
+            scheduled_at: string | null;
             sent_at: string | null;
             smtp_transcript: string | null;
             source: components["schemas"]["MessageSource"];
@@ -1514,6 +1526,7 @@ export type components = {
             id: string;
             opened_at: string | null;
             reply_to: string[] | null;
+            scheduled_at: string | null;
             sent_at: string | null;
             smtp_transcript: string | null;
             source: components["schemas"]["MessageSource"];
@@ -1559,6 +1572,7 @@ export type components = {
             id: string;
             opened_at: string | null;
             reply_to: string[] | null;
+            scheduled_at: string | null;
             sent_at: string | null;
             smtp_transcript: string | null;
             source: components["schemas"]["MessageSource"];
@@ -1820,6 +1834,7 @@ export type components = {
             email_id: string;
             from: string;
             id: string | null;
+            scheduled_at?: string;
             subject: string;
             to: string | string[];
         };
@@ -1878,6 +1893,7 @@ export type components = {
             html?: string;
             idempotency_key?: string;
             reply_to?: string | string[];
+            scheduled_at?: string;
             subject?: string;
             tags?: components["schemas"]["EmailTagDto"][];
             template?: components["schemas"]["EmailTemplateRefDto"];
@@ -1908,6 +1924,7 @@ export type components = {
             };
             html?: string;
             reply_to?: string | string[];
+            scheduled_at?: string;
             subject?: string;
             tags?: components["schemas"]["EmailTagDto"][];
             template?: components["schemas"]["EmailTemplateRefDto"];
@@ -1930,6 +1947,7 @@ export type components = {
         });
         SendEmailResponseDto: {
             id: string;
+            scheduled_at?: string;
         };
         SendTemplateDto: {
             attachments?: components["schemas"]["EmailAttachmentDto"][];
@@ -1943,6 +1961,7 @@ export type components = {
                 [key: string]: string;
             };
             reply_to?: string | string[];
+            scheduled_at?: string;
             subject?: string;
             tags?: components["schemas"]["EmailTagDto"][];
             to: string | string[];
@@ -2196,6 +2215,9 @@ export type components = {
             open_tracking?: boolean;
             tls?: "opportunistic" | "enforced";
             tracking_subdomain?: string;
+        };
+        UpdateEmailDto: {
+            scheduled_at: string;
         };
         UpdateGitHubSettingsDto: {
             branch: string;
@@ -2648,227 +2670,231 @@ namespace Mail {
     // (undocumented)
     type ContactTopic = __ContactTopic;
     const // (undocumented)
+    EmailCancelStatus: {
+        values: readonly ["canceled"];
+    };
+    // (undocumented)
+    type ContactTopics = __ContactTopics;
+    const // (undocumented)
     EmailMetricsGranularity: {
         values: readonly ["hourly", "daily"];
     };
     // (undocumented)
-    type ContactTopics = __ContactTopics;
+    type ContactTopicUpdateParams = __ContactTopicUpdateParams;
     const // (undocumented)
     EmailMetricsObject: {
         values: readonly ["metrics"];
     };
     // (undocumented)
-    type ContactTopicUpdateParams = __ContactTopicUpdateParams;
+    type ContactUpdatedEvent = __ContactUpdatedEvent;
     const // (undocumented)
     EngagementProxy: {
         values: readonly ["apple", "google", "yahoo", "microsoft"];
     };
     // (undocumented)
-    type ContactUpdatedEvent = __ContactUpdatedEvent;
+    type ContactUpdateParams = __ContactUpdateParams;
     const // (undocumented)
     IntegrationStatus: {
         values: readonly ["active", "error", "revoked"];
     };
     // (undocumented)
-    type ContactUpdateParams = __ContactUpdateParams;
+    type CreatedShareLink = __CreatedShareLink;
     const // (undocumented)
     IntegrationSyncState: {
         values: readonly ["running", "completed", "failed"];
     };
     // (undocumented)
-    type CreatedShareLink = __CreatedShareLink;
+    type DefaultSender = __DefaultSender;
     const // (undocumented)
     LintSeverity: {
         values: readonly ["error", "warn", "info"];
     };
     // (undocumented)
-    type DefaultSender = __DefaultSender;
+    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
     const // (undocumented)
     MailboxStatus: {
         values: readonly ["active", "disabled"];
     };
-    // (undocumented)
-    type DefaultSenderSkippedSends = __DefaultSenderSkippedSends;
-    const // (undocumented)
-    MessageEventType: {
-        values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed", "opened", "clicked"];
-    };
     // @deprecated (undocumented)
     type DeleteByRecipient = __DeleteByRecipient;
+    const // (undocumented)
+    MessageEventType: {
+        values: readonly ["queued", "sent", "delivered", "deferred", "bounced", "complained", "failed", "suppressed", "opened", "clicked", "scheduled", "canceled"];
+    };
+    // (undocumented)
+    type Deliverability = __Deliverability;
     const // (undocumented)
     MessageSource: {
         values: readonly ["api_key", "dashboard", "platform", "test_send"];
     };
     // (undocumented)
-    type Deliverability = __Deliverability;
+    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
     const // (undocumented)
     MessageStatus: {
-        values: readonly ["queued", "sent", "delivered", "bounced", "complained", "failed", "suppressed", "deferred"];
+        values: readonly ["queued", "sent", "delivered", "bounced", "complained", "failed", "suppressed", "deferred", "scheduled", "canceled"];
     };
     // (undocumented)
-    type DeliverabilityBlockSignal = __DeliverabilityBlockSignal;
+    type DeliverabilityDomain = __DeliverabilityDomain;
     const // (undocumented)
     MessageTransport: {
         values: readonly ["smtp", "ses"];
     };
     // (undocumented)
-    type DeliverabilityDomain = __DeliverabilityDomain;
+    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
     const // (undocumented)
     SegmentMatch: {
         values: readonly ["all", "any"];
     };
     // (undocumented)
-    type DeliverabilityRetrieveParams = __DeliverabilityRetrieveParams;
+    type DeliverabilityVerdict = __DeliverabilityVerdict;
     const // (undocumented)
     SegmentOperator: {
         values: readonly ["equals", "contains", "exists"];
     };
     // (undocumented)
-    type DeliverabilityVerdict = __DeliverabilityVerdict;
+    type DmarcAlignmentMode = __DmarcAlignmentMode;
     const // (undocumented)
     SegmentType: {
         values: readonly ["static", "rule"];
     };
     // (undocumented)
-    type DmarcAlignmentMode = __DmarcAlignmentMode;
+    type DmarcGrade = __DmarcGrade;
     const // (undocumented)
     SendBatchRowState: {
         values: readonly ["accepted", "rejected"];
     };
     // (undocumented)
-    type DmarcGrade = __DmarcGrade;
+    type DmarcPolicy = __DmarcPolicy;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type DmarcPolicy = __DmarcPolicy;
+    type DmarcRecordLocation = __DmarcRecordLocation;
     const // (undocumented)
     SesDkimStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE", "NOT_STARTED", "not_enabled"];
     };
     // (undocumented)
-    type DmarcRecordLocation = __DmarcRecordLocation;
+    type DnsApplyAction = __DnsApplyAction;
     const // (undocumented)
     SesMailFromStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE"];
     };
     // (undocumented)
-    type DnsApplyAction = __DnsApplyAction;
+    type DnsApplyConflict = __DnsApplyConflict;
     const // (undocumented)
     ShareLinkStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type DnsApplyConflict = __DnsApplyConflict;
+    type DnsApplyCounts = __DnsApplyCounts;
     const // (undocumented)
     SmtpConfigStatus: {
         values: readonly ["pending", "active", "failed"];
     };
     // (undocumented)
-    type DnsApplyCounts = __DnsApplyCounts;
+    type DnsApplyPlanItem = __DnsApplyPlanItem;
     const // (undocumented)
     SpamVerdict: {
         values: readonly ["ham", "junk", "reject"];
     };
     // (undocumented)
-    type DnsApplyPlanItem = __DnsApplyPlanItem;
+    type DnsApplyProvider = __DnsApplyProvider;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type DnsApplyProvider = __DnsApplyProvider;
+    type DnsApplyRecordResult = __DnsApplyRecordResult;
     const // (undocumented)
     StatsSeriesMetric: {
         values: readonly ["sent"];
     };
     // (undocumented)
-    type DnsApplyRecordResult = __DnsApplyRecordResult;
+    type DnsApplyResult = __DnsApplyResult;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type DnsApplyResult = __DnsApplyResult;
+    type DnsApplyWarning = __DnsApplyWarning;
     const // (undocumented)
     Subscription: {
         values: readonly ["opt_in", "opt_out"];
     };
     // (undocumented)
-    type DnsApplyWarning = __DnsApplyWarning;
+    type DnsConflictCode = __DnsConflictCode;
     const // (undocumented)
     SubscriptionReason: {
         values: readonly ["opted_in", "default_with_consent", "unsubscribed", "opted_out", "no_consent", "not_opted_in"];
     };
     // (undocumented)
-    type DnsConflictCode = __DnsConflictCode;
+    type DnsConflictSeverity = __DnsConflictSeverity;
     const // (undocumented)
     SuppressionSource: {
         values: readonly ["manual", "bounce", "complaint"];
     };
     // (undocumented)
-    type DnsConflictSeverity = __DnsConflictSeverity;
+    type DnsInstruction = __DnsInstruction;
     const // (undocumented)
     TemplateKind: {
         values: readonly ["template", "layout", "partial"];
     };
     // (undocumented)
-    type DnsInstruction = __DnsInstruction;
+    type DnsProviderId = __DnsProviderId;
     const // (undocumented)
     TemplateSource: {
         values: readonly ["manual", "github"];
     };
     // (undocumented)
-    type DnsProviderId = __DnsProviderId;
+    type DnsProviderLookupSource = __DnsProviderLookupSource;
     const // (undocumented)
     TimelineMetric: {
         values: readonly ["sent", "bounced"];
     };
     // (undocumented)
-    type DnsProviderLookupSource = __DnsProviderLookupSource;
+    type DnsProviderSource = __DnsProviderSource;
     const // (undocumented)
     TopicVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type DnsProviderSource = __DnsProviderSource;
+    type DnsRecordConflict = __DnsRecordConflict;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type DnsRecordConflict = __DnsRecordConflict;
+    type DnsRecordPurpose = __DnsRecordPurpose;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type DnsRecordPurpose = __DnsRecordPurpose;
+    type DnsRecordState = __DnsRecordState;
     const // (undocumented)
     WebhookEndpointLegacySlot: {
         values: readonly ["default", "domain"];
     };
     // (undocumented)
-    type DnsRecordState = __DnsRecordState;
+    type DnsRecordStatus = __DnsRecordStatus;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DnsRecordStatus = __DnsRecordStatus;
+    type DnsRecordType = __DnsRecordType;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type DnsRecordType = __DnsRecordType;
+    type Domain = __Domain;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained", "email.failed", "email.suppressed", "email.skipped", "email.scheduled", "email.canceled", "email.opened", "email.clicked", "email.received", "domain.created", "domain.updated", "domain.verified", "domain.deleted", "suppression.added", "suppression.removed", "sending_defaults.updated", "contact.created", "contact.updated", "contact.deleted"];
     };
-    // (undocumented)
-    type Domain = __Domain;
     // (undocumented)
     type DomainCapabilities = __DomainCapabilities;
     // (undocumented)
@@ -2966,9 +2992,13 @@ namespace Mail {
     // (undocumented)
     type EmailBouncedEventData = __EmailBouncedEventData;
     // (undocumented)
+    type EmailCancel = __EmailCancel;
+    // (undocumented)
     type EmailCanceledEvent = __EmailCanceledEvent;
     // (undocumented)
     type EmailCanceledEventData = __EmailCanceledEventData;
+    // (undocumented)
+    type EmailCancelStatus = __EmailCancelStatus;
     // (undocumented)
     type EmailClickedEvent = __EmailClickedEvent;
     // (undocumented)
@@ -3020,6 +3050,8 @@ namespace Mail {
     // (undocumented)
     type EmailReceivedEventData = __EmailReceivedEventData;
     // (undocumented)
+    type EmailSchedule = __EmailSchedule;
+    // (undocumented)
     type EmailScheduledEvent = __EmailScheduledEvent;
     // (undocumented)
     type EmailScheduledEventData = __EmailScheduledEventData;
@@ -3041,6 +3073,8 @@ namespace Mail {
     type EmailSuppressedEventData = __EmailSuppressedEventData;
     // (undocumented)
     type EmailTag = __EmailTag;
+    // (undocumented)
+    type EmailUpdateParams = __EmailUpdateParams;
     // (undocumented)
     type EngagementProxy = __EngagementProxy;
     // (undocumented)
@@ -3454,11 +3488,11 @@ export { Mail }
 export default Mail;
 
 // @public
-export type MailErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ATTACHMENT_NOT_FOUND" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_ATTACHMENT_CID_UNREFERENCED" | "MAIL_ATTACHMENT_FETCH_FAILED" | "MAIL_ATTACHMENT_INVALID" | "MAIL_ATTACHMENT_TOO_LARGE" | "MAIL_ATTACHMENT_TYPE_BLOCKED" | "MAIL_ATTACHMENTS_NOT_IN_BATCH" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace" | (string & {});
+export type MailErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ATTACHMENT_NOT_FOUND" | "AUDIENCE_REQUIRED" | "BROADCAST_AUDIENCE_EMPTY" | "BROADCAST_CONTENT_CONFLICT" | "BROADCAST_NOT_CANCELABLE" | "BROADCAST_NOT_DELETABLE" | "BROADCAST_NOT_DRAFT" | "BROADCAST_NOT_FOUND" | "BROADCAST_NOT_READY" | "CAPABILITY_NOT_VERIFIED" | "CONTACT_EXISTS" | "CONTACT_LIMIT" | "CONTACT_NOT_FOUND" | "CONTACT_PROPERTY_EXISTS" | "CONTACT_PROPERTY_LIMIT" | "CONTACT_PROPERTY_NOT_FOUND" | "DATE_RANGE_BEYOND_RETENTION" | "DATE_RANGE_TOO_WIDE" | "DATE_WINDOW_TOO_WIDE" | "DKIM_KEY_MISSING" | "DNS_CONFLICTS" | "DOMAIN_CONNECT_DISABLED" | "DOMAIN_CONNECT_MAIL_FROM_LABEL" | "DOMAIN_CONNECT_NOT_SENDING" | "DOMAIN_CONNECT_UNAVAILABLE" | "DOMAIN_HAS_MAILBOXES" | "DOMAIN_NOT_FOUND" | "EMAIL_CONTENT_CONFLICT" | "EMAIL_NOT_FOUND" | "EMAIL_UNAVAILABLE" | "FROM_DOMAIN_MISMATCH" | "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW" | "IMPORT_IN_PROGRESS" | "IMPORT_NOT_FOUND" | "IMPORT_TOO_LARGE" | "INVALID_CAPABILITIES" | "INVALID_CONTACT_PROPERTY_VALUE" | "INVALID_CSV" | "INVALID_DATE" | "INVALID_DATE_RANGE" | "INVALID_DATE_WINDOW" | "INVALID_FORMAT" | "INVALID_FROM_ADDRESS" | "INVALID_SEGMENT_RULE" | "INVALID_TIMEZONE" | "INVALID_ZONE" | "MAIL_ATTACHMENT_CID_UNREFERENCED" | "MAIL_ATTACHMENT_FETCH_FAILED" | "MAIL_ATTACHMENT_INVALID" | "MAIL_ATTACHMENT_TOO_LARGE" | "MAIL_ATTACHMENT_TYPE_BLOCKED" | "MAIL_ATTACHMENTS_NOT_IN_BATCH" | "MAIL_EMAIL_NOT_SCHEDULED" | "MAIL_FROM_HOST_IN_USE" | "MAIL_FROM_NOT_SENDING" | "MAIL_HEADER_NOT_ALLOWED" | "MAIL_SCHEDULE_OUT_OF_RANGE" | "MAIL_SCHEDULE_UNPARSEABLE" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "RECIPIENT_LIMIT" | "RECIPIENT_SUPPRESSED" | "REGION_NOT_AVAILABLE" | "RESERVED_PROPERTY_KEY" | "SEGMENT_EXISTS" | "SEGMENT_LIMIT" | "SEGMENT_NOT_FOUND" | "SEGMENT_RULE_BASED" | "SEGMENT_TYPE_FIXED" | "SES_IDENTITY_DELETE_FAILED" | "SHARE_LINK_NOT_FOUND" | "SMTP_AUTH_PARTIAL" | "SMTP_CONFIG_NOT_FOUND" | "SMTP_PASSWORD_REQUIRED" | "TEMPLATE_DATA_INVALID" | "TEMPLATE_KIND_NOT_SENDABLE" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_RENDER_FAILED" | "TLS_ENFORCED_NOT_AVAILABLE" | "TOPIC_EXISTS" | "TOPIC_LIMIT" | "TOPIC_NOT_FOUND" | "TRACKING_NOT_AVAILABLE" | "UNKNOWN_CONTACT_PROPERTY" | "UNSUBSCRIBE_LINK_REQUIRED" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | "sender_domain_not_in_workspace" | (string & {});
 
 // @public (undocumented)
 export const MailErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ATTACHMENT_NOT_FOUND", "AUDIENCE_REQUIRED", "BROADCAST_AUDIENCE_EMPTY", "BROADCAST_CONTENT_CONFLICT", "BROADCAST_NOT_CANCELABLE", "BROADCAST_NOT_DELETABLE", "BROADCAST_NOT_DRAFT", "BROADCAST_NOT_FOUND", "BROADCAST_NOT_READY", "CAPABILITY_NOT_VERIFIED", "CONTACT_EXISTS", "CONTACT_LIMIT", "CONTACT_NOT_FOUND", "CONTACT_PROPERTY_EXISTS", "CONTACT_PROPERTY_LIMIT", "CONTACT_PROPERTY_NOT_FOUND", "DATE_RANGE_BEYOND_RETENTION", "DATE_RANGE_TOO_WIDE", "DATE_WINDOW_TOO_WIDE", "DKIM_KEY_MISSING", "DNS_CONFLICTS", "DOMAIN_CONNECT_DISABLED", "DOMAIN_CONNECT_MAIL_FROM_LABEL", "DOMAIN_CONNECT_NOT_SENDING", "DOMAIN_CONNECT_UNAVAILABLE", "DOMAIN_HAS_MAILBOXES", "DOMAIN_NOT_FOUND", "EMAIL_CONTENT_CONFLICT", "EMAIL_NOT_FOUND", "EMAIL_UNAVAILABLE", "FROM_DOMAIN_MISMATCH", "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW", "IMPORT_IN_PROGRESS", "IMPORT_NOT_FOUND", "IMPORT_TOO_LARGE", "INVALID_CAPABILITIES", "INVALID_CONTACT_PROPERTY_VALUE", "INVALID_CSV", "INVALID_DATE", "INVALID_DATE_RANGE", "INVALID_DATE_WINDOW", "INVALID_FORMAT", "INVALID_FROM_ADDRESS", "INVALID_SEGMENT_RULE", "INVALID_TIMEZONE", "INVALID_ZONE", "MAIL_ATTACHMENT_CID_UNREFERENCED", "MAIL_ATTACHMENT_FETCH_FAILED", "MAIL_ATTACHMENT_INVALID", "MAIL_ATTACHMENT_TOO_LARGE", "MAIL_ATTACHMENT_TYPE_BLOCKED", "MAIL_ATTACHMENTS_NOT_IN_BATCH", "MAIL_FROM_HOST_IN_USE", "MAIL_FROM_NOT_SENDING", "MAIL_HEADER_NOT_ALLOWED", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "RECIPIENT_LIMIT", "RECIPIENT_SUPPRESSED", "REGION_NOT_AVAILABLE", "RESERVED_PROPERTY_KEY", "SEGMENT_EXISTS", "SEGMENT_LIMIT", "SEGMENT_NOT_FOUND", "SEGMENT_RULE_BASED", "SEGMENT_TYPE_FIXED", "SES_IDENTITY_DELETE_FAILED", "SHARE_LINK_NOT_FOUND", "SMTP_AUTH_PARTIAL", "SMTP_CONFIG_NOT_FOUND", "SMTP_PASSWORD_REQUIRED", "TEMPLATE_DATA_INVALID", "TEMPLATE_KIND_NOT_SENDABLE", "TEMPLATE_NOT_FOUND", "TEMPLATE_RENDER_FAILED", "TLS_ENFORCED_NOT_AVAILABLE", "TOPIC_EXISTS", "TOPIC_LIMIT", "TOPIC_NOT_FOUND", "TRACKING_NOT_AVAILABLE", "UNKNOWN_CONTACT_PROPERTY", "UNSUBSCRIBE_LINK_REQUIRED", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender", "sender_domain_not_in_workspace"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ATTACHMENT_NOT_FOUND", "AUDIENCE_REQUIRED", "BROADCAST_AUDIENCE_EMPTY", "BROADCAST_CONTENT_CONFLICT", "BROADCAST_NOT_CANCELABLE", "BROADCAST_NOT_DELETABLE", "BROADCAST_NOT_DRAFT", "BROADCAST_NOT_FOUND", "BROADCAST_NOT_READY", "CAPABILITY_NOT_VERIFIED", "CONTACT_EXISTS", "CONTACT_LIMIT", "CONTACT_NOT_FOUND", "CONTACT_PROPERTY_EXISTS", "CONTACT_PROPERTY_LIMIT", "CONTACT_PROPERTY_NOT_FOUND", "DATE_RANGE_BEYOND_RETENTION", "DATE_RANGE_TOO_WIDE", "DATE_WINDOW_TOO_WIDE", "DKIM_KEY_MISSING", "DNS_CONFLICTS", "DOMAIN_CONNECT_DISABLED", "DOMAIN_CONNECT_MAIL_FROM_LABEL", "DOMAIN_CONNECT_NOT_SENDING", "DOMAIN_CONNECT_UNAVAILABLE", "DOMAIN_HAS_MAILBOXES", "DOMAIN_NOT_FOUND", "EMAIL_CONTENT_CONFLICT", "EMAIL_NOT_FOUND", "EMAIL_UNAVAILABLE", "FROM_DOMAIN_MISMATCH", "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW", "IMPORT_IN_PROGRESS", "IMPORT_NOT_FOUND", "IMPORT_TOO_LARGE", "INVALID_CAPABILITIES", "INVALID_CONTACT_PROPERTY_VALUE", "INVALID_CSV", "INVALID_DATE", "INVALID_DATE_RANGE", "INVALID_DATE_WINDOW", "INVALID_FORMAT", "INVALID_FROM_ADDRESS", "INVALID_SEGMENT_RULE", "INVALID_TIMEZONE", "INVALID_ZONE", "MAIL_ATTACHMENT_CID_UNREFERENCED", "MAIL_ATTACHMENT_FETCH_FAILED", "MAIL_ATTACHMENT_INVALID", "MAIL_ATTACHMENT_TOO_LARGE", "MAIL_ATTACHMENT_TYPE_BLOCKED", "MAIL_ATTACHMENTS_NOT_IN_BATCH", "MAIL_EMAIL_NOT_SCHEDULED", "MAIL_FROM_HOST_IN_USE", "MAIL_FROM_NOT_SENDING", "MAIL_HEADER_NOT_ALLOWED", "MAIL_SCHEDULE_OUT_OF_RANGE", "MAIL_SCHEDULE_UNPARSEABLE", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "RECIPIENT_LIMIT", "RECIPIENT_SUPPRESSED", "REGION_NOT_AVAILABLE", "RESERVED_PROPERTY_KEY", "SEGMENT_EXISTS", "SEGMENT_LIMIT", "SEGMENT_NOT_FOUND", "SEGMENT_RULE_BASED", "SEGMENT_TYPE_FIXED", "SES_IDENTITY_DELETE_FAILED", "SHARE_LINK_NOT_FOUND", "SMTP_AUTH_PARTIAL", "SMTP_CONFIG_NOT_FOUND", "SMTP_PASSWORD_REQUIRED", "TEMPLATE_DATA_INVALID", "TEMPLATE_KIND_NOT_SENDABLE", "TEMPLATE_NOT_FOUND", "TEMPLATE_RENDER_FAILED", "TLS_ENFORCED_NOT_AVAILABLE", "TOPIC_EXISTS", "TOPIC_LIMIT", "TOPIC_NOT_FOUND", "TRACKING_NOT_AVAILABLE", "UNKNOWN_CONTACT_PROPERTY", "UNSUBSCRIBE_LINK_REQUIRED", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender", "sender_domain_not_in_workspace"];
 };
 
 export { NotFoundError }
@@ -4138,7 +4172,7 @@ export type paths = {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["EmailsController_update"];
         trace?: never;
     };
     "/v1/workspaces/{workspace_id}/emails/{id}/attachments/{position}": {
@@ -4151,6 +4185,22 @@ export type paths = {
         get: operations["EmailsController_downloadAttachment"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/emails/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EmailsController_cancel"];
         delete?: never;
         options?: never;
         head?: never;

@@ -4926,8 +4926,38 @@
         "type": "object",
         "x-pc-sdk-model": "EmailBouncedEventData"
       },
+      "EmailCancelResponseDto": {
+        "properties": {
+          "id": {
+            "description": "The email id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailCancelStatus"
+              }
+            ],
+            "description": "Always `canceled`.",
+            "example": "canceled"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EmailCancel"
+      },
+      "EmailCancelStatus": {
+        "enum": [
+          "canceled"
+        ],
+        "type": "string"
+      },
       "EmailCanceledEvent": {
-        "description": "A scheduled message was canceled (scheduled sending; not emitted yet). Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
+        "description": "A scheduled send was canceled before it went out; one event per recipient. Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
         "example": {
           "created_at": "2026-11-05T09:00:00.000Z",
           "data": {
@@ -4999,7 +5029,7 @@
             "type": "string"
           },
           "email_id": {
-            "description": "The email. Not sent yet: an endpoint can subscribe now and receives it when the feature ships.",
+            "description": "The message (`GET /messages/{id}`); the first recipient's is also the email id.",
             "example": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
             "format": "uuid",
             "type": "string"
@@ -5702,6 +5732,12 @@
             },
             "type": "array"
           },
+          "scheduled_at": {
+            "description": "For a scheduled email (tasks/mail-api/004): when it goes (or went) out. Null for an email sent straight away.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "subject": {
             "description": "Subject line; null when the email has none.",
             "nullable": true,
@@ -5740,6 +5776,7 @@
           "last_event",
           "recipient_count",
           "created_at",
+          "scheduled_at",
           "headers",
           "messages",
           "attachments"
@@ -5797,6 +5834,12 @@
             },
             "type": "array"
           },
+          "scheduled_at": {
+            "description": "For a scheduled email (tasks/mail-api/004): when it goes (or went) out. Null for an email sent straight away.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "subject": {
             "description": "Subject line; null when the email has none.",
             "nullable": true,
@@ -5834,7 +5877,8 @@
           "tags",
           "last_event",
           "recipient_count",
-          "created_at"
+          "created_at",
+          "scheduled_at"
         ],
         "type": "object",
         "x-pc-sdk-model": "Email"
@@ -6584,8 +6628,28 @@
         "type": "object",
         "x-pc-sdk-model": "EmailReceivedEventData"
       },
+      "EmailScheduleResponseDto": {
+        "properties": {
+          "id": {
+            "description": "The email id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "scheduled_at": {
+            "description": "When it goes out.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "scheduled_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EmailSchedule"
+      },
       "EmailScheduledEvent": {
-        "description": "A message was scheduled for later (scheduled sending; not emitted yet). Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
+        "description": "A send with `scheduled_at` was accepted; one event per recipient. Endpoints behind the deprecated per-slot routes also get `X-Mail-Event-Id` and `X-Mail-Event-Type` headers until their sunset.",
         "example": {
           "created_at": "2026-11-05T09:00:00.000Z",
           "data": {
@@ -6651,7 +6715,7 @@
       "EmailScheduledEventDataDto": {
         "properties": {
           "email_id": {
-            "description": "The email. Not sent yet: an endpoint can subscribe now and receives it when the feature ships.",
+            "description": "The message (`GET /messages/{id}`); the first recipient's is also the email id.",
             "example": "0b9d4c1e-5f2a-4e8b-9c3d-7a6b5e4f3d2c",
             "format": "uuid",
             "type": "string"
@@ -8259,9 +8323,12 @@
               "MAIL_ATTACHMENT_TOO_LARGE",
               "MAIL_ATTACHMENT_TYPE_BLOCKED",
               "MAIL_ATTACHMENTS_NOT_IN_BATCH",
+              "MAIL_EMAIL_NOT_SCHEDULED",
               "MAIL_FROM_HOST_IN_USE",
               "MAIL_FROM_NOT_SENDING",
               "MAIL_HEADER_NOT_ALLOWED",
+              "MAIL_SCHEDULE_OUT_OF_RANGE",
+              "MAIL_SCHEDULE_UNPARSEABLE",
               "PROVIDER_ERROR",
               "PROVIDER_PERMISSION_DENIED",
               "PROVIDER_TOKEN_REJECTED",
@@ -8370,9 +8437,12 @@
           "MAIL_ATTACHMENT_INVALID": "An attachment is malformed: bad base64, both or neither of `content` and `path`, or a bad file name or `content_id` (`details.index`).",
           "MAIL_ATTACHMENT_TOO_LARGE": "More than 20 attachments, or more than 10 MB in total after decoding (`details.limit_bytes`, `details.total_bytes`).",
           "MAIL_ATTACHMENT_TYPE_BLOCKED": "An attachment is an executable file type (by name, declared type or content) and cannot be sent (`details.index`).",
+          "MAIL_EMAIL_NOT_SCHEDULED": "The email is not scheduled any more: it was sent, is going out now, or was canceled.",
           "MAIL_FROM_HOST_IN_USE": "The MAIL FROM host already has records that are not ours (`details.found`).",
           "MAIL_FROM_NOT_SENDING": "A custom MAIL FROM needs the domain to send.",
           "MAIL_HEADER_NOT_ALLOWED": "A custom header is not allowed, or its value is invalid (`details.headers`).",
+          "MAIL_SCHEDULE_OUT_OF_RANGE": "`scheduled_at` must be between 1 minute and 7 days from now (`details.earliest`, `details.latest`).",
+          "MAIL_SCHEDULE_UNPARSEABLE": "`scheduled_at` is not ISO 8601 with an offset or one of the documented phrases.",
           "MCP_NOT_PERMITTED": "An MCP (agent) token cannot call this route.",
           "MCP_WORKSPACE_MISMATCH": "The MCP token was issued for a different workspace.",
           "METHOD_NOT_ALLOWED": "The route does not accept this HTTP method.",
@@ -9122,7 +9192,9 @@
           "failed",
           "suppressed",
           "opened",
-          "clicked"
+          "clicked",
+          "scheduled",
+          "canceled"
         ],
         "type": "string"
       },
@@ -9144,7 +9216,9 @@
           "complained",
           "failed",
           "suppressed",
-          "deferred"
+          "deferred",
+          "scheduled",
+          "canceled"
         ],
         "type": "string"
       },
@@ -9356,6 +9430,12 @@
             "nullable": true,
             "type": "array"
           },
+          "scheduled_at": {
+            "description": "For a scheduled send (tasks/mail-api/004): when it goes (or went) out. Null otherwise.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "sent_at": {
             "description": "When the message was handed off for delivery. This is the fact the send path actually establishes.",
             "format": "date-time",
@@ -9469,6 +9549,7 @@
           "tracking",
           "opened_at",
           "clicked_at",
+          "scheduled_at",
           "attachments",
           "events",
           "last_event"
@@ -9600,6 +9681,12 @@
             "nullable": true,
             "type": "array"
           },
+          "scheduled_at": {
+            "description": "For a scheduled send (tasks/mail-api/004): when it goes (or went) out. Null otherwise.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "sent_at": {
             "description": "When the message was handed off for delivery. This is the fact the send path actually establishes.",
             "format": "date-time",
@@ -9712,7 +9799,8 @@
           "tags",
           "tracking",
           "opened_at",
-          "clicked_at"
+          "clicked_at",
+          "scheduled_at"
         ],
         "type": "object",
         "x-pc-sdk-model": "OutboundMessage"
@@ -9896,6 +9984,12 @@
             "nullable": true,
             "type": "array"
           },
+          "scheduled_at": {
+            "description": "For a scheduled send (tasks/mail-api/004): when it goes (or went) out. Null otherwise.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "sent_at": {
             "description": "When the message was handed off for delivery. This is the fact the send path actually establishes.",
             "format": "date-time",
@@ -10009,6 +10103,7 @@
           "tracking",
           "opened_at",
           "clicked_at",
+          "scheduled_at",
           "attachments",
           "body_html",
           "body_text"
@@ -11412,6 +11507,12 @@
             "nullable": true,
             "type": "string"
           },
+          "scheduled_at": {
+            "description": "Only for a send with `scheduled_at` (tasks/mail-api/004): when it goes out.",
+            "example": "2026-11-18T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
           "subject": {
             "description": "The rendered subject line.",
             "type": "string"
@@ -11895,6 +11996,12 @@
               }
             ]
           },
+          "scheduled_at": {
+            "description": "Send later instead of now: ISO 8601 with an offset (`2026-11-18T09:00:00+01:00`), or `in 10 minutes`, `in 2 hours`, `in 1 day`, `tomorrow at 9am` (UTC). Between 1 minute and 7 days ahead (400 `MAIL_SCHEDULE_OUT_OF_RANGE`; anything else 400 `MAIL_SCHEDULE_UNPARSEABLE`). The send is checked now (content, From domain, attachments) and recorded `scheduled` with an `email.scheduled` event; it is rendered, checked against the suppression list and counted against the send limits when it goes out (a send over the limits waits a minute and tries again). Cancel with `POST /emails/{id}/cancel`, move with `PATCH /emails/{id}`.",
+            "example": "in 2 hours",
+            "maxLength": 64,
+            "type": "string"
+          },
           "subject": {
             "description": "Subject line. Required with `html`/`text`; with a `template` it overrides the template's subject.",
             "example": "Your order has shipped",
@@ -12121,6 +12228,12 @@
               }
             ]
           },
+          "scheduled_at": {
+            "description": "Send later instead of now: ISO 8601 with an offset (`2026-11-18T09:00:00+01:00`), or `in 10 minutes`, `in 2 hours`, `in 1 day`, `tomorrow at 9am` (UTC). Between 1 minute and 7 days ahead (400 `MAIL_SCHEDULE_OUT_OF_RANGE`; anything else 400 `MAIL_SCHEDULE_UNPARSEABLE`). The send is checked now (content, From domain, attachments) and recorded `scheduled` with an `email.scheduled` event; it is rendered, checked against the suppression list and counted against the send limits when it goes out (a send over the limits waits a minute and tries again). Cancel with `POST /emails/{id}/cancel`, move with `PATCH /emails/{id}`.",
+            "example": "in 2 hours",
+            "maxLength": 64,
+            "type": "string"
+          },
           "subject": {
             "description": "Subject line. Required with `html`/`text`; with a `template` it overrides the template's subject.",
             "example": "Your order has shipped",
@@ -12197,6 +12310,12 @@
             "description": "The email's id. Pass it to `GET /emails/{id}`; it is also the id of the first recipient's message (`GET /messages/{id}`), and webhook events of every recipient carry their own message id as `email_id`.",
             "example": "4f8b2c1e-9a3d-4e57-b6f0-2d1c8e7a9b05",
             "format": "uuid",
+            "type": "string"
+          },
+          "scheduled_at": {
+            "description": "Only for a send with `scheduled_at`: when it goes out.",
+            "example": "2026-11-18T09:00:00.000Z",
+            "format": "date-time",
             "type": "string"
           }
         },
@@ -12303,6 +12422,12 @@
                 "type": "array"
               }
             ]
+          },
+          "scheduled_at": {
+            "description": "Send later instead of now: ISO 8601 with an offset (`2026-11-18T09:00:00+01:00`), or `in 10 minutes`, `in 2 hours`, `in 1 day`, `tomorrow at 9am` (UTC). Between 1 minute and 7 days ahead (400 `MAIL_SCHEDULE_OUT_OF_RANGE`; anything else 400 `MAIL_SCHEDULE_UNPARSEABLE`). The send is checked now (content, From domain, attachments) and recorded `scheduled` with an `email.scheduled` event; it is rendered, checked against the suppression list and counted against the send limits when it goes out (a send over the limits waits a minute and tries again). Cancel with `POST /emails/{id}/cancel`, move with `PATCH /emails/{id}`.",
+            "example": "in 2 hours",
+            "maxLength": 64,
+            "type": "string"
           },
           "subject": {
             "description": "Subject override (optional; uses template subject otherwise)",
@@ -13797,6 +13922,20 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "UpdateEmailDto": {
+        "properties": {
+          "scheduled_at": {
+            "description": "The new time, same rules as `scheduled_at` on a send.",
+            "example": "2026-11-18T09:00:00Z",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "required": [
+          "scheduled_at"
+        ],
         "type": "object"
       },
       "UpdateGitHubSettingsDto": {
@@ -27809,7 +27948,7 @@
                 }
               }
             },
-            "description": "Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers); `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED` or `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index` names the attachment). Nothing is recorded, queued or counted.",
+            "description": "Validation failure; `EMAIL_CONTENT_CONFLICT` (both or neither of `html`/`text` and `template`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_HEADER_NOT_ALLOWED` (`details.headers` names the refused headers); `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED` or `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index` names the attachment); `MAIL_SCHEDULE_UNPARSEABLE` / `MAIL_SCHEDULE_OUT_OF_RANGE` for `scheduled_at`. Nothing is recorded, queued or counted.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -27824,7 +27963,9 @@
               "MAIL_ATTACHMENT_INVALID",
               "MAIL_ATTACHMENT_TOO_LARGE",
               "MAIL_ATTACHMENT_TYPE_BLOCKED",
-              "MAIL_ATTACHMENT_CID_UNREFERENCED"
+              "MAIL_ATTACHMENT_CID_UNREFERENCED",
+              "MAIL_SCHEDULE_UNPARSEABLE",
+              "MAIL_SCHEDULE_OUT_OF_RANGE"
             ]
           },
           "401": {
@@ -28723,6 +28864,243 @@
           "paginated": false,
           "resource": "emails"
         }
+      },
+      "patch": {
+        "description": "Moves a scheduled email (sent with `scheduled_at`) to a new time, for every recipient. Same rules as `scheduled_at`: 1 minute to 7 days ahead. Only while it is still scheduled.",
+        "operationId": "EmailsController_update",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the email.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9._:-]`) used to deduplicate retries within a 24h window. A retry with the same key and body returns the original response with `Idempotent-Replay: true`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateEmailDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailScheduleResponseDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`MAIL_SCHEDULE_UNPARSEABLE` or `MAIL_SCHEDULE_OUT_OF_RANGE`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR",
+              "MAIL_SCHEDULE_UNPARSEABLE",
+              "MAIL_SCHEDULE_OUT_OF_RANGE"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`EMAIL_NOT_FOUND`: no scheduled email with this id in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "EMAIL_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reschedule a scheduled email",
+        "tags": [
+          "emails"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "update",
+          "paginated": false,
+          "resource": "emails"
+        }
       }
     },
     "/v1/workspaces/{workspace_id}/emails/{id}/attachments/{position}": {
@@ -28918,6 +29296,234 @@
           "method": "retrieve",
           "paginated": false,
           "resource": "emails.attachments"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/emails/{id}/cancel": {
+      "post": {
+        "description": "Cancels a scheduled email before it goes out: every recipient's message reads `canceled` and gets an `email.canceled` event. Nothing is sent or counted.",
+        "operationId": "EmailsController_cancel",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the email.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9._:-]`) used to deduplicate retries within a 24h window. A retry with the same key and body returns the original response with `Idempotent-Replay: true`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailCancelResponseDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`EMAIL_NOT_FOUND`: no scheduled email with this id in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "EMAIL_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`MAIL_EMAIL_NOT_SCHEDULED`: it was already sent, is going out right now, or was canceled. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "MAIL_EMAIL_NOT_SCHEDULED",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a scheduled email",
+        "tags": [
+          "emails"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "cancel",
+          "paginated": false,
+          "resource": "emails"
         }
       }
     },
@@ -33194,7 +33800,9 @@
                   "complained",
                   "failed",
                   "suppressed",
-                  "deferred"
+                  "deferred",
+                  "scheduled",
+                  "canceled"
                 ],
                 "type": "string"
               },
@@ -33528,7 +34136,9 @@
                   "complained",
                   "failed",
                   "suppressed",
-                  "deferred"
+                  "deferred",
+                  "scheduled",
+                  "canceled"
                 ],
                 "type": "string"
               },
@@ -48839,7 +49449,7 @@
             "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
           }
         },
-        "summary": "A scheduled message was canceled (scheduled sending; not emitted yet).",
+        "summary": "A scheduled send was canceled before it went out; one event per recipient.",
         "tags": [
           "outbound-webhooks"
         ],
@@ -49407,7 +50017,7 @@
             "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
           }
         },
-        "summary": "A message was scheduled for later (scheduled sending; not emitted yet).",
+        "summary": "A send with `scheduled_at` was accepted; one event per recipient.",
         "tags": [
           "outbound-webhooks"
         ],
