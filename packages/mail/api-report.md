@@ -1949,6 +1949,20 @@ export type components = {
             id: string;
             scheduled_at?: string;
         };
+        SendLimitWindowDto: {
+            limit: number;
+            remaining: number;
+            reset_seconds: number;
+            used: number;
+            window: components["schemas"]["SendLimitWindowName"];
+        };
+        SendLimitWindowName: "per_minute" | "per_hour" | "per_day";
+        SendLimitsDto: {
+            custom: boolean;
+            plan: components["schemas"]["SendLimitsPlan"] | null;
+            windows: components["schemas"]["SendLimitWindowDto"][];
+        };
+        SendLimitsPlan: "free" | "pro" | "scale" | "internal" | "preview";
         SendTemplateDto: {
             attachments?: components["schemas"]["EmailAttachmentDto"][];
             bcc?: string | string[];
@@ -2766,139 +2780,147 @@ namespace Mail {
     // (undocumented)
     type DmarcPolicy = __DmarcPolicy;
     const // (undocumented)
+    SendLimitWindowName: {
+        values: readonly ["per_minute", "per_hour", "per_day"];
+    };
+    // (undocumented)
+    type DmarcRecordLocation = __DmarcRecordLocation;
+    const // (undocumented)
+    SendLimitsPlan: {
+        values: readonly ["free", "pro", "scale", "internal", "preview"];
+    };
+    // (undocumented)
+    type DnsApplyAction = __DnsApplyAction;
+    const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type DmarcRecordLocation = __DmarcRecordLocation;
+    type DnsApplyConflict = __DnsApplyConflict;
     const // (undocumented)
     SesDkimStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE", "NOT_STARTED", "not_enabled"];
     };
     // (undocumented)
-    type DnsApplyAction = __DnsApplyAction;
+    type DnsApplyCounts = __DnsApplyCounts;
     const // (undocumented)
     SesMailFromStatus: {
         values: readonly ["PENDING", "SUCCESS", "FAILED", "TEMPORARY_FAILURE"];
     };
     // (undocumented)
-    type DnsApplyConflict = __DnsApplyConflict;
+    type DnsApplyPlanItem = __DnsApplyPlanItem;
     const // (undocumented)
     ShareLinkStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type DnsApplyCounts = __DnsApplyCounts;
+    type DnsApplyProvider = __DnsApplyProvider;
     const // (undocumented)
     SmtpConfigStatus: {
         values: readonly ["pending", "active", "failed"];
     };
     // (undocumented)
-    type DnsApplyPlanItem = __DnsApplyPlanItem;
+    type DnsApplyRecordResult = __DnsApplyRecordResult;
     const // (undocumented)
     SpamVerdict: {
         values: readonly ["ham", "junk", "reject"];
     };
     // (undocumented)
-    type DnsApplyProvider = __DnsApplyProvider;
+    type DnsApplyResult = __DnsApplyResult;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type DnsApplyRecordResult = __DnsApplyRecordResult;
+    type DnsApplyWarning = __DnsApplyWarning;
     const // (undocumented)
     StatsSeriesMetric: {
         values: readonly ["sent"];
     };
     // (undocumented)
-    type DnsApplyResult = __DnsApplyResult;
+    type DnsConflictCode = __DnsConflictCode;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type DnsApplyWarning = __DnsApplyWarning;
+    type DnsConflictSeverity = __DnsConflictSeverity;
     const // (undocumented)
     Subscription: {
         values: readonly ["opt_in", "opt_out"];
     };
     // (undocumented)
-    type DnsConflictCode = __DnsConflictCode;
+    type DnsInstruction = __DnsInstruction;
     const // (undocumented)
     SubscriptionReason: {
         values: readonly ["opted_in", "default_with_consent", "unsubscribed", "opted_out", "no_consent", "not_opted_in"];
     };
     // (undocumented)
-    type DnsConflictSeverity = __DnsConflictSeverity;
+    type DnsProviderId = __DnsProviderId;
     const // (undocumented)
     SuppressionSource: {
         values: readonly ["manual", "bounce", "complaint"];
     };
     // (undocumented)
-    type DnsInstruction = __DnsInstruction;
+    type DnsProviderLookupSource = __DnsProviderLookupSource;
     const // (undocumented)
     TemplateKind: {
         values: readonly ["template", "layout", "partial"];
     };
     // (undocumented)
-    type DnsProviderId = __DnsProviderId;
+    type DnsProviderSource = __DnsProviderSource;
     const // (undocumented)
     TemplateSource: {
         values: readonly ["manual", "github"];
     };
     // (undocumented)
-    type DnsProviderLookupSource = __DnsProviderLookupSource;
+    type DnsRecordConflict = __DnsRecordConflict;
     const // (undocumented)
     TimelineMetric: {
         values: readonly ["sent", "bounced"];
     };
     // (undocumented)
-    type DnsProviderSource = __DnsProviderSource;
+    type DnsRecordPurpose = __DnsRecordPurpose;
     const // (undocumented)
     TopicVisibility: {
         values: readonly ["public", "private"];
     };
     // (undocumented)
-    type DnsRecordConflict = __DnsRecordConflict;
+    type DnsRecordState = __DnsRecordState;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type DnsRecordPurpose = __DnsRecordPurpose;
+    type DnsRecordStatus = __DnsRecordStatus;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type DnsRecordState = __DnsRecordState;
+    type DnsRecordType = __DnsRecordType;
     const // (undocumented)
     WebhookEndpointLegacySlot: {
         values: readonly ["default", "domain"];
     };
     // (undocumented)
-    type DnsRecordStatus = __DnsRecordStatus;
+    type Domain = __Domain;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DnsRecordType = __DnsRecordType;
+    type DomainCapabilities = __DomainCapabilities;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type Domain = __Domain;
+    type DomainCapabilityState = __DomainCapabilityState;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["email.sent", "email.delivered", "email.delivery_delayed", "email.bounced", "email.complained", "email.failed", "email.suppressed", "email.skipped", "email.scheduled", "email.canceled", "email.opened", "email.clicked", "email.received", "domain.created", "domain.updated", "domain.verified", "domain.deleted", "suppression.added", "suppression.removed", "sending_defaults.updated", "contact.created", "contact.updated", "contact.deleted"];
     };
-    // (undocumented)
-    type DomainCapabilities = __DomainCapabilities;
-    // (undocumented)
-    type DomainCapabilityState = __DomainCapabilityState;
     // (undocumented)
     type DomainConnectStart = __DomainConnectStart;
     // (undocumented)
@@ -3323,6 +3345,14 @@ namespace Mail {
     type SendingDefaultsUpdatedEventData = __SendingDefaultsUpdatedEventData;
     // (undocumented)
     type SendingDefaultUpdateParams = __SendingDefaultUpdateParams;
+    // (undocumented)
+    type SendLimits = __SendLimits;
+    // (undocumented)
+    type SendLimitsPlan = __SendLimitsPlan;
+    // (undocumented)
+    type SendLimitWindow = __SendLimitWindow;
+    // (undocumented)
+    type SendLimitWindowName = __SendLimitWindowName;
     // (undocumented)
     type SesDkimStatus = __SesDkimStatus;
     // (undocumented)
@@ -4330,6 +4360,22 @@ export type paths = {
         put?: never;
         post?: never;
         delete: operations["IntegrationsController_disconnect"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/limits": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["LimitsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;

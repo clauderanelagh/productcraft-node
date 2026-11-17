@@ -1576,7 +1576,7 @@ Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipient
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `INVALID_FROM_ADDRESS`, `TEMPLATE_RENDER_FAILED`, `TEMPLATE_DATA_INVALID`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace (`reason: not_registered` or `not_verified`); refused before anything is recorded or queued. Or `domain_not_verified_by_provider`: the from-domain's DNS records have been broken for over 72 h, so the email provider no longer sends for it. Or `INVALID_FROM_ADDRESS`. Or `TEMPLATE_RENDER_FAILED` / `TEMPLATE_DATA_INVALID` for a template send. Or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`); nothing is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (by plan, see `GET /limits`; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.emails.send({
@@ -1853,6 +1853,30 @@ const syncStatus = await mail.integrations.github.sync.retrieve("3f0c1a2b-4c5d-4
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-sync-sync-id)
+
+## limits
+
+### `mail.limits.retrieve(options?)`
+
+`GET /v1/workspaces/{workspace_id}/limits` → `Mail.SendLimits`
+
+Get the workspace send limits.
+
+The send limits per minute, per hour and per day (each recipient counts one), what is used and left in each window now, and when each resets. Limits follow the workspace plan (Free 60 / 600 / 10,000; Pro 300 / 5,000 / 25,000; Scale 600 / 10,000 / 50,000); `custom` is true when ProductCraft set different limits for this workspace. A send over a limit is refused with 429 `RATE_LIMITED`, `Retry-After` and `ratelimit-*` headers; successful sends carry the same `ratelimit-*` headers. Reading this changes nothing and counts nothing.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const sendLimits = await mail.limits.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-limits)
 
 ## mailboxes
 
@@ -3131,7 +3155,7 @@ Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | IDEMPOTENCY_KEY_REUSE — same key, different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_SUPPRESSED`, `TOPIC_NOT_FOUND`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `no_default_sender`, `MAIL_ATTACHMENT_FETCH_FAILED` | Recipient suppressed (`RECIPIENT_SUPPRESSED`; with a `topic_id`, or a template rendering `{{{unsubscribe_url}}}`, also when the recipient unsubscribed or never opted in: `details.reason` is `unsubscribe` or `no_consent`), `TOPIC_NOT_FOUND`, render failure, or invalid from address; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it; or `no_default_sender` (body `code`): the body has no `from` and the workspace has no default sender set (nothing is queued; an `email.skipped` webhook event is logged); or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`), nothing is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (60 per minute, 600 per hour, 10,000 per day): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (by plan, see `GET /limits`): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
@@ -3158,7 +3182,7 @@ Two ways to make retries safe. An `Idempotency-Key` header covers the whole requ
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider` | For any row: `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued (the whole batch is refused); or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it. The whole batch is refused; no row is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits (60 per minute, 600 per hour, 10,000 per day) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits (by plan, see `GET /limits`) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.templates.sendBatch("welcome", {
