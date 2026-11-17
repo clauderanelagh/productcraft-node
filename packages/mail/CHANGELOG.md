@@ -1,5 +1,11 @@
 # @productcraft/mail
 
+## 1.7.0
+
+### Minor Changes
+
+- bcfcac6: Scheduled sends: `scheduled_at` on `emails.send()`, batch rows and `templates.send()`, `emails.update(id, { scheduled_at })` to reschedule and `emails.cancel(id)` to cancel; `scheduled` and `canceled` message statuses and `scheduled_at` on emails and messages.
+
 ## 1.6.0
 
 ### Minor Changes
