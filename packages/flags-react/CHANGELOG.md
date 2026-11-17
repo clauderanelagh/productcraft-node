@@ -1,9 +1,10 @@
 # @productcraft/flags-react
 
-## 1.0.0
+## 0.1.4
 
 ### Patch Changes
 
+- Accept `@productcraft/flags` 0.6 as a peer.
 - Updated dependencies [97be777]
   - @productcraft/flags@0.6.0
 
