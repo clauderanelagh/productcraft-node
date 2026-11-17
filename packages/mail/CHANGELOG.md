@@ -1,5 +1,11 @@
 # @productcraft/mail
 
+## 1.9.0
+
+### Minor Changes
+
+- de758c8: Test addresses: `is_test` on messages (mail sent to `delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co`, simulated through the Amazon SES mailbox simulator).
+
 ## 1.8.0
 
 ### Minor Changes
