@@ -271,13 +271,16 @@ The user object has the same shape (`identifier`, `email`, `country`, `custom`);
 
 Full reference: [api.md](./api.md).
 
+- `flags.changeRequests`: `apply`, `approve`, `cancel`, `list`, `rebase`, `reject`, `retrieve`, `schedule`
 - `flags.changes`: `retrieve`, `revert`
 - `flags.configs`: `compare`, `delete`, `environments.copy`, `environments.evaluate`, `environments.revisions.list`, `environments.revisions.retrieve`, `environments.sdkKeys.endGracePeriod`, `environments.sdkKeys.list`, `environments.sdkKeys.reveal`, `environments.sdkKeys.rotate`, `environments.values.list`, `retrieve`, `settings.create`, `settings.list`, `update`
 - `flags.imports`: `create`
 - `flags.limits`: `retrieve`
-- `flags.projects`: `changes.export`, `changes.list`, `configs.create`, `configs.list`, `create`, `delete`, `environments.create`, `environments.delete`, `environments.list`, `environments.retrieve`, `environments.update`, `list`, `retrieve`, `segments.create`, `segments.list`, `update`
+- `flags.projects`: `changes.export`, `changes.list`, `configs.create`, `configs.list`, `create`, `delete`, `environments.create`, `environments.delete`, `environments.list`, `environments.retrieve`, `environments.update`, `list`, `retrieve`, `segments.create`, `segments.list`, `staleFlags.list`, `staleFlags.sendDigest`, `update`
+- `flags.ramps`: `cancel`, `list`, `pause`, `resume`, `retrieve`
+- `flags.scheduledChanges`: `cancel`, `list`, `retrieve`
 - `flags.segments`: `delete`, `retrieve`, `revealConfidential`, `update`
-- `flags.settings`: `delete`, `retrieve`, `update`, `values.replace`, `values.retrieve`, `values.revealConfidential`, `values.update`
+- `flags.settings`: `delete`, `retrieve`, `update`, `values.changeRequests.create`, `values.ramps.create`, `values.replace`, `values.retrieve`, `values.revealConfidential`, `values.scheduledChanges.create`, `values.update`
 - `flags.stats`: `retrieve`
 - `flags.webhooks`: `endpoints.create`, `endpoints.delete`, `endpoints.list`, `endpoints.retrieve`, `endpoints.rotateSecret`, `endpoints.test`, `endpoints.update`, `eventTypes.list`, `events.list`, `events.replay`, `events.retrieve`
 
@@ -288,10 +291,10 @@ List methods return a `PagePromise`: `for await` walks every item across pages, 
 ```ts
 import { Flags } from "@productcraft/flags";
 const flags = new Flags({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-for await (const item of flags.projects.list({ limit: 50 })) console.log(item);
-const page = await flags.projects.list();
+for await (const item of flags.changeRequests.list({ limit: 50 })) console.log(item);
+const page = await flags.changeRequests.list();
 if (page.hasNextPage()) await page.getNextPage();
-const all = await flags.projects.list().toArray({ maxItems: 500 });
+const all = await flags.changeRequests.list().toArray({ maxItems: 500 });
 ```
 
 ## Errors
@@ -302,7 +305,7 @@ Every failure is a class you can catch. `APIError` carries `status`, `code`, `me
 import { Flags, NotFoundError, RateLimitError, APIError } from "@productcraft/flags";
 const flags = new Flags();
 try {
-  await flags.changes.retrieve("00000000-0000-0000-0000-000000000000");
+  await flags.changeRequests.retrieve("00000000-0000-0000-0000-000000000000");
 } catch (err) {
   if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
   else if (err instanceof RateLimitError) console.log(err.retryAfter);
@@ -318,7 +321,7 @@ Network errors, 408, 429, 5xx and `409 IDEMPOTENCY_IN_PROGRESS` are retried twic
 ```ts
 import { Flags } from "@productcraft/flags";
 const flags = new Flags({ maxRetries: 3, timeout: 20_000 });
-await flags.projects.list({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
+await flags.changeRequests.list({}, { maxRetries: 0, signal: AbortSignal.timeout(5_000) });
 ```
 
 ## Idempotency
@@ -343,7 +346,7 @@ const flags = new Flags();
 export async function POST(req: Request) {
   const event = await flags.webhooks.unwrap({ payload: await req.text(), headers: req.headers });
   switch (event.type) {
-    case "config.published":
+    case "change_request.applied":
       console.log(event.data);
       break;
     default:
@@ -386,7 +389,7 @@ Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, s
 ```ts
 import { Flags } from "@productcraft/flags";
 const flags = new Flags({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });
-const { payload, headers } = await flags.webhooks.sign({ payload: { id: "evt_test_1", type: "config.published", created_at: new Date().toISOString(), data: {} } });
+const { payload, headers } = await flags.webhooks.sign({ payload: { id: "evt_test_1", type: "change_request.applied", created_at: new Date().toISOString(), data: {} } });
 const event = await flags.webhooks.unwrap({ payload, headers });
 console.log(event.type);
 ```
@@ -399,9 +402,9 @@ Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`
 import { Flags } from "@productcraft/flags";
 const flags = new Flags({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
 const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
-const obj = await flags.changes.retrieve(id);
+const obj = await flags.changeRequests.retrieve(id);
 console.log(obj.lastResponse.requestId);
-const { data, response, requestId, rateLimit } = await flags.changes.retrieve(id).withResponse();
+const { data, response, requestId, rateLimit } = await flags.changeRequests.retrieve(id).withResponse();
 console.log(data, response.status, requestId, rateLimit?.remaining);
 ```
 
@@ -414,7 +417,7 @@ import { Flags } from "@productcraft/flags";
 import { createMockFetch } from "@productcraft/flags/testing";
 const fetch = createMockFetch();
 const flags = new Flags({ apiKey: "test", workspaceId: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", fetch });
-await flags.projects.list();
+await flags.changeRequests.list();
 console.log(fetch.calls.length);
 ```
 
@@ -425,7 +428,7 @@ console.log(fetch.calls.length);
 ```ts
 import { Flags } from "@productcraft/flags";
 const flags = new Flags({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-const { data, error } = await flags.client.GET("/v1/workspaces/{workspace_id}/limits", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
+const { data, error } = await flags.client.GET("/v1/workspaces/{workspace_id}/change-requests", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
 console.log(data, error);
 ```
 

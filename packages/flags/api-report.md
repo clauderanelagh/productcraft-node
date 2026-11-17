@@ -115,6 +115,101 @@ export type components = {
             data: components["schemas"]["ChangeResponseDto"][];
             pagination: components["schemas"]["FlagsPaginationDto"];
         };
+        ChangeRequestAppliedEvent: {
+            created_at: string;
+            data: components["schemas"]["ChangeRequestEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "change_request.applied";
+            workspace_id?: string;
+        };
+        ChangeRequestApprovedEvent: {
+            created_at: string;
+            data: components["schemas"]["ChangeRequestEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "change_request.approved";
+            workspace_id?: string;
+        };
+        ChangeRequestCancelledEvent: {
+            created_at: string;
+            data: components["schemas"]["ChangeRequestEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "change_request.cancelled";
+            workspace_id?: string;
+        };
+        ChangeRequestCreatedEvent: {
+            created_at: string;
+            data: components["schemas"]["ChangeRequestEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "change_request.created";
+            workspace_id?: string;
+        };
+        ChangeRequestEventDataDto: {
+            actor: components["schemas"]["FlagsWebhookActorDto"];
+            applied_change_id: string | null;
+            change_request: components["schemas"]["FlagsWebhookChangeRequestDto"];
+            config: components["schemas"]["FlagsWebhookConfigDto"];
+            environment: components["schemas"]["FlagsWebhookEnvironmentDto"];
+            project: components["schemas"]["FlagsWebhookProjectDto"];
+            review_note: string | null;
+            setting: components["schemas"]["FlagsWebhookSettingDto"];
+        };
+        ChangeRequestListResponseDto: {
+            data: components["schemas"]["ChangeRequestResponseDto"][];
+            pagination: components["schemas"]["FlagsPaginationDto"];
+        };
+        ChangeRequestRejectedEvent: {
+            created_at: string;
+            data: components["schemas"]["ChangeRequestEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "change_request.rejected";
+            workspace_id?: string;
+        };
+        ChangeRequestResponseDto: {
+            after: {
+                [key: string]: unknown;
+            };
+            applied_at: string | null;
+            applied_change_id: string | null;
+            approvals: number;
+            author: components["schemas"]["GovernanceActorDto"];
+            base_version: number;
+            before: {
+                [key: string]: unknown;
+            };
+            config_id: string;
+            created_at: string;
+            current_version: number;
+            diff: components["schemas"]["JsonPatchOperationDto"][];
+            environment_id: string;
+            environment_key: string;
+            id: string;
+            kind: components["schemas"]["FlagsChangeRequestKind"];
+            last_error: components["schemas"]["GovernanceErrorDto"] | null;
+            note: string | null;
+            project_id: string;
+            required_approvals: number;
+            reviews: components["schemas"]["ChangeRequestReviewDto"][];
+            scheduled_change_id: string | null;
+            setting_id: string;
+            setting_key: string;
+            stale: boolean;
+            status: components["schemas"]["FlagsChangeRequestStatus"];
+            summary: string[];
+            updated_at: string;
+            workspace_id: string;
+        };
+        ChangeRequestReviewDto: {
+            created_at: string;
+            decision: components["schemas"]["FlagsReviewDecision"];
+            note: string | null;
+            reviewer_id: string;
+            reviewer_label: string | null;
+        };
         ChangeResponseDto: {
             action: string;
             actor: components["schemas"]["ChangeActorDto"];
@@ -243,6 +338,22 @@ export type components = {
             data: components["schemas"]["CopiedSettingDto"][];
             revision: number | null;
         };
+        CreateChangeRequestDto: {
+            clear_rules?: boolean;
+            note?: string;
+            operation: "replace" | "patch" | "ramp";
+            percentage_attribute?: string | null;
+            percentages?: {
+                [key: string]: unknown;
+            }[] | null;
+            rule_edits?: components["schemas"]["RuleListEditDto"][];
+            rules?: {
+                [key: string]: unknown;
+            }[];
+            steps?: components["schemas"]["RampStepDto"][];
+            value?: boolean | string | number;
+            version: number;
+        };
         CreateConfigDto: {
             description?: string;
             key: string;
@@ -275,6 +386,26 @@ export type components = {
             name: string;
             note?: string;
         };
+        CreateRampDto: {
+            note?: string;
+            steps: components["schemas"]["RampStepDto"][];
+            value: boolean | string | number;
+        };
+        CreateScheduledChangeDto: {
+            clear_rules?: boolean;
+            note?: string;
+            operation: "patch" | "replace";
+            percentage_attribute?: string | null;
+            percentages?: {
+                [key: string]: unknown;
+            }[] | null;
+            rules?: {
+                [key: string]: unknown;
+            }[];
+            run_at: string;
+            value?: boolean | string | number;
+            version?: number;
+        };
         CreateSegmentDto: {
             conditions: components["schemas"]["UserConditionDto"][];
             description?: string;
@@ -300,7 +431,7 @@ export type components = {
             description?: string | null;
             enabled?: boolean;
             environment_id?: string | null;
-            event_types?: ("config.published" | "sdk_key.rotated")[];
+            event_types?: ("config.published" | "sdk_key.rotated" | "change_request.created" | "change_request.approved" | "change_request.rejected" | "change_request.applied" | "change_request.cancelled")[];
             project_id?: string | null;
             url: string;
         };
@@ -308,6 +439,7 @@ export type components = {
             data: components["schemas"]["EnvironmentResponseDto"][];
         };
         EnvironmentResponseDto: {
+            approval_policy: components["schemas"]["FlagsApprovalPolicy"];
             color: string;
             created_at: string;
             id: string;
@@ -317,6 +449,7 @@ export type components = {
             project_id: string;
             protected: boolean;
             require_note: boolean;
+            required_approvals: number;
             updated_at: string;
             workspace_id: string;
         };
@@ -358,12 +491,17 @@ export type components = {
             rule_index: number | null;
         };
         FlagsActorType: "user" | "api_key" | "system";
+        FlagsApprovalPolicy: "off" | "everyone" | "agents";
         FlagsChangeActorType: "user" | "api_key" | "system";
+        FlagsChangeRequestKind: "value" | "ramp";
+        FlagsChangeRequestStatus: "pending" | "approved" | "scheduled" | "applied" | "rejected" | "cancelled" | "failed";
         FlagsEnvironmentPreset: "dev_prod" | "dev_staging_prod";
-        FlagsErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "PROJECT_NOT_FOUND" | "ENVIRONMENT_NOT_FOUND" | "CONFIG_NOT_FOUND" | "SETTING_NOT_FOUND" | "SEGMENT_NOT_FOUND" | "CHANGE_NOT_FOUND" | "REVISION_NOT_FOUND" | "SDK_KEY_NOT_FOUND" | "KEY_ALREADY_EXISTS" | "LAST_ENVIRONMENT" | "VERSION_CONFLICT" | "SETTING_IN_USE" | "SEGMENT_IN_USE" | "CIRCULAR_PREREQUISITE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_TYPE_MISMATCH" | "INVALID_VALUE" | "INVALID_TARGETING" | "PERCENTAGES_MUST_SUM_TO_100" | "CONFIG_TOO_LARGE" | "LIMIT_EXCEEDED" | "CONFIRMATION_REQUIRED" | "NOTE_REQUIRED" | "CONFIDENTIAL_LIST_NOT_EDITABLE" | "REVERT_NOT_SUPPORTED" | "NOTHING_TO_RESTORE" | "EVALUATION_BUDGET_EXCEEDED" | "MANAGEMENT_UNAVAILABLE" | "IMPORT_CREDENTIALS_INVALID" | "IMPORT_SOURCE_UNAVAILABLE" | "IMPORT_SOURCE_NOT_FOUND" | "IMPORT_UNSUPPORTED" | "IMPORT_EXCEEDS_LIMITS" | "OWNER_NOT_A_MEMBER" | "SETTING_TYPE_IMMUTABLE") | string;
+        FlagsErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "PROJECT_NOT_FOUND" | "ENVIRONMENT_NOT_FOUND" | "CONFIG_NOT_FOUND" | "SETTING_NOT_FOUND" | "SEGMENT_NOT_FOUND" | "CHANGE_NOT_FOUND" | "REVISION_NOT_FOUND" | "SDK_KEY_NOT_FOUND" | "KEY_ALREADY_EXISTS" | "LAST_ENVIRONMENT" | "VERSION_CONFLICT" | "SETTING_IN_USE" | "SEGMENT_IN_USE" | "CIRCULAR_PREREQUISITE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_TYPE_MISMATCH" | "INVALID_VALUE" | "INVALID_TARGETING" | "PERCENTAGES_MUST_SUM_TO_100" | "CONFIG_TOO_LARGE" | "LIMIT_EXCEEDED" | "CONFIRMATION_REQUIRED" | "NOTE_REQUIRED" | "CONFIDENTIAL_LIST_NOT_EDITABLE" | "REVERT_NOT_SUPPORTED" | "NOTHING_TO_RESTORE" | "EVALUATION_BUDGET_EXCEEDED" | "MANAGEMENT_UNAVAILABLE" | "IMPORT_CREDENTIALS_INVALID" | "IMPORT_SOURCE_UNAVAILABLE" | "IMPORT_SOURCE_NOT_FOUND" | "IMPORT_UNSUPPORTED" | "IMPORT_EXCEEDS_LIMITS" | "OWNER_NOT_A_MEMBER" | "SETTING_TYPE_IMMUTABLE" | "APPROVAL_REQUIRED" | "APPROVAL_POLICY_HUMAN_ONLY" | "NOTHING_TO_PROPOSE" | "CHANGE_REQUEST_NOT_FOUND" | "CHANGE_REQUEST_NOT_OPEN" | "CHANGE_REQUEST_NOT_APPROVED" | "CHANGE_REQUEST_STALE" | "REVIEWER_MUST_BE_HUMAN" | "SELF_APPROVAL_NOT_ALLOWED" | "ALREADY_REVIEWED" | "NOT_CHANGE_REQUEST_AUTHOR" | "SCHEDULED_CHANGE_NOT_FOUND" | "SCHEDULED_CHANGE_NOT_PENDING" | "RUN_AT_INVALID" | "RAMP_NOT_FOUND" | "RAMP_INVALID" | "RAMP_ALREADY_ACTIVE" | "RAMP_NOT_LIVE") | string;
+        FlagsEvaluationData: "not_collected";
         FlagsEvaluationErrorCode: "FLAG_NOT_FOUND" | "TYPE_MISMATCH" | "PREREQUISITE_CYCLE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_DEPTH" | "GENERAL";
         FlagsEvaluationReason: "STATIC" | "TARGETING_MATCH" | "SPLIT" | "DEFAULT" | "ERROR";
         FlagsEvaluationWarningCode: "missing_user" | "missing_attribute" | "invalid_attribute" | "unknown_comparator" | "missing_percentage_attribute" | "iso_date_converted";
+        FlagsGovernanceActorType: "user" | "api_key" | "system";
         FlagsHistoryExportFormat: "csv" | "json";
         FlagsHistoryUsageDto: {
             bytes: number;
@@ -398,11 +536,16 @@ export type components = {
             project_id: string;
             segments: number;
         };
+        FlagsRampStatus: "active" | "paused" | "completed" | "cancelled" | "failed";
+        FlagsReviewDecision: "approved" | "rejected";
+        FlagsScheduledChangeStatus: "pending" | "applied" | "failed" | "cancelled";
+        FlagsScheduledOperation: "patch" | "replace";
         FlagsSdkKeyRotationReason: "rotated" | "grace_ended";
         FlagsSdkKeySlot: "primary" | "secondary";
         FlagsSegmentComparator: "in" | "not_in";
-        FlagsSettingLifecycle: "temporary" | "permanent";
+        FlagsSettingLifecycle: "temporary" | "permanent" | "released" | "deprecated";
         FlagsSettingType: "boolean" | "string" | "integer" | "number" | "json";
+        FlagsStaleReason: "no_recent_change" | "rolled_out" | "turned_off" | "same_value_everywhere" | "lifecycle_released" | "lifecycle_deprecated";
         FlagsStatsResponseDto: {
             changes_last_week: number;
             configs: number;
@@ -429,6 +572,17 @@ export type components = {
             id: string | null;
             note: string | null;
         };
+        FlagsWebhookChangeRequestDto: {
+            approvals: number;
+            author: components["schemas"]["FlagsWebhookActorDto"];
+            author_is_agent: boolean;
+            id: string;
+            kind: components["schemas"]["FlagsChangeRequestKind"];
+            note: string | null;
+            required_approvals: number;
+            status: components["schemas"]["FlagsChangeRequestStatus"];
+            summary: string[];
+        };
         FlagsWebhookConfigDto: {
             id: string;
             key: string;
@@ -442,6 +596,26 @@ export type components = {
         FlagsWebhookProjectDto: {
             id: string;
             name: string;
+        };
+        FlagsWebhookSettingDto: {
+            id: string;
+            key: string;
+        };
+        GovernanceActionDto: {
+            note?: string;
+        };
+        GovernanceActorDto: {
+            client_id: string | null;
+            id: string | null;
+            is_agent: boolean;
+            label: string | null;
+            on_behalf_of_user_id: string | null;
+            type: components["schemas"]["FlagsGovernanceActorType"];
+        };
+        GovernanceErrorDto: {
+            at: string;
+            code: string;
+            message: string;
         };
         HashedValuesViewDto: {
             count: number;
@@ -547,6 +721,8 @@ export type components = {
             id: string;
             name: string;
             ordinal: number;
+            stale_after_days: number;
+            stale_digest: boolean;
             updated_at: string;
             workspace_id: string;
         };
@@ -557,6 +733,40 @@ export type components = {
             rules?: components["schemas"]["TargetingRule"][];
             value: boolean | string | number;
             version: number;
+        };
+        RampListResponseDto: {
+            data: components["schemas"]["RampResponseDto"][];
+            pagination: components["schemas"]["FlagsPaginationDto"];
+        };
+        RampResponseDto: {
+            change_request_id: string | null;
+            config_id: string;
+            created_at: string;
+            created_by: components["schemas"]["GovernanceActorDto"];
+            current_percentage: number;
+            environment_id: string;
+            environment_key: string;
+            id: string;
+            last_change_id: string | null;
+            last_error: components["schemas"]["GovernanceErrorDto"] | null;
+            note: string | null;
+            project_id: string;
+            setting_id: string;
+            setting_key: string;
+            status: components["schemas"]["FlagsRampStatus"];
+            steps: components["schemas"]["RampStepStateDto"][];
+            updated_at: string;
+            value: boolean | string | number;
+            workspace_id: string;
+        };
+        RampStepDto: {
+            at: string;
+            percentage: number;
+        };
+        RampStepStateDto: {
+            applied: boolean;
+            at: string;
+            percentage: number;
         };
         ReplayWebhookEventResponseDto: {
             attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
@@ -577,6 +787,10 @@ export type components = {
             note?: string;
             version?: number;
         };
+        ReviewChangeRequestDto: {
+            apply?: boolean;
+            note?: string;
+        };
         RotateSdkKeyDto: {
             grace_hours?: number;
             note?: string;
@@ -589,6 +803,38 @@ export type components = {
             rule_index: number;
             values_add?: string[];
             values_remove?: string[];
+        };
+        ScheduleChangeRequestDto: {
+            run_at: string;
+        };
+        ScheduledChangeListResponseDto: {
+            data: components["schemas"]["ScheduledChangeResponseDto"][];
+            pagination: components["schemas"]["FlagsPaginationDto"];
+        };
+        ScheduledChangeResponseDto: {
+            applied_change_id: string | null;
+            base_version: number | null;
+            change_request_id: string | null;
+            config_id: string;
+            created_at: string;
+            created_by: components["schemas"]["GovernanceActorDto"];
+            environment_id: string;
+            environment_key: string;
+            executed_at: string | null;
+            id: string;
+            last_error: components["schemas"]["GovernanceErrorDto"] | null;
+            note: string | null;
+            operation: components["schemas"]["FlagsScheduledOperation"];
+            payload: {
+                [key: string]: unknown;
+            };
+            project_id: string;
+            run_at: string;
+            setting_id: string;
+            setting_key: string;
+            status: components["schemas"]["FlagsScheduledChangeStatus"];
+            updated_at: string;
+            workspace_id: string;
         };
         SdkKeyListResponseDto: {
             data: components["schemas"]["SdkKeyResponseDto"][];
@@ -670,7 +916,7 @@ export type components = {
             setting_key: string;
         };
         SendWebhookTestDto: {
-            event_type: "config.published" | "sdk_key.rotated";
+            event_type: "config.published" | "sdk_key.rotated" | "change_request.created" | "change_request.approved" | "change_request.rejected" | "change_request.applied" | "change_request.cancelled";
         };
         ServeRuleDto: {
             conditions: components["schemas"]["TargetingCondition"][];
@@ -754,6 +1000,40 @@ export type components = {
             conditions: components["schemas"]["TargetingCondition"][];
             percentages: components["schemas"]["PercentageOptionDto"][];
         };
+        StaleDigestResponseDto: {
+            digests_queued: number;
+            stale_flags: number;
+        };
+        StaleEnvironmentStateDto: {
+            environment_id: string;
+            environment_key: string;
+            has_targeting: boolean;
+            updated_at: string;
+            value: boolean | string | number;
+        };
+        StaleFlagDto: {
+            config_id: string;
+            config_key: string;
+            days_since_change: number;
+            environments: components["schemas"]["StaleEnvironmentStateDto"][];
+            key: string;
+            last_changed_at: string;
+            lifecycle: components["schemas"]["FlagsSettingLifecycle"];
+            name: string;
+            owner_id: string | null;
+            prerequisite_of: number;
+            reasons: components["schemas"]["FlagsStaleReason"][];
+            setting_id: string;
+            suggested_value: (boolean | string | number) | null;
+            tags: string[];
+            type: components["schemas"]["FlagsSettingType"];
+        };
+        StaleFlagsResponseDto: {
+            data: components["schemas"]["StaleFlagDto"][];
+            days: number;
+            evaluation_data: components["schemas"]["FlagsEvaluationData"];
+            pagination: components["schemas"]["FlagsPaginationDto"];
+        };
         TargetingCondition: components["schemas"]["UserConditionDto"] | components["schemas"]["SegmentConditionDto"] | components["schemas"]["PrerequisiteConditionDto"];
         TargetingRule: components["schemas"]["ServeRuleDto"] | components["schemas"]["SplitRuleDto"];
         TestEvaluationResponseDto: {
@@ -768,18 +1048,22 @@ export type components = {
             ordinal?: number;
         };
         UpdateEnvironmentDto: {
+            approval_policy?: components["schemas"]["FlagsApprovalPolicy"];
             color?: string;
             name?: string;
             note?: string;
             ordinal?: number;
             protected?: boolean;
             require_note?: boolean;
+            required_approvals?: number;
         };
         UpdateProjectDto: {
             description?: string;
             name?: string;
             note?: string;
             ordinal?: number;
+            stale_after_days?: number;
+            stale_digest?: boolean;
         };
         UpdateSegmentDto: {
             condition_edits?: components["schemas"]["ConditionListEditDto"][];
@@ -807,7 +1091,7 @@ export type components = {
             description?: string | null;
             enabled?: boolean;
             environment_id?: string | null;
-            event_types?: ("config.published" | "sdk_key.rotated")[];
+            event_types?: ("config.published" | "sdk_key.rotated" | "change_request.created" | "change_request.approved" | "change_request.rejected" | "change_request.applied" | "change_request.cancelled")[];
             project_id?: string | null;
             url?: string;
         };
@@ -927,7 +1211,7 @@ export type components = {
             type: components["schemas"]["WebhookEventType"];
         };
         WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
-        WebhookEventType: "config.published" | "sdk_key.rotated";
+        WebhookEventType: "config.published" | "sdk_key.rotated" | "change_request.created" | "change_request.approved" | "change_request.rejected" | "change_request.applied" | "change_request.cancelled";
         WebhookEventTypeDto: {
             category: string;
             description: string;
@@ -999,157 +1283,225 @@ namespace Flags {
     // (undocumented)
     type ChangeList = __ChangeList;
     // (undocumented)
-    type ChangeRevertParams = __ChangeRevertParams;
+    type ChangeRequest = __ChangeRequest;
     // (undocumented)
-    type ChangeRevision = __ChangeRevision;
+    type ChangeRequestAppliedEvent = __ChangeRequestAppliedEvent;
     // (undocumented)
-    type ClientOptions = __ClientOptions;
+    type ChangeRequestApprovedEvent = __ChangeRequestApprovedEvent;
     // (undocumented)
-    type Compare = __Compare;
+    type ChangeRequestApproveParams = __ChangeRequestApproveParams;
     // (undocumented)
-    type CompareEnvironment = __CompareEnvironment;
+    type ChangeRequestCancelledEvent = __ChangeRequestCancelledEvent;
     const // (undocumented)
     FlagsActorType: {
         values: readonly ["user", "api_key", "system"];
     };
     // (undocumented)
-    type CompareRow = __CompareRow;
+    type ChangeRequestCancelParams = __ChangeRequestCancelParams;
+    const // (undocumented)
+    FlagsApprovalPolicy: {
+        values: readonly ["off", "everyone", "agents"];
+    };
+    // (undocumented)
+    type ChangeRequestCreatedEvent = __ChangeRequestCreatedEvent;
     const // (undocumented)
     FlagsChangeActorType: {
         values: readonly ["user", "api_key", "system"];
     };
     // (undocumented)
-    type ConfidentialList = __ConfidentialList;
+    type ChangeRequestEventData = __ChangeRequestEventData;
+    const // (undocumented)
+    FlagsChangeRequestKind: {
+        values: readonly ["value", "ramp"];
+    };
+    // (undocumented)
+    type ChangeRequestList = __ChangeRequestList;
+    const // (undocumented)
+    FlagsChangeRequestStatus: {
+        values: readonly ["pending", "approved", "scheduled", "applied", "rejected", "cancelled", "failed"];
+    };
+    // (undocumented)
+    type ChangeRequestListParams = __ChangeRequestListParams;
     const // (undocumented)
     FlagsEnvironmentPreset: {
         values: readonly ["dev_prod", "dev_staging_prod"];
     };
     // (undocumented)
-    type ConfidentialReveal = __ConfidentialReveal;
+    type ChangeRequestRejectedEvent = __ChangeRequestRejectedEvent;
+    const // (undocumented)
+    FlagsEvaluationData: {
+        values: readonly ["not_collected"];
+    };
+    // (undocumented)
+    type ChangeRequestRejectParams = __ChangeRequestRejectParams;
     const // (undocumented)
     FlagsEvaluationErrorCode: {
         values: readonly ["FLAG_NOT_FOUND", "TYPE_MISMATCH", "PREREQUISITE_CYCLE", "PREREQUISITE_NOT_FOUND", "PREREQUISITE_DEPTH", "GENERAL"];
     };
     // (undocumented)
-    type Config = __Config;
+    type ChangeRequestReview = __ChangeRequestReview;
     const // (undocumented)
     FlagsEvaluationReason: {
         values: readonly ["STATIC", "TARGETING_MATCH", "SPLIT", "DEFAULT", "ERROR"];
     };
     // (undocumented)
-    type ConfigCompareParams = __ConfigCompareParams;
+    type ChangeRequestScheduleParams = __ChangeRequestScheduleParams;
     const // (undocumented)
     FlagsEvaluationWarningCode: {
         values: readonly ["missing_user", "missing_attribute", "invalid_attribute", "unknown_comparator", "missing_percentage_attribute", "iso_date_converted"];
     };
     // (undocumented)
-    type ConfigDeleteParams = __ConfigDeleteParams;
+    type ChangeRevertParams = __ChangeRevertParams;
+    const // (undocumented)
+    FlagsGovernanceActorType: {
+        values: readonly ["user", "api_key", "system"];
+    };
+    // (undocumented)
+    type ChangeRevision = __ChangeRevision;
     const // (undocumented)
     FlagsHistoryExportFormat: {
         values: readonly ["csv", "json"];
     };
     // (undocumented)
-    type ConfigEnvironmentCopyParams = __ConfigEnvironmentCopyParams;
+    type ClientOptions = __ClientOptions;
     const // (undocumented)
     FlagsImportMappedType: {
         values: readonly ["environment", "config", "segment", "setting"];
     };
     // (undocumented)
-    type ConfigEnvironmentEvaluateParams = __ConfigEnvironmentEvaluateParams;
+    type Compare = __Compare;
     const // (undocumented)
     FlagsImportSource: {
         values: readonly ["configcat"];
     };
     // (undocumented)
-    type ConfigEnvironmentRevisionListParams = __ConfigEnvironmentRevisionListParams;
+    type CompareEnvironment = __CompareEnvironment;
     const // (undocumented)
     FlagsJsonPatchOp: {
         values: readonly ["add", "remove", "replace"];
     };
     // (undocumented)
-    type ConfigEnvironmentRevisionRetrieveResponse = __ConfigEnvironmentRevisionRetrieveResponse;
+    type CompareRow = __CompareRow;
     const // (undocumented)
     FlagsPrerequisiteComparator: {
         values: readonly ["eq", "neq"];
     };
     // (undocumented)
-    type ConfigEnvironmentSdkKeyRotateParams = __ConfigEnvironmentSdkKeyRotateParams;
+    type ConfidentialList = __ConfidentialList;
+    const // (undocumented)
+    FlagsRampStatus: {
+        values: readonly ["active", "paused", "completed", "cancelled", "failed"];
+    };
+    // (undocumented)
+    type ConfidentialReveal = __ConfidentialReveal;
+    const // (undocumented)
+    FlagsReviewDecision: {
+        values: readonly ["approved", "rejected"];
+    };
+    // (undocumented)
+    type Config = __Config;
+    const // (undocumented)
+    FlagsScheduledChangeStatus: {
+        values: readonly ["pending", "applied", "failed", "cancelled"];
+    };
+    // (undocumented)
+    type ConfigCompareParams = __ConfigCompareParams;
+    const // (undocumented)
+    FlagsScheduledOperation: {
+        values: readonly ["patch", "replace"];
+    };
+    // (undocumented)
+    type ConfigDeleteParams = __ConfigDeleteParams;
     const // (undocumented)
     FlagsSdkKeyRotationReason: {
         values: readonly ["rotated", "grace_ended"];
     };
     // (undocumented)
-    type ConfigEnvironmentValueListParams = __ConfigEnvironmentValueListParams;
+    type ConfigEnvironmentCopyParams = __ConfigEnvironmentCopyParams;
     const // (undocumented)
     FlagsSdkKeySlot: {
         values: readonly ["primary", "secondary"];
     };
     // (undocumented)
-    type ConfigList = __ConfigList;
+    type ConfigEnvironmentEvaluateParams = __ConfigEnvironmentEvaluateParams;
     const // (undocumented)
     FlagsSegmentComparator: {
         values: readonly ["in", "not_in"];
     };
     // (undocumented)
-    type ConfigPublishedEvent = __ConfigPublishedEvent;
+    type ConfigEnvironmentRevisionListParams = __ConfigEnvironmentRevisionListParams;
     const // (undocumented)
     FlagsSettingLifecycle: {
-        values: readonly ["temporary", "permanent"];
+        values: readonly ["temporary", "permanent", "released", "deprecated"];
     };
     // (undocumented)
-    type ConfigPublishedEventData = __ConfigPublishedEventData;
+    type ConfigEnvironmentRevisionRetrieveResponse = __ConfigEnvironmentRevisionRetrieveResponse;
     const // (undocumented)
     FlagsSettingType: {
         values: readonly ["boolean", "string", "integer", "number", "json"];
     };
     // (undocumented)
-    type ConfigRevision = __ConfigRevision;
+    type ConfigEnvironmentSdkKeyRotateParams = __ConfigEnvironmentSdkKeyRotateParams;
+    const // (undocumented)
+    FlagsStaleReason: {
+        values: readonly ["no_recent_change", "rolled_out", "turned_off", "same_value_everywhere", "lifecycle_released", "lifecycle_deprecated"];
+    };
+    // (undocumented)
+    type ConfigEnvironmentValueListParams = __ConfigEnvironmentValueListParams;
     const // (undocumented)
     FlagsUserComparator: {
         values: readonly ["eq", "neq", "one_of", "not_one_of", "contains_any", "not_contains_any", "starts_with_any", "not_starts_with_any", "ends_with_any", "not_ends_with_any", "semver_one_of", "semver_not_one_of", "semver_lt", "semver_lte", "semver_gt", "semver_gte", "num_eq", "num_neq", "num_lt", "num_lte", "num_gt", "num_gte", "before", "after", "array_contains_any", "array_not_contains_any", "eq_hashed", "neq_hashed", "one_of_hashed", "not_one_of_hashed", "starts_with_any_hashed", "not_starts_with_any_hashed", "ends_with_any_hashed", "not_ends_with_any_hashed", "array_contains_any_hashed", "array_not_contains_any_hashed"];
     };
     // (undocumented)
-    type ConfigRevisionList = __ConfigRevisionList;
+    type ConfigList = __ConfigList;
     const // (undocumented)
     FlagsWebhookActorType: {
         values: readonly ["user", "api_key", "system"];
     };
     // (undocumented)
-    type ConfigSettingsCreateParams = __ConfigSettingsCreateParams;
+    type ConfigPublishedEvent = __ConfigPublishedEvent;
     const // (undocumented)
     SdkKeySlot: {
         values: readonly ["primary", "secondary"];
     };
     // (undocumented)
-    type ConfigSettingsListParams = __ConfigSettingsListParams;
+    type ConfigPublishedEventData = __ConfigPublishedEventData;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type ConfigUpdateParams = __ConfigUpdateParams;
+    type ConfigRevision = __ConfigRevision;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type CopiedSetting = __CopiedSetting;
+    type ConfigRevisionList = __ConfigRevisionList;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type CopyEnvironment = __CopyEnvironment;
+    type ConfigSettingsCreateParams = __ConfigSettingsCreateParams;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type Environment = __Environment;
+    type ConfigSettingsListParams = __ConfigSettingsListParams;
     const // (undocumented)
     WebhookEventType: {
-        values: readonly ["config.published", "sdk_key.rotated"];
+        values: readonly ["config.published", "sdk_key.rotated", "change_request.created", "change_request.approved", "change_request.rejected", "change_request.applied", "change_request.cancelled"];
     };
+    // (undocumented)
+    type ConfigUpdateParams = __ConfigUpdateParams;
+    // (undocumented)
+    type CopiedSetting = __CopiedSetting;
+    // (undocumented)
+    type CopyEnvironment = __CopyEnvironment;
+    // (undocumented)
+    type Environment = __Environment;
     // (undocumented)
     type EnvironmentList = __EnvironmentList;
     // (undocumented)
@@ -1165,15 +1517,25 @@ namespace Flags {
     // (undocumented)
     type FlagsActorType = __FlagsActorType;
     // (undocumented)
+    type FlagsApprovalPolicy = __FlagsApprovalPolicy;
+    // (undocumented)
     type FlagsChangeActorType = __FlagsChangeActorType;
     // (undocumented)
+    type FlagsChangeRequestKind = __FlagsChangeRequestKind;
+    // (undocumented)
+    type FlagsChangeRequestStatus = __FlagsChangeRequestStatus;
+    // (undocumented)
     type FlagsEnvironmentPreset = __FlagsEnvironmentPreset;
+    // (undocumented)
+    type FlagsEvaluationData = __FlagsEvaluationData;
     // (undocumented)
     type FlagsEvaluationErrorCode = __FlagsEvaluationErrorCode;
     // (undocumented)
     type FlagsEvaluationReason = __FlagsEvaluationReason;
     // (undocumented)
     type FlagsEvaluationWarningCode = __FlagsEvaluationWarningCode;
+    // (undocumented)
+    type FlagsGovernanceActorType = __FlagsGovernanceActorType;
     // (undocumented)
     type FlagsHistoryExportFormat = __FlagsHistoryExportFormat;
     // (undocumented)
@@ -1195,6 +1557,14 @@ namespace Flags {
     // (undocumented)
     type FlagsProjectUsage = __FlagsProjectUsage;
     // (undocumented)
+    type FlagsRampStatus = __FlagsRampStatus;
+    // (undocumented)
+    type FlagsReviewDecision = __FlagsReviewDecision;
+    // (undocumented)
+    type FlagsScheduledChangeStatus = __FlagsScheduledChangeStatus;
+    // (undocumented)
+    type FlagsScheduledOperation = __FlagsScheduledOperation;
+    // (undocumented)
     type FlagsSdkKeyRotationReason = __FlagsSdkKeyRotationReason;
     // (undocumented)
     type FlagsSdkKeySlot = __FlagsSdkKeySlot;
@@ -1204,6 +1574,8 @@ namespace Flags {
     type FlagsSettingLifecycle = __FlagsSettingLifecycle;
     // (undocumented)
     type FlagsSettingType = __FlagsSettingType;
+    // (undocumented)
+    type FlagsStaleReason = __FlagsStaleReason;
     // (undocumented)
     type FlagsStats = __FlagsStats;
     // (undocumented)
@@ -1217,11 +1589,19 @@ namespace Flags {
     // (undocumented)
     type FlagsWebhookChange = __FlagsWebhookChange;
     // (undocumented)
+    type FlagsWebhookChangeRequest = __FlagsWebhookChangeRequest;
+    // (undocumented)
     type FlagsWebhookConfig = __FlagsWebhookConfig;
     // (undocumented)
     type FlagsWebhookEnvironment = __FlagsWebhookEnvironment;
     // (undocumented)
     type FlagsWebhookProject = __FlagsWebhookProject;
+    // (undocumented)
+    type FlagsWebhookSetting = __FlagsWebhookSetting;
+    // (undocumented)
+    type GovernanceActor = __GovernanceActor;
+    // (undocumented)
+    type GovernanceError = __GovernanceError;
     // (undocumented)
     type HashedValuesView = __HashedValuesView;
     // (undocumented)
@@ -1289,7 +1669,23 @@ namespace Flags {
     // (undocumented)
     type ProjectSegmentListParams = __ProjectSegmentListParams;
     // (undocumented)
+    type ProjectStaleFlagListParams = __ProjectStaleFlagListParams;
+    // (undocumented)
     type ProjectUpdateParams = __ProjectUpdateParams;
+    // (undocumented)
+    type Ramp = __Ramp;
+    // (undocumented)
+    type RampCancelParams = __RampCancelParams;
+    // (undocumented)
+    type RampList = __RampList;
+    // (undocumented)
+    type RampListParams = __RampListParams;
+    // (undocumented)
+    type RampPauseParams = __RampPauseParams;
+    // (undocumented)
+    type RampResumeParams = __RampResumeParams;
+    // (undocumented)
+    type RampStepState = __RampStepState;
     // (undocumented)
     type RateLimitInfo = __RateLimitInfo;
     // @deprecated (undocumented)
@@ -1300,6 +1696,14 @@ namespace Flags {
     type RevealedSdkKey = __RevealedSdkKey;
     // (undocumented)
     type RevealedSdkKeyList = __RevealedSdkKeyList;
+    // (undocumented)
+    type ScheduledChange = __ScheduledChange;
+    // (undocumented)
+    type ScheduledChangeCancelParams = __ScheduledChangeCancelParams;
+    // (undocumented)
+    type ScheduledChangeList = __ScheduledChangeList;
+    // (undocumented)
+    type ScheduledChangeListParams = __ScheduledChangeListParams;
     // (undocumented)
     type SdkKey = __SdkKey;
     // (undocumented)
@@ -1345,7 +1749,13 @@ namespace Flags {
     // (undocumented)
     type SettingsUpdateParams = __SettingsUpdateParams;
     // (undocumented)
+    type SettingsValueChangeRequestCreateParams = __SettingsValueChangeRequestCreateParams;
+    // (undocumented)
+    type SettingsValueRampCreateParams = __SettingsValueRampCreateParams;
+    // (undocumented)
     type SettingsValueReplaceParams = __SettingsValueReplaceParams;
+    // (undocumented)
+    type SettingsValueScheduledChangeCreateParams = __SettingsValueScheduledChangeCreateParams;
     // (undocumented)
     type SettingsValueUpdateParams = __SettingsValueUpdateParams;
     // (undocumented)
@@ -1354,6 +1764,14 @@ namespace Flags {
     type SettingValue = __SettingValue;
     // (undocumented)
     type SplitRule = __SplitRule;
+    // (undocumented)
+    type StaleDigest = __StaleDigest;
+    // (undocumented)
+    type StaleEnvironmentState = __StaleEnvironmentState;
+    // (undocumented)
+    type StaleFlag = __StaleFlag;
+    // (undocumented)
+    type StaleFlags = __StaleFlags;
     // (undocumented)
     type TestEvaluation = __TestEvaluation;
     // (undocumented)
@@ -1494,11 +1912,11 @@ export interface FlagsClientOptions {
 }
 
 // @public
-export type FlagsErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "PROJECT_NOT_FOUND" | "ENVIRONMENT_NOT_FOUND" | "CONFIG_NOT_FOUND" | "SETTING_NOT_FOUND" | "SEGMENT_NOT_FOUND" | "CHANGE_NOT_FOUND" | "REVISION_NOT_FOUND" | "SDK_KEY_NOT_FOUND" | "KEY_ALREADY_EXISTS" | "LAST_ENVIRONMENT" | "VERSION_CONFLICT" | "SETTING_IN_USE" | "SEGMENT_IN_USE" | "CIRCULAR_PREREQUISITE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_TYPE_MISMATCH" | "INVALID_VALUE" | "INVALID_TARGETING" | "PERCENTAGES_MUST_SUM_TO_100" | "CONFIG_TOO_LARGE" | "LIMIT_EXCEEDED" | "CONFIRMATION_REQUIRED" | "NOTE_REQUIRED" | "CONFIDENTIAL_LIST_NOT_EDITABLE" | "REVERT_NOT_SUPPORTED" | "NOTHING_TO_RESTORE" | "EVALUATION_BUDGET_EXCEEDED" | "MANAGEMENT_UNAVAILABLE" | "IMPORT_CREDENTIALS_INVALID" | "IMPORT_SOURCE_UNAVAILABLE" | "IMPORT_SOURCE_NOT_FOUND" | "IMPORT_UNSUPPORTED" | "IMPORT_EXCEEDS_LIMITS" | "OWNER_NOT_A_MEMBER" | "SETTING_TYPE_IMMUTABLE" | (string & {});
+export type FlagsErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "PROJECT_NOT_FOUND" | "ENVIRONMENT_NOT_FOUND" | "CONFIG_NOT_FOUND" | "SETTING_NOT_FOUND" | "SEGMENT_NOT_FOUND" | "CHANGE_NOT_FOUND" | "REVISION_NOT_FOUND" | "SDK_KEY_NOT_FOUND" | "KEY_ALREADY_EXISTS" | "LAST_ENVIRONMENT" | "VERSION_CONFLICT" | "SETTING_IN_USE" | "SEGMENT_IN_USE" | "CIRCULAR_PREREQUISITE" | "PREREQUISITE_NOT_FOUND" | "PREREQUISITE_TYPE_MISMATCH" | "INVALID_VALUE" | "INVALID_TARGETING" | "PERCENTAGES_MUST_SUM_TO_100" | "CONFIG_TOO_LARGE" | "LIMIT_EXCEEDED" | "CONFIRMATION_REQUIRED" | "NOTE_REQUIRED" | "CONFIDENTIAL_LIST_NOT_EDITABLE" | "REVERT_NOT_SUPPORTED" | "NOTHING_TO_RESTORE" | "EVALUATION_BUDGET_EXCEEDED" | "MANAGEMENT_UNAVAILABLE" | "IMPORT_CREDENTIALS_INVALID" | "IMPORT_SOURCE_UNAVAILABLE" | "IMPORT_SOURCE_NOT_FOUND" | "IMPORT_UNSUPPORTED" | "IMPORT_EXCEEDS_LIMITS" | "OWNER_NOT_A_MEMBER" | "SETTING_TYPE_IMMUTABLE" | "APPROVAL_REQUIRED" | "APPROVAL_POLICY_HUMAN_ONLY" | "NOTHING_TO_PROPOSE" | "CHANGE_REQUEST_NOT_FOUND" | "CHANGE_REQUEST_NOT_OPEN" | "CHANGE_REQUEST_NOT_APPROVED" | "CHANGE_REQUEST_STALE" | "REVIEWER_MUST_BE_HUMAN" | "SELF_APPROVAL_NOT_ALLOWED" | "ALREADY_REVIEWED" | "NOT_CHANGE_REQUEST_AUTHOR" | "SCHEDULED_CHANGE_NOT_FOUND" | "SCHEDULED_CHANGE_NOT_PENDING" | "RUN_AT_INVALID" | "RAMP_NOT_FOUND" | "RAMP_INVALID" | "RAMP_ALREADY_ACTIVE" | "RAMP_NOT_LIVE" | (string & {});
 
 // @public (undocumented)
 export const FlagsErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "PROJECT_NOT_FOUND", "ENVIRONMENT_NOT_FOUND", "CONFIG_NOT_FOUND", "SETTING_NOT_FOUND", "SEGMENT_NOT_FOUND", "CHANGE_NOT_FOUND", "REVISION_NOT_FOUND", "SDK_KEY_NOT_FOUND", "KEY_ALREADY_EXISTS", "LAST_ENVIRONMENT", "VERSION_CONFLICT", "SETTING_IN_USE", "SEGMENT_IN_USE", "CIRCULAR_PREREQUISITE", "PREREQUISITE_NOT_FOUND", "PREREQUISITE_TYPE_MISMATCH", "INVALID_VALUE", "INVALID_TARGETING", "PERCENTAGES_MUST_SUM_TO_100", "CONFIG_TOO_LARGE", "LIMIT_EXCEEDED", "CONFIRMATION_REQUIRED", "NOTE_REQUIRED", "CONFIDENTIAL_LIST_NOT_EDITABLE", "REVERT_NOT_SUPPORTED", "NOTHING_TO_RESTORE", "EVALUATION_BUDGET_EXCEEDED", "MANAGEMENT_UNAVAILABLE", "IMPORT_CREDENTIALS_INVALID", "IMPORT_SOURCE_UNAVAILABLE", "IMPORT_SOURCE_NOT_FOUND", "IMPORT_UNSUPPORTED", "IMPORT_EXCEEDS_LIMITS", "OWNER_NOT_A_MEMBER", "SETTING_TYPE_IMMUTABLE"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "PROJECT_NOT_FOUND", "ENVIRONMENT_NOT_FOUND", "CONFIG_NOT_FOUND", "SETTING_NOT_FOUND", "SEGMENT_NOT_FOUND", "CHANGE_NOT_FOUND", "REVISION_NOT_FOUND", "SDK_KEY_NOT_FOUND", "KEY_ALREADY_EXISTS", "LAST_ENVIRONMENT", "VERSION_CONFLICT", "SETTING_IN_USE", "SEGMENT_IN_USE", "CIRCULAR_PREREQUISITE", "PREREQUISITE_NOT_FOUND", "PREREQUISITE_TYPE_MISMATCH", "INVALID_VALUE", "INVALID_TARGETING", "PERCENTAGES_MUST_SUM_TO_100", "CONFIG_TOO_LARGE", "LIMIT_EXCEEDED", "CONFIRMATION_REQUIRED", "NOTE_REQUIRED", "CONFIDENTIAL_LIST_NOT_EDITABLE", "REVERT_NOT_SUPPORTED", "NOTHING_TO_RESTORE", "EVALUATION_BUDGET_EXCEEDED", "MANAGEMENT_UNAVAILABLE", "IMPORT_CREDENTIALS_INVALID", "IMPORT_SOURCE_UNAVAILABLE", "IMPORT_SOURCE_NOT_FOUND", "IMPORT_UNSUPPORTED", "IMPORT_EXCEEDS_LIMITS", "OWNER_NOT_A_MEMBER", "SETTING_TYPE_IMMUTABLE", "APPROVAL_REQUIRED", "APPROVAL_POLICY_HUMAN_ONLY", "NOTHING_TO_PROPOSE", "CHANGE_REQUEST_NOT_FOUND", "CHANGE_REQUEST_NOT_OPEN", "CHANGE_REQUEST_NOT_APPROVED", "CHANGE_REQUEST_STALE", "REVIEWER_MUST_BE_HUMAN", "SELF_APPROVAL_NOT_ALLOWED", "ALREADY_REVIEWED", "NOT_CHANGE_REQUEST_AUTHOR", "SCHEDULED_CHANGE_NOT_FOUND", "SCHEDULED_CHANGE_NOT_PENDING", "RUN_AT_INVALID", "RAMP_NOT_FOUND", "RAMP_INVALID", "RAMP_ALREADY_ACTIVE", "RAMP_NOT_LIVE"];
 };
 
 // @public
@@ -1583,6 +2001,134 @@ export type paths = {
         get: operations["DeliveryController_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChangeRequestsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ChangeRequestsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_apply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/rebase": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_rebase"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/change-requests/{change_request_id}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_schedule"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1973,6 +2519,166 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/projects/{project_id}/stale-flags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StaleFlagsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/projects/{project_id}/stale-flags/digest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StaleFlagsController_sendDigest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/ramps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RampsController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/ramps/{ramp_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["RampsController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/ramps/{ramp_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RampsController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/ramps/{ramp_id}/pause": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RampsController_pause"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/ramps/{ramp_id}/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RampsController_resume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/scheduled-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduledChangesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/scheduled-changes/{scheduled_change_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ScheduledChangesController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/scheduled-changes/{scheduled_change_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ScheduledChangesController_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/segments/{segment_id}": {
         parameters: {
             query?: never;
@@ -2037,6 +2743,22 @@ export type paths = {
         patch: operations["SettingsController_patchValue"];
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/change-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ChangeRequestsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/confidential": {
         parameters: {
             query?: never;
@@ -2047,6 +2769,38 @@ export type paths = {
         get: operations["SettingsController_revealValue"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/ramps": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["RampsController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/scheduled-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ScheduledChangesController_create"];
         delete?: never;
         options?: never;
         head?: never;

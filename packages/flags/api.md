@@ -5,6 +5,209 @@
 
 Every method of `Flags`, grouped by resource. Types are under the `Flags` namespace (`import type { Flags } from "@productcraft/flags"`). Every method takes per-request options last (`{ idempotencyKey, timeout, maxRetries, headers, signal, workspaceId }`).
 
+## changeRequests
+
+### `flags.changeRequests.apply(changeRequestId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/apply` → `Flags.ChangeRequest`
+
+Apply a change request.
+
+Writes an approved request through the normal value-write path, only if the value is still at `base_version` (else 409 `CHANGE_REQUEST_STALE`: rebase it). A `ramp` request starts its ramp. Anyone allowed to make the write can apply, including the author's API key or agent: the approval is what the policy asks for.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE`, `RAMP_ALREADY_ACTIVE` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). `RAMP_ALREADY_ACTIVE`: a ramp already runs on the flag. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE`, `RAMP_INVALID`, `RUN_AT_INVALID` | The proposal is refused by the checks the write itself makes: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE` (it equals what the environment serves now), `RAMP_INVALID` or `RUN_AT_INVALID`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.apply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-apply)
+
+### `flags.changeRequests.approve(changeRequestId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/approve` → `Flags.ChangeRequest`
+
+Approve a change request.
+
+Records your approval. With `required_approvals` approvals from different reviewers the request is `approved`; `apply: true` then applies it at once. Only a person signed in to the console who is not the author (nor the person an agent proposed it for) can approve, and they must be allowed to make the write. A stale request (the value moved) cannot be approved: rebase it.
+
+- Params: `Flags.ChangeRequestApproveParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED`, `REVIEWER_MUST_BE_HUMAN`, `SELF_APPROVAL_NOT_ALLOWED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. `REVIEWER_MUST_BE_HUMAN`: only a person signed in to the console can review (never an API key or an AI agent). `SELF_APPROVAL_NOT_ALLOWED`: the author, or the person an agent proposed it for, cannot review it. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE`, `ALREADY_REVIEWED` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). `ALREADY_REVIEWED`: you already reviewed it. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE`, `RAMP_INVALID`, `RUN_AT_INVALID` | The proposal is refused by the checks the write itself makes: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE` (it equals what the environment serves now), `RAMP_INVALID` or `RUN_AT_INVALID`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { apply: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-approve)
+
+### `flags.changeRequests.cancel(changeRequestId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/cancel` → `Flags.ChangeRequest`
+
+Cancel a change request.
+
+Withdraws an open request (and its schedule). The author can always cancel; anyone else needs the right to make the write.
+
+- Params: `Flags.ChangeRequestCancelParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll out the new checkout to everyone (FLAG-142)" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-cancel)
+
+### `flags.changeRequests.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/change-requests` → `PagePromise<Flags.ChangeRequest>`
+
+List change requests.
+
+The workspace's change requests, newest first. `status=open` is the review queue (pending, approved, scheduled and failed requests).
+
+- Params: `Flags.ChangeRequestListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter, cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+for await (const changeRequest of flags.changeRequests.list()) {
+  console.log(changeRequest);
+}
+const page = await flags.changeRequests.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-change-requests)
+
+### `flags.changeRequests.rebase(changeRequestId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/rebase` → `Flags.ChangeRequest`
+
+Rebase a change request.
+
+Re-diffs a stale request against the current value: the proposed targeting stays, `before` and `base_version` become the current ones, its approvals are cleared and it is `pending` again (reviewers approve the new diff).
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE`, `RAMP_INVALID`, `RUN_AT_INVALID` | The proposal is refused by the checks the write itself makes: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE` (it equals what the environment serves now), `RAMP_INVALID` or `RUN_AT_INVALID`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.rebase("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-rebase)
+
+### `flags.changeRequests.reject(changeRequestId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/reject` → `Flags.ChangeRequest`
+
+Reject a change request.
+
+Rejects the request (final); the author is emailed with your note. Same reviewer rules as approve.
+
+- Params: `Flags.ChangeRequestRejectParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `apply` is only for approvals. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED`, `REVIEWER_MUST_BE_HUMAN`, `SELF_APPROVAL_NOT_ALLOWED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. `REVIEWER_MUST_BE_HUMAN`: only a person signed in to the console can review (never an API key or an AI agent). `SELF_APPROVAL_NOT_ALLOWED`: the author, or the person an agent proposed it for, cannot review it. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE`, `ALREADY_REVIEWED` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). `ALREADY_REVIEWED`: you already reviewed it. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.reject("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { apply: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-reject)
+
+### `flags.changeRequests.retrieve(changeRequestId, options?)`
+
+`GET /v1/workspaces/{workspace_id}/change-requests/{change_request_id}` → `Flags.ChangeRequest`
+
+Get a change request.
+
+One change request with its diff, reviews and whether it is `stale`.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-change-requests-change-request-id)
+
+### `flags.changeRequests.schedule(changeRequestId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/change-requests/{change_request_id}/schedule` → `Flags.ChangeRequest`
+
+Schedule a change request.
+
+Applies an approved `value` request at `run_at` (status `scheduled`). If the value moved by then the request becomes `failed`: rebase it. Cancel the schedule by cancelling the scheduled change or the request.
+
+- Params: `Flags.ChangeRequestScheduleParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `CHANGE_REQUEST_NOT_FOUND` | `CHANGE_REQUEST_NOT_FOUND`: no such change request in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `CHANGE_REQUEST_NOT_OPEN`, `CHANGE_REQUEST_NOT_APPROVED`, `CHANGE_REQUEST_STALE` | `CHANGE_REQUEST_NOT_OPEN` (its `status` does not allow this; `details.status`), `CHANGE_REQUEST_NOT_APPROVED` (it still needs approvals) or `CHANGE_REQUEST_STALE` (the value changed since it was proposed: rebase it). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RUN_AT_INVALID` | `RUN_AT_INVALID`: `run_at` is in the past or more than a year ahead, or the request is a ramp (it carries its own times). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.changeRequests.schedule("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { run_at: "2026-11-20T09:00:00.000Z" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-change-requests-change-request-id-schedule)
+
 ## changes
 
 ### `flags.changes.retrieve(changeId, options?)`
@@ -864,7 +1067,7 @@ const environment = await flags.projects.environments.retrieve("3f0c3c1e-8a2b-4c
 
 Update an environment.
 
-Name, color, order, `protected` and `require_note`; the key never changes. Changing `protected` or `require_note` is recorded in the workspace audit log. Needs `flags.project.manage`.
+Name, color, order, `protected`, `require_note`, and the approval policy (`approval_policy`, `required_approvals`); the key never changes. Changing a guard is recorded in the workspace audit log. Needs `flags.project.manage`; only a person signed in to the console can change the approval policy.
 
 - Params: `Flags.ProjectEnvironmentUpdateParams`
 
@@ -872,13 +1075,13 @@ Name, color, order, `protected` and `require_note`; the key never changes. Chang
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED`, `APPROVAL_POLICY_HUMAN_ONLY` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). `APPROVAL_POLICY_HUMAN_ONLY`: an API key or an agent tried to change `approval_policy` or `required_approvals`. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `ENVIRONMENT_NOT_FOUND`: no such environment in this project. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
 ```ts
-const environment = await flags.projects.environments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { color: "#e67700" });
+const environment = await flags.projects.environments.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { approval_policy: "off" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/flags/api-reference#patch-v1-workspaces-workspace-id-projects-project-id-environments-environment-id)
@@ -948,6 +1151,263 @@ const page = await flags.projects.segments.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3
 ```
 
 [HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-projects-project-id-segments)
+
+## projects.staleFlags
+
+### `flags.projects.staleFlags.list(projectId, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/projects/{project_id}/stale-flags` → `PagePromise<Flags.StaleFlag>`
+
+List stale flags.
+
+Flags that are probably dead code, longest unchanged first, each with its `reasons`: no value or targeting change in `days` (default the project's `stale_after_days`), serving one value to everyone in every environment (`rolled_out`, `turned_off`, `same_value_everywhere`), or marked `released` / `deprecated`. `suggested_value` is the literal to replace the flag read with when cleaning it up; `prerequisite_of` counts settings that still depend on it. Permanent flags are never listed. Flags collects no evaluation data, so the report cannot tell whether code still reads a flag (`evaluation_data: not_collected`).
+
+- Params: `Flags.ProjectStaleFlagListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad `days`, `reason`, cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+for await (const staleFlag of flags.projects.staleFlags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+  console.log(staleFlag);
+}
+const page = await flags.projects.staleFlags.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-projects-project-id-stale-flags)
+
+### `flags.projects.staleFlags.sendDigest(projectId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/projects/{project_id}/stale-flags/digest` → `Flags.StaleDigest`
+
+Send the stale-flag digest now.
+
+Emails the digest that otherwise goes out every Monday at 07:00 UTC: each flag owner gets their stale flags; flags without an owner go to the workspace owners. Recipients are always members of the workspace.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `PROJECT_NOT_FOUND` | `PROJECT_NOT_FOUND`: no such project in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const staleDigest = await flags.projects.staleFlags.sendDigest("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-projects-project-id-stale-flags-digest)
+
+## ramps
+
+### `flags.ramps.cancel(rampId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/ramps/{ramp_id}/cancel` → `Flags.Ramp`
+
+Cancel a ramp.
+
+Stops the ramp where it is: the split it reached stays. Change or restore the value to undo it.
+
+- Params: `Flags.RampCancelParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `RAMP_NOT_FOUND` | `RAMP_NOT_FOUND`: no such ramp in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `RAMP_NOT_LIVE` | `RAMP_NOT_LIVE`: the ramp already completed, failed or was cancelled. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const ramp = await flags.ramps.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll out the new checkout to everyone (FLAG-142)" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-ramps-ramp-id-cancel)
+
+### `flags.ramps.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/ramps` → `PagePromise<Flags.Ramp>`
+
+List ramps.
+
+Percentage ramps, newest first. Filter by `status` (`active`, `paused`, `completed`, `cancelled`, `failed`), project, environment or setting.
+
+- Params: `Flags.RampListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter, cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+for await (const ramp of flags.ramps.list()) {
+  console.log(ramp);
+}
+const page = await flags.ramps.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-ramps)
+
+### `flags.ramps.pause(rampId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/ramps/{ramp_id}/pause` → `Flags.Ramp`
+
+Pause a ramp.
+
+Holds the ramp at its current percentage; no further steps apply until it is resumed. Allowed even where changes need approval (it is a safety stop).
+
+- Params: `Flags.RampPauseParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `RAMP_NOT_FOUND` | `RAMP_NOT_FOUND`: no such ramp in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `RAMP_NOT_LIVE` | `RAMP_NOT_LIVE`: the ramp is not active. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const ramp = await flags.ramps.pause("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll out the new checkout to everyone (FLAG-142)" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-ramps-ramp-id-pause)
+
+### `flags.ramps.resume(rampId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/ramps/{ramp_id}/resume` → `Flags.Ramp`
+
+Resume a ramp.
+
+Continues a paused ramp. Steps whose time passed while it was paused are not replayed one by one: the latest due step applies on the next tick.
+
+- Params: `Flags.RampResumeParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `RAMP_NOT_FOUND` | `RAMP_NOT_FOUND`: no such ramp in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `RAMP_NOT_LIVE` | `RAMP_NOT_LIVE`: the ramp is not paused. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const ramp = await flags.ramps.resume("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll out the new checkout to everyone (FLAG-142)" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-ramps-ramp-id-resume)
+
+### `flags.ramps.retrieve(rampId, options?)`
+
+`GET /v1/workspaces/{workspace_id}/ramps/{ramp_id}` → `Flags.Ramp`
+
+Get a ramp.
+
+One ramp with its steps, the percentage it reached and its state.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `RAMP_NOT_FOUND` | `RAMP_NOT_FOUND`: no such ramp in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const ramp = await flags.ramps.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-ramps-ramp-id)
+
+## scheduledChanges
+
+### `flags.scheduledChanges.cancel(scheduledChangeId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/scheduled-changes/{scheduled_change_id}/cancel` → `Flags.ScheduledChange`
+
+Cancel a scheduled change.
+
+Cancels a pending scheduled change. A scheduled change request goes back to `approved`.
+
+- Params: `Flags.ScheduledChangeCancelParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `SCHEDULED_CHANGE_NOT_FOUND` | `SCHEDULED_CHANGE_NOT_FOUND`: no such scheduled change in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `SCHEDULED_CHANGE_NOT_PENDING` | `SCHEDULED_CHANGE_NOT_PENDING`: it already ran or was cancelled. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const scheduledChange = await flags.scheduledChanges.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Roll out the new checkout to everyone (FLAG-142)" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-scheduled-changes-scheduled-change-id-cancel)
+
+### `flags.scheduledChanges.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/scheduled-changes` → `PagePromise<Flags.ScheduledChange>`
+
+List scheduled changes.
+
+Scheduled value changes, soonest first. Filter by `status` (`pending`, `applied`, `failed`, `cancelled`), project, environment or setting.
+
+- Params: `Flags.ScheduledChangeListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad filter, cursor or `limit`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+for await (const scheduledChange of flags.scheduledChanges.list()) {
+  console.log(scheduledChange);
+}
+const page = await flags.scheduledChanges.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-scheduled-changes)
+
+### `flags.scheduledChanges.retrieve(scheduledChangeId, options?)`
+
+`GET /v1/workspaces/{workspace_id}/scheduled-changes/{scheduled_change_id}` → `Flags.ScheduledChange`
+
+Get a scheduled change.
+
+One scheduled change, with what it will write and, once run, the history entry or the error.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `SCHEDULED_CHANGE_NOT_FOUND` | `SCHEDULED_CHANGE_NOT_FOUND`: no such scheduled change in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const scheduledChange = await flags.scheduledChanges.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-scheduled-changes-scheduled-change-id)
 
 ## segments
 
@@ -1225,6 +1685,96 @@ const settingValue = await flags.settings.values.update("3f0c3c1e-8a2b-4c55-9d3f
 
 [HTTP reference](https://productcraft.co/docs/flags/api-reference#patch-v1-workspaces-workspace-id-settings-setting-id-values-environment-id)
 
+## settings.values.changeRequests
+
+### `flags.settings.values.changeRequests.create(settingId, environmentId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/change-requests` → `Flags.ChangeRequest`
+
+Propose a change.
+
+Proposes a value write (`replace` or `patch`, as PUT / PATCH …/values take them) or a timed ramp (`ramp`) for review instead of making it. The proposal is validated as the write would be and stored without any confidential cleartext; the environment's owners and admins are emailed and `change_request.created` is sent to webhooks. Works in any environment; where the environment's `approval_policy` applies to the caller it is the only way to change a value. Send the `version` you read.
+
+- Params: `Flags.SettingsValueChangeRequestCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field does not fit the `operation`, or is missing. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `VERSION_CONFLICT`, `RAMP_ALREADY_ACTIVE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `VERSION_CONFLICT`: the value changed since you read it. `RAMP_ALREADY_ACTIVE`: the flag already has a ramp in this environment. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE`, `RAMP_INVALID`, `RUN_AT_INVALID` | The proposal is refused by the checks the write itself makes: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE` (it equals what the environment serves now), `RAMP_INVALID` or `RUN_AT_INVALID`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const changeRequest = await flags.settings.values.changeRequests.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { operation: "patch", version: 7 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-settings-setting-id-values-environment-id-change-requests)
+
+## settings.values.ramps
+
+### `flags.settings.values.ramps.create(settingId, environmentId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/ramps` → `Flags.Ramp`
+
+Start a ramp.
+
+Rolls `value` out to a growing percentage at set times (for example 5% → 25% → 50% → 100%): each step sets the flag-level split, so users already in keep the value as it grows (sticky bucketing), and a final 100% step makes it the default. Rules still decide first. Where the environment needs approval for the caller this answers 409 `APPROVAL_REQUIRED`: propose it as a change request with `operation: ramp`.
+
+- Params: `Flags.SettingsValueRampCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is missing or invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `APPROVAL_REQUIRED`, `RAMP_ALREADY_ACTIVE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `APPROVAL_REQUIRED`: the environment needs approval for this caller. `RAMP_ALREADY_ACTIVE`: the flag already has a live ramp here. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RAMP_INVALID`, `INVALID_VALUE`, `NOTE_REQUIRED` | `RAMP_INVALID` (`details.errors` lists each step problem, or the value is already the default), `INVALID_VALUE` or `NOTE_REQUIRED`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const ramp = await flags.settings.values.ramps.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { steps: [{ at: "2026-11-20T09:00:00.000Z", percentage: 25 }], value: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-settings-setting-id-values-environment-id-ramps)
+
+## settings.values.scheduledChanges
+
+### `flags.settings.values.scheduledChanges.create(settingId, environmentId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/settings/{setting_id}/values/{environment_id}/scheduled-changes` → `Flags.ScheduledChange`
+
+Schedule a change.
+
+Schedules a value write for `run_at` (to within about 30 seconds): a `patch` (turn a flag on at 09:00) applies to whatever the value is then; a `replace` applies only if the value is still at `version`. Where the environment needs approval for the caller this answers 409 `APPROVAL_REQUIRED`: propose a change request and schedule it once approved.
+
+- Params: `Flags.SettingsValueScheduledChangeCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field does not fit the `operation`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). The caller also needs `flags.value.update` on the environment and the setting, plus `flags.protected.update` in a protected environment. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `SETTING_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `SETTING_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `APPROVAL_REQUIRED`, `VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `APPROVAL_REQUIRED`: the environment needs approval for this caller. `VERSION_CONFLICT`: the value changed since you read it. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE`, `RAMP_INVALID`, `RUN_AT_INVALID` | The proposal is refused by the checks the write itself makes: `INVALID_VALUE`, `INVALID_TARGETING`, `SEGMENT_NOT_FOUND`, `CONFIDENTIAL_LIST_NOT_EDITABLE`, `PERCENTAGES_MUST_SUM_TO_100`, `PREREQUISITE_NOT_FOUND`, `PREREQUISITE_TYPE_MISMATCH`, `CIRCULAR_PREREQUISITE`, `LIMIT_EXCEEDED`, `NOTE_REQUIRED`, `NOTHING_TO_PROPOSE` (it equals what the environment serves now), `RAMP_INVALID` or `RUN_AT_INVALID`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+const scheduledChange = await flags.settings.values.scheduledChanges.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { operation: "patch", run_at: "2026-11-20T09:00:00.000Z" });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#post-v1-workspaces-workspace-id-settings-setting-id-values-environment-id-scheduled-changes)
+
 ## stats
 
 ### `flags.stats.retrieve(options?)`
@@ -1252,7 +1802,7 @@ const flagsStats = await flags.stats.retrieve();
 
 ### `flags.webhooks.unwrap({ payload, headers, secret? })`
 
-Verifies the signature and returns `Flags.UnwrapWebhookEvent`. Events: `config.published`, `sdk_key.rotated`, plus `UnknownWebhookEvent` for types added later.
+Verifies the signature and returns `Flags.UnwrapWebhookEvent`. Events: `change_request.applied`, `change_request.approved`, `change_request.cancelled`, `change_request.created`, `change_request.rejected`, `config.published`, `sdk_key.rotated`, plus `UnknownWebhookEvent` for types added later.
 
 ### `flags.webhooks.sign({ payload, secret?, id?, timestamp? })`
 
@@ -1622,3 +2172,21 @@ const webhookEventDetail = await flags.webhooks.events.retrieve("3f0c1a2b-4c5d-4
 | `IMPORT_EXCEEDS_LIMITS` | The ConfigCat product is larger than the Flags workspace limits. |
 | `OWNER_NOT_A_MEMBER` | The owner_id is not a member of this workspace, or membership could not be checked with this credential. |
 | `SETTING_TYPE_IMMUTABLE` | A setting's type cannot change; create a new setting instead. |
+| `APPROVAL_REQUIRED` | The environment's approval policy applies to this caller: propose the change as a change request instead. |
+| `APPROVAL_POLICY_HUMAN_ONLY` | Only a person signed in to the console can change an environment approval policy. |
+| `NOTHING_TO_PROPOSE` | The proposed change matches what the environment serves now. |
+| `CHANGE_REQUEST_NOT_FOUND` | The change request does not exist in this workspace. |
+| `CHANGE_REQUEST_NOT_OPEN` | The change request is not in a state that allows this action (see details.status). |
+| `CHANGE_REQUEST_NOT_APPROVED` | The change request does not have the approvals it needs yet. |
+| `CHANGE_REQUEST_STALE` | The value changed since the change request was proposed; rebase or recreate it. |
+| `REVIEWER_MUST_BE_HUMAN` | Only a person signed in to the console can review a change request. |
+| `SELF_APPROVAL_NOT_ALLOWED` | The author of a change request (or the person an agent acted for) cannot review it. |
+| `ALREADY_REVIEWED` | You already reviewed this change request. |
+| `NOT_CHANGE_REQUEST_AUTHOR` | Only the author of the change request can do this. |
+| `SCHEDULED_CHANGE_NOT_FOUND` | The scheduled change does not exist in this workspace. |
+| `SCHEDULED_CHANGE_NOT_PENDING` | The scheduled change already ran or was cancelled. |
+| `RUN_AT_INVALID` | run_at must be in the future and within a year. |
+| `RAMP_NOT_FOUND` | The ramp does not exist in this workspace. |
+| `RAMP_INVALID` | The ramp steps are not valid (see details.errors). |
+| `RAMP_ALREADY_ACTIVE` | The flag already has an active or paused ramp in this environment. |
+| `RAMP_NOT_LIVE` | The ramp already completed, failed or was cancelled. |
