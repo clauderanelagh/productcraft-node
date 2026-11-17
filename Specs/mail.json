@@ -9407,6 +9407,11 @@
             "format": "uuid",
             "type": "string"
           },
+          "is_test": {
+            "description": "Sent to a test address (`delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co`, tasks/mail-api/005): simulated through the Amazon SES mailbox simulator, kept out of the deliverability verdict and the metrics, never added to the suppression list.",
+            "example": false,
+            "type": "boolean"
+          },
           "last_event": {
             "allOf": [
               {
@@ -9549,6 +9554,7 @@
           "tracking",
           "opened_at",
           "clicked_at",
+          "is_test",
           "scheduled_at",
           "attachments",
           "events",
@@ -9666,6 +9672,11 @@
             "description": "The message id.",
             "format": "uuid",
             "type": "string"
+          },
+          "is_test": {
+            "description": "Sent to a test address (`delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co`, tasks/mail-api/005): simulated through the Amazon SES mailbox simulator, kept out of the deliverability verdict and the metrics, never added to the suppression list.",
+            "example": false,
+            "type": "boolean"
           },
           "opened_at": {
             "description": "First recorded open; null when never opened or not tracked. Apple Mail Privacy Protection opens every message on arrival.",
@@ -9800,6 +9811,7 @@
           "tracking",
           "opened_at",
           "clicked_at",
+          "is_test",
           "scheduled_at"
         ],
         "type": "object",
@@ -9970,6 +9982,11 @@
             "format": "uuid",
             "type": "string"
           },
+          "is_test": {
+            "description": "Sent to a test address (`delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co`, tasks/mail-api/005): simulated through the Amazon SES mailbox simulator, kept out of the deliverability verdict and the metrics, never added to the suppression list.",
+            "example": false,
+            "type": "boolean"
+          },
           "opened_at": {
             "description": "First recorded open; null when never opened or not tracked. Apple Mail Privacy Protection opens every message on arrival.",
             "format": "date-time",
@@ -10103,6 +10120,7 @@
           "tracking",
           "opened_at",
           "clicked_at",
+          "is_test",
           "scheduled_at",
           "attachments",
           "body_html",
@@ -12037,7 +12055,7 @@
             "type": "string"
           },
           "to": {
-            "description": "Recipient: one address, or an array. At most 50 distinct recipients across `to`, `cc` and `bcc` (400 `RECIPIENT_LIMIT`). Each recipient gets its own copy, with its own suppression check, message (`GET /messages`) and delivery status, showing the full `To` and `Cc` lists.",
+            "description": "Recipient: one address, or an array. At most 50 distinct recipients across `to`, `cc` and `bcc` (400 `RECIPIENT_LIMIT`). Each recipient gets its own copy, with its own suppression check, message (`GET /messages`) and delivery status, showing the full `To` and `Cc` lists. To test without a real mailbox, send to `delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co` (`+label` allowed on the first three).",
             "example": [
               "success@simulator.amazonses.com"
             ],
@@ -12269,7 +12287,7 @@
             "type": "string"
           },
           "to": {
-            "description": "Recipient: one address, or an array. At most 50 distinct recipients across `to`, `cc` and `bcc` (400 `RECIPIENT_LIMIT`). Each recipient gets its own copy, with its own suppression check, message (`GET /messages`) and delivery status, showing the full `To` and `Cc` lists.",
+            "description": "Recipient: one address, or an array. At most 50 distinct recipients across `to`, `cc` and `bcc` (400 `RECIPIENT_LIMIT`). Each recipient gets its own copy, with its own suppression check, message (`GET /messages`) and delivery status, showing the full `To` and `Cc` lists. To test without a real mailbox, send to `delivered@`, `bounced@`, `complained@` or `suppressed@test.productcraft.co` (`+label` allowed on the first three).",
             "example": [
               "success@simulator.amazonses.com"
             ],
