@@ -112,6 +112,19 @@ const waitlist = new Waitlist();
   const page = await waitlist.lists.list({}, { timeout: 5_000 });
 }
 
+// lists.milestoneAwards.list: List reached referral milestones
+{
+  for await (const milestoneAward of waitlist.lists.milestoneAwards.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+    console.log(milestoneAward);
+  }
+  const page = await waitlist.lists.milestoneAwards.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+}
+
+// lists.milestoneAwards.update: Mark a reward handed out (or not)
+{
+  const milestoneAward = await waitlist.lists.milestoneAwards.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { fulfilled: true });
+}
+
 // lists.retrieve: Get waitlist details
 {
   const list = await waitlist.lists.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");

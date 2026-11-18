@@ -155,7 +155,7 @@ export type components = {
         CreateWebhookEndpointDto: {
             description?: string | null;
             enabled?: boolean;
-            event_types?: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            event_types?: ("entry.created" | "entry.approved" | "entry.rejected" | "entry.milestone_reached")[];
             url: string;
         };
         CustomFieldDto: {
@@ -217,6 +217,20 @@ export type components = {
         EntryListResponseDto: {
             data: components["schemas"]["EntryResponseDto"][];
             pagination: components["schemas"]["EntryListPaginationDto"];
+        };
+        EntryMilestoneEventDataDto: {
+            entry: components["schemas"]["WebhookEntryDto"];
+            milestone: components["schemas"]["WebhookMilestoneDto"];
+            waitlist_id: string;
+        };
+        EntryMilestoneReachedEvent: {
+            created_at: string;
+            data: components["schemas"]["EntryMilestoneEventDataDto"];
+            id: string;
+            test?: boolean;
+            type: "entry.milestone_reached";
+            waitlist_id?: string;
+            workspace_id?: string;
         };
         EntryRejectedEvent: {
             created_at: string;
@@ -325,6 +339,22 @@ export type components = {
         ListWebhookEventsResponseDto: {
             data: components["schemas"]["WebhookEventDto"][];
             pagination: components["schemas"]["WebhookPaginationDto"];
+        };
+        MilestoneAwardDto: {
+            awarded_at: string;
+            email: string;
+            entry_id: string;
+            fulfilled_at: string | null;
+            id: string;
+            milestone_count: number;
+            name: string;
+            referral_count: number;
+            reward: string;
+            waitlist_id: string;
+        };
+        MilestoneAwardListDto: {
+            data: components["schemas"]["MilestoneAwardDto"][];
+            pagination: components["schemas"]["PaginationDto"];
         };
         NextRewardDto: {
             count: number;
@@ -465,7 +495,7 @@ export type components = {
             grace_hours?: number;
         };
         SendWebhookTestDto: {
-            event_type: "entry.created" | "entry.approved" | "entry.rejected";
+            event_type: "entry.created" | "entry.approved" | "entry.rejected" | "entry.milestone_reached";
         };
         SenderDomainStatus: "not_started" | "pending" | "partially_verified" | "verified" | "temporary_failure" | "failed" | "disabled" | "deleted" | "not_found";
         SenderMode: "workspace" | "custom";
@@ -475,13 +505,16 @@ export type components = {
             value: number;
         };
         StatsWindow: "1d" | "7d" | "30d";
-        TemplateSlot: "welcome" | "approved" | "rejected" | "confirm";
+        TemplateSlot: "welcome" | "approved" | "rejected" | "confirm" | "milestone";
         TestWebhookDto: {
             event: "entry.created" | "entry.approved" | "entry.rejected";
             waitlist_id?: string;
         };
         UpdateEntryStatusDto: {
             status: components["schemas"]["EntryDecision"];
+        };
+        UpdateMilestoneAwardDto: {
+            fulfilled: boolean;
         };
         UpdateSettingsDto: {
             approved_template_name?: string | null;
@@ -491,6 +524,7 @@ export type components = {
             default_heimdall_app_slug?: string | null;
             default_sender_address?: string | null;
             default_sender_domain_id?: string | null;
+            milestone_template_name?: string | null;
             notifications_via_envoi?: boolean;
             primary_color?: string | null;
             rejected_template_name?: string | null;
@@ -520,7 +554,7 @@ export type components = {
         UpdateWebhookEndpointDto: {
             description?: string | null;
             enabled?: boolean;
-            event_types?: ("entry.created" | "entry.approved" | "entry.rejected")[];
+            event_types?: ("entry.created" | "entry.approved" | "entry.rejected" | "entry.milestone_reached")[];
             url?: string;
         };
         VariantCopyDto: {
@@ -632,6 +666,7 @@ export type components = {
             default_sender_domain_id: string | null;
             effective_sender: components["schemas"]["EffectiveSenderDto"];
             email_setup: components["schemas"]["EmailSetupDto"];
+            milestone_template_name: string | null;
             notifications_via_envoi: boolean;
             primary_color: string | null;
             rejected_template_name: string | null;
@@ -792,7 +827,7 @@ export type components = {
             type: components["schemas"]["WebhookEventType"];
         };
         WebhookEventStatus: "pending" | "delivered" | "failed" | "not_sent";
-        WebhookEventType: "entry.created" | "entry.approved" | "entry.rejected";
+        WebhookEventType: "entry.created" | "entry.approved" | "entry.rejected" | "entry.milestone_reached";
         WebhookEventTypeDto: {
             category: string;
             description: string;
@@ -804,6 +839,10 @@ export type components = {
         WebhookListResponseDto: {
             data: components["schemas"]["WebhookResponseDto"][];
             pagination: components["schemas"]["PaginationDto"];
+        };
+        WebhookMilestoneDto: {
+            count: number;
+            reward: string;
         };
         WebhookPaginationDto: {
             has_more: boolean;
@@ -1280,6 +1319,38 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MilestoneAwardController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards/{award_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["MilestoneAwardController_update"];
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/test-entries": {
         parameters: {
             query?: never;
@@ -1684,7 +1755,7 @@ namespace Waitlist {
     type EntryFraudSignal = __EntryFraudSignal;
     const // (undocumented)
     TemplateSlot: {
-        values: readonly ["welcome", "approved", "rejected", "confirm"];
+        values: readonly ["welcome", "approved", "rejected", "confirm", "milestone"];
     };
     // (undocumented)
     type EntryFraudSignalCode = __EntryFraudSignalCode;
@@ -1717,29 +1788,33 @@ namespace Waitlist {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type EntryRejectedEvent = __EntryRejectedEvent;
+    type EntryMilestoneEventData = __EntryMilestoneEventData;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
+    type EntryMilestoneReachedEvent = __EntryMilestoneReachedEvent;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type EntryStatus = __EntryStatus;
+    type EntryRejectedEvent = __EntryRejectedEvent;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type ErrorCode = __ErrorCode;
+    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
     const // (undocumented)
     WebhookEventType: {
-        values: readonly ["entry.created", "entry.approved", "entry.rejected"];
+        values: readonly ["entry.created", "entry.approved", "entry.rejected", "entry.milestone_reached"];
     };
+    // (undocumented)
+    type EntryStatus = __EntryStatus;
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
     // (undocumented)
     type InfoRetrieveParams = __InfoRetrieveParams;
     // (undocumented)
@@ -1781,6 +1856,10 @@ namespace Waitlist {
     // (undocumented)
     type ListListParams = __ListListParams;
     // (undocumented)
+    type ListMilestoneAwardListParams = __ListMilestoneAwardListParams;
+    // (undocumented)
+    type ListMilestoneAwardUpdateParams = __ListMilestoneAwardUpdateParams;
+    // (undocumented)
     type ListTestEntryCreateParams = __ListTestEntryCreateParams;
     // (undocumented)
     type ListUpdateParams = __ListUpdateParams;
@@ -1798,6 +1877,10 @@ namespace Waitlist {
     type ListWebhookEvents = __ListWebhookEvents;
     // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
+    // (undocumented)
+    type MilestoneAward = __MilestoneAward;
+    // (undocumented)
+    type MilestoneAwardList = __MilestoneAwardList;
     // (undocumented)
     type NextReward = __NextReward;
     // (undocumented)
@@ -1950,6 +2033,8 @@ namespace Waitlist {
     type WebhookEventTypeInfo = __WebhookEventTypeInfo;
     // (undocumented)
     type WebhookEventTypeList = __WebhookEventTypeList;
+    // (undocumented)
+    type WebhookMilestone = __WebhookMilestone;
     // (undocumented)
     type WebhookPagination = __WebhookPagination;
     // (undocumented)

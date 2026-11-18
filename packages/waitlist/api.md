@@ -525,6 +525,56 @@ const inviteWave = await waitlist.lists.inviteWaves.retrieve("3f0c3c1e-8a2b-4c55
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-invite-waves-wave-id)
 
+## lists.milestoneAwards
+
+### `waitlist.lists.milestoneAwards.list(waitlistId, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards` → `PagePromise<Waitlist.MilestoneAward>`
+
+List reached referral milestones.
+
+Every time an entry reaches one of the waitlist's referral rewards (`settings.referral_rewards`) it is recorded here once, `entry.milestone_reached` fires and the milestone email goes out. Use the list to hand rewards out and `PATCH` to mark them done.
+
+- Params: `Waitlist.ListMilestoneAwardListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid cursor. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Waitlist not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const milestoneAward of waitlist.lists.milestoneAwards.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+  console.log(milestoneAward);
+}
+const page = await waitlist.lists.milestoneAwards.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-milestone-awards)
+
+### `waitlist.lists.milestoneAwards.update(waitlistId, awardId, params, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards/{award_id}` → `Waitlist.MilestoneAward`
+
+Mark a reward handed out (or not).
+
+Sets `fulfilled_at` when `fulfilled` is true, clears it when false. Nothing is sent.
+
+- Params: `Waitlist.ListMilestoneAwardUpdateParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Award not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const milestoneAward = await waitlist.lists.milestoneAwards.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { fulfilled: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-waitlist-id-milestone-awards-award-id)
+
 ## lists.testEntries
 
 ### `waitlist.lists.testEntries.create(waitlistId, params?, options?)`
@@ -760,7 +810,7 @@ const waitlistWorkspaceStats = await waitlist.stats.retrieve();
 
 ### `waitlist.webhooks.unwrap({ payload, headers, secret? })`
 
-Verifies the signature and returns `Waitlist.UnwrapWebhookEvent`. Events: `entry.approved`, `entry.created`, `entry.rejected`, plus `UnknownWebhookEvent` for types added later.
+Verifies the signature and returns `Waitlist.UnwrapWebhookEvent`. Events: `entry.approved`, `entry.created`, `entry.milestone_reached`, `entry.rejected`, plus `UnknownWebhookEvent` for types added later.
 
 ### `waitlist.webhooks.sign({ payload, secret?, id?, timestamp? })`
 
