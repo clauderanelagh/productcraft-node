@@ -42,6 +42,25 @@ export interface NotifyStrings {
   quietTo: string;
   saveError: string;
   noCategories: string;
+  /** `<NotifyApproval>` (approval requests): the two buttons. */
+  approvalApprove: string;
+  approvalReject: string;
+  /** The reason box label when a reason is required, and when it is optional. */
+  approvalReason: string;
+  approvalReasonOptional: string;
+  approvalReasonRequired: string;
+  approvalSending: string;
+  approvalApproved: string;
+  approvalRejected: string;
+  approvalExpired: string;
+  approvalCancelled: string;
+  /** After this person answered, instead of their id. */
+  approvalByYou: string;
+  /** `{name}` is the requester. */
+  approvalRequestedBy: string;
+  approvalRequestedByAgent: string;
+  approvalAlreadyDecided: string;
+  approvalError: string;
 }
 
 const en: NotifyStrings = {
@@ -83,6 +102,21 @@ const en: NotifyStrings = {
   quietTo: "To",
   saveError: "Couldn't save your change. Try again.",
   noCategories: "There is nothing to configure yet.",
+  approvalApprove: "Approve",
+  approvalReject: "Reject",
+  approvalReason: "Reason",
+  approvalReasonOptional: "Reason (optional)",
+  approvalReasonRequired: "Add a reason first.",
+  approvalSending: "Sending…",
+  approvalApproved: "Approved",
+  approvalRejected: "Rejected",
+  approvalExpired: "Expired: nobody answered in time",
+  approvalCancelled: "Withdrawn by the requester",
+  approvalByYou: "by you",
+  approvalRequestedBy: "{name} asks",
+  approvalRequestedByAgent: "{name} (an AI agent) asks",
+  approvalAlreadyDecided: "Someone already answered this request.",
+  approvalError: "Couldn't send your answer. Try again.",
 };
 
 const ptPT: NotifyStrings = {
@@ -124,6 +158,21 @@ const ptPT: NotifyStrings = {
   quietTo: "Às",
   saveError: "Não foi possível guardar a alteração. Tente novamente.",
   noCategories: "Ainda não há nada para configurar.",
+  approvalApprove: "Aprovar",
+  approvalReject: "Rejeitar",
+  approvalReason: "Motivo",
+  approvalReasonOptional: "Motivo (opcional)",
+  approvalReasonRequired: "Indique primeiro um motivo.",
+  approvalSending: "A enviar…",
+  approvalApproved: "Aprovado",
+  approvalRejected: "Rejeitado",
+  approvalExpired: "Expirado: ninguém respondeu a tempo",
+  approvalCancelled: "Retirado por quem pediu",
+  approvalByYou: "por si",
+  approvalRequestedBy: "{name} pede",
+  approvalRequestedByAgent: "{name} (um agente de IA) pede",
+  approvalAlreadyDecided: "Alguém já respondeu a este pedido.",
+  approvalError: "Não foi possível enviar a resposta. Tente novamente.",
 };
 
 const ptBR: NotifyStrings = {
@@ -144,6 +193,21 @@ const ptBR: NotifyStrings = {
   saveError: "Não foi possível salvar a alteração. Tente novamente.",
   preferencesLoadError: "Não foi possível carregar suas configurações de notificação.",
   noCategories: "Ainda não há nada para configurar.",
+  approvalApprove: "Aprovar",
+  approvalReject: "Rejeitar",
+  approvalReason: "Motivo",
+  approvalReasonOptional: "Motivo (opcional)",
+  approvalReasonRequired: "Informe um motivo primeiro.",
+  approvalSending: "Enviando…",
+  approvalApproved: "Aprovado",
+  approvalRejected: "Rejeitado",
+  approvalExpired: "Expirado: ninguém respondeu a tempo",
+  approvalCancelled: "Retirado por quem pediu",
+  approvalByYou: "por você",
+  approvalRequestedBy: "{name} pede",
+  approvalRequestedByAgent: "{name} (um agente de IA) pede",
+  approvalAlreadyDecided: "Alguém já respondeu a este pedido.",
+  approvalError: "Não foi possível enviar sua resposta. Tente de novo.",
   retry: "Tentar de novo",
 };
 
@@ -186,6 +250,21 @@ const es: NotifyStrings = {
   quietTo: "Hasta",
   saveError: "No se pudo guardar el cambio. Inténtalo de nuevo.",
   noCategories: "Todavía no hay nada que configurar.",
+  approvalApprove: "Aprobar",
+  approvalReject: "Rechazar",
+  approvalReason: "Motivo",
+  approvalReasonOptional: "Motivo (opcional)",
+  approvalReasonRequired: "Indica primero un motivo.",
+  approvalSending: "Enviando…",
+  approvalApproved: "Aprobado",
+  approvalRejected: "Rechazado",
+  approvalExpired: "Caducado: nadie respondió a tiempo",
+  approvalCancelled: "Retirado por quien lo pidió",
+  approvalByYou: "por ti",
+  approvalRequestedBy: "{name} pide",
+  approvalRequestedByAgent: "{name} (un agente de IA) pide",
+  approvalAlreadyDecided: "Alguien ya respondió a esta solicitud.",
+  approvalError: "No se pudo enviar tu respuesta. Inténtalo de nuevo.",
 };
 
 const fr: NotifyStrings = {
@@ -227,6 +306,21 @@ const fr: NotifyStrings = {
   quietTo: "À",
   saveError: "Impossible d'enregistrer la modification. Réessayez.",
   noCategories: "Rien à configurer pour le moment.",
+  approvalApprove: "Approuver",
+  approvalReject: "Refuser",
+  approvalReason: "Motif",
+  approvalReasonOptional: "Motif (facultatif)",
+  approvalReasonRequired: "Indiquez d'abord un motif.",
+  approvalSending: "Envoi…",
+  approvalApproved: "Approuvé",
+  approvalRejected: "Refusé",
+  approvalExpired: "Expiré : personne n'a répondu à temps",
+  approvalCancelled: "Retiré par le demandeur",
+  approvalByYou: "par vous",
+  approvalRequestedBy: "{name} demande",
+  approvalRequestedByAgent: "{name} (un agent IA) demande",
+  approvalAlreadyDecided: "Quelqu'un a déjà répondu à cette demande.",
+  approvalError: "Impossible d'envoyer votre réponse. Réessayez.",
 };
 
 const de: NotifyStrings = {
@@ -268,6 +362,21 @@ const de: NotifyStrings = {
   quietTo: "Bis",
   saveError: "Die Änderung konnte nicht gespeichert werden. Versuch es erneut.",
   noCategories: "Es gibt noch nichts einzustellen.",
+  approvalApprove: "Genehmigen",
+  approvalReject: "Ablehnen",
+  approvalReason: "Grund",
+  approvalReasonOptional: "Grund (optional)",
+  approvalReasonRequired: "Bitte zuerst einen Grund angeben.",
+  approvalSending: "Wird gesendet…",
+  approvalApproved: "Genehmigt",
+  approvalRejected: "Abgelehnt",
+  approvalExpired: "Abgelaufen: niemand hat rechtzeitig geantwortet",
+  approvalCancelled: "Von der anfragenden Seite zurückgezogen",
+  approvalByYou: "von dir",
+  approvalRequestedBy: "{name} fragt",
+  approvalRequestedByAgent: "{name} (ein KI-Agent) fragt",
+  approvalAlreadyDecided: "Jemand hat diese Anfrage schon beantwortet.",
+  approvalError: "Deine Antwort konnte nicht gesendet werden. Versuch es noch einmal.",
 };
 
 /** The locales the components ship strings for. */

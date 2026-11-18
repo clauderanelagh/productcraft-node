@@ -37,6 +37,16 @@ export interface NotifyBrowserClient {
    * open tabs never overwrite each other), and a cached, subscribable state for preference screens.
    */
   readonly preferences: PreferencesStore;
+  /**
+   * Approval requests this recipient was asked (ProductCraft Notify approval types): `get(id)`, and
+   * `decide(id, "approve" | "reject", reason?)`. The first answer of any approver decides; a second one, or
+   * one after the request expired, rejects with code `APPROVAL_NOT_PENDING`. The inbox item updates on its
+   * own (the stream sends the change).
+   */
+  readonly approvals: {
+    get(approvalId: string): Promise<Notify.Approval>;
+    decide(approvalId: string, decision: "approve" | "reject", reason?: string): Promise<Notify.Approval>;
+  };
   readonly devices: {
     register(params: Notify.MeDeviceRegisterParams): Promise<Notify.Device>;
     /** Call on sign-out so the device stops receiving this recipient's pushes. */
@@ -146,6 +156,10 @@ export function createNotifyClient(options: NotifyClientOptions): NotifyBrowserC
     inbox: createInbox(options.inbox),
     createInbox,
     preferences: new PreferencesStore(call),
+    approvals: {
+      get: (id) => call((s) => s.approvals.retrieve(id)),
+      decide: (id, decision, reason) => call((s) => s.approvals.decide(id, reason ? { decision, reason } : { decision })),
+    },
     devices: {
       register: (params) => call((s) => s.devices.register(params)),
       unregister: (id) => call((s) => s.devices.delete(id)).then(() => undefined),

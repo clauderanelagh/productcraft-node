@@ -68,9 +68,11 @@ Pass `apiKey` (a workspace key, `pcft_live_…`), or omit it and the client read
 
 Full reference: [api.md](./api.md).
 
+- `notify.approvals`: `cancel`, `create`, `list`, `recordDecision`, `retrieve`
 - `notify.batches`: `flush`, `list`, `retrieve`
 - `notify.categories`: `create`, `delete`, `list`, `retrieve`, `update`
 - `notify.channels`: `apns.deleteCredential`, `apns.uploadCredential`, `fcm.deleteCredential`, `fcm.uploadCredential`, `list`, `webpush.generateVapidKeys`, `webpush.importVapidKeys`, `webpush.retrieve`
+- `notify.client(…).approvals`: `decide`, `retrieve`
 - `notify.client(…).devices`: `delete`, `register`
 - `notify.client(…).inbox`: `counts`, `interact`, `list`, `mark`
 - `notify.client(…).preferences`: `retrieve`, `update`
@@ -107,7 +109,7 @@ Every failure is a class you can catch. `APIError` carries `status`, `code`, `me
 import { Notify, NotFoundError, RateLimitError, APIError } from "@productcraft/notify";
 const notify = new Notify();
 try {
-  await notify.batches.retrieve("00000000-0000-0000-0000-000000000000");
+  await notify.approvals.retrieve("00000000-0000-0000-0000-000000000000");
 } catch (err) {
   if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
   else if (err instanceof RateLimitError) console.log(err.retryAfter);
@@ -151,7 +153,7 @@ const notify = new Notify();
 export async function POST(req: Request) {
   const event = await notify.webhooks.unwrap({ payload: await req.text(), headers: req.headers });
   switch (event.type) {
-    case "credential.invalid":
+    case "approval.resolved":
       console.log(event.data);
       break;
     default:
@@ -194,7 +196,7 @@ Testing a handler: `webhooks.sign()` signs an event the way ProductCraft does, s
 ```ts
 import { Notify } from "@productcraft/notify";
 const notify = new Notify({ webhookSecret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw" });
-const { payload, headers } = await notify.webhooks.sign({ payload: { id: "evt_test_1", type: "credential.invalid", created_at: new Date().toISOString(), data: {} } });
+const { payload, headers } = await notify.webhooks.sign({ payload: { id: "evt_test_1", type: "approval.resolved", created_at: new Date().toISOString(), data: {} } });
 const event = await notify.webhooks.unwrap({ payload, headers });
 console.log(event.type);
 ```
@@ -207,9 +209,9 @@ Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`
 import { Notify } from "@productcraft/notify";
 const notify = new Notify({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
 const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
-const obj = await notify.batches.retrieve(id);
+const obj = await notify.approvals.retrieve(id);
 console.log(obj.lastResponse.requestId);
-const { data, response, requestId, rateLimit } = await notify.batches.retrieve(id).withResponse();
+const { data, response, requestId, rateLimit } = await notify.approvals.retrieve(id).withResponse();
 console.log(data, response.status, requestId, rateLimit?.remaining);
 ```
 
@@ -233,7 +235,7 @@ console.log(fetch.calls.length);
 ```ts
 import { Notify } from "@productcraft/notify";
 const notify = new Notify({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-const { data, error } = await notify.client.GET("/v1/workspaces/{workspace_id}/batches", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
+const { data, error } = await notify.client.GET("/v1/workspaces/{workspace_id}/approvals", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
 console.log(data, error);
 ```
 
