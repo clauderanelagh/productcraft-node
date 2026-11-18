@@ -1,5 +1,11 @@
 # @productcraft/auth
 
+## 1.5.0
+
+### Minor Changes
+
+- eb00152: Passwordless email sign-in: `consumer(slug).email.config()`, `email.start({ email })` and `email.verify({ flow_id, code | token })` (magic link and 6-digit code, sign-up and sign-in in one flow), `passwordless_email` on the auth config, the `sign_in` notification template slot and `seed_defaults`, and an `mfa_required` outcome on `exchangeProviderCode`. Also picks up the agent-access and other Auth API additions since the last refresh.
+
 ## 1.4.0
 
 ### Minor Changes
