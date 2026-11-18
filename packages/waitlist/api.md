@@ -976,6 +976,28 @@ const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: 
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-waitlists-workspace-slug-waitlist-slug-entries)
 
+### `waitlist.public({ … }).entries.me(params, options?)`
+
+`GET /v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/me` → `Waitlist.PublicOwnEntry`
+
+Read your own sign-up (entrant status).
+
+What an entrant sees on their status page: status, place in line, referral code and link, referral count and progress to the next reward. Needs the `token` from the signed link in the Waitlist emails (confirmation and welcome); there is no lookup by email address, so nobody can find out who signed up. The hosted status page and its embeddable widget call this; call it yourself to build your own. No API key.
+
+- Params: `Waitlist.EntryMeParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND`, `ENTRY_LINK_INVALID` | Code `ENTRY_LINK_INVALID`: the token is not valid, or the entry was deleted (or expired unconfirmed). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const publicOwnEntry = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.me({ token: "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w" });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-waitlists-workspace-slug-waitlist-slug-entries-me)
+
 ### `waitlist.public({ … }).entries.resendConfirmation(params, options?)`
 
 `POST /v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/resend-confirmation` → `Waitlist.ResendConfirmationAccepted`
