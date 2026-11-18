@@ -144,6 +144,30 @@ const list = await waitlist.lists.updateStatus("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-id-status)
 
+## lists.accessCodes
+
+### `waitlist.lists.accessCodes.redeem(waitlistId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/access-codes/redeem` → `Waitlist.RedeemedAccessCode`
+
+Redeem an access code.
+
+For apps not on Auth: call it from your server when someone enters the code from their invite email. The first call marks the code used and returns who it was sent to; every later call gets 409 `ACCESS_CODE_USED`.
+
+- Params: `Waitlist.ListAccessCodeRedeemParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND`, `ACCESS_CODE_INVALID` | Code `ACCESS_CODE_INVALID`: no such code on this waitlist. |
+| 409 | `ConflictError` | `CONFLICT`, `ACCESS_CODE_USED` | Code `ACCESS_CODE_USED`: already redeemed. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const redeemedAccessCode = await waitlist.lists.accessCodes.redeem("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "K3X9-Q2MZ-7HBD" });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-access-codes-redeem)
+
 ## lists.analytics
 
 ### `waitlist.lists.analytics.retrieve(waitlistId, params?, options?)`
@@ -407,6 +431,99 @@ const entry = await waitlist.lists.entries.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#patch-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id)
+
+## lists.inviteWaves
+
+### `waitlist.lists.inviteWaves.cancel(waitlistId, waveId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}/cancel` → `Waitlist.InviteWave`
+
+Cancel a scheduled invite wave.
+
+Stops future runs and drops its saved API key. Invites already sent stay sent.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND` | Wave not found. |
+| 409 | `ConflictError` | `CONFLICT` | The wave is not scheduled (running, done, failed or already canceled). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inviteWave = await waitlist.lists.inviteWaves.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-invite-waves-wave-id-cancel)
+
+### `waitlist.lists.inviteWaves.create(waitlistId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves` → `Waitlist.InviteWave`
+
+Invite the next N in line, now or on a schedule.
+
+Picks the next `size` entries by place in line (referral boosts included) that are `pending` or `approved` and not invited yet, approves the pending ones, and invites each: into your Auth app (`auth`) or with a single-use access code (`code`), emailing them unless `send_email: false`. Without `run_at` it starts now and runs in the background (GET the wave to follow it). With `run_at` and/or `repeat_every_hours` it is scheduled; a repeating wave invites the next `size` every N hours until canceled. A scheduled `auth` wave needs `api_key` (or call with an API key).
+
+- Params: `Waitlist.ListInviteWaveCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `waitlist.update`. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Waitlist not found. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | No Auth app to invite into, or a scheduled `auth` wave without an API key. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inviteWave = await waitlist.lists.inviteWaves.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { method: "auth", size: 100 });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-invite-waves)
+
+### `waitlist.lists.inviteWaves.list(waitlistId, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves` → `PagePromise<Waitlist.InviteWave>`
+
+List invite waves.
+
+Newest first, cursor-paginated.
+
+- Params: `Waitlist.ListInviteWaveListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid cursor. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Waitlist not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const inviteWave of waitlist.lists.inviteWaves.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+  console.log(inviteWave);
+}
+const page = await waitlist.lists.inviteWaves.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-invite-waves)
+
+### `waitlist.lists.inviteWaves.retrieve(waitlistId, waveId, options?)`
+
+`GET /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}` → `Waitlist.InviteWave`
+
+Get an invite wave.
+
+Its status and progress: `invited_total`, `failed_total`, `last_error`, `next_run_at`. Never the saved API key.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 404 | `NotFoundError` | `NOT_FOUND` | Wave not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inviteWave = await waitlist.lists.inviteWaves.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-invite-waves-wave-id)
 
 ## lists.testEntries
 
@@ -1112,6 +1229,8 @@ const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
 | `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
+| `ACCESS_CODE_INVALID` | No such access code on this waitlist. |
+| `ACCESS_CODE_USED` | The access code has already been redeemed. |
 | `ENTRY_LINK_INVALID` | The confirmation or status link is not valid, or its sign-up expired or was deleted. |
 | `MAIL_UNREACHABLE` | The Mail service did not answer; try again in a minute. |
 | `ORIGIN_NOT_ALLOWED` | Origin not allowed. |

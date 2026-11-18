@@ -118,6 +118,15 @@ export type components = {
             referrer?: string;
             variant_id?: string;
         };
+        CreateInviteWaveDto: {
+            api_key?: string;
+            app_slug?: string;
+            method: components["schemas"]["InviteWaveMethod"];
+            repeat_every_hours?: number;
+            run_at?: string;
+            send_email?: boolean;
+            size: number;
+        };
         CreateTestEntryDto: {
             name?: string;
             send_welcome_email?: boolean;
@@ -268,6 +277,32 @@ export type components = {
             invite_id: string;
             invite_url?: string;
         };
+        InviteWaveDto: {
+            app_slug: string | null;
+            created_at: string;
+            created_by: string | null;
+            failed_total: number;
+            has_api_key: boolean;
+            id: string;
+            invited_total: number;
+            last_error: string | null;
+            last_run_at: string | null;
+            method: components["schemas"]["InviteWaveMethod"];
+            next_run_at: string | null;
+            repeat_every_hours: number | null;
+            runs: number;
+            send_email: boolean;
+            size: number;
+            status: components["schemas"]["InviteWaveStatus"];
+            updated_at: string;
+            waitlist_id: string;
+        };
+        InviteWaveListDto: {
+            data: components["schemas"]["InviteWaveDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        InviteWaveMethod: "auth" | "code";
+        InviteWaveStatus: "scheduled" | "running" | "done" | "failed" | "canceled";
         LegacyWebhookDeliveryAttemptDto: {
             attempt_number: number;
             attempted_at: string;
@@ -390,6 +425,15 @@ export type components = {
             id: string;
             kind: components["schemas"]["VariantKind"];
             locale: string;
+        };
+        RedeemAccessCodeDto: {
+            code: string;
+        };
+        RedeemedAccessCodeDto: {
+            email: string;
+            entry_id: string;
+            name: string;
+            redeemed_at: string;
         };
         ReferralRewardMilestoneDto: {
             count: number;
@@ -551,7 +595,7 @@ export type components = {
             signup_page_url?: string | null;
             status_page_url?: string | null;
         };
-        WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
+        WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCESS_CODE_INVALID" | "ACCESS_CODE_USED" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
         WaitlistFraudProtection: "off" | "relaxed" | "balanced" | "strict";
         WaitlistListPaginationDto: {
             has_more: boolean;
@@ -1028,6 +1072,22 @@ export type paths = {
         patch: operations["WaitlistController_updateStatus"];
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/access-codes/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InviteWaveController_redeem"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics": {
         parameters: {
             query?: never;
@@ -1166,6 +1226,54 @@ export type paths = {
         get?: never;
         put?: never;
         post: operations["EntryController_release"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InviteWaveController_list"];
+        put?: never;
+        post: operations["InviteWaveController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["InviteWaveController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["InviteWaveController_cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1527,109 +1635,127 @@ namespace Waitlist {
     // (undocumented)
     type Entry = __Entry;
     const // (undocumented)
+    InviteWaveMethod: {
+        values: readonly ["auth", "code"];
+    };
+    // (undocumented)
+    type EntryApprovedEvent = __EntryApprovedEvent;
+    const // (undocumented)
+    InviteWaveStatus: {
+        values: readonly ["scheduled", "running", "done", "failed", "canceled"];
+    };
+    // (undocumented)
+    type EntryConfirmParams = __EntryConfirmParams;
+    const // (undocumented)
     PublicEntryStatus: {
         values: readonly ["pending", "approved", "unconfirmed"];
     };
     // (undocumented)
-    type EntryApprovedEvent = __EntryApprovedEvent;
+    type EntryCount = __EntryCount;
     const // (undocumented)
     PublicOwnEntryStatus: {
         values: readonly ["pending", "approved", "rejected", "unconfirmed"];
     };
     // (undocumented)
-    type EntryConfirmParams = __EntryConfirmParams;
+    type EntryCreatedEvent = __EntryCreatedEvent;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type EntryCount = __EntryCount;
+    type EntryCreateParams = __EntryCreateParams;
     const // (undocumented)
     SenderMode: {
         values: readonly ["workspace", "custom"];
     };
     // (undocumented)
-    type EntryCreatedEvent = __EntryCreatedEvent;
+    type EntryDecision = __EntryDecision;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type EntryCreateParams = __EntryCreateParams;
+    type EntryEventData = __EntryEventData;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type EntryDecision = __EntryDecision;
+    type EntryFraudSignal = __EntryFraudSignal;
     const // (undocumented)
     TemplateSlot: {
         values: readonly ["welcome", "approved", "rejected", "confirm"];
     };
     // (undocumented)
-    type EntryEventData = __EntryEventData;
+    type EntryFraudSignalCode = __EntryFraudSignalCode;
     const // (undocumented)
     VariantKind: {
         values: readonly ["ab", "locale"];
     };
     // (undocumented)
-    type EntryFraudSignal = __EntryFraudSignal;
+    type EntryInvite = __EntryInvite;
     const // (undocumented)
     WaitlistFraudProtection: {
         values: readonly ["off", "relaxed", "balanced", "strict"];
     };
     // (undocumented)
-    type EntryFraudSignalCode = __EntryFraudSignalCode;
+    type EntryList = __EntryList;
     const // (undocumented)
     WaitlistStatsMetric: {
         values: readonly ["signups"];
     };
     // (undocumented)
-    type EntryInvite = __EntryInvite;
+    type EntryListPagination = __EntryListPagination;
     const // (undocumented)
     WaitlistStatus: {
         values: readonly ["draft", "active", "paused", "closed"];
     };
     // (undocumented)
-    type EntryList = __EntryList;
+    type EntryMeParams = __EntryMeParams;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type EntryListPagination = __EntryListPagination;
+    type EntryRejectedEvent = __EntryRejectedEvent;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type EntryMeParams = __EntryMeParams;
+    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type EntryRejectedEvent = __EntryRejectedEvent;
+    type EntryStatus = __EntryStatus;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
+    type ErrorCode = __ErrorCode;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["entry.created", "entry.approved", "entry.rejected"];
     };
     // (undocumented)
-    type EntryStatus = __EntryStatus;
-    // (undocumented)
-    type ErrorCode = __ErrorCode;
-    // (undocumented)
     type InfoRetrieveParams = __InfoRetrieveParams;
+    // (undocumented)
+    type InviteWave = __InviteWave;
+    // (undocumented)
+    type InviteWaveList = __InviteWaveList;
+    // (undocumented)
+    type InviteWaveMethod = __InviteWaveMethod;
+    // (undocumented)
+    type InviteWaveStatus = __InviteWaveStatus;
     // (undocumented)
     type LastResponse = __LastResponse;
     // (undocumented)
     type LeaderboardListParams = __LeaderboardListParams;
+    // (undocumented)
+    type ListAccessCodeRedeemParams = __ListAccessCodeRedeemParams;
     // (undocumented)
     type ListAnalyticsRetrieveParams = __ListAnalyticsRetrieveParams;
     // (undocumented)
@@ -1648,6 +1774,10 @@ namespace Waitlist {
     type ListEntryListParams = __ListEntryListParams;
     // (undocumented)
     type ListEntryUpdateParams = __ListEntryUpdateParams;
+    // (undocumented)
+    type ListInviteWaveCreateParams = __ListInviteWaveCreateParams;
+    // (undocumented)
+    type ListInviteWaveListParams = __ListInviteWaveListParams;
     // (undocumented)
     type ListListParams = __ListListParams;
     // (undocumented)
@@ -1704,6 +1834,8 @@ namespace Waitlist {
     type PublicWaitlistVariant = __PublicWaitlistVariant;
     // (undocumented)
     type RateLimitInfo = __RateLimitInfo;
+    // (undocumented)
+    type RedeemedAccessCode = __RedeemedAccessCode;
     // (undocumented)
     type ReferralRewardMilestone = __ReferralRewardMilestone;
     // (undocumented)
@@ -1831,11 +1963,11 @@ export { Waitlist }
 export default Waitlist;
 
 // @public
-export type WaitlistErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | (string & {});
+export type WaitlistErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCESS_CODE_INVALID" | "ACCESS_CODE_USED" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | (string & {});
 
 // @public (undocumented)
 export const WaitlistErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ENTRY_LINK_INVALID", "MAIL_UNREACHABLE", "ORIGIN_NOT_ALLOWED", "WAITLIST_NOT_FOUND", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCESS_CODE_INVALID", "ACCESS_CODE_USED", "ENTRY_LINK_INVALID", "MAIL_UNREACHABLE", "ORIGIN_NOT_ALLOWED", "WAITLIST_NOT_FOUND", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender"];
 };
 
 export { WebhookVerificationError }

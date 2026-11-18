@@ -411,6 +411,61 @@
         ],
         "type": "object"
       },
+      "CreateInviteWaveDto": {
+        "properties": {
+          "api_key": {
+            "description": "Scheduled `auth` waves only: a workspace API key (`pcft_…`) that may invite into the Auth app, used when the wave runs. Write-only, stored encrypted, dropped when the wave ends. Not needed when you call with that API key.",
+            "example": "pcft_live_…",
+            "type": "string",
+            "writeOnly": true
+          },
+          "app_slug": {
+            "description": "Auth app to invite into (`auth`). Default: the app linked in the Waitlist settings.",
+            "example": "acme-app",
+            "type": "string"
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InviteWaveMethod"
+              }
+            ],
+            "description": "`auth`: an invite into your Auth app (as invite-to-app). `code`: a single-use access code by email, for an app that is not on Auth; check it with `POST …/access-codes/redeem`.",
+            "example": "auth"
+          },
+          "repeat_every_hours": {
+            "description": "Run again every N hours (a drip, e.g. 24 for \"100 a day\") until canceled.",
+            "example": 24,
+            "maximum": 720,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "run_at": {
+            "description": "When to run. Omit to run now.",
+            "example": "2026-11-24T09:00:00Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "send_email": {
+            "default": true,
+            "description": "Email each invitee (the approved template, with the invite link or access code). Default true.",
+            "example": true,
+            "type": "boolean"
+          },
+          "size": {
+            "description": "How many to invite: the next N in line who have not been invited yet.",
+            "example": 100,
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "size",
+          "method"
+        ],
+        "type": "object"
+      },
       "CreateTestEntryDto": {
         "properties": {
           "name": {
@@ -1377,6 +1432,162 @@
         "type": "object",
         "x-pc-sdk-model": "EntryInvite"
       },
+      "InviteWaveDto": {
+        "properties": {
+          "app_slug": {
+            "description": "Auth app (`auth`).",
+            "nullable": true,
+            "type": "string"
+          },
+          "created_at": {
+            "description": "When it was created.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "created_by": {
+            "description": "Who created it (platform user or API key subject).",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "failed_total": {
+            "description": "Failed across all runs.",
+            "type": "integer"
+          },
+          "has_api_key": {
+            "description": "Whether an API key is saved for scheduled `auth` runs (never returned).",
+            "type": "boolean"
+          },
+          "id": {
+            "description": "Wave id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "invited_total": {
+            "description": "Invited across all runs.",
+            "type": "integer"
+          },
+          "last_error": {
+            "description": "The last failure, if any.",
+            "nullable": true,
+            "type": "string"
+          },
+          "last_run_at": {
+            "description": "When it last ran.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "method": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InviteWaveMethod"
+              }
+            ],
+            "description": "`auth` (Auth app invites) or `code` (access codes)."
+          },
+          "next_run_at": {
+            "description": "When it runs next (scheduled waves); null otherwise.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "repeat_every_hours": {
+            "description": "Repeats every N hours; null runs once.",
+            "nullable": true,
+            "type": "integer"
+          },
+          "runs": {
+            "description": "Runs so far.",
+            "type": "integer"
+          },
+          "send_email": {
+            "description": "Whether invitees are emailed.",
+            "type": "boolean"
+          },
+          "size": {
+            "description": "People per run.",
+            "type": "integer"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InviteWaveStatus"
+              }
+            ],
+            "description": "`scheduled` waits for `next_run_at` (a repeating wave goes back to it after each run); `running`; `done`; `failed` (nothing could be invited, see `last_error`); `canceled`."
+          },
+          "updated_at": {
+            "description": "When it last changed.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "waitlist_id",
+          "size",
+          "method",
+          "app_slug",
+          "send_email",
+          "status",
+          "next_run_at",
+          "repeat_every_hours",
+          "runs",
+          "invited_total",
+          "failed_total",
+          "last_run_at",
+          "last_error",
+          "has_api_key",
+          "created_by",
+          "created_at",
+          "updated_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "InviteWave"
+      },
+      "InviteWaveListDto": {
+        "properties": {
+          "data": {
+            "description": "Waves on this page, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/InviteWaveDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "InviteWaveList"
+      },
+      "InviteWaveMethod": {
+        "enum": [
+          "auth",
+          "code"
+        ],
+        "type": "string"
+      },
+      "InviteWaveStatus": {
+        "enum": [
+          "scheduled",
+          "running",
+          "done",
+          "failed",
+          "canceled"
+        ],
+        "type": "string"
+      },
       "LegacyWebhookDeliveryAttemptDto": {
         "properties": {
           "attempt_number": {
@@ -2101,6 +2312,49 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "PublicWaitlistVariant"
+      },
+      "RedeemAccessCodeDto": {
+        "properties": {
+          "code": {
+            "description": "The code the person typed (case and dashes do not matter).",
+            "example": "K3X9-Q2MZ-7HBD",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "RedeemedAccessCodeDto": {
+        "properties": {
+          "email": {
+            "description": "Its email address.",
+            "type": "string"
+          },
+          "entry_id": {
+            "description": "The waitlist entry the code was sent to.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "description": "Its name.",
+            "type": "string"
+          },
+          "redeemed_at": {
+            "description": "When it was redeemed (now).",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_id",
+          "email",
+          "name",
+          "redeemed_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "RedeemedAccessCode"
       },
       "ReferralRewardMilestoneDto": {
         "properties": {
@@ -3077,6 +3331,8 @@
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
               "WEBHOOK_EVENT_NOT_FOUND",
               "WEBHOOK_EVENT_TYPE_UNKNOWN",
+              "ACCESS_CODE_INVALID",
+              "ACCESS_CODE_USED",
               "ENTRY_LINK_INVALID",
               "MAIL_UNREACHABLE",
               "ORIGIN_NOT_ALLOWED",
@@ -3094,6 +3350,8 @@
         ],
         "description": "Error codes this API returns (open set: a client must accept codes it does not know; new codes are not a breaking change). Each is documented at https://productcraft.co/docs/errors#<code>.",
         "x-enum-descriptions": {
+          "ACCESS_CODE_INVALID": "No such access code on this waitlist.",
+          "ACCESS_CODE_USED": "The access code has already been redeemed.",
           "ACTIONS_NOT_GRANTABLE": "The policy grants actions the caller does not hold.",
           "BAD_GATEWAY": "An upstream service returned an invalid response.",
           "BAD_REQUEST": "The request is malformed (not valid JSON, a bad header, an unusable parameter).",
@@ -7398,6 +7656,163 @@
         }
       }
     },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/access-codes/redeem": {
+      "post": {
+        "description": "For apps not on Auth: call it from your server when someone enters the code from their invite email. The first call marks the code used and returns who it was sent to; every later call gets 409 `ACCESS_CODE_USED`.",
+        "operationId": "InviteWaveController_redeem",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RedeemAccessCodeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RedeemedAccessCodeDto"
+                }
+              }
+            },
+            "description": "Valid and now used.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `ACCESS_CODE_INVALID`: no such code on this waitlist.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "ACCESS_CODE_INVALID"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `ACCESS_CODE_USED`: already redeemed.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "ACCESS_CODE_USED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Redeem an access code",
+        "tags": [
+          "waitlist-invites"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "redeem",
+          "paginated": false,
+          "resource": "lists.accessCodes"
+        }
+      }
+    },
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/analytics": {
       "get": {
         "description": "Test entries (\"Add test signup\") are left out unless `include_test=true`.",
@@ -9517,6 +9932,703 @@
           "method": "release",
           "paginated": false,
           "resource": "lists.entries"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves": {
+      "get": {
+        "description": "Newest first, cursor-paginated.",
+        "operationId": "InviteWaveController_list",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size. Defaults to 20; values above 100 are clamped.",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Opaque cursor from the previous page's `pagination.next_cursor`. Omit for the first page.",
+            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0xMS0wMVQwMDowMDowMFoifQ",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWaveListDto"
+                }
+              }
+            },
+            "description": "A page of waves.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List invite waves",
+        "tags": [
+          "waitlist-invites"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "lists.inviteWaves"
+        }
+      },
+      "post": {
+        "description": "Picks the next `size` entries by place in line (referral boosts included) that are `pending` or `approved` and not invited yet, approves the pending ones, and invites each: into your Auth app (`auth`) or with a single-use access code (`code`), emailing them unless `send_email: false`. Without `run_at` it starts now and runs in the background (GET the wave to follow it). With `run_at` and/or `repeat_every_hours` it is scheduled; a repeating wave invites the next `size` every N hours until canceled. A scheduled `auth` wave needs `api_key` (or call with an API key).",
+        "operationId": "InviteWaveController_create",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Idempotency key (24 h). A retry with the same key and body returns the first response instead of starting a second wave.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInviteWaveDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWaveDto"
+                }
+              }
+            },
+            "description": "Started or scheduled.",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `waitlist.update`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No Auth app to invite into, or a scheduled `auth` wave without an API key.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Invite the next N in line, now or on a schedule",
+        "tags": [
+          "waitlist-invites"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "create",
+          "paginated": false,
+          "resource": "lists.inviteWaves"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}": {
+      "get": {
+        "description": "Its status and progress: `invited_total`, `failed_total`, `last_error`, `next_run_at`. Never the saved API key.",
+        "operationId": "InviteWaveController_get",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the wave.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "wave_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWaveDto"
+                }
+              }
+            },
+            "description": "The wave.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wave not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get an invite wave",
+        "tags": [
+          "waitlist-invites"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "lists.inviteWaves"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/invite-waves/{wave_id}/cancel": {
+      "post": {
+        "description": "Stops future runs and drops its saved API key. Invites already sent stay sent.",
+        "operationId": "InviteWaveController_cancel",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the wave.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "wave_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteWaveDto"
+                }
+              }
+            },
+            "description": "Canceled.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wave not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The wave is not scheduled (running, done, failed or already canceled).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel a scheduled invite wave",
+        "tags": [
+          "waitlist-invites"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "cancel",
+          "paginated": false,
+          "resource": "lists.inviteWaves"
         }
       }
     },
@@ -13890,6 +15002,10 @@
     {
       "description": "Waitlist totals and a daily sign-up series for the workspace dashboard.",
       "name": "stats"
+    },
+    {
+      "description": "Invite waves (the next N in line into your Auth app or with access codes, now or on a schedule) and access-code redemption.",
+      "name": "waitlist-invites"
     },
     {
       "description": "Workspace-wide Waitlist defaults: the sender, email templates, reCAPTCHA and the linked Auth app.",

@@ -4,6 +4,11 @@ import { Waitlist } from "@productcraft/waitlist";
 
 const waitlist = new Waitlist();
 
+// lists.accessCodes.redeem: Redeem an access code
+{
+  const redeemedAccessCode = await waitlist.lists.accessCodes.redeem("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "K3X9-Q2MZ-7HBD" });
+}
+
 // lists.analytics.retrieve: Aggregate counts, viral coefficient, top referrers + referrals
 {
   const waitlistAnalytics = await waitlist.lists.analytics.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -74,6 +79,29 @@ const waitlist = new Waitlist();
 // lists.entries.update: Approve or reject an entry
 {
   const entry = await waitlist.lists.entries.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { status: "approved" });
+}
+
+// lists.inviteWaves.cancel: Cancel a scheduled invite wave
+{
+  const inviteWave = await waitlist.lists.inviteWaves.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+}
+
+// lists.inviteWaves.create: Invite the next N in line, now or on a schedule
+{
+  const inviteWave = await waitlist.lists.inviteWaves.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { method: "auth", size: 100 });
+}
+
+// lists.inviteWaves.list: List invite waves
+{
+  for await (const inviteWave of waitlist.lists.inviteWaves.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
+    console.log(inviteWave);
+  }
+  const page = await waitlist.lists.inviteWaves.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
+}
+
+// lists.inviteWaves.retrieve: Get an invite wave
+{
+  const inviteWave = await waitlist.lists.inviteWaves.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
 // lists.list: List waitlists in this workspace
