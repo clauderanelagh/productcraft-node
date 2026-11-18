@@ -1,5 +1,12 @@
 # productcraft
 
+## 1.4.7
+
+### Patch Changes
+
+- Updated dependencies [01fa1a3]
+  - @productcraft/notify@0.3.0
+
 ## 1.4.6
 
 ### Patch Changes
