@@ -655,7 +655,8 @@
               "enum": [
                 "entry.created",
                 "entry.approved",
-                "entry.rejected"
+                "entry.rejected",
+                "entry.milestone_reached"
               ],
               "type": "string"
             },
@@ -1080,6 +1081,116 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "EntryList"
+      },
+      "EntryMilestoneEventDataDto": {
+        "properties": {
+          "entry": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookEntryDto"
+              }
+            ],
+            "description": "The entry that reached the milestone (`referral_count` is its count now)."
+          },
+          "milestone": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WebhookMilestoneDto"
+              }
+            ],
+            "description": "The milestone reached."
+          },
+          "waitlist_id": {
+            "description": "The waitlist.",
+            "example": "33a8b309-8753-4f08-90d7-9dc484eff392",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "waitlist_id",
+          "entry",
+          "milestone"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EntryMilestoneEventData"
+      },
+      "EntryMilestoneReachedEvent": {
+        "description": "An entry reached one of your referral rewards (settings.referral_rewards). Fires once per entry and milestone, when the referral that reaches it counts. Hand the reward out from here. Every real delivery also carries the keys of the previous webhook body (`event`, `occurred_at`, `entry`) until its sunset; read `type`, `created_at` and `data` instead.",
+        "example": {
+          "created_at": "2026-11-05T09:00:00.000Z",
+          "data": {
+            "entry": {
+              "created_at": "2026-10-17T10:00:00.000Z",
+              "email": "ada@example.com",
+              "id": "1d0b7828-0e1a-407b-8706-aeb7ff619088",
+              "is_test": false,
+              "name": "Ada Lovelace",
+              "position": 4,
+              "referral_code": "464QTHE0",
+              "referral_count": 3,
+              "referred_by_entry_id": null,
+              "status": "approved",
+              "updated_at": "2026-10-17T10:00:00.000Z"
+            },
+            "milestone": {
+              "count": 3,
+              "reward": "Skip the line"
+            },
+            "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392"
+          },
+          "id": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+          "type": "entry.milestone_reached",
+          "waitlist_id": "33a8b309-8753-4f08-90d7-9dc484eff392",
+          "workspace_id": "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"
+        },
+        "properties": {
+          "created_at": {
+            "description": "When the event happened (the same on every retry).",
+            "example": "2026-11-05T09:00:00.000Z",
+            "format": "date-time",
+            "type": "string"
+          },
+          "data": {
+            "$ref": "#/components/schemas/EntryMilestoneEventDataDto"
+          },
+          "id": {
+            "description": "The event id, also sent as `webhook-id`; the same on every retry and replay.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "pattern": "^evt_[0-9a-f-]{36}$",
+            "type": "string"
+          },
+          "test": {
+            "description": "Present and true only on a delivery made by \"Send test\"; its `data` is the catalogue example.",
+            "type": "boolean"
+          },
+          "type": {
+            "description": "The event type. Switch on it to narrow the event.",
+            "enum": [
+              "entry.milestone_reached"
+            ],
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "created_at",
+          "data"
+        ],
+        "title": "EntryMilestoneReachedEvent",
+        "type": "object",
+        "x-pc-sdk-model": "EntryMilestoneReachedEvent"
       },
       "EntryRejectedEvent": {
         "description": "An entry was rejected. Every real delivery also carries the keys of the previous webhook body (`event`, `occurred_at`, `entry`) until its sunset; read `type`, `created_at` and `data` instead.",
@@ -1725,6 +1836,95 @@
         "x-pc-sdk-model-aliases": [
           "ListWebhookEvents"
         ]
+      },
+      "MilestoneAwardDto": {
+        "properties": {
+          "awarded_at": {
+            "description": "When the entry reached it.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "email": {
+            "description": "The entry email (to deliver the reward).",
+            "example": "ada@example.com",
+            "type": "string"
+          },
+          "entry_id": {
+            "description": "The entry that reached the milestone.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "fulfilled_at": {
+            "description": "When you marked the reward as handed out; null until then.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Award id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "milestone_count": {
+            "description": "Referrals the milestone needs.",
+            "example": 3,
+            "type": "integer"
+          },
+          "name": {
+            "description": "The entry name.",
+            "example": "Ada",
+            "type": "string"
+          },
+          "referral_count": {
+            "description": "The entry referral count now.",
+            "example": 3,
+            "type": "integer"
+          },
+          "reward": {
+            "description": "The reward, as configured when it was reached.",
+            "example": "Skip the line",
+            "type": "string"
+          },
+          "waitlist_id": {
+            "description": "The waitlist.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "waitlist_id",
+          "entry_id",
+          "milestone_count",
+          "reward",
+          "awarded_at",
+          "fulfilled_at",
+          "email",
+          "name",
+          "referral_count"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MilestoneAward"
+      },
+      "MilestoneAwardListDto": {
+        "properties": {
+          "data": {
+            "description": "Awards on this page, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/MilestoneAwardDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationDto"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MilestoneAwardList"
       },
       "NextRewardDto": {
         "properties": {
@@ -2518,7 +2718,8 @@
             "enum": [
               "entry.created",
               "entry.approved",
-              "entry.rejected"
+              "entry.rejected",
+              "entry.milestone_reached"
             ],
             "example": "entry.created",
             "type": "string"
@@ -2590,7 +2791,8 @@
           "welcome",
           "approved",
           "rejected",
-          "confirm"
+          "confirm",
+          "milestone"
         ],
         "type": "string"
       },
@@ -2629,6 +2831,19 @@
         },
         "required": [
           "status"
+        ],
+        "type": "object"
+      },
+      "UpdateMilestoneAwardDto": {
+        "properties": {
+          "fulfilled": {
+            "description": "`true` marks the reward handed out (sets `fulfilled_at`), `false` clears it.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fulfilled"
         ],
         "type": "object"
       },
@@ -2676,6 +2891,12 @@
             "description": "Mail domain UUID to use as default sender for Waitlist notifications. null clears the override.",
             "example": "5e1f3a2b-8c4d-4e6f-9a0b-1c2d3e4f5a6b",
             "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "milestone_template_name": {
+            "description": "Mail template name for the email a referrer gets on reaching a referral reward. Must already exist in the workspace template store. Turning emails on creates `waitlist-milestone` when this is empty.",
+            "example": "waitlist-milestone",
             "nullable": true,
             "type": "string"
           },
@@ -2850,7 +3071,8 @@
               "enum": [
                 "entry.created",
                 "entry.approved",
-                "entry.rejected"
+                "entry.rejected",
+                "entry.milestone_reached"
               ],
               "type": "string"
             },
@@ -3611,6 +3833,11 @@
             ],
             "description": "Whether Waitlist emails can go out and, if not, what is missing. Computed on the server on every read."
           },
+          "milestone_template_name": {
+            "description": "Mail template sent when an entry reaches a referral reward; null when unset.",
+            "nullable": true,
+            "type": "string"
+          },
           "notifications_via_envoi": {
             "description": "Whether Waitlist notifications are routed through the Mail service.",
             "type": "boolean"
@@ -3674,6 +3901,7 @@
           "approved_template_name",
           "rejected_template_name",
           "confirm_template_name",
+          "milestone_template_name",
           "updated_at",
           "email_setup",
           "skipped_sends"
@@ -4594,7 +4822,8 @@
         "enum": [
           "entry.created",
           "entry.approved",
-          "entry.rejected"
+          "entry.rejected",
+          "entry.milestone_reached"
         ],
         "type": "string"
       },
@@ -4651,6 +4880,26 @@
           "pagination"
         ],
         "type": "object"
+      },
+      "WebhookMilestoneDto": {
+        "properties": {
+          "count": {
+            "description": "Confirmed referrals the milestone needs.",
+            "example": 3,
+            "type": "integer"
+          },
+          "reward": {
+            "description": "The reward, as configured in `settings.referral_rewards`.",
+            "example": "Skip the line",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "reward"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WebhookMilestone"
       },
       "WebhookPaginationDto": {
         "properties": {
@@ -6387,7 +6636,8 @@
                 "welcome",
                 "approved",
                 "rejected",
-                "confirm"
+                "confirm",
+                "milestone"
               ],
               "type": "string"
             }
@@ -10632,6 +10882,352 @@
         }
       }
     },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards": {
+      "get": {
+        "description": "Every time an entry reaches one of the waitlist's referral rewards (`settings.referral_rewards`) it is recorded here once, `entry.milestone_reached` fires and the milestone email goes out. Use the list to hand rewards out and `PATCH` to mark them done.",
+        "operationId": "MilestoneAwardController_list",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`false`: only rewards not handed out yet; `true`: only handed out.",
+            "example": true,
+            "in": "query",
+            "name": "fulfilled",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "Page size.",
+            "example": 20,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Cursor from the previous page's `pagination.next_cursor`.",
+            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0xMS0wMVQwMDowMDowMFoifQ",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneAwardListDto"
+                }
+              }
+            },
+            "description": "A page of awards.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Invalid cursor.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Waitlist not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List reached referral milestones",
+        "tags": [
+          "waitlist-rewards"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "lists.milestoneAwards"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/milestone-awards/{award_id}": {
+      "patch": {
+        "description": "Sets `fulfilled_at` when `fulfilled` is true, clears it when false. Nothing is sent.",
+        "operationId": "MilestoneAwardController_update",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the award.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "award_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMilestoneAwardDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MilestoneAwardDto"
+                }
+              }
+            },
+            "description": "Updated.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Award not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Mark a reward handed out (or not)",
+        "tags": [
+          "waitlist-rewards"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "update",
+          "paginated": false,
+          "resource": "lists.milestoneAwards"
+        }
+      }
+    },
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/test-entries": {
       "post": {
         "description": "Creates an entry marked `is_test` with a generated Amazon SES mailbox-simulator address (`success+test-…@simulator.amazonses.com`). Works on draft and paused waitlists and ignores `max_entries`. The entry shows in the entries list, takes a negative position, and is left out of counts, analytics, exports and webhooks unless asked. No email is sent unless `send_welcome_email` is true. Delete it like any other entry.",
@@ -13522,7 +14118,8 @@
                 "enum": [
                   "entry.created",
                   "entry.approved",
-                  "entry.rejected"
+                  "entry.rejected",
+                  "entry.milestone_reached"
                 ],
                 "type": "string"
               },
@@ -15008,6 +15605,10 @@
       "name": "waitlist-invites"
     },
     {
+      "description": "Referral rewards people reached: hand-out tracking for `entry.milestone_reached`.",
+      "name": "waitlist-rewards"
+    },
+    {
       "description": "Workspace-wide Waitlist defaults: the sender, email templates, reCAPTCHA and the linked Auth app.",
       "name": "waitlist-settings"
     },
@@ -15188,6 +15789,77 @@
           "webhooks"
         ],
         "x-pc-webhook-category": "Signups"
+      }
+    },
+    "entry.milestone_reached": {
+      "post": {
+        "description": "A `entry.milestone_reached` event (Referrals), POSTed as JSON to every enabled endpoint subscribed to it and signed with the Standard Webhooks headers. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h.",
+        "parameters": [
+          {
+            "description": "The event id: the same on every retry and replay, so dedupe on it. Part of the signed content.",
+            "example": "evt_3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "header",
+            "name": "webhook-id",
+            "required": true,
+            "schema": {
+              "pattern": "^evt_[0-9a-f-]{36}$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Unix seconds of this attempt. Part of the signed content; reject a delivery more than 5 minutes from your clock.",
+            "example": "1793869200",
+            "in": "header",
+            "name": "webhook-timestamp",
+            "required": true,
+            "schema": {
+              "pattern": "^\\d+$",
+              "type": "string"
+            }
+          },
+          {
+            "description": "`v1,<base64 HMAC-SHA256 of \"<webhook-id>.<webhook-timestamp>.<raw body>\">`, keyed with the base64-decoded part of the endpoint's `whsec_` secret. During a secret rotation it carries one space-separated `v1,` entry per active secret; accept the delivery when any entry matches.",
+            "example": "v1,lkO4DTG3zOoxV5QD2PC5B41Sc8nqZNoh50NPrwnhJ5I=",
+            "in": "header",
+            "name": "webhook-signature",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "deprecated": true,
+            "description": "Only to endpoints carried over from the previous webhook system (`legacy_signature: true`), until its sunset: `t=<unix>,v1=<hex HMAC-SHA256 of \"<unix>.<raw body>\">`, keyed with the UTF-8 bytes of the whole secret string. Verify `webhook-signature` instead.",
+            "in": "header",
+            "name": "X-Waitlist-Signature",
+            "required": false,
+            "schema": {
+              "pattern": "^t=\\d+,v1=[0-9a-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryMilestoneReachedEvent"
+              }
+            }
+          },
+          "description": "The `entry.milestone_reached` event. Verify the signature over the raw body before parsing it.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Any 2xx acknowledges the event. Answer with any 2xx within 15 s to acknowledge it; anything else, or no answer, is retried after 1 min, 5 min, 30 min, 2 h, 6 h, 24 h."
+          }
+        },
+        "summary": "An entry reached one of your referral rewards (settings.referral_rewards). Fires once per entry and milestone, when the referral that reaches it counts. Hand the reward out from here.",
+        "tags": [
+          "webhooks"
+        ],
+        "x-pc-webhook-category": "Referrals"
       }
     },
     "entry.rejected": {

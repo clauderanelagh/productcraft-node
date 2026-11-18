@@ -70,7 +70,7 @@ Webhook signing secrets: pass the endpoint's secret (or several, during a rotati
 
 Full reference: [api.md](./api.md).
 
-- `waitlist.lists`: `accessCodes.redeem`, `analytics.retrieve`, `analytics.timeline`, `create`, `delete`, `entries.bulk`, `entries.count`, `entries.delete`, `entries.export`, `entries.inviteToApp`, `entries.list`, `entries.release`, `entries.retrieve`, `entries.update`, `inviteWaves.cancel`, `inviteWaves.create`, `inviteWaves.list`, `inviteWaves.retrieve`, `list`, `retrieve`, `testEntries.create`, `update`, `updateStatus`, `variants.create`, `variants.delete`, `variants.list`, `variants.update`
+- `waitlist.lists`: `accessCodes.redeem`, `analytics.retrieve`, `analytics.timeline`, `create`, `delete`, `entries.bulk`, `entries.count`, `entries.delete`, `entries.export`, `entries.inviteToApp`, `entries.list`, `entries.release`, `entries.retrieve`, `entries.update`, `inviteWaves.cancel`, `inviteWaves.create`, `inviteWaves.list`, `inviteWaves.retrieve`, `list`, `milestoneAwards.list`, `milestoneAwards.update`, `retrieve`, `testEntries.create`, `update`, `updateStatus`, `variants.create`, `variants.delete`, `variants.list`, `variants.update`
 - `waitlist.public(…).entries`: `confirm`, `create`, `me`, `resendConfirmation`
 - `waitlist.public(…).info`: `retrieve`
 - `waitlist.public(…).leaderboard`: `list`
