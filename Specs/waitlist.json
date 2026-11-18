@@ -324,6 +324,20 @@
         ],
         "type": "string"
       },
+      "ConfirmEntryDto": {
+        "properties": {
+          "token": {
+            "description": "The `token` query parameter of the link in the confirmation email.",
+            "example": "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w",
+            "maxLength": 100,
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "type": "object"
+      },
       "CreateEntryDto": {
         "properties": {
           "email": {
@@ -1032,6 +1046,12 @@
       },
       "EntryResponseDto": {
         "properties": {
+          "confirmed_at": {
+            "description": "When the owner confirmed their email address; null when the waitlist does not ask for it, or not yet.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
           "created_at": {
             "description": "When the entry signed up.",
             "format": "date-time",
@@ -1106,7 +1126,7 @@
                 "$ref": "#/components/schemas/EntryStatus"
               }
             ],
-            "description": "`pending` waits for approval; `approved` and `rejected` are decided."
+            "description": "`unconfirmed` waits for its owner to confirm their email (waitlists with `email_confirmation`) and does not count yet; `pending` waits for approval; `approved` and `rejected` are decided."
           },
           "updated_at": {
             "description": "When the entry last changed.",
@@ -1138,6 +1158,7 @@
           "position",
           "is_test",
           "status",
+          "confirmed_at",
           "invited_at",
           "invited_to_app_slug",
           "metadata",
@@ -1151,7 +1172,8 @@
         "enum": [
           "pending",
           "approved",
-          "rejected"
+          "rejected",
+          "unconfirmed"
         ],
         "type": "string"
       },
@@ -1523,6 +1545,61 @@
         "type": "object",
         "x-pc-sdk-model": "Pagination"
       },
+      "PublicEntryConfirmedDto": {
+        "properties": {
+          "already_confirmed": {
+            "description": "`true` when the link had already been used; nothing changed.",
+            "example": false,
+            "type": "boolean"
+          },
+          "confirmed_at": {
+            "description": "When the email address was confirmed; null when the waitlist does not ask, or not yet.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "rank": {
+            "description": "Place in line as the owner sees it: 1 + the confirmed sign-ups ahead, after referral boosts. Null while `unconfirmed`, after `rejected`, and for a test sign-up.",
+            "example": 12,
+            "nullable": true,
+            "type": "integer"
+          },
+          "referral_code": {
+            "description": "Referral code of this sign-up.",
+            "example": "464QTHE0",
+            "type": "string"
+          },
+          "referral_count": {
+            "description": "Confirmed sign-ups that used this referral code.",
+            "example": 3,
+            "type": "integer"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicOwnEntryStatus"
+              }
+            ],
+            "description": "Where the sign-up stands. `pending`: waiting for approval; `approved`: in; `rejected`: not offered a place; `unconfirmed`: email not confirmed yet."
+          },
+          "waitlist_name": {
+            "description": "Display name of the waitlist.",
+            "example": "Early Access Program",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "rank",
+          "referral_code",
+          "referral_count",
+          "confirmed_at",
+          "waitlist_name",
+          "already_confirmed"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "PublicEntryConfirmed"
+      },
       "PublicEntryCreatedDto": {
         "properties": {
           "created_at": {
@@ -1565,7 +1642,7 @@
                 "$ref": "#/components/schemas/PublicEntryStatus"
               }
             ],
-            "description": "`approved` when the waitlist auto-approves; `pending` when admin approval is required."
+            "description": "`approved` when the waitlist auto-approves; `pending` when admin approval is required; `unconfirmed` when the waitlist needs email confirmation (`email_confirmation`): the sign-up counts once its owner clicks the link in the confirmation email."
           }
         },
         "required": [
@@ -1585,7 +1662,8 @@
       "PublicEntryStatus": {
         "enum": [
           "pending",
-          "approved"
+          "approved",
+          "unconfirmed"
         ],
         "type": "string"
       },
@@ -1630,6 +1708,15 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "PublicLeaderboardEntry"
+      },
+      "PublicOwnEntryStatus": {
+        "enum": [
+          "pending",
+          "approved",
+          "rejected",
+          "unconfirmed"
+        ],
+        "type": "string"
       },
       "PublicWaitlistBrandDto": {
         "properties": {
@@ -1687,6 +1774,11 @@
             "description": "Display name (active variant copy wins over the stored name).",
             "type": "string"
           },
+          "email_confirmation": {
+            "description": "Whether sign-ups must confirm their email address (double opt-in). When `true`, a new sign-up comes back `unconfirmed`: tell the visitor to check their inbox. It counts (place in line, referral credit, leaderboard, webhooks) once they click the link in the email.",
+            "example": false,
+            "type": "boolean"
+          },
           "recaptcha_site_key": {
             "description": "reCAPTCHA v3 site key. When non-null, POST .../entries requires a `recaptcha_token` created with the action `waitlist_signup`.",
             "nullable": true,
@@ -1727,6 +1819,7 @@
           "custom_fields",
           "confirmation_message",
           "recaptcha_site_key",
+          "email_confirmation",
           "referral_rewards",
           "variant",
           "brand"
@@ -1824,6 +1917,34 @@
           "ReplayWebhookEvent"
         ]
       },
+      "ResendConfirmationAcceptedDto": {
+        "properties": {
+          "accepted": {
+            "description": "Always `true`. When the address has an unconfirmed sign-up and has not had its confirmation emails for the last 24 hours, a new email is on its way.",
+            "example": true,
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "accepted"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "ResendConfirmationAccepted"
+      },
+      "ResendConfirmationDto": {
+        "properties": {
+          "email": {
+            "description": "The address that signed up.",
+            "example": "ada@example.com",
+            "format": "email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "type": "object"
+      },
       "RotateWebhookSecretDto": {
         "properties": {
           "grace_hours": {
@@ -1915,7 +2036,8 @@
         "enum": [
           "welcome",
           "approved",
-          "rejected"
+          "rejected",
+          "confirm"
         ],
         "type": "string"
       },
@@ -1975,6 +2097,12 @@
           "brand_name": {
             "description": "Brand name returned in the public waitlist payload. Customer frontends render it on their own signup form.",
             "example": "Acme",
+            "nullable": true,
+            "type": "string"
+          },
+          "confirm_template_name": {
+            "description": "Mail template name for the confirmation email of waitlists with email confirmation (double opt-in). Must already exist in the workspace template store. Turning emails on, or turning email confirmation on for a waitlist, creates `waitlist-confirm` when this is empty.",
+            "example": "waitlist-confirm",
             "nullable": true,
             "type": "string"
           },
@@ -2302,11 +2430,12 @@
             "additionalProperties": {
               "type": "number"
             },
-            "description": "Entry counts keyed by status (`pending` / `approved` / `rejected`).",
+            "description": "Entry counts keyed by status (`pending` / `approved` / `rejected` / `unconfirmed`). `unconfirmed` sign-ups are not in any other figure until they confirm.",
             "example": {
               "approved": 40,
               "pending": 12,
-              "rejected": 3
+              "rejected": 3,
+              "unconfirmed": 2
             },
             "type": "object"
           },
@@ -2377,6 +2506,14 @@
             "example": false,
             "type": "boolean"
           },
+          "confirmation_expiry_days": {
+            "default": 7,
+            "description": "Days an unconfirmed sign-up waits for its owner to confirm before it is deleted. Default 7.",
+            "example": 7,
+            "maximum": 30,
+            "minimum": 1,
+            "type": "integer"
+          },
           "confirmation_message": {
             "description": "Message to show after a sign-up (a variant's copy wins over it).",
             "example": "You're on the list!",
@@ -2389,6 +2526,12 @@
               "$ref": "#/components/schemas/CustomFieldDto"
             },
             "type": "array"
+          },
+          "email_confirmation": {
+            "default": false,
+            "description": "Double opt-in. On: a new sign-up is `unconfirmed` and gets one confirmation email (the workspace's `confirm` Mail template, `waitlist-confirm` by default); it counts (place in line, referral credit, leaderboard, `entry.created`) only once its owner clicks the link. Unconfirmed sign-ups are deleted after `confirmation_expiry_days`. Off (the default): sign-ups count at once.",
+            "example": true,
+            "type": "boolean"
           },
           "max_entries": {
             "description": "Most entries the waitlist takes (test sign-ups not counted); a public sign-up past it gets 422. Null or absent: no cap.",
@@ -2438,6 +2581,14 @@
             "example": false,
             "type": "boolean"
           },
+          "confirmation_expiry_days": {
+            "default": 7,
+            "description": "Days an unconfirmed sign-up waits for its owner to confirm before it is deleted. Default 7.",
+            "example": 7,
+            "maximum": 30,
+            "minimum": 1,
+            "type": "integer"
+          },
           "confirmation_message": {
             "description": "Message to show after a sign-up (a variant's copy wins over it).",
             "example": "You're on the list!",
@@ -2450,6 +2601,12 @@
               "$ref": "#/components/schemas/CustomFieldDto"
             },
             "type": "array"
+          },
+          "email_confirmation": {
+            "default": false,
+            "description": "Double opt-in. On: a new sign-up is `unconfirmed` and gets one confirmation email (the workspace's `confirm` Mail template, `waitlist-confirm` by default); it counts (place in line, referral credit, leaderboard, `entry.created`) only once its owner clicks the link. Unconfirmed sign-ups are deleted after `confirmation_expiry_days`. Off (the default): sign-ups count at once.",
+            "example": true,
+            "type": "boolean"
           },
           "max_entries": {
             "description": "Most entries the waitlist takes (test sign-ups not counted); a public sign-up past it gets 422. Null or absent: no cap.",
@@ -2529,6 +2686,7 @@
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
               "WEBHOOK_EVENT_NOT_FOUND",
               "WEBHOOK_EVENT_TYPE_UNKNOWN",
+              "ENTRY_LINK_INVALID",
               "MAIL_UNREACHABLE",
               "ORIGIN_NOT_ALLOWED",
               "WAITLIST_NOT_FOUND",
@@ -2549,6 +2707,7 @@
           "BAD_GATEWAY": "An upstream service returned an invalid response.",
           "BAD_REQUEST": "The request is malformed (not valid JSON, a bad header, an unusable parameter).",
           "CONFLICT": "The request conflicts with the current state of the resource.",
+          "ENTRY_LINK_INVALID": "The confirmation or status link is not valid, or its sign-up expired or was deleted.",
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
           "GONE": "The resource existed but has been removed for good.",
@@ -2757,6 +2916,11 @@
             "nullable": true,
             "type": "string"
           },
+          "confirm_template_name": {
+            "description": "Mail template sent to confirm a sign-up on waitlists with email confirmation; null when unset.",
+            "nullable": true,
+            "type": "string"
+          },
           "default_heimdall_app_slug": {
             "description": "Auth consumer-app slug approved entries are invited into.",
             "nullable": true,
@@ -2851,6 +3015,7 @@
           "welcome_template_name",
           "approved_template_name",
           "rejected_template_name",
+          "confirm_template_name",
           "updated_at",
           "email_setup",
           "skipped_sends"
@@ -4322,6 +4487,313 @@
         }
       }
     },
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/confirm": {
+      "post": {
+        "description": "Post the `token` from the link in the confirmation email. The sign-up moves from `unconfirmed` to `pending` or `approved`, its referrer gets credit, `entry.created` (and `entry.approved`) fire and the welcome email goes out. Using the link again changes nothing (`already_confirmed: true`). The hosted confirmation page calls this when the visitor presses the button; call it yourself if you host that page. No API key.",
+        "operationId": "PublicConfirmationController_confirm",
+        "parameters": [
+          {
+            "description": "Slug of the workspace that owns the waitlist (a renamed workspace's old slug still resolves).",
+            "example": "acme",
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Slug of the waitlist within its workspace.",
+            "example": "beta",
+            "in": "path",
+            "name": "waitlist_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEntryDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicEntryConfirmedDto"
+                }
+              }
+            },
+            "description": "Confirmed (or already confirmed).",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure (no token).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `ENTRY_LINK_INVALID`: the token is not valid, or the sign-up expired or was deleted. `WAITLIST_NOT_FOUND`: no such waitlist.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "ENTRY_LINK_INVALID",
+              "WAITLIST_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Confirm a sign-up (double opt-in)",
+        "tags": [
+          "public-waitlist"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_slug",
+            "waitlist_slug"
+          ],
+          "method": "confirm",
+          "paginated": false,
+          "public": true,
+          "resource": "entries"
+        }
+      }
+    },
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/resend-confirmation": {
+      "post": {
+        "description": "For a visitor who lost the email. Always answers 202 with `accepted: true`, whether or not the address signed up, so it cannot be used to find out who is on the list. An email goes out only to an `unconfirmed` sign-up, and an address gets at most one confirmation email per workspace (three across ProductCraft) in any 24 hours. No API key.",
+        "operationId": "PublicConfirmationController_resend",
+        "parameters": [
+          {
+            "description": "Slug of the workspace that owns the waitlist (a renamed workspace's old slug still resolves).",
+            "example": "acme",
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Slug of the waitlist within its workspace.",
+            "example": "beta",
+            "in": "path",
+            "name": "waitlist_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendConfirmationDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendConfirmationAcceptedDto"
+                }
+              }
+            },
+            "description": "Accepted.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Validation failure (not an email address).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `WAITLIST_NOT_FOUND`: no such waitlist, or it is not active.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "WAITLIST_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Too many requests from this IP. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Send the confirmation email again",
+        "tags": [
+          "public-waitlist"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_slug",
+            "waitlist_slug"
+          ],
+          "method": "resendConfirmation",
+          "paginated": false,
+          "public": true,
+          "resource": "entries"
+        }
+      }
+    },
     "/v1/waitlists/{workspace_slug}/{waitlist_slug}/leaderboard": {
       "get": {
         "deprecated": true,
@@ -5121,7 +5593,8 @@
               "enum": [
                 "welcome",
                 "approved",
-                "rejected"
+                "rejected",
+                "confirm"
               ],
               "type": "string"
             }
@@ -9720,7 +10193,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10316,7 +10789,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10572,7 +11045,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10810,7 +11283,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -11618,7 +12091,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,

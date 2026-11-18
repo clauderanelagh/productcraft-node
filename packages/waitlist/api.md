@@ -902,6 +902,29 @@ const webhookEventDetail = await waitlist.webhooks.events.retrieve("evt_3f0c3c1e
 
 ## public(…).entries
 
+### `waitlist.public({ … }).entries.confirm(params, options?)`
+
+`POST /v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/confirm` → `Waitlist.PublicEntryConfirmed`
+
+Confirm a sign-up (double opt-in).
+
+Post the `token` from the link in the confirmation email. The sign-up moves from `unconfirmed` to `pending` or `approved`, its referrer gets credit, `entry.created` (and `entry.approved`) fire and the welcome email goes out. Using the link again changes nothing (`already_confirmed: true`). The hosted confirmation page calls this when the visitor presses the button; call it yourself if you host that page. No API key.
+
+- Params: `Waitlist.EntryConfirmParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (no token). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `ENTRY_LINK_INVALID`, `WAITLIST_NOT_FOUND` | Code `ENTRY_LINK_INVALID`: the token is not valid, or the sign-up expired or was deleted. `WAITLIST_NOT_FOUND`: no such waitlist. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const publicEntryConfirmed = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.confirm({ token: "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w" });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-waitlists-workspace-slug-waitlist-slug-entries-confirm)
+
 ### `waitlist.public({ … }).entries.create(params, options?)`
 
 `POST /v1/waitlists/{workspace_slug}/{waitlist_slug}/entries` → `Waitlist.PublicEntryCreated`
@@ -928,6 +951,29 @@ const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: 
 ```
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-waitlists-workspace-slug-waitlist-slug-entries)
+
+### `waitlist.public({ … }).entries.resendConfirmation(params, options?)`
+
+`POST /v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/resend-confirmation` → `Waitlist.ResendConfirmationAccepted`
+
+Send the confirmation email again.
+
+For a visitor who lost the email. Always answers 202 with `accepted: true`, whether or not the address signed up, so it cannot be used to find out who is on the list. An email goes out only to an `unconfirmed` sign-up, and an address gets at most one confirmation email per workspace (three across ProductCraft) in any 24 hours. No API key.
+
+- Params: `Waitlist.EntryResendConfirmationParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (not an email address). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `WAITLIST_NOT_FOUND` | Code `WAITLIST_NOT_FOUND`: no such waitlist, or it is not active. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Too many requests from this IP. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const resendConfirmationAccepted = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.resendConfirmation({ email: "ada@example.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-waitlists-workspace-slug-waitlist-slug-entries-resend-confirmation)
 
 ## public(…).info
 
@@ -1020,6 +1066,7 @@ const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
 | `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
+| `ENTRY_LINK_INVALID` | The confirmation or status link is not valid, or its sign-up expired or was deleted. |
 | `MAIL_UNREACHABLE` | The Mail service did not answer; try again in a minute. |
 | `ORIGIN_NOT_ALLOWED` | Origin not allowed. |
 | `WAITLIST_NOT_FOUND` | No waitlist with this id or slug in this workspace. |

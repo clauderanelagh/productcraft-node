@@ -4,9 +4,19 @@ import { Waitlist } from "@productcraft/waitlist";
 
 const waitlist = new Waitlist();
 
+// entries.confirm: Confirm a sign-up (double opt-in)
+{
+  const publicEntryConfirmed = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.confirm({ token: "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w" });
+}
+
 // entries.create: Submit a new entry to a public waitlist
 {
   const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
+}
+
+// entries.resendConfirmation: Send the confirmation email again
+{
+  const resendConfirmationAccepted = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.resendConfirmation({ email: "ada@example.com" });
 }
 
 export {};

@@ -100,6 +100,9 @@ export type components = {
             status: components["schemas"]["BulkEntryResultStatus"];
         };
         BulkEntryResultStatus: "ok" | "error";
+        ConfirmEntryDto: {
+            token: string;
+        };
         CreateEntryDto: {
             email: string;
             interest?: string;
@@ -208,6 +211,7 @@ export type components = {
             workspace_id?: string;
         };
         EntryResponseDto: {
+            confirmed_at: string | null;
             created_at: string;
             email: string;
             id: string;
@@ -229,7 +233,7 @@ export type components = {
             waitlist_id: string;
             workspace_id: string;
         };
-        EntryStatus: "pending" | "approved" | "rejected";
+        EntryStatus: "pending" | "approved" | "rejected" | "unconfirmed";
         ErrorParamDto: {
             code: string;
             message: string;
@@ -295,6 +299,15 @@ export type components = {
             has_more: boolean;
             next_cursor: string | null;
         };
+        PublicEntryConfirmedDto: {
+            already_confirmed: boolean;
+            confirmed_at: string | null;
+            rank: number | null;
+            referral_code: string;
+            referral_count: number;
+            status: components["schemas"]["PublicOwnEntryStatus"];
+            waitlist_name: string;
+        };
         PublicEntryCreatedDto: {
             created_at: string;
             effective_position: number;
@@ -306,7 +319,7 @@ export type components = {
             referral_code: string;
             status: components["schemas"]["PublicEntryStatus"];
         };
-        PublicEntryStatus: "pending" | "approved";
+        PublicEntryStatus: "pending" | "approved" | "unconfirmed";
         PublicLeaderboardDto: {
             data: components["schemas"]["PublicLeaderboardEntryDto"][];
         };
@@ -315,6 +328,7 @@ export type components = {
             position: number;
             referral_count: number;
         };
+        PublicOwnEntryStatus: "pending" | "approved" | "rejected" | "unconfirmed";
         PublicWaitlistBrandDto: {
             brand_logo_url: string | null;
             brand_name: string | null;
@@ -327,6 +341,7 @@ export type components = {
             custom_fields: components["schemas"]["CustomFieldDto"][];
             description: string | null;
             display_name: string;
+            email_confirmation: boolean;
             recaptcha_site_key: string | null;
             referral_rewards: components["schemas"]["ReferralRewardsDto"];
             slug: string;
@@ -350,6 +365,12 @@ export type components = {
             attempts: components["schemas"]["WebhookDeliveryAttemptDto"][];
             event_id: string;
         };
+        ResendConfirmationAcceptedDto: {
+            accepted: boolean;
+        };
+        ResendConfirmationDto: {
+            email: string;
+        };
         RotateWebhookSecretDto: {
             grace_hours?: number;
         };
@@ -364,7 +385,7 @@ export type components = {
             value: number;
         };
         StatsWindow: "1d" | "7d" | "30d";
-        TemplateSlot: "welcome" | "approved" | "rejected";
+        TemplateSlot: "welcome" | "approved" | "rejected" | "confirm";
         TestWebhookDto: {
             event: "entry.created" | "entry.approved" | "entry.rejected";
             waitlist_id?: string;
@@ -376,6 +397,7 @@ export type components = {
             approved_template_name?: string | null;
             brand_logo_url?: string | null;
             brand_name?: string | null;
+            confirm_template_name?: string | null;
             default_heimdall_app_slug?: string | null;
             default_sender_address?: string | null;
             default_sender_domain_id?: string | null;
@@ -449,8 +471,10 @@ export type components = {
         };
         WaitlistConfigDto: {
             approval_required: boolean;
+            confirmation_expiry_days: number;
             confirmation_message?: string | null;
             custom_fields?: components["schemas"]["CustomFieldDto"][];
+            email_confirmation: boolean;
             max_entries?: number | null;
             recaptcha_secret_configured: boolean;
             recaptcha_site_key?: string | null;
@@ -459,15 +483,17 @@ export type components = {
         };
         WaitlistConfigInputDto: {
             approval_required?: boolean;
+            confirmation_expiry_days?: number;
             confirmation_message?: string | null;
             custom_fields?: components["schemas"]["CustomFieldDto"][];
+            email_confirmation?: boolean;
             max_entries?: number | null;
             recaptcha_secret_key?: string;
             recaptcha_site_key?: string | null;
             referral_boost?: number;
             referral_rewards?: components["schemas"]["ReferralRewardsDto"];
         };
-        WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
+        WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
         WaitlistListPaginationDto: {
             has_more: boolean;
             next_cursor: string | null;
@@ -497,6 +523,7 @@ export type components = {
             approved_template_name: string | null;
             brand_logo_url: string | null;
             brand_name: string | null;
+            confirm_template_name: string | null;
             default_heimdall_app_slug: string | null;
             default_sender_address: string | null;
             default_sender_domain_id: string | null;
@@ -760,6 +787,38 @@ export type paths = {
         get?: never;
         put?: never;
         post: operations["PublicWaitlistController_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicConfirmationController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/resend-confirmation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PublicConfirmationController_resend"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1360,22 +1419,28 @@ namespace Waitlist {
     type EmailSetupMissing = __EmailSetupMissing;
     const // (undocumented)
     EntryStatus: {
-        values: readonly ["pending", "approved", "rejected"];
+        values: readonly ["pending", "approved", "rejected", "unconfirmed"];
     };
     // (undocumented)
     type EmailSetupState = __EmailSetupState;
     const // (undocumented)
     PublicEntryStatus: {
-        values: readonly ["pending", "approved"];
+        values: readonly ["pending", "approved", "unconfirmed"];
     };
     // (undocumented)
     type Entry = __Entry;
+    const // (undocumented)
+    PublicOwnEntryStatus: {
+        values: readonly ["pending", "approved", "rejected", "unconfirmed"];
+    };
+    // (undocumented)
+    type EntryApprovedEvent = __EntryApprovedEvent;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type EntryApprovedEvent = __EntryApprovedEvent;
+    type EntryConfirmParams = __EntryConfirmParams;
     const // (undocumented)
     SenderMode: {
         values: readonly ["workspace", "custom"];
@@ -1396,7 +1461,7 @@ namespace Waitlist {
     type EntryCreateParams = __EntryCreateParams;
     const // (undocumented)
     TemplateSlot: {
-        values: readonly ["welcome", "approved", "rejected"];
+        values: readonly ["welcome", "approved", "rejected", "confirm"];
     };
     // (undocumented)
     type EntryDecision = __EntryDecision;
@@ -1435,17 +1500,19 @@ namespace Waitlist {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type EntryStatus = __EntryStatus;
+    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type ErrorCode = __ErrorCode;
+    type EntryStatus = __EntryStatus;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["entry.created", "entry.approved", "entry.rejected"];
     };
+    // (undocumented)
+    type ErrorCode = __ErrorCode;
     // (undocumented)
     type InfoRetrieveParams = __InfoRetrieveParams;
     // (undocumented)
@@ -1501,6 +1568,8 @@ namespace Waitlist {
     // (undocumented)
     type PollOptions = __PollOptions;
     // (undocumented)
+    type PublicEntryConfirmed = __PublicEntryConfirmed;
+    // (undocumented)
     type PublicEntryCreated = __PublicEntryCreated;
     // (undocumented)
     type PublicEntryStatus = __PublicEntryStatus;
@@ -1508,6 +1577,8 @@ namespace Waitlist {
     type PublicLeaderboard = __PublicLeaderboard;
     // (undocumented)
     type PublicLeaderboardEntry = __PublicLeaderboardEntry;
+    // (undocumented)
+    type PublicOwnEntryStatus = __PublicOwnEntryStatus;
     // (undocumented)
     type PublicWaitlistBrand = __PublicWaitlistBrand;
     // (undocumented)
@@ -1524,6 +1595,8 @@ namespace Waitlist {
     type ReplayWebhookEvent = __ReplayWebhookEvent;
     // (undocumented)
     type RequestOptions = __RequestOptions;
+    // (undocumented)
+    type ResendConfirmationAccepted = __ResendConfirmationAccepted;
     // (undocumented)
     type SenderDomainStatus = __SenderDomainStatus;
     // (undocumented)
@@ -1635,11 +1708,11 @@ export { Waitlist }
 export default Waitlist;
 
 // @public
-export type WaitlistErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | (string & {});
+export type WaitlistErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender" | (string & {});
 
 // @public (undocumented)
 export const WaitlistErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "MAIL_UNREACHABLE", "ORIGIN_NOT_ALLOWED", "WAITLIST_NOT_FOUND", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ENTRY_LINK_INVALID", "MAIL_UNREACHABLE", "ORIGIN_NOT_ALLOWED", "WAITLIST_NOT_FOUND", "domain_not_verified_by_provider", "from_domain_not_verified", "no_default_sender"];
 };
 
 export { WebhookVerificationError }
