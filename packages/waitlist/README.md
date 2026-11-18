@@ -71,7 +71,7 @@ Webhook signing secrets: pass the endpoint's secret (or several, during a rotati
 Full reference: [api.md](./api.md).
 
 - `waitlist.lists`: `analytics.retrieve`, `analytics.timeline`, `create`, `delete`, `entries.bulk`, `entries.count`, `entries.delete`, `entries.export`, `entries.inviteToApp`, `entries.list`, `entries.retrieve`, `entries.update`, `list`, `retrieve`, `testEntries.create`, `update`, `updateStatus`, `variants.create`, `variants.delete`, `variants.list`, `variants.update`
-- `waitlist.public(…).entries`: `create`
+- `waitlist.public(…).entries`: `confirm`, `create`, `resendConfirmation`
 - `waitlist.public(…).info`: `retrieve`
 - `waitlist.public(…).leaderboard`: `list`
 - `waitlist.settings`: `notifications.test`, `retrieve`, `update`
