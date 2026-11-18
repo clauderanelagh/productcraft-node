@@ -1,5 +1,11 @@
 # @productcraft/auth
 
+## 1.7.0
+
+### Minor Changes
+
+- 8eba80d: Auth test mode: `test_mode` (`enabled`, `code`, `allow_in_production`, read-only `active`) on the auth config, and the `TEST_MODE_PRODUCTION_APP` error code. `+pc_test` addresses then sign in with the fixed code and are never emailed.
+
 ## 1.6.0
 
 ### Minor Changes
