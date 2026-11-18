@@ -68,6 +68,7 @@ Pass `apiKey` (a workspace key, `pcft_live_…`), or omit it and the client read
 
 Full reference: [api.md](./api.md).
 
+- `notify.batches`: `flush`, `list`, `retrieve`
 - `notify.categories`: `create`, `delete`, `list`, `retrieve`, `update`
 - `notify.channels`: `apns.deleteCredential`, `apns.uploadCredential`, `fcm.deleteCredential`, `fcm.uploadCredential`, `list`, `webpush.generateVapidKeys`, `webpush.importVapidKeys`, `webpush.retrieve`
 - `notify.client(…).devices`: `delete`, `register`
@@ -79,7 +80,7 @@ Full reference: [api.md](./api.md).
 - `notify.notificationTypes`: `archive`, `create`, `list`, `preview`, `replaceByKey`, `retrieve`, `templates.delete`, `templates.retrieve`, `templates.revert`, `templates.update`, `templates.versions`, `update`
 - `notify.notifications`: `cancel`, `cancelByKey`, `list`, `retract`, `retrieve`, `send`
 - `notify.recipientTokens`: `mint`
-- `notify.recipients`: `bulkIdentify`, `delete`, `devices.create`, `devices.delete`, `devices.list`, `identify`, `inbox.list`, `list`, `preferences.replace`, `preferences.retrieve`, `preferences.update`, `retrieve`, `revokeTokens`, `timeline`, `update`
+- `notify.recipients`: `bulkIdentify`, `createPreferenceLink`, `delete`, `devices.create`, `devices.delete`, `devices.list`, `identify`, `inbox.list`, `list`, `preferences.replace`, `preferences.retrieve`, `preferences.update`, `retrieve`, `revokeTokens`, `timeline`, `update`
 - `notify.settings`: `retrieve`, `revokeAllTokens`, `update`
 - `notify.setupStatus`: `retrieve`
 - `notify.stats`: `retrieve`
@@ -106,7 +107,7 @@ Every failure is a class you can catch. `APIError` carries `status`, `code`, `me
 import { Notify, NotFoundError, RateLimitError, APIError } from "@productcraft/notify";
 const notify = new Notify();
 try {
-  await notify.categories.retrieve("00000000-0000-0000-0000-000000000000");
+  await notify.batches.retrieve("00000000-0000-0000-0000-000000000000");
 } catch (err) {
   if (err instanceof NotFoundError) console.log(err.code, err.requestId, err.docUrl);
   else if (err instanceof RateLimitError) console.log(err.retryAfter);
@@ -206,9 +207,9 @@ Every returned object has a non-enumerable `lastResponse` (`requestId`, `status`
 import { Notify } from "@productcraft/notify";
 const notify = new Notify({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
 const id = "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b";
-const obj = await notify.categories.retrieve(id);
+const obj = await notify.batches.retrieve(id);
 console.log(obj.lastResponse.requestId);
-const { data, response, requestId, rateLimit } = await notify.categories.retrieve(id).withResponse();
+const { data, response, requestId, rateLimit } = await notify.batches.retrieve(id).withResponse();
 console.log(data, response.status, requestId, rateLimit?.remaining);
 ```
 
@@ -232,7 +233,7 @@ console.log(fetch.calls.length);
 ```ts
 import { Notify } from "@productcraft/notify";
 const notify = new Notify({ apiKey: process.env.PRODUCTCRAFT_API_KEY });
-const { data, error } = await notify.client.GET("/v1/workspaces/{workspace_id}/categories", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
+const { data, error } = await notify.client.GET("/v1/workspaces/{workspace_id}/batches", { params: { path: { workspace_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" } } });
 console.log(data, error);
 ```
 

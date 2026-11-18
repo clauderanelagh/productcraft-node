@@ -75,6 +75,74 @@ export type components = {
         };
         ApnsCredentialEnvironment: "sandbox" | "production" | "both";
         ApnsEnvironment: "sandbox" | "production";
+        BatchDeliveryDto: {
+            channel: string;
+            id: string;
+            notification_id: string;
+            reason: string | null;
+            state: string;
+        };
+        BatchDetailDto: {
+            deliveries: components["schemas"]["BatchDeliveryDto"][];
+            flush_at: string;
+            flushed_at: string | null;
+            id: string;
+            item_count: number;
+            key: string;
+            notification_ids: string[];
+            opened_at: string;
+            payload: {
+                [key: string]: unknown;
+            } | null;
+            recipient: string | null;
+            state: components["schemas"]["NotifyBatchState"];
+            type: string;
+        };
+        BatchDto: {
+            inbox?: components["schemas"]["NotifyBatchInboxMode"];
+            key?: string | null;
+            max_items?: number;
+            max_window_seconds?: number | null;
+            mode: components["schemas"]["NotifyBatchMode"];
+            schedule?: components["schemas"]["BatchScheduleDto"] | null;
+            sliding?: boolean;
+            window_seconds?: number | null;
+        };
+        BatchListResponseDto: {
+            data: components["schemas"]["BatchSummaryDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        BatchScheduleDto: {
+            frequency: components["schemas"]["NotifyDigestFrequency"];
+            time: string;
+            weekday?: components["schemas"]["NotifyWeekday"] | null;
+        };
+        BatchScheduleViewDto: {
+            frequency: components["schemas"]["NotifyDigestFrequency"];
+            time: string;
+            weekday: components["schemas"]["NotifyWeekday"] | null;
+        };
+        BatchSummaryDto: {
+            flush_at: string;
+            flushed_at: string | null;
+            id: string;
+            item_count: number;
+            key: string;
+            opened_at: string;
+            recipient: string | null;
+            state: components["schemas"]["NotifyBatchState"];
+            type: string;
+        };
+        BatchViewDto: {
+            inbox: components["schemas"]["NotifyBatchInboxMode"];
+            key: string | null;
+            max_items: number;
+            max_window_seconds: number | null;
+            mode: components["schemas"]["NotifyBatchMode"];
+            schedule: components["schemas"]["BatchScheduleViewDto"] | null;
+            sliding: boolean;
+            window_seconds: number | null;
+        };
         BulkRecipientDto: {
             auth_user_id?: string | null;
             devices?: components["schemas"]["RegisterDeviceDto"][];
@@ -208,6 +276,7 @@ export type components = {
             transactional?: boolean;
         };
         CreateNotificationTypeDto: {
+            batch?: components["schemas"]["BatchDto"] | null;
             category_key?: string;
             critical?: boolean;
             default_locale?: string;
@@ -218,6 +287,9 @@ export type components = {
             routing?: components["schemas"]["RoutingDto"];
             throttle?: components["schemas"]["ThrottleDto"] | null;
             ttl_seconds?: number;
+        };
+        CreatePreferenceLinkDto: {
+            category_key?: string;
         };
         CreateRecipientTokenDto: {
             recipient: string;
@@ -271,6 +343,7 @@ export type components = {
         DeliveryDetailDto: {
             attempts: number;
             attempts_log: components["schemas"]["DeliveryAttemptDto"][];
+            batch_id: string | null;
             channel: components["schemas"]["NotifyChannel"];
             created_at: string;
             device_id: string | null;
@@ -295,6 +368,7 @@ export type components = {
         };
         DeliveryDto: {
             attempts: number;
+            batch_id: string | null;
             channel: components["schemas"]["NotifyChannel"];
             created_at: string;
             device_id: string | null;
@@ -434,6 +508,7 @@ export type components = {
         };
         ExportNotificationTypeDto: {
             archived_at: string | null;
+            batch: components["schemas"]["BatchViewDto"] | null;
             category_key: string;
             critical: boolean;
             default_locale: string;
@@ -479,6 +554,10 @@ export type components = {
             replaced_credential_ids: string[];
             status: components["schemas"]["CredentialStatus"];
             warnings: string[];
+        };
+        FlushBatchResponseDto: {
+            batch: components["schemas"]["BatchDetailDto"];
+            merged: number;
         };
         GenerateVapidKeysDto: {
             confirm?: "rotate";
@@ -638,6 +717,7 @@ export type components = {
         NotificationStatus: "scheduled" | "accepted" | "planned" | "cancelled";
         NotificationTypeDto: {
             archived_at: string | null;
+            batch: components["schemas"]["BatchViewDto"] | null;
             category_id: string;
             category_key: string;
             created_at: string;
@@ -658,6 +738,21 @@ export type components = {
         NotificationTypeListResponseDto: {
             data: components["schemas"]["NotificationTypeDto"][];
             pagination: components["schemas"]["PaginationDto"];
+        };
+        NotifyBatchInboxMode: "collapse" | "each";
+        NotifyBatchMode: "window" | "digest";
+        NotifyBatchState: "open" | "flushed" | "cancelled";
+        NotifyBrandingDto: {
+            accent_color?: string | null;
+            logo_url?: string | null;
+            name?: string | null;
+            privacy_url?: string | null;
+        };
+        NotifyBrandingViewDto: {
+            accent_color: string | null;
+            logo_url: string | null;
+            name: string | null;
+            privacy_url: string | null;
         };
         NotifyChannel: "inbox" | "email" | "push" | "webpush";
         NotifyCredentialInvalidDataDto: {
@@ -680,7 +775,7 @@ export type components = {
             state: components["schemas"]["NotifyWebhookDeliveryState"];
             type_key: string;
         };
-        NotifyDeliveryReason: "suppressed_preference" | "default_off" | "unsubscribed_all" | "held_quiet_hours" | "scheduled_send" | "no_device" | "no_address" | "email_invalid" | "email_complained" | "email_paused" | "email_budget" | "email_backlog_full" | "channel_not_configured" | "channel_restricted" | "type_archived" | "credential_invalid" | "template_missing" | "rate_limited" | "throttled" | "read_in_inbox" | "awaiting_unread" | "actor_excluded" | "recipient_not_found" | "recipient_erased" | "mail_suppressed" | "mail_refused" | "pruned" | "payload_too_large" | "credential_error" | "circuit_open" | "expired" | "cancelled" | "provider_error";
+        NotifyDeliveryReason: "suppressed_preference" | "default_off" | "unsubscribed_all" | "held_quiet_hours" | "scheduled_send" | "no_device" | "no_address" | "email_invalid" | "email_complained" | "email_paused" | "email_budget" | "email_backlog_full" | "channel_not_configured" | "channel_restricted" | "type_archived" | "credential_invalid" | "template_missing" | "rate_limited" | "throttled" | "read_in_inbox" | "awaiting_unread" | "batched" | "batched_into" | "actor_excluded" | "recipient_not_found" | "recipient_erased" | "mail_suppressed" | "mail_refused" | "pruned" | "payload_too_large" | "credential_error" | "circuit_open" | "expired" | "cancelled" | "provider_error";
         NotifyDeviceEventDataDto: {
             channel: components["schemas"]["NotifyWebhookDeviceChannel"];
             device_id: string;
@@ -690,6 +785,7 @@ export type components = {
             reason: string | null;
             recipient: components["schemas"]["NotifyWebhookRecipientDto"];
         };
+        NotifyDigestFrequency: "daily" | "weekly";
         NotifyEmailAutoPausedDataDto: {
             bounces: number;
             complaints: number;
@@ -697,7 +793,7 @@ export type components = {
             window: number;
         };
         NotifyEmailPauseReason: "complaints" | "bounces";
-        NotifyErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "NOTIFICATION_TYPE_NOT_FOUND" | "NOTIFICATION_TYPE_ARCHIVED" | "RECIPIENT_NOT_FOUND" | "TOO_MANY_RECIPIENTS" | "DATA_TOO_LARGE" | "TEMPLATE_MISSING" | "TEMPLATE_INVALID" | "CHANNEL_NOT_CONFIGURED" | "CREDENTIAL_INVALID" | "CREDENTIAL_NOT_FOUND" | "CREDENTIAL_MISMATCH" | "DEVICE_TOKEN_INVALID" | "WEBPUSH_ENDPOINT_NOT_ALLOWED" | "RECIPIENT_TOKEN_INVALID" | "RECIPIENT_TOKEN_EXPIRED" | "RECIPIENT_TOKEN_SCOPE" | "ORIGIN_NOT_ALLOWED" | "STREAM_LIMIT" | "LIMIT_EXCEEDED" | "SEND_AT_OUT_OF_RANGE" | "UNSAFE_URL" | "AUTH_USER_ALREADY_LINKED" | "DEVICE_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "CATEGORY_KEY_TAKEN" | "CATEGORY_IN_USE" | "NOTIFICATION_TYPE_KEY_TAKEN" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_VERSION_NOT_FOUND" | "PREFERENCE_LOCKED" | "NOTIFICATION_NOT_FOUND" | "DELIVERY_NOT_FOUND" | "CONFIRMATION_REQUIRED" | "INBOX_ITEM_NOT_FOUND" | "RECIPIENT_ERASED" | "DEVICE_MOVE_LIMIT") | string;
+        NotifyErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "NOTIFICATION_TYPE_NOT_FOUND" | "NOTIFICATION_TYPE_ARCHIVED" | "RECIPIENT_NOT_FOUND" | "TOO_MANY_RECIPIENTS" | "DATA_TOO_LARGE" | "TEMPLATE_MISSING" | "TEMPLATE_INVALID" | "CHANNEL_NOT_CONFIGURED" | "CREDENTIAL_INVALID" | "CREDENTIAL_NOT_FOUND" | "CREDENTIAL_MISMATCH" | "DEVICE_TOKEN_INVALID" | "WEBPUSH_ENDPOINT_NOT_ALLOWED" | "RECIPIENT_TOKEN_INVALID" | "RECIPIENT_TOKEN_EXPIRED" | "RECIPIENT_TOKEN_SCOPE" | "ORIGIN_NOT_ALLOWED" | "STREAM_LIMIT" | "LIMIT_EXCEEDED" | "BATCHED_TYPE_NOT_SCHEDULABLE" | "BATCH_NOT_FOUND" | "BATCH_NOT_OPEN" | "SEND_AT_OUT_OF_RANGE" | "UNSAFE_URL" | "AUTH_USER_ALREADY_LINKED" | "DEVICE_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "CATEGORY_KEY_TAKEN" | "CATEGORY_IN_USE" | "NOTIFICATION_TYPE_KEY_TAKEN" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_VERSION_NOT_FOUND" | "PREFERENCE_LOCKED" | "NOTIFICATION_NOT_FOUND" | "DELIVERY_NOT_FOUND" | "CONFIRMATION_REQUIRED" | "INBOX_ITEM_NOT_FOUND" | "RECIPIENT_ERASED" | "DEVICE_MOVE_LIMIT") | string;
         NotifyInboxItemEventDataDto: {
             inbox_item_id: string;
             interaction_key: string | null;
@@ -720,6 +816,7 @@ export type components = {
         };
         NotifyRecipientDeletionCause: "api" | "auth_user_deleted";
         NotifySettingsDto: {
+            branding: components["schemas"]["NotifyBrandingViewDto"] | null;
             client_origins: string[];
             default_quiet_hours: components["schemas"]["QuietHoursDto"] | null;
             default_timezone: string | null;
@@ -762,12 +859,20 @@ export type components = {
             external_id: string | null;
             id: string;
         };
+        NotifyWeekday: "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
         PaginationDto: {
             has_more: boolean;
             next_cursor: string | null;
         };
+        PlanBatchDto: {
+            batch_id: string | null;
+            flush_at: string;
+            item_count: number;
+            key: string;
+        };
         PlanDecision: "deliver" | "schedule" | "skip";
         PlanRowDto: {
+            batch?: components["schemas"]["PlanBatchDto"];
             channel: components["schemas"]["NotifyChannel"];
             decision: components["schemas"]["PlanDecision"];
             explanation: string | null;
@@ -796,6 +901,11 @@ export type components = {
             scope: components["schemas"]["PreferenceScope"];
         };
         PreferenceChannel: "inbox" | "email" | "push" | "webpush" | "*";
+        PreferenceLinkDto: {
+            category_key: string | null;
+            expires_at: string;
+            url: string;
+        };
         PreferenceScope: "all" | "category" | "type";
         PreferenceSetDto: {
             effective_quiet_hours: components["schemas"]["EffectiveQuietHoursDto"] | null;
@@ -908,6 +1018,7 @@ export type components = {
             title: string;
         };
         ReplaceNotificationTypeDto: {
+            batch?: components["schemas"]["BatchDto"] | null;
             category_key?: string;
             critical?: boolean;
             default_locale?: string;
@@ -1051,6 +1162,7 @@ export type components = {
         };
         TimelineEntryDto: {
             attempts: number;
+            batch_id: string | null;
             channel: components["schemas"]["NotifyChannel"];
             created_at: string;
             device: components["schemas"]["TimelineDeviceDto"] | null;
@@ -1095,6 +1207,7 @@ export type components = {
             unsubscribed_all?: boolean;
         };
         UpdateNotificationTypeDto: {
+            batch?: components["schemas"]["BatchDto"] | null;
             category_key?: string;
             critical?: boolean;
             default_locale?: string;
@@ -1106,6 +1219,7 @@ export type components = {
             ttl_seconds?: number;
         };
         UpdateNotifySettingsDto: {
+            branding?: components["schemas"]["NotifyBrandingDto"] | null;
             client_origins?: string[];
             default_quiet_hours?: components["schemas"]["QuietHoursDto"] | null;
             default_timezone?: string | null;
@@ -1339,261 +1453,295 @@ namespace Notify {
     // (undocumented)
     type ApnsEnvironment = __ApnsEnvironment;
     // (undocumented)
-    type BulkRowError = __BulkRowError;
+    type BatchDelivery = __BatchDelivery;
     // (undocumented)
-    type BulkRowResult = __BulkRowResult;
+    type BatchDetail = __BatchDetail;
     // (undocumented)
-    type BulkRowStatus = __BulkRowStatus;
+    type BatchList = __BatchList;
     // (undocumented)
-    type BulkUpsertRecipients = __BulkUpsertRecipients;
+    type BatchListParams = __BatchListParams;
     // (undocumented)
-    type CancelByKey = __CancelByKey;
+    type BatchScheduleView = __BatchScheduleView;
     // (undocumented)
-    type Category = __Category;
+    type BatchSummary = __BatchSummary;
     const // (undocumented)
     ApnsCredentialEnvironment: {
         values: readonly ["sandbox", "production", "both"];
     };
     // (undocumented)
-    type CategoryCreateParams = __CategoryCreateParams;
+    type BatchView = __BatchView;
     const // (undocumented)
     ApnsEnvironment: {
         values: readonly ["sandbox", "production"];
     };
     // (undocumented)
-    type CategoryDefault = __CategoryDefault;
+    type BulkRowError = __BulkRowError;
     const // (undocumented)
     BulkRowStatus: {
         values: readonly ["created", "updated", "error"];
     };
     // (undocumented)
-    type CategoryDefaultsView = __CategoryDefaultsView;
+    type BulkRowResult = __BulkRowResult;
     const // (undocumented)
     CategoryDefault: {
         values: readonly ["on", "off", "mandatory"];
     };
     // (undocumented)
-    type CategoryList = __CategoryList;
+    type BulkRowStatus = __BulkRowStatus;
     const // (undocumented)
     ChannelReadiness: {
         values: readonly ["ready", "not_configured", "disabled", "paused"];
     };
     // (undocumented)
-    type CategoryListParams = __CategoryListParams;
+    type BulkUpsertRecipients = __BulkUpsertRecipients;
     const // (undocumented)
     ClientInboxStatusFilter: {
         values: readonly ["all", "unread", "unseen"];
     };
     // (undocumented)
-    type CategoryUpdateParams = __CategoryUpdateParams;
+    type CancelByKey = __CancelByKey;
     const // (undocumented)
     CredentialEnvironment: {
         values: readonly ["sandbox", "production", "both"];
     };
     // (undocumented)
-    type ChannelApnUploadCredentialParams = __ChannelApnUploadCredentialParams;
+    type Category = __Category;
     const // (undocumented)
     CredentialOrigin: {
         values: readonly ["generated", "imported", "uploaded"];
     };
     // (undocumented)
-    type ChannelCounts = __ChannelCounts;
+    type CategoryCreateParams = __CategoryCreateParams;
     const // (undocumented)
     CredentialProvider: {
         values: readonly ["apns", "fcm", "vapid"];
     };
     // (undocumented)
-    type ChannelCredential = __ChannelCredential;
+    type CategoryDefault = __CategoryDefault;
     const // (undocumented)
     CredentialStatus: {
         values: readonly ["active", "invalid", "superseded"];
     };
     // (undocumented)
-    type ChannelFcmUploadCredentialParams = __ChannelFcmUploadCredentialParams;
+    type CategoryDefaultsView = __CategoryDefaultsView;
     const // (undocumented)
     DeliveryState: {
         values: readonly ["pending", "scheduled", "sending", "retry", "sent", "delivered", "failed", "bounced", "skipped", "pruned"];
     };
     // (undocumented)
-    type ChannelList = __ChannelList;
+    type CategoryList = __CategoryList;
     const // (undocumented)
     DeviceChannel: {
         values: readonly ["apns", "fcm", "webpush"];
     };
     // (undocumented)
-    type ChannelReadiness = __ChannelReadiness;
+    type CategoryListParams = __CategoryListParams;
     const // (undocumented)
     DeviceMoveDirection: {
         values: readonly ["moved_in", "moved_out"];
     };
     // (undocumented)
-    type ChannelStatus = __ChannelStatus;
+    type CategoryUpdateParams = __CategoryUpdateParams;
     const // (undocumented)
     DevicePlatform: {
         values: readonly ["ios", "ipados", "macos", "watchos", "tvos", "visionos", "android", "web"];
     };
     // (undocumented)
-    type ChannelWebpushGenerateVapidKeysParams = __ChannelWebpushGenerateVapidKeysParams;
+    type ChannelApnUploadCredentialParams = __ChannelApnUploadCredentialParams;
     const // (undocumented)
     DeviceState: {
         values: readonly ["active", "invalid", "pruned"];
     };
     // (undocumented)
-    type ChannelWebpushImportVapidKeysParams = __ChannelWebpushImportVapidKeysParams;
+    type ChannelCounts = __ChannelCounts;
     const // (undocumented)
     InboxItemStatusFilter: {
         values: readonly ["active", "archived", "all"];
     };
     // (undocumented)
-    type ClientCategory = __ClientCategory;
+    type ChannelCredential = __ChannelCredential;
     const // (undocumented)
     InboxMarkAction: {
         values: readonly ["seen", "read", "unread", "archived", "unarchived"];
     };
     // (undocumented)
-    type ClientInboxList = __ClientInboxList;
+    type ChannelFcmUploadCredentialParams = __ChannelFcmUploadCredentialParams;
     const // (undocumented)
     NotificationStatus: {
         values: readonly ["scheduled", "accepted", "planned", "cancelled"];
     };
     // (undocumented)
-    type ClientInboxStatusFilter = __ClientInboxStatusFilter;
+    type ChannelList = __ChannelList;
+    const // (undocumented)
+    NotifyBatchInboxMode: {
+        values: readonly ["collapse", "each"];
+    };
+    // (undocumented)
+    type ChannelReadiness = __ChannelReadiness;
+    const // (undocumented)
+    NotifyBatchMode: {
+        values: readonly ["window", "digest"];
+    };
+    // (undocumented)
+    type ChannelStatus = __ChannelStatus;
+    const // (undocumented)
+    NotifyBatchState: {
+        values: readonly ["open", "flushed", "cancelled"];
+    };
+    // (undocumented)
+    type ChannelWebpushGenerateVapidKeysParams = __ChannelWebpushGenerateVapidKeysParams;
     const // (undocumented)
     NotifyChannel: {
         values: readonly ["inbox", "email", "push", "webpush"];
     };
     // (undocumented)
-    type ClientOptions = __ClientOptions;
+    type ChannelWebpushImportVapidKeysParams = __ChannelWebpushImportVapidKeysParams;
     const // (undocumented)
     NotifyDeliveryReason: {
-        values: readonly ["suppressed_preference", "default_off", "unsubscribed_all", "held_quiet_hours", "scheduled_send", "no_device", "no_address", "email_invalid", "email_complained", "email_paused", "email_budget", "email_backlog_full", "channel_not_configured", "channel_restricted", "type_archived", "credential_invalid", "template_missing", "rate_limited", "throttled", "read_in_inbox", "awaiting_unread", "actor_excluded", "recipient_not_found", "recipient_erased", "mail_suppressed", "mail_refused", "pruned", "payload_too_large", "credential_error", "circuit_open", "expired", "cancelled", "provider_error"];
+        values: readonly ["suppressed_preference", "default_off", "unsubscribed_all", "held_quiet_hours", "scheduled_send", "no_device", "no_address", "email_invalid", "email_complained", "email_paused", "email_budget", "email_backlog_full", "channel_not_configured", "channel_restricted", "type_archived", "credential_invalid", "template_missing", "rate_limited", "throttled", "read_in_inbox", "awaiting_unread", "batched", "batched_into", "actor_excluded", "recipient_not_found", "recipient_erased", "mail_suppressed", "mail_refused", "pruned", "payload_too_large", "credential_error", "circuit_open", "expired", "cancelled", "provider_error"];
     };
     // (undocumented)
-    type ClientPreferences = __ClientPreferences;
+    type ClientCategory = __ClientCategory;
+    const // (undocumented)
+    NotifyDigestFrequency: {
+        values: readonly ["daily", "weekly"];
+    };
+    // (undocumented)
+    type ClientInboxList = __ClientInboxList;
     const // (undocumented)
     NotifyEmailPauseReason: {
         values: readonly ["complaints", "bounces"];
     };
     // (undocumented)
-    type CredentialEnvironment = __CredentialEnvironment;
+    type ClientInboxStatusFilter = __ClientInboxStatusFilter;
     const // (undocumented)
     NotifyQuietHoursSource: {
         values: readonly ["recipient", "workspace"];
     };
     // (undocumented)
-    type CredentialInvalidEvent = __CredentialInvalidEvent;
+    type ClientOptions = __ClientOptions;
     const // (undocumented)
     NotifyRecipientDeletionCause: {
         values: readonly ["api", "auth_user_deleted"];
     };
     // (undocumented)
-    type CredentialOrigin = __CredentialOrigin;
+    type ClientPreferences = __ClientPreferences;
     const // (undocumented)
     NotifyStatsChannel: {
         values: readonly ["inbox", "email", "push", "webpush"];
     };
     // (undocumented)
-    type CredentialProvider = __CredentialProvider;
+    type CredentialEnvironment = __CredentialEnvironment;
     const // (undocumented)
     NotifyWebhookChannel: {
         values: readonly ["inbox", "email", "push", "webpush"];
     };
     // (undocumented)
-    type CredentialStatus = __CredentialStatus;
+    type CredentialInvalidEvent = __CredentialInvalidEvent;
     const // (undocumented)
     NotifyWebhookCredentialProvider: {
         values: readonly ["apns", "fcm", "vapid"];
     };
     // (undocumented)
-    type Delivery = __Delivery;
+    type CredentialOrigin = __CredentialOrigin;
     const // (undocumented)
     NotifyWebhookDeliveryState: {
         values: readonly ["sent", "delivered", "failed", "bounced", "skipped", "pruned"];
     };
     // (undocumented)
-    type DeliveryAttempt = __DeliveryAttempt;
+    type CredentialProvider = __CredentialProvider;
     const // (undocumented)
     NotifyWebhookDeviceChannel: {
         values: readonly ["apns", "fcm", "webpush"];
     };
     // (undocumented)
-    type DeliveryBouncedEvent = __DeliveryBouncedEvent;
+    type CredentialStatus = __CredentialStatus;
+    const // (undocumented)
+    NotifyWeekday: {
+        values: readonly ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+    };
+    // (undocumented)
+    type Delivery = __Delivery;
     const // (undocumented)
     PlanDecision: {
         values: readonly ["deliver", "schedule", "skip"];
     };
     // (undocumented)
-    type DeliveryDeliveredEvent = __DeliveryDeliveredEvent;
+    type DeliveryAttempt = __DeliveryAttempt;
     const // (undocumented)
     PreferenceChannel: {
         values: readonly ["inbox", "email", "push", "webpush", "*"];
     };
     // (undocumented)
-    type DeliveryDetail = __DeliveryDetail;
+    type DeliveryBouncedEvent = __DeliveryBouncedEvent;
     const // (undocumented)
     PreferenceScope: {
         values: readonly ["all", "category", "type"];
     };
     // (undocumented)
-    type DeliveryFailedEvent = __DeliveryFailedEvent;
+    type DeliveryDeliveredEvent = __DeliveryDeliveredEvent;
     const // (undocumented)
     RecipientErasureStatus: {
         values: readonly ["erased"];
     };
     // (undocumented)
-    type DeliveryList = __DeliveryList;
+    type DeliveryDetail = __DeliveryDetail;
     const // (undocumented)
     RecipientInclude: {
         values: readonly ["preferences"];
     };
     // (undocumented)
-    type DeliveryListParams = __DeliveryListParams;
+    type DeliveryFailedEvent = __DeliveryFailedEvent;
     const // (undocumented)
     RecipientTokenScope: {
         values: readonly ["inbox:read", "inbox:write", "devices:write", "preferences:read", "preferences:write", "stream"];
     };
     // (undocumented)
-    type DeliverySentEvent = __DeliverySentEvent;
+    type DeliveryList = __DeliveryList;
     const // (undocumented)
     SendStatus: {
         values: readonly ["accepted", "scheduled"];
     };
     // (undocumented)
-    type DeliverySkippedEvent = __DeliverySkippedEvent;
+    type DeliveryListParams = __DeliveryListParams;
     const // (undocumented)
     SetupRowState: {
         values: readonly ["pass", "attention", "not_set", "blocked"];
     };
     // (undocumented)
-    type DeliveryState = __DeliveryState;
+    type DeliverySentEvent = __DeliverySentEvent;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type Device = __Device;
+    type DeliverySkippedEvent = __DeliverySkippedEvent;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type DeviceChannel = __DeviceChannel;
+    type DeliveryState = __DeliveryState;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type DeviceList = __DeviceList;
+    type Device = __Device;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type DeviceMove = __DeviceMove;
+    type DeviceChannel = __DeviceChannel;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["notification.accepted", "delivery.sent", "delivery.delivered", "delivery.failed", "delivery.bounced", "delivery.skipped", "inbox_item.read", "inbox_item.archived", "inbox_item.interacted", "device.pruned", "device.moved", "credential.invalid", "email.auto_paused", "recipient.deleted"];
     };
+    // (undocumented)
+    type DeviceList = __DeviceList;
+    // (undocumented)
+    type DeviceMove = __DeviceMove;
     // (undocumented)
     type DeviceMovedEvent = __DeviceMovedEvent;
     // (undocumented)
@@ -1622,6 +1770,8 @@ namespace Notify {
     type FallbackStepView = __FallbackStepView;
     // (undocumented)
     type FcmCredential = __FcmCredential;
+    // (undocumented)
+    type FlushBatch = __FlushBatch;
     // (undocumented)
     type InboxAction = __InboxAction;
     // (undocumented)
@@ -1699,6 +1849,14 @@ namespace Notify {
     // (undocumented)
     type NotificationTypeUpdateParams = __NotificationTypeUpdateParams;
     // (undocumented)
+    type NotifyBatchInboxMode = __NotifyBatchInboxMode;
+    // (undocumented)
+    type NotifyBatchMode = __NotifyBatchMode;
+    // (undocumented)
+    type NotifyBatchState = __NotifyBatchState;
+    // (undocumented)
+    type NotifyBrandingView = __NotifyBrandingView;
+    // (undocumented)
     type NotifyChannel = __NotifyChannel;
     // (undocumented)
     type NotifyCredentialInvalidData = __NotifyCredentialInvalidData;
@@ -1708,6 +1866,8 @@ namespace Notify {
     type NotifyDeliveryReason = __NotifyDeliveryReason;
     // (undocumented)
     type NotifyDeviceEventData = __NotifyDeviceEventData;
+    // (undocumented)
+    type NotifyDigestFrequency = __NotifyDigestFrequency;
     // (undocumented)
     type NotifyEmailAutoPausedData = __NotifyEmailAutoPausedData;
     // (undocumented)
@@ -1743,11 +1903,15 @@ namespace Notify {
     // (undocumented)
     type NotifyWebhookRecipient = __NotifyWebhookRecipient;
     // (undocumented)
+    type NotifyWeekday = __NotifyWeekday;
+    // (undocumented)
     type Page<T> = __Page<T>;
     // (undocumented)
     type PagePromise<T> = __PagePromise<T>;
     // (undocumented)
     type Pagination = __Pagination;
+    // (undocumented)
+    type PlanBatch = __PlanBatch;
     // (undocumented)
     type PlanDecision = __PlanDecision;
     // (undocumented)
@@ -1758,6 +1922,8 @@ namespace Notify {
     type PreferenceCell = __PreferenceCell;
     // (undocumented)
     type PreferenceChannel = __PreferenceChannel;
+    // (undocumented)
+    type PreferenceLink = __PreferenceLink;
     // (undocumented)
     type PreferenceScope = __PreferenceScope;
     // (undocumented)
@@ -1774,6 +1940,8 @@ namespace Notify {
     type Recipient = __Recipient;
     // (undocumented)
     type RecipientBulkIdentifyParams = __RecipientBulkIdentifyParams;
+    // (undocumented)
+    type RecipientCreatePreferenceLinkParams = __RecipientCreatePreferenceLinkParams;
     // (undocumented)
     type RecipientDeletedEvent = __RecipientDeletedEvent;
     // (undocumented)
@@ -1921,11 +2089,11 @@ export { Notify }
 export default Notify;
 
 // @public
-export type NotifyErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "NOTIFICATION_TYPE_NOT_FOUND" | "NOTIFICATION_TYPE_ARCHIVED" | "RECIPIENT_NOT_FOUND" | "TOO_MANY_RECIPIENTS" | "DATA_TOO_LARGE" | "TEMPLATE_MISSING" | "TEMPLATE_INVALID" | "CHANNEL_NOT_CONFIGURED" | "CREDENTIAL_INVALID" | "CREDENTIAL_NOT_FOUND" | "CREDENTIAL_MISMATCH" | "DEVICE_TOKEN_INVALID" | "WEBPUSH_ENDPOINT_NOT_ALLOWED" | "RECIPIENT_TOKEN_INVALID" | "RECIPIENT_TOKEN_EXPIRED" | "RECIPIENT_TOKEN_SCOPE" | "ORIGIN_NOT_ALLOWED" | "STREAM_LIMIT" | "LIMIT_EXCEEDED" | "SEND_AT_OUT_OF_RANGE" | "UNSAFE_URL" | "AUTH_USER_ALREADY_LINKED" | "DEVICE_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "CATEGORY_KEY_TAKEN" | "CATEGORY_IN_USE" | "NOTIFICATION_TYPE_KEY_TAKEN" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_VERSION_NOT_FOUND" | "PREFERENCE_LOCKED" | "NOTIFICATION_NOT_FOUND" | "DELIVERY_NOT_FOUND" | "CONFIRMATION_REQUIRED" | "INBOX_ITEM_NOT_FOUND" | "RECIPIENT_ERASED" | "DEVICE_MOVE_LIMIT" | (string & {});
+export type NotifyErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "NOTIFICATION_TYPE_NOT_FOUND" | "NOTIFICATION_TYPE_ARCHIVED" | "RECIPIENT_NOT_FOUND" | "TOO_MANY_RECIPIENTS" | "DATA_TOO_LARGE" | "TEMPLATE_MISSING" | "TEMPLATE_INVALID" | "CHANNEL_NOT_CONFIGURED" | "CREDENTIAL_INVALID" | "CREDENTIAL_NOT_FOUND" | "CREDENTIAL_MISMATCH" | "DEVICE_TOKEN_INVALID" | "WEBPUSH_ENDPOINT_NOT_ALLOWED" | "RECIPIENT_TOKEN_INVALID" | "RECIPIENT_TOKEN_EXPIRED" | "RECIPIENT_TOKEN_SCOPE" | "ORIGIN_NOT_ALLOWED" | "STREAM_LIMIT" | "LIMIT_EXCEEDED" | "BATCHED_TYPE_NOT_SCHEDULABLE" | "BATCH_NOT_FOUND" | "BATCH_NOT_OPEN" | "SEND_AT_OUT_OF_RANGE" | "UNSAFE_URL" | "AUTH_USER_ALREADY_LINKED" | "DEVICE_NOT_FOUND" | "CATEGORY_NOT_FOUND" | "CATEGORY_KEY_TAKEN" | "CATEGORY_IN_USE" | "NOTIFICATION_TYPE_KEY_TAKEN" | "TEMPLATE_NOT_FOUND" | "TEMPLATE_VERSION_NOT_FOUND" | "PREFERENCE_LOCKED" | "NOTIFICATION_NOT_FOUND" | "DELIVERY_NOT_FOUND" | "CONFIRMATION_REQUIRED" | "INBOX_ITEM_NOT_FOUND" | "RECIPIENT_ERASED" | "DEVICE_MOVE_LIMIT" | (string & {});
 
 // @public (undocumented)
 export const NotifyErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "NOTIFICATION_TYPE_NOT_FOUND", "NOTIFICATION_TYPE_ARCHIVED", "RECIPIENT_NOT_FOUND", "TOO_MANY_RECIPIENTS", "DATA_TOO_LARGE", "TEMPLATE_MISSING", "TEMPLATE_INVALID", "CHANNEL_NOT_CONFIGURED", "CREDENTIAL_INVALID", "CREDENTIAL_NOT_FOUND", "CREDENTIAL_MISMATCH", "DEVICE_TOKEN_INVALID", "WEBPUSH_ENDPOINT_NOT_ALLOWED", "RECIPIENT_TOKEN_INVALID", "RECIPIENT_TOKEN_EXPIRED", "RECIPIENT_TOKEN_SCOPE", "ORIGIN_NOT_ALLOWED", "STREAM_LIMIT", "LIMIT_EXCEEDED", "SEND_AT_OUT_OF_RANGE", "UNSAFE_URL", "AUTH_USER_ALREADY_LINKED", "DEVICE_NOT_FOUND", "CATEGORY_NOT_FOUND", "CATEGORY_KEY_TAKEN", "CATEGORY_IN_USE", "NOTIFICATION_TYPE_KEY_TAKEN", "TEMPLATE_NOT_FOUND", "TEMPLATE_VERSION_NOT_FOUND", "PREFERENCE_LOCKED", "NOTIFICATION_NOT_FOUND", "DELIVERY_NOT_FOUND", "CONFIRMATION_REQUIRED", "INBOX_ITEM_NOT_FOUND", "RECIPIENT_ERASED", "DEVICE_MOVE_LIMIT"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "NOTIFICATION_TYPE_NOT_FOUND", "NOTIFICATION_TYPE_ARCHIVED", "RECIPIENT_NOT_FOUND", "TOO_MANY_RECIPIENTS", "DATA_TOO_LARGE", "TEMPLATE_MISSING", "TEMPLATE_INVALID", "CHANNEL_NOT_CONFIGURED", "CREDENTIAL_INVALID", "CREDENTIAL_NOT_FOUND", "CREDENTIAL_MISMATCH", "DEVICE_TOKEN_INVALID", "WEBPUSH_ENDPOINT_NOT_ALLOWED", "RECIPIENT_TOKEN_INVALID", "RECIPIENT_TOKEN_EXPIRED", "RECIPIENT_TOKEN_SCOPE", "ORIGIN_NOT_ALLOWED", "STREAM_LIMIT", "LIMIT_EXCEEDED", "BATCHED_TYPE_NOT_SCHEDULABLE", "BATCH_NOT_FOUND", "BATCH_NOT_OPEN", "SEND_AT_OUT_OF_RANGE", "UNSAFE_URL", "AUTH_USER_ALREADY_LINKED", "DEVICE_NOT_FOUND", "CATEGORY_NOT_FOUND", "CATEGORY_KEY_TAKEN", "CATEGORY_IN_USE", "NOTIFICATION_TYPE_KEY_TAKEN", "TEMPLATE_NOT_FOUND", "TEMPLATE_VERSION_NOT_FOUND", "PREFERENCE_LOCKED", "NOTIFICATION_NOT_FOUND", "DELIVERY_NOT_FOUND", "CONFIRMATION_REQUIRED", "INBOX_ITEM_NOT_FOUND", "RECIPIENT_ERASED", "DEVICE_MOVE_LIMIT"];
 };
 
 export { Page }
@@ -2072,6 +2240,54 @@ export type paths = {
         get: operations["ClientController_vapidPublicKey"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BatchesController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["BatchesController_retrieve"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/batches/{batch_id}/flush": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["BatchesController_flush"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2584,6 +2800,22 @@ export type paths = {
         get: operations["RecipientMessagesController_inbox"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/workspaces/{workspace_id}/recipients/{external_id}/preference-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["PreferenceLinkController_create"];
         delete?: never;
         options?: never;
         head?: never;

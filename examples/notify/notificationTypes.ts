@@ -64,7 +64,18 @@ const notify = new Notify();
 
 // notificationTypes.update: Update a notification type
 {
-  const notificationType = await notify.notificationTypes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { category_key: "billing" });
+  const notificationType = await notify.notificationTypes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
+    batch: {
+      inbox: "collapse",
+      key: "post_id",
+      max_items: 10,
+      max_window_seconds: 3600,
+      mode: "window",
+      schedule: { frequency: "daily", time: "09:00", weekday: "monday" },
+      sliding: false,
+      window_seconds: 300,
+    },
+  });
 }
 
 export {};

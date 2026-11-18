@@ -9,6 +9,11 @@ const notify = new Notify();
   const bulkUpsertRecipients = await notify.recipients.bulkIdentify({ recipients: [{ external_id: "user_123" }] });
 }
 
+// recipients.createPreferenceLink: Create a hosted preference page link
+{
+  const preferenceLink = await notify.recipients.createPreferenceLink("user_123", { category_key: "product-updates" });
+}
+
 // recipients.delete: Erase a recipient (GDPR)
 {
   const recipientErasure = await notify.recipients.delete("user_123");

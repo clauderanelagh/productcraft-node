@@ -5,6 +5,84 @@
 
 Every method of `Notify`, grouped by resource. Types are under the `Notify` namespace (`import type { Notify } from "@productcraft/notify"`). Every method takes per-request options last (`{ idempotencyKey, timeout, maxRetries, headers, signal, workspaceId }`).
 
+## batches
+
+### `notify.batches.flush(batchId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/batches/{batch_id}/flush` → `Notify.FlushBatch`
+
+Close a batch now.
+
+Sends an open batch now instead of at its window end or digest time: one message per batched channel, rendered with everything collected so far. Preferences, quiet hours, the recipient budgets and the type throttle apply as for any send. Useful to test a digest template without waiting for the morning.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `BATCH_NOT_FOUND` | `BATCH_NOT_FOUND`: no batch with this id in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `BATCH_NOT_OPEN`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `BATCH_NOT_OPEN`: the batch already closed, or is closing right now. `IDEMPOTENCY_KEY_REUSE`: the key was used for another request. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const flushBatch = await notify.batches.flush("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-batches-batch-id-flush)
+
+### `notify.batches.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/batches` → `PagePromise<Notify.BatchSummary>`
+
+List batches.
+
+Batches of notification types with `batch` (a window or a digest), newest first: one per recipient and key value while collecting (`open`), then `flushed` once its one message went out. Filter by `recipient`, `type` and `state`. Pass `next_cursor` as `cursor` until `has_more` is false.
+
+- Params: `Notify.BatchListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const batch of notify.batches.list()) {
+  console.log(batch);
+}
+const page = await notify.batches.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-workspaces-workspace-id-batches)
+
+### `notify.batches.retrieve(batchId, options?)`
+
+`GET /v1/workspaces/{workspace_id}/batches/{batch_id}` → `Notify.BatchDetail`
+
+Get a batch.
+
+The notifications collected in it, its deliveries (while open, `scheduled: batched`; after it closes, one carrier per channel with its outcome, the rest `skipped: batched_into`), and the `batch` data templates got.
+
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `BATCH_NOT_FOUND` | `BATCH_NOT_FOUND`: no batch with this id in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const batchDetail = await notify.batches.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-workspaces-workspace-id-batches-batch-id)
+
 ## categories
 
 ### `notify.categories.create(params, options?)`
@@ -596,7 +674,18 @@ Changes the fields you send; `routing` is replaced whole. The key cannot change.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notificationType = await notify.notificationTypes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { category_key: "billing" });
+const notificationType = await notify.notificationTypes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
+  batch: {
+    inbox: "collapse",
+    key: "post_id",
+    max_items: 10,
+    max_window_seconds: 3600,
+    mode: "window",
+    schedule: { frequency: "daily", time: "09:00", weekday: "monday" },
+    sliding: false,
+    window_seconds: 300,
+  },
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#patch-v1-workspaces-workspace-id-notification-types-type-id)
@@ -867,7 +956,7 @@ Notifies up to 1,000 recipients with one notification type, across the type's ch
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE`, `DATA_TOO_LARGE` | `DATA_TOO_LARGE`: `data` is over 16 KB. |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_NOT_FOUND`, `NOTIFICATION_TYPE_ARCHIVED`, `TEMPLATE_MISSING`, `SEND_AT_OUT_OF_RANGE`, `UNSAFE_URL`, `VALIDATION_ERROR` | `RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_NOT_FOUND`, `NOTIFICATION_TYPE_ARCHIVED`, `TEMPLATE_MISSING`, `SEND_AT_OUT_OF_RANGE`, `BATCHED_TYPE_NOT_SCHEDULABLE`, `UNSAFE_URL`, `VALIDATION_ERROR` | `RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `BATCHED_TYPE_NOT_SCHEDULABLE`: the type batches (send it now); `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 3,000 recipients a minute in this workspace; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -933,6 +1022,32 @@ const bulkUpsertRecipients = await notify.recipients.bulkIdentify({ recipients: 
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-recipients-bulk)
+
+### `notify.recipients.createPreferenceLink(externalId, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/recipients/{external_id}/preference-link` → `Notify.PreferenceLink`
+
+Create a hosted preference page link.
+
+Returns a signed link to a page, hosted by Notify in your workspace's branding (`branding` in settings), where this recipient switches each category on or off per channel, sets quiet hours and a time zone, or unsubscribes from everything except critical types. It needs no sign-in, so it works from any email, also for people who never open your app. The link is valid for 365 days. Changes are recorded in the recipient's consent history with source `hosted_page`. Each call returns a fresh link and changes nothing, so it takes no `Idempotency-Key`.
+
+- Params: `Notify.RecipientCreatePreferenceLinkParams`
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `category_key` is malformed. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks `notify.recipient.write`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CATEGORY_NOT_FOUND` | `CATEGORY_NOT_FOUND`: no category with this key. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const preferenceLink = await notify.recipients.createPreferenceLink("user_123", { category_key: "product-updates" });
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-recipients-external-id-preference-link)
 
 ### `notify.recipients.delete(externalId, options?)`
 
@@ -1360,7 +1475,14 @@ Turn email on or off, set the default time zone and quiet hours (`null` clears e
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notifySettings = await notify.settings.update({ client_origins: ["https://app.example.com", "https://www.example.com"] });
+const notifySettings = await notify.settings.update({
+  branding: {
+    accent_color: "#4f46e5",
+    logo_url: "https://acme.example/logo.png",
+    name: "Acme",
+    privacy_url: "https://acme.example/privacy",
+  },
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#patch-v1-workspaces-workspace-id-settings)
@@ -2012,6 +2134,9 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `ORIGIN_NOT_ALLOWED` | The request origin is not in the workspace client origins. |
 | `STREAM_LIMIT` | The recipient has the maximum number of open real-time streams. |
 | `LIMIT_EXCEEDED` | A preview limit of the workspace was reached. |
+| `BATCHED_TYPE_NOT_SCHEDULABLE` | The notification type batches its notifications (`batch`): send it now, the batch window or digest decides when it goes out. |
+| `BATCH_NOT_FOUND` | No batch with this id in this workspace. |
+| `BATCH_NOT_OPEN` | The batch is already closed (flushed or cancelled), or closing right now. |
 | `SEND_AT_OUT_OF_RANGE` | `send_at` or `delay_seconds` is in the past or beyond the type TTL. |
 | `UNSAFE_URL` | A URL field does not use https (http is accepted only for localhost). |
 | `AUTH_USER_ALREADY_LINKED` | The Auth end user is already linked to another recipient in this workspace. |
