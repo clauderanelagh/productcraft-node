@@ -291,6 +291,11 @@ export type components = {
             data: components["schemas"]["WebhookEventDto"][];
             pagination: components["schemas"]["WebhookPaginationDto"];
         };
+        NextRewardDto: {
+            count: number;
+            remaining: number;
+            reward: string;
+        };
         NotificationTestResponseDto: {
             from: string | null;
             message_id: string | null;
@@ -316,9 +321,14 @@ export type components = {
             already_confirmed: boolean;
             confirmed_at: string | null;
             rank: number | null;
+            referral_boost: number;
             referral_code: string;
             referral_count: number;
+            referral_link: string | null;
+            rewards: components["schemas"]["RewardsProgressDto"];
             status: components["schemas"]["PublicOwnEntryStatus"];
+            status_page_url: string | null;
+            status_url: string | null;
             waitlist_name: string;
         };
         PublicEntryCreatedDto: {
@@ -340,6 +350,19 @@ export type components = {
             masked_email: string;
             position: number;
             referral_count: number;
+        };
+        PublicOwnEntryDto: {
+            confirmed_at: string | null;
+            rank: number | null;
+            referral_boost: number;
+            referral_code: string;
+            referral_count: number;
+            referral_link: string | null;
+            rewards: components["schemas"]["RewardsProgressDto"];
+            status: components["schemas"]["PublicOwnEntryStatus"];
+            status_page_url: string | null;
+            status_url: string | null;
+            waitlist_name: string;
         };
         PublicOwnEntryStatus: "pending" | "approved" | "rejected" | "unconfirmed";
         PublicWaitlistBrandDto: {
@@ -384,6 +407,15 @@ export type components = {
         };
         ResendConfirmationDto: {
             email: string;
+        };
+        RewardMilestoneProgressDto: {
+            count: number;
+            reached: boolean;
+            reward: string;
+        };
+        RewardsProgressDto: {
+            milestones: components["schemas"]["RewardMilestoneProgressDto"][];
+            next: components["schemas"]["NextRewardDto"] | null;
         };
         RotateWebhookSecretDto: {
             grace_hours?: number;
@@ -498,6 +530,8 @@ export type components = {
             recaptcha_site_key?: string | null;
             referral_boost: number;
             referral_rewards?: components["schemas"]["ReferralRewardsDto"];
+            signup_page_url?: string | null;
+            status_page_url?: string | null;
         };
         WaitlistConfigInputDto: {
             approval_required?: boolean;
@@ -514,6 +548,8 @@ export type components = {
             recaptcha_site_key?: string | null;
             referral_boost?: number;
             referral_rewards?: components["schemas"]["ReferralRewardsDto"];
+            signup_page_url?: string | null;
+            status_page_url?: string | null;
         };
         WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
         WaitlistFraudProtection: "off" | "relaxed" | "balanced" | "strict";
@@ -826,6 +862,22 @@ export type paths = {
         get?: never;
         put?: never;
         post: operations["PublicConfirmationController_confirm"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["PublicConfirmationController_me"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1551,23 +1603,25 @@ namespace Waitlist {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type EntryRejectedEvent = __EntryRejectedEvent;
+    type EntryMeParams = __EntryMeParams;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
+    type EntryRejectedEvent = __EntryRejectedEvent;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type EntryStatus = __EntryStatus;
+    type EntryResendConfirmationParams = __EntryResendConfirmationParams;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["entry.created", "entry.approved", "entry.rejected"];
     };
+    // (undocumented)
+    type EntryStatus = __EntryStatus;
     // (undocumented)
     type ErrorCode = __ErrorCode;
     // (undocumented)
@@ -1615,6 +1669,8 @@ namespace Waitlist {
     // @deprecated (undocumented)
     type ListWebhookEventTypes = __ListWebhookEventTypes;
     // (undocumented)
+    type NextReward = __NextReward;
+    // (undocumented)
     type NotificationTest = __NotificationTest;
     // (undocumented)
     type Page<T> = __Page<T>;
@@ -1637,6 +1693,8 @@ namespace Waitlist {
     // (undocumented)
     type PublicLeaderboardEntry = __PublicLeaderboardEntry;
     // (undocumented)
+    type PublicOwnEntry = __PublicOwnEntry;
+    // (undocumented)
     type PublicOwnEntryStatus = __PublicOwnEntryStatus;
     // (undocumented)
     type PublicWaitlistBrand = __PublicWaitlistBrand;
@@ -1656,6 +1714,10 @@ namespace Waitlist {
     type RequestOptions = __RequestOptions;
     // (undocumented)
     type ResendConfirmationAccepted = __ResendConfirmationAccepted;
+    // (undocumented)
+    type RewardMilestoneProgress = __RewardMilestoneProgress;
+    // (undocumented)
+    type RewardsProgress = __RewardsProgress;
     // (undocumented)
     type SenderDomainStatus = __SenderDomainStatus;
     // (undocumented)

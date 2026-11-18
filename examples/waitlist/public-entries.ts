@@ -14,6 +14,11 @@ const waitlist = new Waitlist();
   const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
 }
 
+// entries.me: Read your own sign-up (entrant status)
+{
+  const publicOwnEntry = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.me({ token: "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w" });
+}
+
 // entries.resendConfirmation: Send the confirmation email again
 {
   const resendConfirmationAccepted = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.resendConfirmation({ email: "ada@example.com" });

@@ -1515,6 +1515,32 @@
           "ListWebhookEvents"
         ]
       },
+      "NextRewardDto": {
+        "properties": {
+          "count": {
+            "description": "Confirmed referrals that unlock it.",
+            "example": 3,
+            "type": "integer"
+          },
+          "remaining": {
+            "description": "Referrals still needed.",
+            "example": 2,
+            "type": "integer"
+          },
+          "reward": {
+            "description": "The reward.",
+            "example": "Skip the line",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "reward",
+          "remaining"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "NextReward"
+      },
       "NotificationTestResponseDto": {
         "properties": {
           "from": {
@@ -1652,6 +1678,11 @@
             "nullable": true,
             "type": "integer"
           },
+          "referral_boost": {
+            "description": "Places each confirmed referral moves this entry up.",
+            "example": 5,
+            "type": "integer"
+          },
           "referral_code": {
             "description": "Referral code of this sign-up.",
             "example": "464QTHE0",
@@ -1662,6 +1693,21 @@
             "example": 3,
             "type": "integer"
           },
+          "referral_link": {
+            "description": "The share link: the waitlist's `signup_page_url` with `?ref=<referral_code>`. Null when the waitlist has no sign-up page set; share `referral_code` instead.",
+            "example": "https://acme.com/early-access?ref=464QTHE0",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "rewards": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RewardsProgressDto"
+              }
+            ],
+            "description": "Progress towards the waitlist's referral rewards."
+          },
           "status": {
             "allOf": [
               {
@@ -1669,6 +1715,18 @@
               }
             ],
             "description": "Where the sign-up stands. `pending`: waiting for approval; `approved`: in; `rejected`: not offered a place; `unconfirmed`: email not confirmed yet."
+          },
+          "status_page_url": {
+            "description": "The waitlist's own status page, when it has one; the hosted page redirects there.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_url": {
+            "description": "This entry's status link (hosted, or the waitlist's own `status_page_url` with `?token=`). Treat it like a password: whoever has it sees this entry.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
           },
           "waitlist_name": {
             "description": "Display name of the waitlist.",
@@ -1683,6 +1741,11 @@
           "referral_count",
           "confirmed_at",
           "waitlist_name",
+          "referral_link",
+          "referral_boost",
+          "rewards",
+          "status_url",
+          "status_page_url",
           "already_confirmed"
         ],
         "type": "object",
@@ -1796,6 +1859,92 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "PublicLeaderboardEntry"
+      },
+      "PublicOwnEntryDto": {
+        "properties": {
+          "confirmed_at": {
+            "description": "When the email address was confirmed; null when the waitlist does not ask, or not yet.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "rank": {
+            "description": "Place in line as the owner sees it: 1 + the confirmed sign-ups ahead, after referral boosts. Null while `unconfirmed`, after `rejected`, and for a test sign-up.",
+            "example": 12,
+            "nullable": true,
+            "type": "integer"
+          },
+          "referral_boost": {
+            "description": "Places each confirmed referral moves this entry up.",
+            "example": 5,
+            "type": "integer"
+          },
+          "referral_code": {
+            "description": "Referral code of this sign-up.",
+            "example": "464QTHE0",
+            "type": "string"
+          },
+          "referral_count": {
+            "description": "Confirmed sign-ups that used this referral code.",
+            "example": 3,
+            "type": "integer"
+          },
+          "referral_link": {
+            "description": "The share link: the waitlist's `signup_page_url` with `?ref=<referral_code>`. Null when the waitlist has no sign-up page set; share `referral_code` instead.",
+            "example": "https://acme.com/early-access?ref=464QTHE0",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "rewards": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RewardsProgressDto"
+              }
+            ],
+            "description": "Progress towards the waitlist's referral rewards."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicOwnEntryStatus"
+              }
+            ],
+            "description": "Where the sign-up stands. `pending`: waiting for approval; `approved`: in; `rejected`: not offered a place; `unconfirmed`: email not confirmed yet."
+          },
+          "status_page_url": {
+            "description": "The waitlist's own status page, when it has one; the hosted page redirects there.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_url": {
+            "description": "This entry's status link (hosted, or the waitlist's own `status_page_url` with `?token=`). Treat it like a password: whoever has it sees this entry.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "waitlist_name": {
+            "description": "Display name of the waitlist.",
+            "example": "Early Access Program",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "rank",
+          "referral_code",
+          "referral_count",
+          "confirmed_at",
+          "waitlist_name",
+          "referral_link",
+          "referral_boost",
+          "rewards",
+          "status_url",
+          "status_page_url"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "PublicOwnEntry"
       },
       "PublicOwnEntryStatus": {
         "enum": [
@@ -2042,6 +2191,58 @@
           "email"
         ],
         "type": "object"
+      },
+      "RewardMilestoneProgressDto": {
+        "properties": {
+          "count": {
+            "description": "Confirmed referrals that unlock it.",
+            "example": 3,
+            "type": "integer"
+          },
+          "reached": {
+            "description": "Whether this entry has reached it.",
+            "example": false,
+            "type": "boolean"
+          },
+          "reward": {
+            "description": "The reward.",
+            "example": "Skip the line",
+            "type": "string"
+          }
+        },
+        "required": [
+          "count",
+          "reward",
+          "reached"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "RewardMilestoneProgress"
+      },
+      "RewardsProgressDto": {
+        "properties": {
+          "milestones": {
+            "description": "Every reward of the waitlist, lowest count first; empty when it has none.",
+            "items": {
+              "$ref": "#/components/schemas/RewardMilestoneProgressDto"
+            },
+            "type": "array"
+          },
+          "next": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NextRewardDto"
+              }
+            ],
+            "description": "The next reward, or null when all are reached (or there are none).",
+            "nullable": true
+          }
+        },
+        "required": [
+          "milestones",
+          "next"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "RewardsProgress"
       },
       "RotateWebhookSecretDto": {
         "properties": {
@@ -2694,6 +2895,20 @@
               }
             ],
             "description": "Rewards unlocked at referral counts, shown on the public info."
+          },
+          "signup_page_url": {
+            "description": "Your page with the sign-up form (https). Entrants' referral links point here with `?ref=<code>`. Null: the status page shows the referral code only.",
+            "example": "https://acme.com/early-access",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_page_url": {
+            "description": "Your own status page (https). Status links in the emails go here with `?token=`, and the hosted status page redirects here; read the entry with `GET …/entries/me?token=` or embed the widget. Null: the hosted status page on productcraft.co.",
+            "example": "https://acme.com/early-access/status",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
           }
         },
         "required": [
@@ -2803,6 +3018,20 @@
               }
             ],
             "description": "Rewards unlocked at referral counts, shown on the public info."
+          },
+          "signup_page_url": {
+            "description": "Your page with the sign-up form (https). Entrants' referral links point here with `?ref=<code>`. Null: the status page shows the referral code only.",
+            "example": "https://acme.com/early-access",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "status_page_url": {
+            "description": "Your own status page (https). Status links in the emails go here with `?token=`, and the hosted status page redirects here; read the entry with `GET …/entries/me?token=` or embed the widget. Null: the hosted status page on productcraft.co.",
+            "example": "https://acme.com/early-access/status",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
           }
         },
         "type": "object"
@@ -4806,6 +5035,141 @@
             "waitlist_slug"
           ],
           "method": "confirm",
+          "paginated": false,
+          "public": true,
+          "resource": "entries"
+        }
+      }
+    },
+    "/v1/waitlists/{workspace_slug}/{waitlist_slug}/entries/me": {
+      "get": {
+        "description": "What an entrant sees on their status page: status, place in line, referral code and link, referral count and progress to the next reward. Needs the `token` from the signed link in the Waitlist emails (confirmation and welcome); there is no lookup by email address, so nobody can find out who signed up. The hosted status page and its embeddable widget call this; call it yourself to build your own. No API key.",
+        "operationId": "PublicConfirmationController_me",
+        "parameters": [
+          {
+            "description": "Slug of the workspace that owns the waitlist (a renamed workspace's old slug still resolves).",
+            "example": "acme",
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Slug of the waitlist within its workspace.",
+            "example": "beta",
+            "in": "path",
+            "name": "waitlist_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "The `token` query parameter of the status link from the email.",
+            "example": "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w",
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "example": "1d0b78280e1a407b8706aeb7ff619088.k2Jx0bq9sXJmD1oQyZ0n8w",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicOwnEntryDto"
+                }
+              }
+            },
+            "description": "The entry, as its owner sees it.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `ENTRY_LINK_INVALID`: the token is not valid, or the entry was deleted (or expired unconfirmed).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "ENTRY_LINK_INVALID"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Read your own sign-up (entrant status)",
+        "tags": [
+          "public-waitlist"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_slug",
+            "waitlist_slug"
+          ],
+          "method": "me",
           "paginated": false,
           "public": true,
           "resource": "entries"
