@@ -1,5 +1,12 @@
 # productcraft
 
+## 1.4.8
+
+### Patch Changes
+
+- Updated dependencies [ca41983]
+  - @productcraft/notify@0.4.0
+
 ## 1.4.7
 
 ### Patch Changes
