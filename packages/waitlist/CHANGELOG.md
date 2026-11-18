@@ -1,5 +1,11 @@
 # @productcraft/waitlist
 
+## 2.6.0
+
+### Minor Changes
+
+- 9dabf83: Referral reward fulfilment: the `entry.milestone_reached` webhook event (typed, with `data.milestone`), `lists.milestoneAwards.list()` / `.update()` to track handing rewards out, and the `milestone_template_name` workspace setting.
+
 ## 2.5.0
 
 ### Minor Changes
