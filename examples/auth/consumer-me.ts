@@ -11,6 +11,19 @@ const auth = new Auth();
   }
 }
 
+// me.agentGrants.delete: Disconnect an agent
+{
+  await auth.consumer("my-app").me.agentGrants.delete("agr_9xYk2LmQ0aBcDeFg");
+}
+
+// me.agentGrants.list: List the signed-in user's connected agents
+{
+  for await (const agentGrant of auth.consumer("my-app").me.agentGrants.list()) {
+    console.log(agentGrant);
+  }
+  const page = await auth.consumer("my-app").me.agentGrants.list({}, { timeout: 5_000 });
+}
+
 // me.changePassword: Change the password of the signed-in EndUser
 {
   await auth.consumer("my-app").me.changePassword({

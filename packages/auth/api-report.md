@@ -135,343 +135,397 @@ namespace Auth {
     // (undocumented)
     type AdminProvisionFactor = __AdminProvisionFactor;
     // (undocumented)
-    type ApiKeyCreateParams = __ApiKeyCreateParams;
+    type AgentAccessAuthorizationApproveParams = __AgentAccessAuthorizationApproveParams;
     // (undocumented)
-    type ApiKeyList = __ApiKeyList;
+    type AgentAccessConfig = __AgentAccessConfig;
+    const // (undocumented)
+    AgentAuthorizationStatus: {
+        values: readonly ["pending", "approved", "denied", "exchanged"];
+    };
+    // (undocumented)
+    type AgentAccessConfigUpdateParams = __AgentAccessConfigUpdateParams;
+    const // (undocumented)
+    AgentClientKind: {
+        values: readonly ["self_registered", "metadata_document"];
+    };
+    // (undocumented)
+    type AgentAccessGrantListParams = __AgentAccessGrantListParams;
     const // (undocumented)
     ApiKeyStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type ApiKeyListParams = __ApiKeyListParams;
+    type AgentAccessIntrospectParams = __AgentAccessIntrospectParams;
     const // (undocumented)
     AppEnvironment: {
         values: readonly ["production", "staging", "development"];
     };
     // (undocumented)
-    type ApiKeyRotateParams = __ApiKeyRotateParams;
+    type AgentAuthorization = __AgentAuthorization;
     const // (undocumented)
     AppStatus: {
         values: readonly ["active", "suspended", "archived"];
     };
     // (undocumented)
-    type ApiKeyStatus = __ApiKeyStatus;
+    type AgentAuthorizationDecision = __AgentAuthorizationDecision;
     const // (undocumented)
     ApplyPlanAction: {
         values: readonly ["create", "skip"];
     };
     // (undocumented)
-    type ApiKeySummary = __ApiKeySummary;
+    type AgentAuthorizationStatus = __AgentAuthorizationStatus;
     const // (undocumented)
     ApplyPlanResult: {
         values: readonly ["created", "unchanged", "failed"];
     };
     // (undocumented)
-    type APIPromise<T> = __APIPromise<T>;
+    type AgentClientKind = __AgentClientKind;
     const // (undocumented)
     AuditSinkAttemptKind: {
         values: readonly ["batch", "test"];
     };
     // (undocumented)
-    type App = __App;
+    type AgentClientSummary = __AgentClientSummary;
     const // (undocumented)
     AuditSinkState: {
         values: readonly ["active", "paused", "auto_disabled"];
     };
     // (undocumented)
-    type AppCreateParams = __AppCreateParams;
+    type AgentGrant = __AgentGrant;
     const // (undocumented)
     AuthStatsMetric: {
         values: readonly ["active_users"];
     };
     // (undocumented)
-    type AppEnvironment = __AppEnvironment;
+    type AgentGrantList = __AgentGrantList;
     const // (undocumented)
     BotProtectionProvider: {
         values: readonly ["turnstile", "hcaptcha"];
     };
     // (undocumented)
-    type AppList = __AppList;
+    type AgentRedirect = __AgentRedirect;
     const // (undocumented)
     ContactType: {
         values: readonly ["email", "phone"];
     };
     // (undocumented)
-    type AppListParams = __AppListParams;
+    type AgentScope = __AgentScope;
     const // (undocumented)
     CustomDomainApplyWarning: {
         values: readonly ["token_scope_broader_than_zone", "partially_applied"];
     };
     // (undocumented)
-    type ApplyConflict = __ApplyConflict;
+    type AgentTokenIntrospection = __AgentTokenIntrospection;
     const // (undocumented)
     CustomDomainStatus: {
         values: readonly ["pending", "active", "failing"];
     };
     // (undocumented)
-    type ApplyCounts = __ApplyCounts;
+    type ApiKeyCreateParams = __ApiKeyCreateParams;
     const // (undocumented)
     DnsConflictSeverity: {
         values: readonly ["blocking", "warning"];
     };
     // (undocumented)
-    type ApplyPlanAction = __ApplyPlanAction;
+    type ApiKeyList = __ApiKeyList;
     const // (undocumented)
     DnsProvider: {
         values: readonly ["cloudflare", "digitalocean"];
     };
     // (undocumented)
-    type ApplyPlanItem = __ApplyPlanItem;
+    type ApiKeyListParams = __ApiKeyListParams;
     const // (undocumented)
     DnsRecordPurpose: {
         values: readonly ["routing", "ownership"];
     };
     // (undocumented)
-    type ApplyPlanResult = __ApplyPlanResult;
+    type ApiKeyRotateParams = __ApiKeyRotateParams;
     const // (undocumented)
     DnsRecordState: {
         values: readonly ["not_found", "propagating", "verified", "conflict", "lookup_failed"];
     };
     // (undocumented)
-    type AppMemberList = __AppMemberList;
+    type ApiKeyStatus = __ApiKeyStatus;
     const // (undocumented)
     DnsRecordType: {
         values: readonly ["CNAME", "TXT"];
     };
     // (undocumented)
-    type AppMembership = __AppMembership;
+    type ApiKeySummary = __ApiKeySummary;
+    const // (undocumented)
+    EmailSignInResponseMode: {
+        values: readonly ["tokens", "redirect"];
+    };
+    // (undocumented)
+    type APIPromise<T> = __APIPromise<T>;
     const // (undocumented)
     EndUserStatus: {
         values: readonly ["active", "suspended", "deactivated"];
     };
     // (undocumented)
-    type AppMemberSummary = __AppMemberSummary;
+    type App = __App;
     const // (undocumented)
     EnrollmentType: {
         values: readonly ["totp", "email", "webauthn"];
     };
     // (undocumented)
-    type AppNotificationSettings = __AppNotificationSettings;
+    type AppAgentGrant = __AppAgentGrant;
     const // (undocumented)
     ImportJobStatus: {
         values: readonly ["queued", "running", "succeeded", "failed"];
     };
     // (undocumented)
-    type AppPermissionCatalogEntry = __AppPermissionCatalogEntry;
+    type AppAgentGrantAccount = __AppAgentGrantAccount;
     const // (undocumented)
     IntrospectedTokenType: {
         values: readonly ["m2m", "end_user"];
     };
     // (undocumented)
-    type AppScopedPermissionCreateParams = __AppScopedPermissionCreateParams;
+    type AppAgentGrantClient = __AppAgentGrantClient;
     const // (undocumented)
     JwkUse: {
         values: readonly ["sig"];
     };
     // (undocumented)
-    type AppScopedPermissionListResponse = __AppScopedPermissionListResponse;
+    type AppAgentGrantList = __AppAgentGrantList;
     const // (undocumented)
     MfaPolicy: {
         values: readonly ["optional", "required"];
     };
     // (undocumented)
-    type AppScopedRoleCreateParams = __AppScopedRoleCreateParams;
+    type AppCreateParams = __AppCreateParams;
     const // (undocumented)
     OAuthLinkPolicy: {
         values: readonly ["auto", "confirm", "reject"];
     };
     // (undocumented)
-    type AppScopedRoleListParams = __AppScopedRoleListParams;
+    type AppEnvironment = __AppEnvironment;
     const // (undocumented)
     OAuthProvider: {
         values: readonly ["google", "github", "apple"];
     };
     // (undocumented)
-    type AppScopedRoleUpdateParams = __AppScopedRoleUpdateParams;
+    type AppList = __AppList;
     const // (undocumented)
     PasswordBreachCheck: {
         values: readonly ["off", "warn", "block"];
     };
     // (undocumented)
-    type AppScopedRoleUpdatePermissionsParams = __AppScopedRoleUpdatePermissionsParams;
+    type AppListParams = __AppListParams;
+    const // (undocumented)
+    PasswordlessDelivery: {
+        values: readonly ["code", "link", "code_and_link"];
+    };
+    // (undocumented)
+    type ApplyConflict = __ApplyConflict;
     const // (undocumented)
     ProviderBlockedReason: {
         values: readonly ["no_redirect_origins", "missing_credentials", "credentials_rejected"];
     };
     // (undocumented)
-    type AppScopedRoleUpdatePermissionsResponse = __AppScopedRoleUpdatePermissionsResponse;
+    type ApplyCounts = __ApplyCounts;
     const // (undocumented)
     ProviderCheckResult: {
         values: readonly ["credentials_valid", "credentials_rejected", "inconclusive"];
     };
     // (undocumented)
-    type AppScopedTenantApiKeyConfigUpdateParams = __AppScopedTenantApiKeyConfigUpdateParams;
+    type ApplyPlanAction = __ApplyPlanAction;
     const // (undocumented)
     ProviderStatus: {
         values: readonly ["ready", "blocked", "disabled", "not_configured"];
     };
     // (undocumented)
-    type AppScopedTenantApiKeyListParams = __AppScopedTenantApiKeyListParams;
+    type ApplyPlanItem = __ApplyPlanItem;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type AppScopedTenantCreateParams = __AppScopedTenantCreateParams;
+    type ApplyPlanResult = __ApplyPlanResult;
     const // (undocumented)
     SenderSource: {
         values: readonly ["workspace", "custom"];
     };
     // (undocumented)
-    type AppScopedTenantInviteCreateParams = __AppScopedTenantInviteCreateParams;
+    type AppMemberList = __AppMemberList;
     const // (undocumented)
     SetupRowState: {
         values: readonly ["pass", "attention", "not_set", "blocked"];
     };
     // (undocumented)
-    type AppScopedTenantInviteListParams = __AppScopedTenantInviteListParams;
+    type AppMembership = __AppMembership;
     const // (undocumented)
     SignInResult: {
         values: readonly ["session", "mfa_required", "mfa_enrollment_required"];
     };
     // (undocumented)
-    type AppScopedTenantListParams = __AppScopedTenantListParams;
+    type AppMemberSummary = __AppMemberSummary;
     const // (undocumented)
     SignInTestEmailNoticeCode: {
         values: readonly ["emails_off", "email_sender_missing", "email_template_missing", "email_workspace_missing", "email_unavailable", "email_send_failed"];
     };
     // (undocumented)
-    type AppScopedTenantMemberCreateParams = __AppScopedTenantMemberCreateParams;
+    type AppNotificationSettings = __AppNotificationSettings;
     const // (undocumented)
     SignInTestMethod: {
         values: readonly ["oauth", "password", "otp"];
     };
     // (undocumented)
-    type AppScopedTenantMemberListParams = __AppScopedTenantMemberListParams;
+    type AppPermissionCatalogEntry = __AppPermissionCatalogEntry;
     const // (undocumented)
     SignInTestOutcome: {
         values: readonly ["would_sign_in_existing", "would_create"];
     };
     // (undocumented)
-    type AppScopedTenantMemberUpdateParams = __AppScopedTenantMemberUpdateParams;
+    type AppScopedPermissionCreateParams = __AppScopedPermissionCreateParams;
     const // (undocumented)
     SignInTestState: {
         values: readonly ["pending", "succeeded", "failed"];
     };
     // (undocumented)
-    type AppScopedTenantUpdateParams = __AppScopedTenantUpdateParams;
+    type AppScopedPermissionListResponse = __AppScopedPermissionListResponse;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type AppSlugChangedEvent = __AppSlugChangedEvent;
+    type AppScopedRoleCreateParams = __AppScopedRoleCreateParams;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type AppSlugChangedEventData = __AppSlugChangedEventData;
+    type AppScopedRoleListParams = __AppScopedRoleListParams;
     const // (undocumented)
     TenantApiKeyAdminState: {
         values: readonly ["active", "expired", "revoked", "orphaned"];
     };
     // (undocumented)
-    type AppStatus = __AppStatus;
+    type AppScopedRoleUpdateParams = __AppScopedRoleUpdateParams;
     const // (undocumented)
     TenantApiKeyEffectiveStatus: {
         values: readonly ["active", "expired", "revoked", "orphaned", "suspended"];
     };
     // (undocumented)
-    type AppUpdateParams = __AppUpdateParams;
+    type AppScopedRoleUpdatePermissionsParams = __AppScopedRoleUpdatePermissionsParams;
     const // (undocumented)
     TenantApiKeyEnv: {
         values: readonly ["live", "test"];
     };
     // (undocumented)
-    type AuditLogEntry = __AuditLogEntry;
+    type AppScopedRoleUpdatePermissionsResponse = __AppScopedRoleUpdatePermissionsResponse;
     const // (undocumented)
     TenantApiKeyManagementLane: {
         values: readonly ["direct", "app_proxy_only"];
     };
     // (undocumented)
-    type AuditLogExportParams = __AuditLogExportParams;
+    type AppScopedTenantApiKeyConfigUpdateParams = __AppScopedTenantApiKeyConfigUpdateParams;
     const // (undocumented)
     TenantApiKeyRevokeReason: {
         values: readonly ["manual", "rotated", "member_removed", "tenant_deleted"];
     };
     // (undocumented)
-    type AuditLogList = __AuditLogList;
+    type AppScopedTenantApiKeyListParams = __AppScopedTenantApiKeyListParams;
     const // (undocumented)
     TenantApiKeyState: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type AuditLogListParams = __AuditLogListParams;
+    type AppScopedTenantCreateParams = __AppScopedTenantCreateParams;
     const // (undocumented)
     TenantInviteStatus: {
         values: readonly ["pending", "revoked", "expired", "used"];
     };
     // (undocumented)
-    type AuditSink = __AuditSink;
+    type AppScopedTenantInviteCreateParams = __AppScopedTenantInviteCreateParams;
     const // (undocumented)
     TenantStatus: {
         values: readonly ["active", "suspended", "archived"];
     };
     // (undocumented)
-    type AuditSinkAttemptKind = __AuditSinkAttemptKind;
+    type AppScopedTenantInviteListParams = __AppScopedTenantInviteListParams;
     const // (undocumented)
     TokenType: {
         values: readonly ["Bearer"];
     };
     // (undocumented)
-    type AuditSinkReplaceParams = __AuditSinkReplaceParams;
+    type AppScopedTenantListParams = __AppScopedTenantListParams;
     const // (undocumented)
     UserCreatedVia: {
         values: readonly ["admin", "invite", "tenant_invite"];
     };
     // (undocumented)
-    type AuditSinkState = __AuditSinkState;
+    type AppScopedTenantMemberCreateParams = __AppScopedTenantMemberCreateParams;
     const // (undocumented)
     UserDeletedReason: {
         values: readonly ["unverified_expired"];
     };
     // (undocumented)
-    type AuditSinkTestResult = __AuditSinkTestResult;
+    type AppScopedTenantMemberListParams = __AppScopedTenantMemberListParams;
     const // (undocumented)
     UserDeletedVia: {
         values: readonly ["platform", "platform_bulk", "consumer_admin", "self"];
     };
     // (undocumented)
-    type AuditSinkUpdateParams = __AuditSinkUpdateParams;
+    type AppScopedTenantMemberUpdateParams = __AppScopedTenantMemberUpdateParams;
     const // (undocumented)
     WebhookAttemptTrigger: {
         values: readonly ["automatic", "replay", "test"];
     };
     // (undocumented)
-    type AuditSinkWithSecret = __AuditSinkWithSecret;
+    type AppScopedTenantUpdateParams = __AppScopedTenantUpdateParams;
     const // (undocumented)
     WebhookEndpointDisabledReason: {
         values: readonly ["manual", "failing"];
     };
     // (undocumented)
-    type AuthConfig = __AuthConfig;
+    type AppSlugChangedEvent = __AppSlugChangedEvent;
     const // (undocumented)
     WebhookEndpointStatus: {
         values: readonly ["enabled", "disabled", "auto_disabled"];
     };
     // (undocumented)
-    type AuthConfigProviderListResponse = __AuthConfigProviderListResponse;
+    type AppSlugChangedEventData = __AppSlugChangedEventData;
     const // (undocumented)
     WebhookEventStatus: {
         values: readonly ["pending", "delivered", "failed", "not_sent"];
     };
     // (undocumented)
-    type AuthConfigProviderReplaceParams = __AuthConfigProviderReplaceParams;
+    type AppStatus = __AppStatus;
     const // (undocumented)
     WebhookEventType: {
         values: readonly ["user.signup", "user.signin", "user.suspended", "user.deactivated", "user.reinstated", "user.role_changed", "user.deleted", "user.contact_verified", "user.email_verified", "user.password_reset.requested", "user.password_reset.completed", "user.mfa.factor_enrolled", "user.mfa.factor_disabled", "user.mfa.recovery_code_used", "user.mfa.step_up_succeeded", "user.mfa.step_up_locked", "user.mfa.enrollment_required", "user.mfa.reenrollment_required", "tenant.created", "tenant.updated", "tenant.deleted", "tenant.member.added", "tenant.member.removed", "tenant.member.role_changed", "tenant.invite.created", "tenant.invite.accepted", "tenant.invite.revoked", "app.slug_changed"];
     };
+    // (undocumented)
+    type AppUpdateParams = __AppUpdateParams;
+    // (undocumented)
+    type AuditLogEntry = __AuditLogEntry;
+    // (undocumented)
+    type AuditLogExportParams = __AuditLogExportParams;
+    // (undocumented)
+    type AuditLogList = __AuditLogList;
+    // (undocumented)
+    type AuditLogListParams = __AuditLogListParams;
+    // (undocumented)
+    type AuditSink = __AuditSink;
+    // (undocumented)
+    type AuditSinkAttemptKind = __AuditSinkAttemptKind;
+    // (undocumented)
+    type AuditSinkReplaceParams = __AuditSinkReplaceParams;
+    // (undocumented)
+    type AuditSinkState = __AuditSinkState;
+    // (undocumented)
+    type AuditSinkTestResult = __AuditSinkTestResult;
+    // (undocumented)
+    type AuditSinkUpdateParams = __AuditSinkUpdateParams;
+    // (undocumented)
+    type AuditSinkWithSecret = __AuditSinkWithSecret;
+    // (undocumented)
+    type AuthConfig = __AuthConfig;
+    // (undocumented)
+    type AuthConfigProviderListResponse = __AuthConfigProviderListResponse;
+    // (undocumented)
+    type AuthConfigProviderReplaceParams = __AuthConfigProviderReplaceParams;
     // (undocumented)
     type AuthConfigProviderUpdateParams = __AuthConfigProviderUpdateParams;
     // (undocumented)
@@ -526,6 +580,14 @@ namespace Auth {
     type ConsumerCodeDispatch = __ConsumerCodeDispatch;
     // (undocumented)
     type ConsumerCodeIssue = __ConsumerCodeIssue;
+    // (undocumented)
+    type ConsumerEmailSignInBotProtection = __ConsumerEmailSignInBotProtection;
+    // (undocumented)
+    type ConsumerEmailSignInConfig = __ConsumerEmailSignInConfig;
+    // (undocumented)
+    type ConsumerEmailSignInRedirect = __ConsumerEmailSignInRedirect;
+    // (undocumented)
+    type ConsumerEmailSignInStart = __ConsumerEmailSignInStart;
     // (undocumented)
     type ConsumerMfaChallenge = __ConsumerMfaChallenge;
     // (undocumented)
@@ -609,6 +671,8 @@ namespace Auth {
     // (undocumented)
     type CredentialUpdateScopesResponse = __CredentialUpdateScopesResponse;
     // (undocumented)
+    type CursorPagination = __CursorPagination;
+    // (undocumented)
     type CustomDomain = __CustomDomain;
     // (undocumented)
     type CustomDomainApplyParams = __CustomDomainApplyParams;
@@ -646,6 +710,14 @@ namespace Auth {
     type EffectiveSender = __EffectiveSender;
     // (undocumented)
     type EmailEnrollmentData = __EmailEnrollmentData;
+    // (undocumented)
+    type EmailSignInResponseMode = __EmailSignInResponseMode;
+    // (undocumented)
+    type EmailStartParams = __EmailStartParams;
+    // (undocumented)
+    type EmailVerifyParams = __EmailVerifyParams;
+    // (undocumented)
+    type EmailVerifyResponse = __EmailVerifyResponse;
     // (undocumented)
     type EndUserActionCount = __EndUserActionCount;
     // (undocumented)
@@ -702,6 +774,8 @@ namespace Auth {
     type ErrorCode = __ErrorCode;
     // (undocumented)
     type Exchange = __Exchange;
+    // (undocumented)
+    type ExchangeMfaFactor = __ExchangeMfaFactor;
     // (undocumented)
     type ExchangeProviderCodeParams = __ExchangeProviderCodeParams;
     // (undocumented)
@@ -770,6 +844,8 @@ namespace Auth {
     type MeActivity = __MeActivity;
     // (undocumented)
     type MeActivityEntry = __MeActivityEntry;
+    // (undocumented)
+    type MeAgentGrantListParams = __MeAgentGrantListParams;
     // (undocumented)
     type MeChangePasswordParams = __MeChangePasswordParams;
     // (undocumented)
@@ -858,6 +934,10 @@ namespace Auth {
     type PasskeyVerifyParams = __PasskeyVerifyParams;
     // (undocumented)
     type PasswordBreachCheck = __PasswordBreachCheck;
+    // (undocumented)
+    type PasswordlessDelivery = __PasswordlessDelivery;
+    // (undocumented)
+    type PasswordlessEmail = __PasswordlessEmail;
     // (undocumented)
     type Permission = __Permission;
     // (undocumented)
@@ -1251,11 +1331,11 @@ export interface AuthClaims extends JWTPayload {
 export { AuthenticationError }
 
 // @public
-export type AuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required" | (string & {});
+export type AuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required" | (string & {});
 
 // @public (undocumented)
 export const AuthErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_EXISTS", "ACCOUNT_NOT_FOUND", "ACCOUNT_SUSPENDED", "APEX_NOT_SUPPORTED", "APP_ARCHIVED", "APP_HAS_NO_WORKSPACE", "APP_NOT_FOUND", "APP_SUSPENDED", "AUTH_SETTINGS_IN_METADATA", "AVATAR_INVALID_TYPE", "AVATAR_MAGIC_MISMATCH", "AVATAR_NOT_FOUND", "AVATAR_TOO_LARGE", "BOT_PROTECTION_FAILED", "BOT_PROTECTION_REQUIRED", "BOT_PROTECTION_UNAVAILABLE", "CUSTOM_DOMAIN_EXISTS", "CUSTOM_DOMAIN_NOT_ACTIVE", "CUSTOM_DOMAIN_NOT_FOUND", "CUSTOM_DOMAIN_OAUTH_ONLY", "DNS_CONFLICTS", "ENVOI_APP_NOT_BOUND_TO_WORKSPACE", "ENVOI_NOT_ENABLED", "ENVOI_NOT_WIRED", "ENVOI_SENDER_NOT_CONFIGURED", "ENVOI_TEMPLATE_NOT_CONFIGURED", "FEATURE_NOT_ENABLED", "HOSTNAME_RESERVED", "HOSTNAME_TAKEN", "INSUFFICIENT_PERMISSIONS", "INVALID_FORMAT", "INVALID_HOSTNAME", "INVALID_IDENTIFIER", "INVALID_PROVIDER", "INVALID_ZONE", "MAIL_UNREACHABLE", "PAK_WORKSPACE_MISMATCH", "PASSWORD_BREACHED", "PASSWORD_TOO_COMMON", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "ROLE_IN_USE", "SENDER_ADDRESS_REQUIRED", "SESSION_EXPIRED", "SIGN_IN_TEST_INVALID", "SLUG_TAKEN", "SLUG_UUID_SHAPED", "TENANT_API_KEYS_APP_PROXY_ONLY", "TENANT_API_KEYS_FORBIDDEN", "TENANT_API_KEYS_NOT_ENABLED", "TENANT_API_KEYS_NO_SCOPES", "TENANT_API_KEYS_SCOPE_INVALID", "TENANT_API_KEYS_SUSPENDED", "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE", "TENANT_API_KEYS_UNKNOWN_ROLE", "TENANT_API_KEY_EXPIRY_INVALID", "TENANT_API_KEY_LIMIT", "TENANT_API_KEY_NOT_ACTIVE", "TENANT_API_KEY_NOT_FOUND", "TENANT_API_KEY_SCOPE_ABOVE_CEILING", "TENANT_API_KEY_SCOPE_NOT_GRANTABLE", "TENANT_CONTEXT_REQUIRED", "TENANT_MEMBERSHIP_REQUIRED", "TENANT_NOT_ACTIVE", "TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_REVOKED", "USERNAME_TAKEN", "account_exists_with_different_provider", "idempotency_secret_not_replayable", "link_required", "step_up_required"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_EXISTS", "ACCOUNT_NOT_FOUND", "ACCOUNT_SUSPENDED", "AGENT_ACCESS_DISABLED", "AGENT_ACCESS_INVALID_CONFIG", "AGENT_AUTHORIZATION_DECIDED", "AGENT_AUTHORIZATION_NOT_FOUND", "AGENT_AUTHORIZATION_INVALID", "AGENT_GRANT_NOT_FOUND", "APEX_NOT_SUPPORTED", "APP_ARCHIVED", "APP_HAS_NO_WORKSPACE", "APP_NOT_FOUND", "APP_SUSPENDED", "AUTH_SETTINGS_IN_METADATA", "AVATAR_INVALID_TYPE", "AVATAR_MAGIC_MISMATCH", "AVATAR_NOT_FOUND", "AVATAR_TOO_LARGE", "BOT_PROTECTION_FAILED", "BOT_PROTECTION_REQUIRED", "BOT_PROTECTION_UNAVAILABLE", "CUSTOM_DOMAIN_EXISTS", "CUSTOM_DOMAIN_NOT_ACTIVE", "CUSTOM_DOMAIN_NOT_FOUND", "CUSTOM_DOMAIN_OAUTH_ONLY", "DNS_CONFLICTS", "ENVOI_APP_NOT_BOUND_TO_WORKSPACE", "ENVOI_NOT_ENABLED", "ENVOI_NOT_WIRED", "ENVOI_SENDER_NOT_CONFIGURED", "ENVOI_TEMPLATE_NOT_CONFIGURED", "FEATURE_NOT_ENABLED", "HOSTNAME_RESERVED", "HOSTNAME_TAKEN", "INSUFFICIENT_PERMISSIONS", "INVALID_FORMAT", "INVALID_HOSTNAME", "INVALID_IDENTIFIER", "INVALID_PROVIDER", "INVALID_ZONE", "MAIL_UNREACHABLE", "PAK_WORKSPACE_MISMATCH", "PASSWORD_BREACHED", "PASSWORD_TOO_COMMON", "PASSWORDLESS_CODE_INVALID", "PASSWORDLESS_DISABLED", "PASSWORDLESS_LINK_OTHER_BROWSER", "PASSWORDLESS_RATE_LIMITED", "PASSWORDLESS_RETURN_TO_NOT_ALLOWED", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "ROLE_IN_USE", "SENDER_ADDRESS_REQUIRED", "SESSION_EXPIRED", "SIGN_IN_TEST_INVALID", "SLUG_TAKEN", "SLUG_UUID_SHAPED", "TENANT_API_KEYS_APP_PROXY_ONLY", "TENANT_API_KEYS_FORBIDDEN", "TENANT_API_KEYS_NOT_ENABLED", "TENANT_API_KEYS_NO_SCOPES", "TENANT_API_KEYS_SCOPE_INVALID", "TENANT_API_KEYS_SUSPENDED", "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE", "TENANT_API_KEYS_UNKNOWN_ROLE", "TENANT_API_KEY_EXPIRY_INVALID", "TENANT_API_KEY_LIMIT", "TENANT_API_KEY_NOT_ACTIVE", "TENANT_API_KEY_NOT_FOUND", "TENANT_API_KEY_SCOPE_ABOVE_CEILING", "TENANT_API_KEY_SCOPE_NOT_GRANTABLE", "TENANT_CONTEXT_REQUIRED", "TENANT_MEMBERSHIP_REQUIRED", "TENANT_NOT_ACTIVE", "TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_REVOKED", "USERNAME_TAKEN", "account_exists_with_different_provider", "idempotency_secret_not_replayable", "link_required", "step_up_required"];
 };
 
 // @public @deprecated (undocumented)
@@ -1347,6 +1427,75 @@ export type components = {
             display_name?: string;
             email?: string;
         };
+        AgentAccessConfigDto: {
+            consent_url: string | null;
+            enabled: boolean;
+            resources: string[];
+            scopes: components["schemas"]["AgentScopeDto"][];
+        };
+        AgentAuthorizationDecisionDto: {
+            grant_id?: string;
+            redirect_to: string;
+        };
+        AgentAuthorizationDto: {
+            client: components["schemas"]["AgentClientSummaryDto"];
+            expires_at: string;
+            redirect: components["schemas"]["AgentRedirectDto"];
+            requested_scopes: components["schemas"]["AgentScopeDto"][];
+            resource: string;
+            status: components["schemas"]["AgentAuthorizationStatus"];
+        };
+        AgentAuthorizationStatus: "pending" | "approved" | "denied" | "exchanged";
+        AgentClientKind: "self_registered" | "metadata_document";
+        AgentClientSummaryDto: {
+            client_id: string;
+            kind: components["schemas"]["AgentClientKind"];
+            metadata_host: string | null;
+            name: string;
+            publisher: string | null;
+            uri: string | null;
+            verified: boolean;
+        };
+        AgentGrantDto: {
+            client_id: string;
+            client_name: string;
+            client_verified: boolean;
+            context: {
+                [key: string]: unknown;
+            } | null;
+            created_at: string;
+            expires_at: string;
+            id: string;
+            last_used_at: string | null;
+            resource: string;
+            scopes: string[];
+        };
+        AgentGrantListDto: {
+            data: components["schemas"]["AgentGrantDto"][];
+            pagination: components["schemas"]["PaginationDto"];
+        };
+        AgentRedirectDto: {
+            host: string;
+            loopback: boolean;
+        };
+        AgentScopeDto: {
+            description: string;
+            name: string;
+        };
+        AgentTokenIntrospectionDto: {
+            active: boolean;
+            aud?: string;
+            client_id?: string;
+            client_name?: string;
+            context?: {
+                [key: string]: unknown;
+            } | null;
+            exp?: number;
+            grant_created_at?: string;
+            grant_id?: string;
+            scope?: string;
+            sub?: string;
+        };
         ApiKeyListResponseDto: {
             data: components["schemas"]["ApiKeySummaryDto"][];
             pagination: components["schemas"]["PaginationDto"];
@@ -1364,6 +1513,34 @@ export type components = {
             revoked_by: string | null;
             rotated_from: string | null;
             status: components["schemas"]["ApiKeyStatus"];
+        };
+        AppAgentGrantAccountDto: {
+            email: string | null;
+            id: string;
+            username: string | null;
+        };
+        AppAgentGrantClientDto: {
+            client_id: string;
+            kind: components["schemas"]["AgentClientKind"];
+            name: string;
+            verified: boolean;
+        };
+        AppAgentGrantDto: {
+            account: components["schemas"]["AppAgentGrantAccountDto"];
+            client: components["schemas"]["AppAgentGrantClientDto"];
+            context: {
+                [key: string]: unknown;
+            } | null;
+            created_at: string;
+            expires_at: string;
+            id: string;
+            last_used_at: string | null;
+            resource: string;
+            scopes: string[];
+        };
+        AppAgentGrantListDto: {
+            data: components["schemas"]["AppAgentGrantDto"][];
+            pagination: components["schemas"]["CursorPaginationDto"];
         };
         AppEnvironment: "production" | "staging" | "development";
         AppListResponseDto: {
@@ -1401,6 +1578,7 @@ export type components = {
             notifications_via_envoi: boolean;
             password_reset_template_name: string | null;
             sender_mode: components["schemas"]["SenderSource"];
+            sign_in_template_name: string | null;
             updated_at: string;
             verification_template_name: string | null;
             web_origin: string | null;
@@ -1540,6 +1718,12 @@ export type components = {
             value: string;
         };
         ApplyPlanResult: "created" | "unchanged" | "failed";
+        ApproveAgentAuthorizationDto: {
+            context?: {
+                [key: string]: unknown;
+            } | null;
+            scopes?: string[];
+        };
         AssignRoleDto: {
             account_id: string;
             role: string;
@@ -1629,6 +1813,7 @@ export type components = {
             password_require_number: boolean;
             password_require_symbol: boolean;
             password_require_uppercase: boolean;
+            passwordless_email: components["schemas"]["PasswordlessEmailResponseDto"] | null;
             session_duration_minutes: number;
             signin_enabled: boolean;
             signup_allowed_email_domains: string[];
@@ -1637,7 +1822,7 @@ export type components = {
             signup_requires_pak: boolean;
             unverified_account_ttl_days: number | null;
         };
-        AuthErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required") | string;
+        AuthErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required") | string;
         AuthStatsInWindowDto: {
             active_users_1d: number;
             active_users_30d: number;
@@ -1838,6 +2023,39 @@ export type components = {
         ConsumerCodeIssueResponseDto: {
             code: string;
             expires_at: string;
+        };
+        ConsumerEmailSignInBotProtectionDto: {
+            provider: components["schemas"]["BotProtectionProvider"];
+            site_key: string;
+        };
+        ConsumerEmailSignInConfigDto: {
+            app_name: string;
+            bot_protection: components["schemas"]["ConsumerEmailSignInBotProtectionDto"] | null;
+            delivery: components["schemas"]["PasswordlessDelivery"] | null;
+            enabled: boolean;
+            ttl_minutes: number | null;
+        };
+        ConsumerEmailSignInRedirectResponseDto: {
+            redirect_url: string;
+        };
+        ConsumerEmailSignInStartDto: {
+            bot_protection_token?: string;
+            email: string;
+            link_url?: string;
+            return_to?: string;
+            tenant_id?: string;
+        };
+        ConsumerEmailSignInStartResponseDto: {
+            delivery: components["schemas"]["PasswordlessDelivery"];
+            expires_at: string;
+            flow_id: string;
+            retry_after_seconds: number;
+        };
+        ConsumerEmailSignInVerifyDto: {
+            code?: string;
+            flow_id?: string;
+            response_mode?: components["schemas"]["EmailSignInResponseMode"];
+            token?: string;
         };
         ConsumerLogoutDto: {
             refresh_token: string;
@@ -2123,6 +2341,10 @@ export type components = {
             event_types?: ("user.signup" | "user.signin" | "user.suspended" | "user.deactivated" | "user.reinstated" | "user.role_changed" | "user.deleted" | "user.contact_verified" | "user.email_verified" | "user.password_reset.requested" | "user.password_reset.completed" | "user.mfa.factor_enrolled" | "user.mfa.factor_disabled" | "user.mfa.recovery_code_used" | "user.mfa.step_up_succeeded" | "user.mfa.step_up_locked" | "user.mfa.enrollment_required" | "user.mfa.reenrollment_required" | "tenant.created" | "tenant.updated" | "tenant.deleted" | "tenant.member.added" | "tenant.member.removed" | "tenant.member.role_changed" | "tenant.invite.created" | "tenant.invite.accepted" | "tenant.invite.revoked" | "app.slug_changed")[];
             url: string;
         };
+        CursorPaginationDto: {
+            has_more: boolean;
+            next_cursor: string | null;
+        };
         CustomDomainApplyResultDto: {
             applied: boolean;
             conflicts: components["schemas"]["ApplyConflictDto"][];
@@ -2204,6 +2426,7 @@ export type components = {
             email_masked: string;
             type: "email";
         };
+        EmailSignInResponseMode: "tokens" | "redirect";
         EndUserActionCountDto: {
             action: string;
             count: number;
@@ -2321,6 +2544,12 @@ export type components = {
             statusCode?: number;
             status_code: number;
         };
+        ExchangeMfaFactorDto: {
+            email_masked?: string | null;
+            id: string;
+            label: string | null;
+            type: string;
+        };
         ExchangeRequestDto: {
             code: string;
         };
@@ -2328,7 +2557,9 @@ export type components = {
             access_token?: string;
             expires_at?: string;
             expires_in?: number;
+            factors?: components["schemas"]["ExchangeMfaFactorDto"][];
             mfa_enrollment_required?: components["schemas"]["MfaEnrollmentRequiredFlag"];
+            mfa_required?: components["schemas"]["MfaRequiredFlag"];
             mfa_token?: string;
             refresh_token?: string;
             result: components["schemas"]["SignInResult"];
@@ -2413,6 +2644,9 @@ export type components = {
             completed: number;
             completion_rate: number | null;
             requested: number;
+        };
+        IntrospectAgentTokenDto: {
+            token: string;
         };
         IntrospectDto: {
             token?: string;
@@ -2591,6 +2825,7 @@ export type components = {
             account_id: string;
             remaining: number;
         };
+        MfaRequiredFlag: true;
         MfaStepUpLockedEventDataDto: {
             account_id: string;
             locked_until: string;
@@ -2639,6 +2874,15 @@ export type components = {
             next_cursor: string | null;
         };
         PasswordBreachCheck: "off" | "warn" | "block";
+        PasswordlessDelivery: "code" | "link" | "code_and_link";
+        PasswordlessEmailResponseDto: {
+            allow_signup: boolean;
+            delivery: components["schemas"]["PasswordlessDelivery"];
+            enabled: boolean;
+            link_url: string | null;
+            require_same_browser: boolean;
+            ttl_minutes: number;
+        };
         PatchProviderConfigDto: {
             config?: {
                 [key: string]: unknown;
@@ -2741,6 +2985,12 @@ export type components = {
             management_lane?: "direct" | "app_proxy_only";
             max_expiry_days?: 7 | 30 | 90 | 365;
             require_recent_mfa_minutes?: number | null;
+        };
+        PutAgentAccessConfigDto: {
+            consent_url?: string | null;
+            enabled: boolean;
+            resources: string[];
+            scopes: components["schemas"]["AgentScopeDto"][];
         };
         RecoveryCodesResponseDto: {
             recovery_codes: string[];
@@ -3198,7 +3448,9 @@ export type components = {
             mfa_code_template_name?: string | null;
             notifications_via_envoi?: boolean;
             password_reset_template_name?: string | null;
+            seed_defaults?: ("verification" | "welcome" | "password_reset" | "invite" | "mfa_code" | "sign_in")[];
             sender_mode?: "workspace" | "custom";
+            sign_in_template_name?: string | null;
             verification_template_name?: string | null;
             web_origin?: string | null;
             welcome_template_name?: string | null;
@@ -3225,6 +3477,7 @@ export type components = {
             password_require_number?: boolean;
             password_require_symbol?: boolean;
             password_require_uppercase?: boolean;
+            passwordless_email?: components["schemas"]["UpdatePasswordlessEmailDto"] | null;
             session_duration_minutes?: number;
             signin_enabled?: boolean;
             signup_allowed_email_domains?: string[];
@@ -3262,6 +3515,14 @@ export type components = {
         };
         UpdateMemberRoleDto: {
             role_name: string;
+        };
+        UpdatePasswordlessEmailDto: {
+            allow_signup?: boolean;
+            delivery?: components["schemas"]["PasswordlessDelivery"];
+            enabled?: boolean;
+            link_url?: string | null;
+            require_same_browser?: boolean;
+            ttl_minutes?: number;
         };
         UpdateRoleDto: {
             description?: string;
@@ -5577,6 +5838,118 @@ export type paths = {
         patch: operations["ConsumerAdminController_updateStatus"];
         trace?: never;
     };
+    "/{app_slug}/v1/agent-access/authorizations/{handle}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AgentAccessConsentController_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/authorizations/{handle}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentAccessConsentController_approve"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/authorizations/{handle}/deny": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentAccessConsentController_deny"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AgentAccessAppController_getConfig"];
+        put: operations["AgentAccessAppController_putConfig"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AgentAccessAppController_listGrants"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/grants/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AgentAccessAppController_revokeGrant"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/agent-access/introspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AgentAccessAppController_introspect"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/{app_slug}/v1/auth/accept-invite": {
         parameters: {
             query?: never;
@@ -5603,6 +5976,54 @@ export type paths = {
         get?: never;
         put?: never;
         post: operations["ConsumerAuthController_acceptTenantInvite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/email/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["ConsumerAuthController_emailConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/email/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_emailStart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/auth/email/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["ConsumerAuthController_emailVerify"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6068,6 +6489,38 @@ export type paths = {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/agent-grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["AgentAccessConsentController_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/{app_slug}/v1/me/agent-grants/{grant_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["AgentAccessConsentController_revoke"];
         options?: never;
         head?: never;
         patch?: never;
