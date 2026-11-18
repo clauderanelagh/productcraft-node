@@ -7,7 +7,7 @@ import { StrictMode, type ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Notify } from "@productcraft/notify";
 import { createNotifyClient, type NotifyBrowserClient } from "@productcraft/notify-js";
-import { NotifyInbox, NotifyPreferences, NotifyProvider, useInbox, usePreferences, type NotifyProviderProps } from "../src/index.js";
+import { NotifyApproval, NotifyInbox, NotifyPreferences, NotifyProvider, useInbox, usePreferences, type NotifyProviderProps } from "../src/index.js";
 import { fakeApi, inboxPage, item, json } from "../../notify-js/tests/helpers.js";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -372,5 +372,52 @@ describe("viewportShift (popover collision)", () => {
     expect(viewportShift({ left: 880, right: 1260 }, 1280)).toBe(0);
     // Wider than the viewport allows: the left edge wins.
     expect(viewportShift({ left: 10, right: 400 }, 380)).toBe(6);
+  });
+});
+
+describe("<NotifyApproval> (approval requests)", () => {
+  const approvalItem = (over: Record<string, unknown> = {}) =>
+    item({
+      title: "Deploy api v2.14?",
+      actions: [
+        { label: "Approve", action_key: "approve" },
+        { label: "Reject", action_key: "reject" },
+      ] as never,
+      data: { approval: { id: "a1", title: "Deploy api v2.14?", status: "pending", requester: { kind: "agent", name: "Deploy bot" }, reason_policy: "required_on_reject", expires_at: new Date(Date.now() + 3_600_000).toISOString(), ...over } } as never,
+    });
+
+  it("renders in the inbox with the requester and a reason box; Approve answers through the client API", async () => {
+    const a = approvalItem();
+    const { api, wrap } = setup([a]);
+    api.on("POST /v1/client/approvals/a1/decision", (c) => json({ id: "a1", status: "approved", reason: (c.body as { reason?: string }).reason ?? null }));
+    render(wrap(<NotifyInbox />));
+    fireEvent.click(await screen.findByRole("button", { name: /Notifications/ }));
+    await screen.findByText("Deploy bot (an AI agent) asks");
+    fireEvent.change(screen.getByLabelText("Reason"), { target: { value: "Checked" } });
+    fireEvent.click(screen.getByRole("button", { name: "Approve" }));
+    await screen.findByText(/Approved · by you · “Checked”/);
+    expect(api.calls.find((c) => c.path === "/v1/client/approvals/a1/decision")?.body).toEqual({ decision: "approve", reason: "Checked" });
+    // The plain item buttons are replaced, so the press is never sent twice.
+    expect(api.calls.some((c) => c.path.endsWith("/interact"))).toBe(false);
+  });
+
+  it("asks for a reason before rejecting when the type requires one, and shows a decided request", async () => {
+    const a = approvalItem();
+    const { api, wrap } = setup([a]);
+    render(wrap(<NotifyApproval item={a} />));
+    fireEvent.click(screen.getByRole("button", { name: "Reject" }));
+    expect((await screen.findByRole("alert")).textContent).toBe("Add a reason first.");
+    expect(api.calls.some((c) => c.path.includes("/approvals/"))).toBe(false);
+    cleanup();
+    render(wrap(<NotifyApproval item={approvalItem({ status: "rejected", decided_by: "ana", reason: "freeze" })} />));
+    expect(screen.getByRole("status").textContent).toBe("Rejected · ana · “freeze”");
+  });
+
+  it("pt-PT strings", async () => {
+    const a = approvalItem();
+    const { wrap } = setup([a]);
+    render(wrap(<NotifyApproval item={a} />, { locale: "pt-PT" }));
+    expect(screen.getByRole("button", { name: "Aprovar" })).toBeTruthy();
+    expect(screen.getByText("Deploy bot (um agente de IA) pede")).toBeTruthy();
   });
 });

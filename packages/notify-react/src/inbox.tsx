@@ -1,6 +1,7 @@
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent, type ReactElement } from "react";
 import { rootClass, useInbox, useNotifyContext, type NotifyInboxItem, type NotifyTheme } from "./provider.js";
 import { renderMarkdown, safeUrl } from "./markdown.js";
+import { approvalOf, NotifyApproval } from "./approval.js";
 import { fill, notifyStrings, relativeTime, type NotifyStrings } from "./strings.js";
 
 export interface NotifyInboxProps {
@@ -283,7 +284,9 @@ function Item(props: { item: NotifyInboxItem; inbox: ReturnType<typeof useInbox>
         <time className="pcn-time" dateTime={item.created_at}>
           {relativeTime(item.created_at, locale, now, t)}
         </time>
-        {item.actions.length > 0 && (
+        {approvalOf(item) ? (
+          <NotifyApproval item={item} />
+        ) : item.actions.length > 0 && (
           <div className="pcn-actions">
             {item.actions.slice(0, 2).map((a, i) => (
               <button key={i} type="button" className={i === 0 ? "pcn-action pcn-action-primary" : "pcn-action"} onClick={(e) => go(e, item, safeUrl(a.url), a.action_key)}>

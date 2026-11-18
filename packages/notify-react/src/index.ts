@@ -8,6 +8,8 @@ export type { NotifyInboxItem, NotifyPreferencesData, NotifyPreferencesExtra, No
 export { NotifyInbox } from "./inbox.js";
 export type { NotifyInboxProps } from "./inbox.js";
 export { NotifyPreferences } from "./preferences.js";
+export { NotifyApproval, approvalOf } from "./approval.js";
+export type { NotifyApprovalData, NotifyApprovalProps } from "./approval.js";
 export type { NotifyPreferencesProps } from "./preferences.js";
 export { NOTIFY_LOCALES, notifyStrings } from "./strings.js";
 export type { NotifyStrings } from "./strings.js";

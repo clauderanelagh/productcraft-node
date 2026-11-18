@@ -224,3 +224,24 @@ describe("inbox store", () => {
     expect(client.inbox.items[0]?.interaction_key).toBe("accept");
   });
 });
+
+describe("approvals", () => {
+  it("reads and answers an approval request with the recipient token", async () => {
+    const { api, client } = setup();
+    const approval = { id: "a1", type: "deploy.approval", status: "pending", title: "Deploy?" };
+    api.on("GET /v1/client/approvals/a1", () => json(approval));
+    api.on("POST /v1/client/approvals/a1/decision", () => json({ ...approval, status: "approved", decided_via: "inbox", reason: "ok" }));
+    expect(await client.approvals.get("a1")).toMatchObject({ status: "pending" });
+    expect(await client.approvals.decide("a1", "approve", "ok")).toMatchObject({ status: "approved", decided_via: "inbox" });
+    const post = api.calls.find((c) => c.method === "POST");
+    expect(post?.headers.authorization).toBe("Bearer rt_1");
+    expect(post?.body).toEqual({ decision: "approve", reason: "ok" });
+  });
+
+  it("passes APPROVAL_NOT_PENDING through", async () => {
+    const { api, client } = setup();
+    api.on("POST /v1/client/approvals/a2/decision", () => apiError(409, "APPROVAL_NOT_PENDING"));
+    await expect(client.approvals.decide("a2", "reject")).rejects.toMatchObject({ status: 409, code: "APPROVAL_NOT_PENDING" });
+    expect(api.calls.at(-1)?.body).toEqual({ decision: "reject" });
+  });
+});

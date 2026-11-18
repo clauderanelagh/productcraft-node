@@ -252,3 +252,14 @@
 .pcn-quiet select, .pcn-quiet input[type="time"] { font: inherit; padding: 4px 6px; border: 1px solid var(--pcn-border); border-radius: 6px; background: var(--pcn-bg); color: var(--pcn-fg); max-width: 100%; }
 .pcn-quiet-window { display: flex; gap: 16px; flex-wrap: wrap; }
 .pcn-save-error { margin: 0; color: var(--pcn-danger); }
+
+/* <NotifyApproval> (approval requests). */
+.pcn-approval { margin-top: 6px; }
+.pcn-approval-requester { margin: 0 0 6px; font-size: 12px; color: var(--pcn-muted); }
+.pcn-approval-reason-label { display: block; font-size: 12px; color: var(--pcn-muted); margin-bottom: 4px; }
+.pcn-approval-reason { width: 100%; box-sizing: border-box; font: inherit; font-size: 13px; color: var(--pcn-fg); background: var(--pcn-bg); border: 1px solid var(--pcn-border); border-radius: 6px; padding: 6px 8px; resize: vertical; }
+.pcn-approval .pcn-action { min-height: 32px; }
+.pcn-approval .pcn-action:disabled { opacity: 0.6; cursor: progress; }
+.pcn-approval-outcome { margin: 4px 0 0; font-size: 13px; font-weight: 600; }
+.pcn-approval[data-status="approved"] .pcn-approval-outcome { color: var(--pcn-accent); }
+.pcn-approval-error { margin: 6px 0 0; font-size: 12px; color: #b91c1c; }

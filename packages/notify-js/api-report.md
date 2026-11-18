@@ -78,6 +78,10 @@ export class InboxStore {
 
 // @public
 export interface NotifyBrowserClient {
+    readonly approvals: {
+        get(approvalId: string): Promise<Notify.Approval>;
+        decide(approvalId: string, decision: "approve" | "reject", reason?: string): Promise<Notify.Approval>;
+    };
     call<T>(fn: (scope: NotifyClientScope) => PromiseLike<T>): Promise<T>;
     close(): void;
     createInbox(filters?: InboxFilters): InboxStore;

@@ -112,6 +112,14 @@ React apps get all of this ready-made from [`@productcraft/notify-react`](https:
 
 `notify.call((scope) => scope.inbox.counts())` runs any other client-scope call with the same token handling.
 
+## Approval requests
+
+```ts
+const request = await client.approvals.get(approvalId);
+await client.approvals.decide(approvalId, "approve", "Checked the migrations");
+// a second answer, or one after the request expired, rejects with code APPROVAL_NOT_PENDING
+```
+
 ## Web push
 
 1. Turn web push on for the workspace (the console, or `notify.channels.webpush.generateVapidKeys()` from your backend) and add your site to the workspace's client origins.

@@ -16,7 +16,49 @@ import { ReactElement } from 'react';
 import { ReactNode } from 'react';
 
 // @public
+export function approvalOf(item: Pick<NotifyInboxItem, "data">): NotifyApprovalData | null;
+
+// @public
 export const NOTIFY_LOCALES: readonly ["en", "pt-PT", "pt-BR", "es", "fr", "de"];
+
+// @public
+export function NotifyApproval(props: NotifyApprovalProps): ReactElement | null;
+
+// @public
+export interface NotifyApprovalData {
+    // (undocumented)
+    body?: string | null;
+    // (undocumented)
+    decided_by?: string | null;
+    // (undocumented)
+    expires_at?: string;
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    reason?: string | null;
+    // (undocumented)
+    reason_policy?: "optional" | "required_on_reject" | "required";
+    // (undocumented)
+    requester?: {
+        kind?: string;
+        name?: string;
+    } | null;
+    // (undocumented)
+    status?: "pending" | "approved" | "rejected" | "expired" | "cancelled";
+    // (undocumented)
+    title?: string;
+}
+
+// @public (undocumented)
+export interface NotifyApprovalProps {
+    className?: string;
+    item: NotifyInboxItem;
+    onDecided?: (approval: {
+        id: string;
+        status: string;
+    }) => void;
+    theme?: NotifyTheme;
+}
 
 // @public
 export function NotifyInbox(props: NotifyInboxProps): ReactElement;
@@ -69,6 +111,32 @@ export interface NotifyProviderProps extends Partial<Omit<NotifyClientOptions, "
 
 // @public (undocumented)
 export interface NotifyStrings {
+    // (undocumented)
+    approvalAlreadyDecided: string;
+    approvalApprove: string;
+    // (undocumented)
+    approvalApproved: string;
+    approvalByYou: string;
+    // (undocumented)
+    approvalCancelled: string;
+    // (undocumented)
+    approvalError: string;
+    // (undocumented)
+    approvalExpired: string;
+    approvalReason: string;
+    // (undocumented)
+    approvalReasonOptional: string;
+    // (undocumented)
+    approvalReasonRequired: string;
+    // (undocumented)
+    approvalReject: string;
+    // (undocumented)
+    approvalRejected: string;
+    approvalRequestedBy: string;
+    // (undocumented)
+    approvalRequestedByAgent: string;
+    // (undocumented)
+    approvalSending: string;
     // (undocumented)
     archive: string;
     // (undocumented)

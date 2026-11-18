@@ -5,6 +5,144 @@
 
 Every method of `Notify`, grouped by resource. Types are under the `Notify` namespace (`import type { Notify } from "@productcraft/notify"`). Every method takes per-request options last (`{ idempotencyKey, timeout, maxRetries, headers, signal, workspaceId }`).
 
+## approvals
+
+### `notify.approvals.cancel(approvalId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/approvals/{approval_id}/cancel` → `Notify.Approval`
+
+Cancel an approval request.
+
+Withdraws a pending request: approvers see it as cancelled, nothing more is sent, and `approval.resolved` fires with `status: cancelled`. Takes no Idempotency-Key: cancelling twice is a 409 the second time.
+
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APPROVAL_NOT_FOUND` | `APPROVAL_NOT_FOUND`: no approval request with this id in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `APPROVAL_NOT_PENDING` | `APPROVAL_NOT_PENDING`: it was already answered, expired or cancelled. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approval = await notify.approvals.cancel("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-approvals-approval-id-cancel)
+
+### `notify.approvals.create(params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/approvals` → `Notify.Approval`
+
+Request an approval.
+
+Asks one or more people a yes/no question on the type's channels and records the first answer. In the inbox the item gets Approve and Reject buttons (or render it with `<NotifyApproval/>`); emails and pushes carry a signed link per approver (`approval.url`, `approval.approve_url`, `approval.reject_url`) to a hosted page that needs no sign-in. The answer arrives as the signed `approval.resolved` webhook and on `GET /approvals/{approval_id}`. Nobody answered by `expires_at`: the type's `timeout_outcome` applies (default `expired`). Pass `wait_seconds` (up to 15) to wait for the answer in this call. The type must have `approval` set; its notifications can only be sent here. An `Idempotency-Key` is required: the same key and body return the same request (200), a different body is a 409.
+
+- Params: `Notify.ApprovalCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `IDEMPOTENCY_KEY_REQUIRED` | `IDEMPOTENCY_KEY_REQUIRED`; `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `NOT_AN_APPROVAL_TYPE`, `NOTIFICATION_TYPE_ARCHIVED`, `RECIPIENT_NOT_FOUND` | `NOT_AN_APPROVAL_TYPE`: the type has no `approval`; `NOTIFICATION_TYPE_ARCHIVED`; `RECIPIENT_NOT_FOUND`: an approver is not a recipient (`details.missing`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over the workspace send limit; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approval = await notify.approvals.create({
+  approvers: ["user_123"],
+  title: "Deploy api v2.14 to production?",
+  type: "deploy.approval",
+});
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-approvals)
+
+### `notify.approvals.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/approvals` → `PagePromise<Notify.Approval>`
+
+List approval requests.
+
+Newest first; filter by `status` and `type`. Pass `next_cursor` as `cursor` until `has_more` is false.
+
+- Params: `Notify.ApprovalListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const approval of notify.approvals.list()) {
+  console.log(approval);
+}
+const page = await notify.approvals.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-workspaces-workspace-id-approvals)
+
+### `notify.approvals.recordDecision(approvalId, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/approvals/{approval_id}/decision` → `Notify.Approval`
+
+Record an approver's answer.
+
+For answers you collected yourself (your own UI, a phone call): records `approve` or `reject` for one of the approvers, exactly as if they had pressed the button (`decided_via: api`). Never give this to the agent that made the request: it is how a human's answer gets in, so it is not an MCP tool.
+
+- Params: `Notify.ApprovalRecordDecisionParams`
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a field is invalid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APPROVAL_NOT_FOUND`, `RECIPIENT_NOT_FOUND` | `APPROVAL_NOT_FOUND`, or `RECIPIENT_NOT_FOUND`: no recipient with that external id. |
+| 409 | `ConflictError` | `CONFLICT`, `APPROVAL_NOT_PENDING` | `APPROVAL_NOT_PENDING`: already answered, expired or cancelled. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `NOT_AN_APPROVER`, `APPROVAL_REASON_REQUIRED` | `NOT_AN_APPROVER`: that recipient was not asked; `APPROVAL_REASON_REQUIRED`: the type needs a reason. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approval = await notify.approvals.recordDecision("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { approver: "user_123", decision: "approve" });
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-approvals-approval-id-decision)
+
+### `notify.approvals.retrieve(approvalId, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/approvals/{approval_id}` → `Notify.ApprovalDetail`
+
+Get an approval request.
+
+Its status, the answer (who, when, why, from where) and its trail. With `wait_seconds` (up to 15) a pending request is long-polled: the call returns as soon as someone answers, or after that many seconds.
+
+- Params: `Notify.ApprovalRetrieveParams`
+- Credential: [`bearer`](#bearer)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `wait_seconds` out of range. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID` | Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APPROVAL_NOT_FOUND` | `APPROVAL_NOT_FOUND`: no approval request with this id in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approvalDetail = await notify.approvals.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-workspaces-workspace-id-approvals-approval-id)
+
 ## batches
 
 ### `notify.batches.flush(batchId, options?)`
@@ -675,16 +813,7 @@ Changes the fields you send; `routing` is replaced whole. The key cannot change.
 
 ```ts
 const notificationType = await notify.notificationTypes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
-  batch: {
-    inbox: "collapse",
-    key: "post_id",
-    max_items: 10,
-    max_window_seconds: 3600,
-    mode: "window",
-    schedule: { frequency: "daily", time: "09:00", weekday: "monday" },
-    sliding: false,
-    window_seconds: 300,
-  },
+  approval: { default_expires_in_seconds: 86400, reason: "optional", timeout_outcome: "expired" },
 });
 ```
 
@@ -956,7 +1085,7 @@ Notifies up to 1,000 recipients with one notification type, across the type's ch
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE`, `DATA_TOO_LARGE` | `DATA_TOO_LARGE`: `data` is over 16 KB. |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_NOT_FOUND`, `NOTIFICATION_TYPE_ARCHIVED`, `TEMPLATE_MISSING`, `SEND_AT_OUT_OF_RANGE`, `BATCHED_TYPE_NOT_SCHEDULABLE`, `UNSAFE_URL`, `VALIDATION_ERROR` | `RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `BATCHED_TYPE_NOT_SCHEDULABLE`: the type batches (send it now); `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_NOT_FOUND`, `NOTIFICATION_TYPE_ARCHIVED`, `TEMPLATE_MISSING`, `SEND_AT_OUT_OF_RANGE`, `BATCHED_TYPE_NOT_SCHEDULABLE`, `APPROVAL_TYPE_SEND_REFUSED`, `UNSAFE_URL`, `VALIDATION_ERROR` | `RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `BATCHED_TYPE_NOT_SCHEDULABLE`: the type batches (send it now); `APPROVAL_TYPE_SEND_REFUSED`: an approval type, sent with `POST /approvals`; `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 3,000 recipients a minute in this workspace; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1541,7 +1670,7 @@ const notifyStats = await notify.stats.retrieve();
 
 ### `notify.webhooks.unwrap({ payload, headers, secret? })`
 
-Verifies the signature and returns `Notify.UnwrapWebhookEvent`. Events: `credential.invalid`, `delivery.bounced`, `delivery.delivered`, `delivery.failed`, `delivery.sent`, `delivery.skipped`, `device.moved`, `device.pruned`, `email.auto_paused`, `inbox_item.archived`, `inbox_item.interacted`, `inbox_item.read`, `notification.accepted`, `recipient.deleted`, plus `UnknownWebhookEvent` for types added later.
+Verifies the signature and returns `Notify.UnwrapWebhookEvent`. Events: `approval.resolved`, `credential.invalid`, `delivery.bounced`, `delivery.delivered`, `delivery.failed`, `delivery.sent`, `delivery.skipped`, `device.moved`, `device.pruned`, `email.auto_paused`, `inbox_item.archived`, `inbox_item.interacted`, `inbox_item.read`, `notification.accepted`, `notification.webhook`, `recipient.deleted`, plus `UnknownWebhookEvent` for types added later.
 
 ### `notify.webhooks.sign({ payload, secret?, id?, timestamp? })`
 
@@ -1836,6 +1965,58 @@ const webhookEventDetail = await notify.webhooks.events.retrieve("3f0c1a2b-4c5d-
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-workspaces-workspace-id-webhooks-events-event-id)
+
+## client(…).approvals
+
+### `notify.client({ token }).approvals.decide(approvalId, params, options?)`
+
+`POST /v1/client/approvals/{approval_id}/decision` → `Notify.Approval`
+
+Answer an approval request.
+
+Approve or reject, with an optional reason (required when the type says so). The first answer of any approver decides; the requester gets the signed `approval.resolved` webhook. Answering again, or after the request expired, is a 409.
+
+- Params: `Notify.MeApprovalDecideParams`
+- Credential: [`recipient_token`](#recipient_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `decision` must be `approve` or `reject`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:write` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APPROVAL_NOT_FOUND` | `APPROVAL_NOT_FOUND`: no such request for this recipient. |
+| 409 | `ConflictError` | `CONFLICT`, `APPROVAL_NOT_PENDING` | `APPROVAL_NOT_PENDING`: already answered, expired or cancelled. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `APPROVAL_REASON_REQUIRED` | `APPROVAL_REASON_REQUIRED`: a reason is required. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approval = await notify.client({ token: "rt_example_recipient_token" }).approvals.decide("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { decision: "approve" });
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-client-approvals-approval-id-decision)
+
+### `notify.client({ token }).approvals.retrieve(approvalId, options?)`
+
+`GET /v1/client/approvals/{approval_id}` → `Notify.Approval`
+
+Get an approval request.
+
+One request the recipient was asked to answer: the question, who asked, its status and, once decided, who answered and why.
+
+- Credential: [`recipient_token`](#recipient_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `RECIPIENT_TOKEN_INVALID`, `RECIPIENT_TOKEN_EXPIRED` | `RECIPIENT_TOKEN_INVALID`: no recipient token, a malformed or forged one, an API key, or a revoked token (mint a new one); `RECIPIENT_TOKEN_EXPIRED`: the token expired (mint a new one). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `RECIPIENT_TOKEN_SCOPE`, `ORIGIN_NOT_ALLOWED`, `SERVICE_NOT_ENABLED` | `RECIPIENT_TOKEN_SCOPE`: the token lacks the `inbox:read` scope; `ORIGIN_NOT_ALLOWED`: the browser origin is not in the workspace client origins; `SERVICE_NOT_ENABLED`: Notify is turned off for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APPROVAL_NOT_FOUND` | `APPROVAL_NOT_FOUND`: no such request for this recipient. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 60 client calls per minute for this recipient; `Retry-After` gives the seconds to wait. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const approval = await notify.client({ token: "rt_example_recipient_token" }).approvals.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/notify/api-reference#get-v1-client-approvals-approval-id)
 
 ## client(…).devices
 
@@ -2135,6 +2316,12 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `STREAM_LIMIT` | The recipient has the maximum number of open real-time streams. |
 | `LIMIT_EXCEEDED` | A preview limit of the workspace was reached. |
 | `BATCHED_TYPE_NOT_SCHEDULABLE` | The notification type batches its notifications (`batch`): send it now, the batch window or digest decides when it goes out. |
+| `APPROVAL_NOT_FOUND` | No approval request with this id in this workspace (or, on the client API, not one this recipient was asked). |
+| `APPROVAL_NOT_PENDING` | The approval request was already answered, expired or cancelled: the first answer decides. |
+| `APPROVAL_REASON_REQUIRED` | The approval type requires a reason for this answer. |
+| `APPROVAL_TYPE_SEND_REFUSED` | Notifications of an approval type are sent with POST /approvals, not POST /notifications. |
+| `NOT_AN_APPROVAL_TYPE` | The notification type has no `approval` config, so it cannot carry approval requests. |
+| `NOT_AN_APPROVER` | That recipient was not asked to answer this approval request. |
 | `BATCH_NOT_FOUND` | No batch with this id in this workspace. |
 | `BATCH_NOT_OPEN` | The batch is already closed (flushed or cancelled), or closing right now. |
 | `SEND_AT_OUT_OF_RANGE` | `send_at` or `delay_seconds` is in the past or beyond the type TTL. |

@@ -72,6 +72,21 @@ export function Badge() {
 }
 ```
 
+## Approval requests
+
+When an agent or your backend asks a person a yes/no question (`notify.approvals.create`), the inbox item carries the request. `<NotifyInbox/>` renders it with who asks, a reason box and Approve / Reject; to show one elsewhere:
+
+```tsx
+import { NotifyApproval, useInbox } from "@productcraft/notify-react";
+
+function Pending() {
+  const { items } = useInbox({ category: "operations" });
+  return items.map((item) => <NotifyApproval key={item.id} item={item} onDecided={(a) => console.log(a.status)} />);
+}
+```
+
+The first answer of any approver decides; afterwards the component shows the outcome. The requester gets the signed `approval.resolved` webhook.
+
 ## Safety
 
 - **Links.** Every `href` and image `src` (the item's `action_url`, action buttons, Markdown links, avatars) is checked again in the browser: only `https:`, or `http:` on `localhost`. Anything else (`javascript:`, `data:`, relative paths) is not rendered as a link. Notify already refuses such URLs when a template is saved and when it renders.
