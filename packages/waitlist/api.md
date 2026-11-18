@@ -339,6 +339,30 @@ const page = await waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d
 
 [HTTP reference](https://productcraft.co/docs/waitlist/api-reference#get-v1-workspaces-workspace-id-waitlists-waitlist-id-entries)
 
+### `waitlist.lists.entries.release(waitlistId, entryId, options?)`
+
+`POST /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}/release` → `Waitlist.Entry`
+
+Release a held entry from the review queue.
+
+For a sign-up the referral fraud checks held (`held`). It carries on as if the checks had passed: with email confirmation on it becomes `unconfirmed` and gets the confirmation email; otherwise `pending` or `approved`, its referrer gets credit, `entry.created` (and `entry.approved`) fire and the welcome email goes out. To turn it away instead, `PATCH` it to `rejected` (nothing is sent).
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `entry.update`. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Entry not found in this waitlist. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The entry is not held. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const entry = await waitlist.lists.entries.release("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/waitlist/api-reference#post-v1-workspaces-workspace-id-waitlists-waitlist-id-entries-entry-id-release)
+
 ### `waitlist.lists.entries.retrieve(waitlistId, entryId, options?)`
 
 `GET /v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}` → `Waitlist.Entry`

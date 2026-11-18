@@ -324,6 +324,14 @@
         ],
         "type": "string"
       },
+      "CaptchaProvider": {
+        "enum": [
+          "recaptcha",
+          "turnstile",
+          "hcaptcha"
+        ],
+        "type": "string"
+      },
       "ConfirmEntryDto": {
         "properties": {
           "token": {
@@ -340,6 +348,18 @@
       },
       "CreateEntryDto": {
         "properties": {
+          "captcha_token": {
+            "description": "Token from the waitlist's bot check (`captcha.provider` on the public info: `recaptcha` v3 with the action `waitlist_signup`, `turnstile` or `hcaptcha`). Required when the waitlist has one. `recaptcha_token` is still accepted for reCAPTCHA.",
+            "example": "0.Zq3x…",
+            "maxLength": 4096,
+            "type": "string"
+          },
+          "device_id": {
+            "description": "Optional, stable id of the visitor's browser (for example a random id your form keeps in localStorage). Used only, hashed, by the referral fraud checks to spot many sign-ups from one device; without it they use the browser signature.",
+            "example": "c3f1e0f2-6d0b-4c55-9d3e-2b8e7f1a9c10",
+            "maxLength": 200,
+            "type": "string"
+          },
           "email": {
             "description": "Email address",
             "example": "ada@example.com",
@@ -932,6 +952,41 @@
         "type": "object",
         "x-pc-sdk-model": "EntryEventData"
       },
+      "EntryFraudSignalCode": {
+        "enum": [
+          "self_referral",
+          "referrer_same_device",
+          "referrer_same_network",
+          "network_burst",
+          "device_cluster",
+          "referrer_not_counted"
+        ],
+        "type": "string"
+      },
+      "EntryFraudSignalDto": {
+        "properties": {
+          "code": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EntryFraudSignalCode"
+              }
+            ],
+            "description": "`self_referral`: the referrer is another address of the same mailbox. `referrer_same_device` / `referrer_same_network`: signed up from the referrer's device or network. `network_burst`: many sign-ups from one network within an hour. `device_cluster`: many from one device within a day. `referrer_not_counted`: the referrer is held or unconfirmed itself (strict).",
+            "example": "referrer_same_device"
+          },
+          "detail": {
+            "description": "The same reason in a sentence, for the review queue.",
+            "example": "Signed up from the same device as the referrer.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EntryFraudSignal"
+      },
       "EntryListPaginationDto": {
         "properties": {
           "has_more": {
@@ -1062,6 +1117,13 @@
             "format": "email",
             "type": "string"
           },
+          "fraud_signals": {
+            "description": "Why the referral fraud checks held this entry (`held`); empty otherwise. Kept after release as a record.",
+            "items": {
+              "$ref": "#/components/schemas/EntryFraudSignalDto"
+            },
+            "type": "array"
+          },
           "id": {
             "description": "Entry id.",
             "format": "uuid",
@@ -1157,6 +1219,7 @@
           "referred_by_entry_id",
           "position",
           "is_test",
+          "fraud_signals",
           "status",
           "confirmed_at",
           "invited_at",
@@ -1173,7 +1236,8 @@
           "pending",
           "approved",
           "rejected",
-          "unconfirmed"
+          "unconfirmed",
+          "held"
         ],
         "type": "string"
       },
@@ -1545,6 +1609,30 @@
         "type": "object",
         "x-pc-sdk-model": "Pagination"
       },
+      "PublicCaptchaDto": {
+        "properties": {
+          "provider": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CaptchaProvider"
+              }
+            ],
+            "description": "`recaptcha` (v3, action `waitlist_signup`), `turnstile` (Cloudflare) or `hcaptcha`.",
+            "example": "turnstile"
+          },
+          "site_key": {
+            "description": "Site key to load the widget with.",
+            "example": "0x4AAAAAAAexample",
+            "type": "string"
+          }
+        },
+        "required": [
+          "provider",
+          "site_key"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "PublicCaptcha"
+      },
       "PublicEntryConfirmedDto": {
         "properties": {
           "already_confirmed": {
@@ -1754,6 +1842,15 @@
             "description": "Canonical workspace slug. When the request URL used a stale slug, compare with the URL slug and 301-redirect.",
             "type": "string"
           },
+          "captcha": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicCaptchaDto"
+              }
+            ],
+            "description": "The bot check your form must pass, or null when the waitlist has none. Send its token as `captcha_token`.",
+            "nullable": true
+          },
           "confirmation_message": {
             "description": "Message to show after a successful signup.",
             "type": "string"
@@ -1780,7 +1877,7 @@
             "type": "boolean"
           },
           "recaptcha_site_key": {
-            "description": "reCAPTCHA v3 site key. When non-null, POST .../entries requires a `recaptcha_token` created with the action `waitlist_signup`.",
+            "description": "Legacy: the reCAPTCHA v3 site key when the bot check is reCAPTCHA (null otherwise). Prefer `captcha`.",
             "nullable": true,
             "type": "string"
           },
@@ -1819,6 +1916,7 @@
           "custom_fields",
           "confirmation_message",
           "recaptcha_site_key",
+          "captcha",
           "email_confirmation",
           "referral_rewards",
           "variant",
@@ -2506,6 +2604,27 @@
             "example": false,
             "type": "boolean"
           },
+          "captcha_provider": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CaptchaProvider"
+              }
+            ],
+            "description": "Bot check every public sign-up must pass: `recaptcha` (v3), `turnstile` (Cloudflare) or `hcaptcha`. Send with `captcha_site_key` and `captcha_secret_key`; null turns it off. Wins over the older `recaptcha_site_key`.",
+            "example": "turnstile",
+            "nullable": true
+          },
+          "captcha_secret_configured": {
+            "description": "Whether a secret key for `captcha_provider` is saved (never returned).",
+            "example": false,
+            "type": "boolean"
+          },
+          "captcha_site_key": {
+            "description": "Site key of the bot check, returned on the public info so your form can load the widget.",
+            "example": "0x4AAAAAAAexample",
+            "nullable": true,
+            "type": "string"
+          },
           "confirmation_expiry_days": {
             "default": 7,
             "description": "Days an unconfirmed sign-up waits for its owner to confirm before it is deleted. Default 7.",
@@ -2532,6 +2651,16 @@
             "description": "Double opt-in. On: a new sign-up is `unconfirmed` and gets one confirmation email (the workspace's `confirm` Mail template, `waitlist-confirm` by default); it counts (place in line, referral credit, leaderboard, `entry.created`) only once its owner clicks the link. Unconfirmed sign-ups are deleted after `confirmation_expiry_days`. Off (the default): sign-ups count at once.",
             "example": true,
             "type": "boolean"
+          },
+          "fraud_protection": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistFraudProtection"
+              }
+            ],
+            "default": "off",
+            "description": "Referral fraud checks. Anything but `off` treats aliases of one mailbox (`ada+x@`, Gmail dots) as one contact (a second one gets 409). Sign-ups that look like abuse are `held` for review: no place in line, no referral credit, no email, no webhook. `relaxed` holds clear abuse (self-referral, a referral from the referrer's own device and network, 30+ sign-ups an hour from one network); `balanced` also a referral from the referrer's device or network, 10+ an hour per network, 5+ a day per device; `strict` 3 an hour, 2 a day, and referrals from held or unconfirmed referrers.",
+            "example": "balanced"
           },
           "max_entries": {
             "description": "Most entries the waitlist takes (test sign-ups not counted); a public sign-up past it gets 422. Null or absent: no cap.",
@@ -2568,7 +2697,8 @@
           }
         },
         "required": [
-          "recaptcha_secret_configured"
+          "recaptcha_secret_configured",
+          "captcha_secret_configured"
         ],
         "type": "object",
         "x-pc-sdk-model": "WaitlistConfig"
@@ -2580,6 +2710,28 @@
             "description": "New sign-ups start `pending` and wait for approval. Off (the default): they start `approved`.",
             "example": false,
             "type": "boolean"
+          },
+          "captcha_provider": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CaptchaProvider"
+              }
+            ],
+            "description": "Bot check every public sign-up must pass: `recaptcha` (v3), `turnstile` (Cloudflare) or `hcaptcha`. Send with `captcha_site_key` and `captcha_secret_key`; null turns it off. Wins over the older `recaptcha_site_key`.",
+            "example": "turnstile",
+            "nullable": true
+          },
+          "captcha_secret_key": {
+            "description": "Secret key of the bot check (`captcha_provider`). Write-only: stored encrypted, never returned (`captcha_secret_configured`).",
+            "example": "0x4AAAAAAAexampleSecret",
+            "type": "string",
+            "writeOnly": true
+          },
+          "captcha_site_key": {
+            "description": "Site key of the bot check, returned on the public info so your form can load the widget.",
+            "example": "0x4AAAAAAAexample",
+            "nullable": true,
+            "type": "string"
           },
           "confirmation_expiry_days": {
             "default": 7,
@@ -2607,6 +2759,16 @@
             "description": "Double opt-in. On: a new sign-up is `unconfirmed` and gets one confirmation email (the workspace's `confirm` Mail template, `waitlist-confirm` by default); it counts (place in line, referral credit, leaderboard, `entry.created`) only once its owner clicks the link. Unconfirmed sign-ups are deleted after `confirmation_expiry_days`. Off (the default): sign-ups count at once.",
             "example": true,
             "type": "boolean"
+          },
+          "fraud_protection": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WaitlistFraudProtection"
+              }
+            ],
+            "default": "off",
+            "description": "Referral fraud checks. Anything but `off` treats aliases of one mailbox (`ada+x@`, Gmail dots) as one contact (a second one gets 409). Sign-ups that look like abuse are `held` for review: no place in line, no referral credit, no email, no webhook. `relaxed` holds clear abuse (self-referral, a referral from the referrer's own device and network, 30+ sign-ups an hour from one network); `balanced` also a referral from the referrer's device or network, 10+ an hour per network, 5+ a day per device; `strict` 3 an hour, 2 a day, and referrals from held or unconfirmed referrers.",
+            "example": "balanced"
           },
           "max_entries": {
             "description": "Most entries the waitlist takes (test sign-ups not counted); a public sign-up past it gets 422. Null or absent: no cap.",
@@ -2750,6 +2912,15 @@
         },
         "x-pc-error-docs": "https://productcraft.co/docs/errors#{code}",
         "x-pc-open-enum": true
+      },
+      "WaitlistFraudProtection": {
+        "enum": [
+          "off",
+          "relaxed",
+          "balanced",
+          "strict"
+        ],
+        "type": "string"
       },
       "WaitlistListPaginationDto": {
         "properties": {
@@ -8762,6 +8933,224 @@
             "workspace_id"
           ],
           "method": "inviteToApp",
+          "paginated": false,
+          "resource": "lists.entries"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}/release": {
+      "post": {
+        "description": "For a sign-up the referral fraud checks held (`held`). It carries on as if the checks had passed: with email confirmation on it becomes `unconfirmed` and gets the confirmation email; otherwise `pending` or `approved`, its referrer gets credit, `entry.created` (and `entry.approved`) fire and the welcome email goes out. To turn it away instead, `PATCH` it to `rejected` (nothing is sent).",
+        "operationId": "EntryController_release",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the waitlist.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "waitlist_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Id of the entry.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Idempotency key (24 h). A retry with the same key and body returns the first response instead of acting twice.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryResponseDto"
+                }
+              }
+            },
+            "description": "Released.",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller lacks `entry.update`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Entry not found in this waitlist.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The entry is not held.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Release a held entry from the review queue",
+        "tags": [
+          "entries"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "release",
           "paginated": false,
           "resource": "lists.entries"
         }

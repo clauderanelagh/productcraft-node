@@ -61,6 +61,11 @@ const waitlist = new Waitlist();
   const page = await waitlist.lists.entries.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {}, { timeout: 5_000 });
 }
 
+// lists.entries.release: Release a held entry from the review queue
+{
+  const entry = await waitlist.lists.entries.release("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+}
+
 // lists.entries.retrieve: Get a single entry
 {
   const entry = await waitlist.lists.entries.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");

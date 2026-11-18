@@ -100,10 +100,13 @@ export type components = {
             status: components["schemas"]["BulkEntryResultStatus"];
         };
         BulkEntryResultStatus: "ok" | "error";
+        CaptchaProvider: "recaptcha" | "turnstile" | "hcaptcha";
         ConfirmEntryDto: {
             token: string;
         };
         CreateEntryDto: {
+            captcha_token?: string;
+            device_id?: string;
             email: string;
             interest?: string;
             metadata?: {
@@ -193,6 +196,11 @@ export type components = {
             entry: components["schemas"]["WebhookEntryDto"];
             waitlist_id: string;
         };
+        EntryFraudSignalCode: "self_referral" | "referrer_same_device" | "referrer_same_network" | "network_burst" | "device_cluster" | "referrer_not_counted";
+        EntryFraudSignalDto: {
+            code: components["schemas"]["EntryFraudSignalCode"];
+            detail: string;
+        };
         EntryListPaginationDto: {
             has_more: boolean;
             next_cursor: string | null;
@@ -214,6 +222,7 @@ export type components = {
             confirmed_at: string | null;
             created_at: string;
             email: string;
+            fraud_signals: components["schemas"]["EntryFraudSignalDto"][];
             id: string;
             interest: string | null;
             invited_at: string | null;
@@ -233,7 +242,7 @@ export type components = {
             waitlist_id: string;
             workspace_id: string;
         };
-        EntryStatus: "pending" | "approved" | "rejected" | "unconfirmed";
+        EntryStatus: "pending" | "approved" | "rejected" | "unconfirmed" | "held";
         ErrorParamDto: {
             code: string;
             message: string;
@@ -299,6 +308,10 @@ export type components = {
             has_more: boolean;
             next_cursor: string | null;
         };
+        PublicCaptchaDto: {
+            provider: components["schemas"]["CaptchaProvider"];
+            site_key: string;
+        };
         PublicEntryConfirmedDto: {
             already_confirmed: boolean;
             confirmed_at: string | null;
@@ -337,6 +350,7 @@ export type components = {
         PublicWaitlistInfoDto: {
             brand: components["schemas"]["PublicWaitlistBrandDto"];
             canonical_workspace_slug: string;
+            captcha: components["schemas"]["PublicCaptchaDto"] | null;
             confirmation_message: string;
             custom_fields: components["schemas"]["CustomFieldDto"][];
             description: string | null;
@@ -471,10 +485,14 @@ export type components = {
         };
         WaitlistConfigDto: {
             approval_required: boolean;
+            captcha_provider?: components["schemas"]["CaptchaProvider"] | null;
+            captcha_secret_configured: boolean;
+            captcha_site_key?: string | null;
             confirmation_expiry_days: number;
             confirmation_message?: string | null;
             custom_fields?: components["schemas"]["CustomFieldDto"][];
             email_confirmation: boolean;
+            fraud_protection: components["schemas"]["WaitlistFraudProtection"];
             max_entries?: number | null;
             recaptcha_secret_configured: boolean;
             recaptcha_site_key?: string | null;
@@ -483,10 +501,14 @@ export type components = {
         };
         WaitlistConfigInputDto: {
             approval_required?: boolean;
+            captcha_provider?: components["schemas"]["CaptchaProvider"] | null;
+            captcha_secret_key?: string;
+            captcha_site_key?: string | null;
             confirmation_expiry_days?: number;
             confirmation_message?: string | null;
             custom_fields?: components["schemas"]["CustomFieldDto"][];
             email_confirmation?: boolean;
+            fraud_protection?: components["schemas"]["WaitlistFraudProtection"];
             max_entries?: number | null;
             recaptcha_secret_key?: string;
             recaptcha_site_key?: string | null;
@@ -494,6 +516,7 @@ export type components = {
             referral_rewards?: components["schemas"]["ReferralRewardsDto"];
         };
         WaitlistErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ENTRY_LINK_INVALID" | "MAIL_UNREACHABLE" | "ORIGIN_NOT_ALLOWED" | "WAITLIST_NOT_FOUND" | "domain_not_verified_by_provider" | "from_domain_not_verified" | "no_default_sender") | string;
+        WaitlistFraudProtection: "off" | "relaxed" | "balanced" | "strict";
         WaitlistListPaginationDto: {
             has_more: boolean;
             next_cursor: string | null;
@@ -1081,6 +1104,22 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/entries/{entry_id}/release": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["EntryController_release"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_id}/waitlists/{waitlist_id}/test-entries": {
         parameters: {
             query?: never;
@@ -1392,10 +1431,16 @@ namespace Waitlist {
         values: readonly ["approve", "reject", "invite-to-app"];
     };
     // (undocumented)
-    type ClientOptions = __ClientOptions;
+    type CaptchaProvider = __CaptchaProvider;
     const // (undocumented)
     BulkEntryResultStatus: {
         values: readonly ["ok", "error"];
+    };
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
+    const // (undocumented)
+    CaptchaProvider: {
+        values: readonly ["recaptcha", "turnstile", "hcaptcha"];
     };
     // (undocumented)
     type CustomField = __CustomField;
@@ -1418,59 +1463,71 @@ namespace Waitlist {
     // (undocumented)
     type EmailSetupMissing = __EmailSetupMissing;
     const // (undocumented)
-    EntryStatus: {
-        values: readonly ["pending", "approved", "rejected", "unconfirmed"];
+    EntryFraudSignalCode: {
+        values: readonly ["self_referral", "referrer_same_device", "referrer_same_network", "network_burst", "device_cluster", "referrer_not_counted"];
     };
     // (undocumented)
     type EmailSetupState = __EmailSetupState;
+    const // (undocumented)
+    EntryStatus: {
+        values: readonly ["pending", "approved", "rejected", "unconfirmed", "held"];
+    };
+    // (undocumented)
+    type Entry = __Entry;
     const // (undocumented)
     PublicEntryStatus: {
         values: readonly ["pending", "approved", "unconfirmed"];
     };
     // (undocumented)
-    type Entry = __Entry;
+    type EntryApprovedEvent = __EntryApprovedEvent;
     const // (undocumented)
     PublicOwnEntryStatus: {
         values: readonly ["pending", "approved", "rejected", "unconfirmed"];
     };
     // (undocumented)
-    type EntryApprovedEvent = __EntryApprovedEvent;
+    type EntryConfirmParams = __EntryConfirmParams;
     const // (undocumented)
     SenderDomainStatus: {
         values: readonly ["not_started", "pending", "partially_verified", "verified", "temporary_failure", "failed", "disabled", "deleted", "not_found"];
     };
     // (undocumented)
-    type EntryConfirmParams = __EntryConfirmParams;
+    type EntryCount = __EntryCount;
     const // (undocumented)
     SenderMode: {
         values: readonly ["workspace", "custom"];
     };
     // (undocumented)
-    type EntryCount = __EntryCount;
+    type EntryCreatedEvent = __EntryCreatedEvent;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type EntryCreatedEvent = __EntryCreatedEvent;
+    type EntryCreateParams = __EntryCreateParams;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
-    type EntryCreateParams = __EntryCreateParams;
+    type EntryDecision = __EntryDecision;
     const // (undocumented)
     TemplateSlot: {
         values: readonly ["welcome", "approved", "rejected", "confirm"];
     };
     // (undocumented)
-    type EntryDecision = __EntryDecision;
+    type EntryEventData = __EntryEventData;
     const // (undocumented)
     VariantKind: {
         values: readonly ["ab", "locale"];
     };
     // (undocumented)
-    type EntryEventData = __EntryEventData;
+    type EntryFraudSignal = __EntryFraudSignal;
+    const // (undocumented)
+    WaitlistFraudProtection: {
+        values: readonly ["off", "relaxed", "balanced", "strict"];
+    };
+    // (undocumented)
+    type EntryFraudSignalCode = __EntryFraudSignalCode;
     const // (undocumented)
     WaitlistStatsMetric: {
         values: readonly ["signups"];
@@ -1568,6 +1625,8 @@ namespace Waitlist {
     // (undocumented)
     type PollOptions = __PollOptions;
     // (undocumented)
+    type PublicCaptcha = __PublicCaptcha;
+    // (undocumented)
     type PublicEntryConfirmed = __PublicEntryConfirmed;
     // (undocumented)
     type PublicEntryCreated = __PublicEntryCreated;
@@ -1629,6 +1688,8 @@ namespace Waitlist {
     type WaitlistAnalytics = __WaitlistAnalytics;
     // (undocumented)
     type WaitlistConfig = __WaitlistConfig;
+    // (undocumented)
+    type WaitlistFraudProtection = __WaitlistFraudProtection;
     // (undocumented)
     type WaitlistList = __WaitlistList;
     // (undocumented)
