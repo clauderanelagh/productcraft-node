@@ -16,7 +16,14 @@ const notify = new Notify();
 
 // settings.update: Update Notify settings
 {
-  const notifySettings = await notify.settings.update({ client_origins: ["https://app.example.com", "https://www.example.com"] });
+  const notifySettings = await notify.settings.update({
+    branding: {
+      accent_color: "#4f46e5",
+      logo_url: "https://acme.example/logo.png",
+      name: "Acme",
+      privacy_url: "https://acme.example/privacy",
+    },
+  });
 }
 
 export {};

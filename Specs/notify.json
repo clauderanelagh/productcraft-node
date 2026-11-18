@@ -184,6 +184,419 @@
         ],
         "type": "string"
       },
+      "BatchDeliveryDto": {
+        "properties": {
+          "channel": {
+            "description": "Channel.",
+            "type": "string"
+          },
+          "id": {
+            "description": "The delivery.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "notification_id": {
+            "description": "The notification it belongs to.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "reason": {
+            "description": "Reason: `batched` while the batch is open; after it closes, the carrier has its send outcome and the others `batched_into`.",
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "description": "State.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "notification_id",
+          "channel",
+          "state",
+          "reason"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchDelivery"
+      },
+      "BatchDetailDto": {
+        "properties": {
+          "deliveries": {
+            "description": "Its deliveries on the batched channels: while open, one `scheduled: batched` per notification and channel; after the flush, the carrier per channel with its outcome.",
+            "items": {
+              "$ref": "#/components/schemas/BatchDeliveryDto"
+            },
+            "type": "array"
+          },
+          "flush_at": {
+            "description": "When it closes (or closed): the window end or the digest time. A sliding window moves it.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "flushed_at": {
+            "description": "When it was closed.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "The batch id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "item_count": {
+            "description": "Notifications in the batch.",
+            "type": "integer"
+          },
+          "key": {
+            "description": "The value of the type's batch `key` in the sends (empty: one batch per recipient).",
+            "example": "p_42",
+            "type": "string"
+          },
+          "notification_ids": {
+            "description": "The notifications in the batch, oldest first (the first 100).",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "opened_at": {
+            "description": "When the first notification opened it.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "What templates got as `batch` when it closed (`count`, `items`, `actors`, …); null while open.",
+            "nullable": true,
+            "type": "object"
+          },
+          "recipient": {
+            "description": "The recipient external id (null once erased).",
+            "example": "user_123",
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchState"
+              }
+            ],
+            "description": "`open` (collecting), `flushed` (sent as one message), `cancelled` (every notification in it was cancelled)."
+          },
+          "type": {
+            "description": "The notification type key.",
+            "example": "comment.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "recipient",
+          "key",
+          "state",
+          "item_count",
+          "opened_at",
+          "flush_at",
+          "flushed_at",
+          "notification_ids",
+          "deliveries",
+          "payload"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchDetail"
+      },
+      "BatchDto": {
+        "properties": {
+          "inbox": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchInboxMode"
+              }
+            ],
+            "default": "collapse",
+            "description": "`collapse`: the inbox shows one item per open batch, replaced (and unread again) as notifications join it, rendered with `batch.*`. `each`: every notification gets its own inbox item at once. Either way the inbox never waits."
+          },
+          "key": {
+            "description": "A path into the send's `data` (`post_id`, `thread.id`): one batch per value, so \"3 new comments on Post A\" and \"2 on Post B\" stay apart. Left out: one batch per recipient.",
+            "example": "post_id",
+            "nullable": true,
+            "type": "string"
+          },
+          "max_items": {
+            "default": 10,
+            "description": "How many notifications templates get in `batch.items` (newest first). `batch.count` always counts all of them.",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "max_window_seconds": {
+            "description": "Sliding windows: the latest a batch closes, in seconds after its first notification. Default: `window_seconds`.",
+            "example": 3600,
+            "maximum": 604800,
+            "minimum": 10,
+            "nullable": true,
+            "type": "integer"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchMode"
+              }
+            ],
+            "description": "`window`: collect for `window_seconds` after the first notification (or after the latest, with `sliding`), then send one message. `digest`: collect until the next `schedule` time in the recipient's time zone."
+          },
+          "schedule": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchScheduleDto"
+              }
+            ],
+            "description": "Digest mode: when the digest goes out.",
+            "nullable": true
+          },
+          "sliding": {
+            "default": false,
+            "description": "Window mode: every new notification restarts the window (a burst goes out once it is quiet), up to `max_window_seconds` after the first.",
+            "type": "boolean"
+          },
+          "window_seconds": {
+            "description": "Window mode: how long a batch collects, in seconds.",
+            "example": 300,
+            "maximum": 604800,
+            "minimum": 10,
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "type": "object"
+      },
+      "BatchListResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Batches, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/BatchSummaryDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchList"
+      },
+      "BatchScheduleDto": {
+        "properties": {
+          "frequency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyDigestFrequency"
+              }
+            ],
+            "description": "`daily`, or `weekly` on `weekday`."
+          },
+          "time": {
+            "description": "Local time the digest goes out, `HH:MM` 24-hour, in the recipient time zone (else the workspace default, else UTC).",
+            "example": "09:00",
+            "type": "string"
+          },
+          "weekday": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyWeekday"
+              }
+            ],
+            "description": "Weekly digests only: the day it goes out.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "frequency",
+          "time"
+        ],
+        "type": "object"
+      },
+      "BatchScheduleViewDto": {
+        "properties": {
+          "frequency": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyDigestFrequency"
+              }
+            ],
+            "description": "Daily or weekly."
+          },
+          "time": {
+            "description": "Local time, `HH:MM`.",
+            "example": "09:00",
+            "type": "string"
+          },
+          "weekday": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyWeekday"
+              }
+            ],
+            "description": "Weekly: the day.",
+            "nullable": true
+          }
+        },
+        "required": [
+          "frequency",
+          "time",
+          "weekday"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchScheduleView"
+      },
+      "BatchSummaryDto": {
+        "properties": {
+          "flush_at": {
+            "description": "When it closes (or closed): the window end or the digest time. A sliding window moves it.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "flushed_at": {
+            "description": "When it was closed.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "The batch id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "item_count": {
+            "description": "Notifications in the batch.",
+            "type": "integer"
+          },
+          "key": {
+            "description": "The value of the type's batch `key` in the sends (empty: one batch per recipient).",
+            "example": "p_42",
+            "type": "string"
+          },
+          "opened_at": {
+            "description": "When the first notification opened it.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "recipient": {
+            "description": "The recipient external id (null once erased).",
+            "example": "user_123",
+            "nullable": true,
+            "type": "string"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchState"
+              }
+            ],
+            "description": "`open` (collecting), `flushed` (sent as one message), `cancelled` (every notification in it was cancelled)."
+          },
+          "type": {
+            "description": "The notification type key.",
+            "example": "comment.created",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "recipient",
+          "key",
+          "state",
+          "item_count",
+          "opened_at",
+          "flush_at",
+          "flushed_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchSummary"
+      },
+      "BatchViewDto": {
+        "properties": {
+          "inbox": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchInboxMode"
+              }
+            ],
+            "description": "How the inbox shows a batch."
+          },
+          "key": {
+            "description": "Data path batches are keyed by; null: one per recipient.",
+            "nullable": true,
+            "type": "string"
+          },
+          "max_items": {
+            "description": "Items templates get in `batch.items`.",
+            "type": "integer"
+          },
+          "max_window_seconds": {
+            "description": "Sliding cap in seconds.",
+            "nullable": true,
+            "type": "integer"
+          },
+          "mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBatchMode"
+              }
+            ],
+            "description": "Window or digest."
+          },
+          "schedule": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchScheduleViewDto"
+              }
+            ],
+            "description": "Digest schedule (digest mode).",
+            "nullable": true
+          },
+          "sliding": {
+            "description": "Whether each notification restarts the window.",
+            "type": "boolean"
+          },
+          "window_seconds": {
+            "description": "Window length in seconds (window mode).",
+            "nullable": true,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mode",
+          "key",
+          "window_seconds",
+          "sliding",
+          "max_window_seconds",
+          "schedule",
+          "max_items",
+          "inbox"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "BatchView"
+      },
       "BulkRecipientDto": {
         "properties": {
           "auth_user_id": {
@@ -986,6 +1399,15 @@
       },
       "CreateNotificationTypeDto": {
         "properties": {
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchDto"
+              }
+            ],
+            "description": "Batch notifications of this type per recipient (a window, or a daily/weekly digest): email and push send one message per batch, rendered with `batch.count`, `batch.items` and `batch.actors`; the inbox collapses. Not for critical types, and only with `always` routing (no fallback steps). Null removes it; open batches still close as configured when they were opened.",
+            "nullable": true
+          },
           "category_key": {
             "description": "Key of the category the type belongs to.",
             "example": "billing",
@@ -1052,6 +1474,16 @@
         "required": [
           "key"
         ],
+        "type": "object"
+      },
+      "CreatePreferenceLinkDto": {
+        "properties": {
+          "category_key": {
+            "description": "A category key. The page then opens with a one-click \"Unsubscribe from these emails\" for that category, the way the `List-Unsubscribe` header of a Notify email does. Leave it out for a general link (an account settings page, a footer you write yourself).",
+            "example": "product-updates",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "CreateRecipientTokenDto": {
@@ -1433,6 +1865,12 @@
             },
             "type": "array"
           },
+          "batch_id": {
+            "description": "The batch this delivery waits in or was sent with (types with `batch`); see `GET /batches/{batch_id}`.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "channel": {
             "allOf": [
               {
@@ -1567,6 +2005,7 @@
           "target",
           "fallback_step",
           "is_fallback",
+          "batch_id",
           "state",
           "reason",
           "explanation",
@@ -1590,6 +2029,12 @@
             "description": "Provider calls made.",
             "type": "integer"
           },
+          "batch_id": {
+            "description": "The batch this delivery waits in or was sent with (types with `batch`); see `GET /batches/{batch_id}`.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "channel": {
             "allOf": [
               {
@@ -1724,6 +2169,7 @@
           "target",
           "fallback_step",
           "is_fallback",
+          "batch_id",
           "state",
           "reason",
           "explanation",
@@ -2565,6 +3011,15 @@
             "nullable": true,
             "type": "string"
           },
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchViewDto"
+              }
+            ],
+            "description": "Batching or digest config; null sends each notification on its own.",
+            "nullable": true
+          },
           "category_key": {
             "description": "Category key.",
             "type": "string"
@@ -2660,6 +3115,7 @@
           "default_locale",
           "email_quiet_hours",
           "throttle",
+          "batch",
           "archived_at",
           "templates"
         ],
@@ -2819,6 +3275,28 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "FcmCredential"
+      },
+      "FlushBatchResponseDto": {
+        "properties": {
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchDetailDto"
+              }
+            ],
+            "description": "The batch after closing it."
+          },
+          "merged": {
+            "description": "Deliveries merged into the carriers (`skipped: batched_into`).",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "batch",
+          "merged"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "FlushBatch"
       },
       "GenerateVapidKeysDto": {
         "properties": {
@@ -3761,6 +4239,15 @@
             "nullable": true,
             "type": "string"
           },
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchViewDto"
+              }
+            ],
+            "description": "Batching or digest config; null sends each notification on its own.",
+            "nullable": true
+          },
           "category_id": {
             "description": "Category id.",
             "format": "uuid",
@@ -3857,6 +4344,7 @@
           "default_locale",
           "email_quiet_hours",
           "throttle",
+          "batch",
           "archived_at",
           "version",
           "templates",
@@ -3890,6 +4378,98 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "NotificationTypeList"
+      },
+      "NotifyBatchInboxMode": {
+        "enum": [
+          "collapse",
+          "each"
+        ],
+        "type": "string"
+      },
+      "NotifyBatchMode": {
+        "enum": [
+          "window",
+          "digest"
+        ],
+        "type": "string"
+      },
+      "NotifyBatchState": {
+        "enum": [
+          "open",
+          "flushed",
+          "cancelled"
+        ],
+        "type": "string"
+      },
+      "NotifyBrandingDto": {
+        "properties": {
+          "accent_color": {
+            "description": "Accent colour for the switches and the Save button, `#rrggbb`. Text on it is black or white, whichever reads better.",
+            "example": "#4f46e5",
+            "nullable": true,
+            "type": "string"
+          },
+          "logo_url": {
+            "description": "An `https://` image shown at the top of the page (at most 32 px high). It is loaded by the visitor's browser from your host.",
+            "example": "https://acme.example/logo.png",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Your product name, shown at the top of the page and in its title. Null: the page says \"Notification preferences\" only.",
+            "example": "Acme",
+            "maxLength": 80,
+            "nullable": true,
+            "type": "string"
+          },
+          "privacy_url": {
+            "description": "Your privacy policy, linked in the page footer (`https://`).",
+            "example": "https://acme.example/privacy",
+            "format": "uri",
+            "maxLength": 500,
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "NotifyBrandingViewDto": {
+        "properties": {
+          "accent_color": {
+            "description": "Accent colour, `#rrggbb`.",
+            "example": "#4f46e5",
+            "nullable": true,
+            "type": "string"
+          },
+          "logo_url": {
+            "description": "Logo image (`https://`).",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "name": {
+            "description": "Product name shown on the page.",
+            "example": "Acme",
+            "nullable": true,
+            "type": "string"
+          },
+          "privacy_url": {
+            "description": "Privacy policy linked in the footer.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "logo_url",
+          "accent_color",
+          "privacy_url"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "NotifyBrandingView"
       },
       "NotifyChannel": {
         "enum": [
@@ -4037,7 +4617,7 @@
         "x-pc-sdk-model": "NotifyDeliveryEventData"
       },
       "NotifyDeliveryReason": {
-        "description": "Why a delivery was skipped, held, retried or failed. Open enum: new reasons may be added.\n\n- `suppressed_preference`: The recipient turned this channel off for this type or its category. Fix: Nothing to fix: the recipient chose this. Mark the category channel `mandatory` only for messages they must receive.\n- `default_off`: This channel is off by default for the category, and the recipient has not turned it on. Fix: Nothing to fix if the channel is opt-in by design: it is sent once the recipient turns it on in their preferences. Set the category default to `on` to send it without an opt-in.\n- `unsubscribed_all`: The recipient unsubscribed from all non-critical notifications. Fix: Only types marked `critical` still reach them; otherwise the recipient has to opt back in.\n- `held_quiet_hours`: Held until the recipient's quiet hours end. Fix: It is sent when the window ends. Mark the type `critical` if it must not wait.\n- `scheduled_send`: Waiting for the send time given in `send_at` or `delay_seconds`. Fix: It is sent at that time. Cancel it with the notification id or its `cancellation_key`.\n- `no_device`: The recipient has no active device for this channel. Fix: Register the device token from your app (`POST …/devices`) after the user grants permission.\n- `no_address`: The recipient has no email address. Fix: Set `email` on the recipient, or pass it inline in the send.\n- `email_invalid`: An earlier email to this address hard-bounced. Fix: Update the recipient's email address; a new address clears the bounce.\n- `email_complained`: The recipient marked an earlier email as spam. Fix: Email stays off for this recipient; reach them through another channel.\n- `email_paused`: Email is paused for this workspace (high bounce or complaint rate). Fix: Check your sending in the console and resume email in Notify settings.\n- `email_budget`: The workspace email budget is spent for now; the email waits for the next window. Fix: It is sent automatically when the budget allows. Ask us to raise the budget if this is routine.\n- `email_backlog_full`: The workspace already holds 10,000 emails waiting for budget, so this one was not queued. Fix: Send fewer emails or spread them out; ask us to raise the budget if this volume is routine.\n- `channel_not_configured`: The channel is not set up in this workspace. Fix: Upload APNs or FCM credentials, generate web push keys, or enable Mail with a verified sender.\n- `channel_restricted`: The send's `channels` list left this channel out. Fix: Add the channel to `channels`, or omit `channels` to use every channel of the type.\n- `type_archived`: The notification type is archived. Fix: Unarchive the type or send a different one.\n- `credential_invalid`: No valid credential matches this device's app or environment. Fix: Upload the APNs key or FCM service account for this bundle id or project, in the right environment.\n- `template_missing`: The type has no template for this channel. Fix: Add a template for the channel (any locale) to the notification type.\n- `rate_limited`: The recipient already received the per-minute maximum of notifications. Fix: Send fewer notifications to one person, or batch them; critical types have their own budget.\n- `throttled`: The type's own throttle for this recipient was reached. Fix: Raise or remove `throttle` on the notification type if every message must go out.\n- `read_in_inbox`: The recipient read the inbox item first, so the follow-up was not needed. Fix: Nothing to fix: this is how `after_unread_seconds` works.\n- `awaiting_unread`: A follow-up step waiting to see whether the recipient reads the inbox item first. Fix: Nothing to fix: it is sent when the `after_unread_seconds` timer ends and the item is still unread, and skipped as `read_in_inbox` otherwise.\n- `actor_excluded`: The recipient is the actor who caused the notification. Fix: Pass `exclude_actor: false` to notify the actor too.\n- `recipient_not_found`: No recipient with this external id exists in the workspace. Fix: Create the recipient first (`PUT /recipients/{external_id}`), pass it inline with an email, or send `create_missing: true`.\n- `recipient_erased`: The recipient was erased in the last 24 hours and cannot be recreated by a send yet. Fix: Wait 24 hours after the erasure, then create the recipient again.\n- `mail_suppressed`: ProductCraft Mail suppressed the address (earlier bounces or complaints). Fix: Check the suppression list in Mail; remove the address only if you know it is valid.\n- `mail_refused`: ProductCraft Mail refused the message (the code after the colon says why). Fix: Look up the Mail error code; usually the template name or sender needs fixing.\n- `pruned`: The push provider said the device token is no longer valid; the device was removed. Fix: Nothing to fix: the app registers a fresh token the next time it opens.\n- `payload_too_large`: The rendered push payload is over the provider's size limit. Fix: Shorten the template or move data out of the push payload.\n- `credential_error`: The push provider rejected the workspace credential. Fix: Upload a fresh APNs key or FCM service account; the channel resumes as soon as it validates.\n- `circuit_open`: The provider is failing for this credential, so sends are paused briefly and retried. Fix: Nothing to fix: it retries on its own. Check the provider's status page if it lasts.\n- `expired`: The notification's time to live passed before it could be delivered. Fix: Raise `ttl_seconds` on the type if late delivery is still useful.\n- `cancelled`: The notification was cancelled, or the recipient was erased, before delivery. Fix: Nothing to fix.\n- `provider_error`: The provider kept failing until retries ran out. Fix: Check the attempts for the provider status and code.",
+        "description": "Why a delivery was skipped, held, retried or failed. Open enum: new reasons may be added.\n\n- `suppressed_preference`: The recipient turned this channel off for this type or its category. Fix: Nothing to fix: the recipient chose this. Mark the category channel `mandatory` only for messages they must receive.\n- `default_off`: This channel is off by default for the category, and the recipient has not turned it on. Fix: Nothing to fix if the channel is opt-in by design: it is sent once the recipient turns it on in their preferences. Set the category default to `on` to send it without an opt-in.\n- `unsubscribed_all`: The recipient unsubscribed from all non-critical notifications. Fix: Only types marked `critical` still reach them; otherwise the recipient has to opt back in.\n- `held_quiet_hours`: Held until the recipient's quiet hours end. Fix: It is sent when the window ends. Mark the type `critical` if it must not wait.\n- `scheduled_send`: Waiting for the send time given in `send_at` or `delay_seconds`. Fix: It is sent at that time. Cancel it with the notification id or its `cancellation_key`.\n- `no_device`: The recipient has no active device for this channel. Fix: Register the device token from your app (`POST …/devices`) after the user grants permission.\n- `no_address`: The recipient has no email address. Fix: Set `email` on the recipient, or pass it inline in the send.\n- `email_invalid`: An earlier email to this address hard-bounced. Fix: Update the recipient's email address; a new address clears the bounce.\n- `email_complained`: The recipient marked an earlier email as spam. Fix: Email stays off for this recipient; reach them through another channel.\n- `email_paused`: Email is paused for this workspace (high bounce or complaint rate). Fix: Check your sending in the console and resume email in Notify settings.\n- `email_budget`: The workspace email budget is spent for now; the email waits for the next window. Fix: It is sent automatically when the budget allows. Ask us to raise the budget if this is routine.\n- `email_backlog_full`: The workspace already holds 10,000 emails waiting for budget, so this one was not queued. Fix: Send fewer emails or spread them out; ask us to raise the budget if this volume is routine.\n- `channel_not_configured`: The channel is not set up in this workspace. Fix: Upload APNs or FCM credentials, generate web push keys, or enable Mail with a verified sender.\n- `channel_restricted`: The send's `channels` list left this channel out. Fix: Add the channel to `channels`, or omit `channels` to use every channel of the type.\n- `type_archived`: The notification type is archived. Fix: Unarchive the type or send a different one.\n- `credential_invalid`: No valid credential matches this device's app or environment. Fix: Upload the APNs key or FCM service account for this bundle id or project, in the right environment.\n- `template_missing`: The type has no template for this channel. Fix: Add a template for the channel (any locale) to the notification type.\n- `rate_limited`: The recipient already received the per-minute maximum of notifications. Fix: Send fewer notifications to one person, or batch them; critical types have their own budget.\n- `throttled`: The type's own throttle for this recipient was reached. Fix: Raise or remove `throttle` on the notification type if every message must go out.\n- `read_in_inbox`: The recipient read the inbox item first, so the follow-up was not needed. Fix: Nothing to fix: this is how `after_unread_seconds` works.\n- `batched`: The type batches notifications: this one waits in the recipient's open batch, which closes at the delivery's next attempt time (the batch window end or the digest time) and then sends one message for everything in it. Fix: Nothing to fix. To send it sooner, flush the batch (POST /batches/{batch_id}/flush), or remove `batch` from the type.\n- `batched_into`: Sent together with the rest of its batch: the batch's message went out in another delivery of the same batch (same recipient and channel). Fix: Nothing to fix. Look up the batch (GET /batches/{batch_id}) to see the delivery that carried it.\n- `awaiting_unread`: A follow-up step waiting to see whether the recipient reads the inbox item first. Fix: Nothing to fix: it is sent when the `after_unread_seconds` timer ends and the item is still unread, and skipped as `read_in_inbox` otherwise.\n- `actor_excluded`: The recipient is the actor who caused the notification. Fix: Pass `exclude_actor: false` to notify the actor too.\n- `recipient_not_found`: No recipient with this external id exists in the workspace. Fix: Create the recipient first (`PUT /recipients/{external_id}`), pass it inline with an email, or send `create_missing: true`.\n- `recipient_erased`: The recipient was erased in the last 24 hours and cannot be recreated by a send yet. Fix: Wait 24 hours after the erasure, then create the recipient again.\n- `mail_suppressed`: ProductCraft Mail suppressed the address (earlier bounces or complaints). Fix: Check the suppression list in Mail; remove the address only if you know it is valid.\n- `mail_refused`: ProductCraft Mail refused the message (the code after the colon says why). Fix: Look up the Mail error code; usually the template name or sender needs fixing.\n- `pruned`: The push provider said the device token is no longer valid; the device was removed. Fix: Nothing to fix: the app registers a fresh token the next time it opens.\n- `payload_too_large`: The rendered push payload is over the provider's size limit. Fix: Shorten the template or move data out of the push payload.\n- `credential_error`: The push provider rejected the workspace credential. Fix: Upload a fresh APNs key or FCM service account; the channel resumes as soon as it validates.\n- `circuit_open`: The provider is failing for this credential, so sends are paused briefly and retried. Fix: Nothing to fix: it retries on its own. Check the provider's status page if it lasts.\n- `expired`: The notification's time to live passed before it could be delivered. Fix: Raise `ttl_seconds` on the type if late delivery is still useful.\n- `cancelled`: The notification was cancelled, or the recipient was erased, before delivery. Fix: Nothing to fix.\n- `provider_error`: The provider kept failing until retries ran out. Fix: Check the attempts for the provider status and code.",
         "enum": [
           "suppressed_preference",
           "default_off",
@@ -4060,6 +4640,8 @@
           "throttled",
           "read_in_inbox",
           "awaiting_unread",
+          "batched",
+          "batched_into",
           "actor_excluded",
           "recipient_not_found",
           "recipient_erased",
@@ -4082,6 +4664,14 @@
           "awaiting_unread": {
             "fix": "Nothing to fix: it is sent when the `after_unread_seconds` timer ends and the item is still unread, and skipped as `read_in_inbox` otherwise.",
             "sentence": "A follow-up step waiting to see whether the recipient reads the inbox item first."
+          },
+          "batched": {
+            "fix": "Nothing to fix. To send it sooner, flush the batch (POST /batches/{batch_id}/flush), or remove `batch` from the type.",
+            "sentence": "The type batches notifications: this one waits in the recipient's open batch, which closes at the delivery's next attempt time (the batch window end or the digest time) and then sends one message for everything in it."
+          },
+          "batched_into": {
+            "fix": "Nothing to fix. Look up the batch (GET /batches/{batch_id}) to see the delivery that carried it.",
+            "sentence": "Sent together with the rest of its batch: the batch's message went out in another delivery of the same batch (same recipient and channel)."
           },
           "cancelled": {
             "fix": "Nothing to fix.",
@@ -4274,6 +4864,13 @@
         "type": "object",
         "x-pc-sdk-model": "NotifyDeviceEventData"
       },
+      "NotifyDigestFrequency": {
+        "enum": [
+          "daily",
+          "weekly"
+        ],
+        "type": "string"
+      },
       "NotifyEmailAutoPausedDataDto": {
         "properties": {
           "bounces": {
@@ -4377,6 +4974,9 @@
               "ORIGIN_NOT_ALLOWED",
               "STREAM_LIMIT",
               "LIMIT_EXCEEDED",
+              "BATCHED_TYPE_NOT_SCHEDULABLE",
+              "BATCH_NOT_FOUND",
+              "BATCH_NOT_OPEN",
               "SEND_AT_OUT_OF_RANGE",
               "UNSAFE_URL",
               "AUTH_USER_ALREADY_LINKED",
@@ -4408,6 +5008,9 @@
           "AUTH_USER_ALREADY_LINKED": "The Auth end user is already linked to another recipient in this workspace.",
           "BAD_GATEWAY": "An upstream service returned an invalid response.",
           "BAD_REQUEST": "The request is malformed (not valid JSON, a bad header, an unusable parameter).",
+          "BATCHED_TYPE_NOT_SCHEDULABLE": "The notification type batches its notifications (`batch`): send it now, the batch window or digest decides when it goes out.",
+          "BATCH_NOT_FOUND": "No batch with this id in this workspace.",
+          "BATCH_NOT_OPEN": "The batch is already closed (flushed or cancelled), or closing right now.",
           "CATEGORY_IN_USE": "The category is used by notification types; move them to another category first.",
           "CATEGORY_KEY_TAKEN": "A category with this key already exists in the workspace.",
           "CATEGORY_NOT_FOUND": "No category with this id or key in this workspace.",
@@ -4613,6 +5216,15 @@
       },
       "NotifySettingsDto": {
         "properties": {
+          "branding": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBrandingViewDto"
+              }
+            ],
+            "description": "Name, logo, accent colour and privacy link of the hosted preference page (`/v1/preferences/{token}`). Null: the page is unbranded.",
+            "nullable": true
+          },
           "client_origins": {
             "description": "Browser origins allowed to call the client API (`/v1/client/…`) with a recipient token. Empty: only `http://localhost` (any port) is accepted, for development. Calls without an `Origin` header (native apps) are not origin-checked.",
             "example": [
@@ -4667,7 +5279,8 @@
           "email_resumed_at",
           "default_timezone",
           "default_quiet_hours",
-          "client_origins"
+          "client_origins",
+          "branding"
         ],
         "type": "object",
         "x-pc-sdk-model": "NotifySettings"
@@ -4891,6 +5504,18 @@
         "type": "object",
         "x-pc-sdk-model": "NotifyWebhookRecipient"
       },
+      "NotifyWeekday": {
+        "enum": [
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+          "sunday"
+        ],
+        "type": "string"
+      },
       "PaginationDto": {
         "properties": {
           "has_more": {
@@ -4910,6 +5535,37 @@
         "type": "object",
         "x-pc-sdk-model": "Pagination"
       },
+      "PlanBatchDto": {
+        "properties": {
+          "batch_id": {
+            "description": "The open batch it would join; null when it would open a new one.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
+          "flush_at": {
+            "description": "When the batch closes and sends one message (a sliding window may move it).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "item_count": {
+            "description": "Notifications in the batch once this one joins.",
+            "type": "integer"
+          },
+          "key": {
+            "description": "The batch key value (empty: one batch per recipient).",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "key",
+          "item_count",
+          "flush_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "PlanBatch"
+      },
       "PlanDecision": {
         "enum": [
           "deliver",
@@ -4920,6 +5576,14 @@
       },
       "PlanRowDto": {
         "properties": {
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanBatchDto"
+              }
+            ],
+            "description": "Batched types: the batch this channel would wait in (`reason: batched`)."
+          },
           "channel": {
             "allOf": [
               {
@@ -5098,6 +5762,33 @@
           "*"
         ],
         "type": "string"
+      },
+      "PreferenceLinkDto": {
+        "properties": {
+          "category_key": {
+            "description": "The category the link offers one-click unsubscribe from, if any.",
+            "nullable": true,
+            "type": "string"
+          },
+          "expires_at": {
+            "description": "When the link stops working (365 days after it was made). Make a new one per email; old ones keep working until then.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "description": "The hosted preference page for this recipient. Anyone holding it can change this recipient's preferences (never critical types), so send it only to the recipient, for example in an email footer. Opening it changes nothing; the page saves only when the person presses a button.",
+            "example": "https://api.notify.productcraft.co/v1/preferences/p1.AQ…",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "expires_at",
+          "category_key"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "PreferenceLink"
       },
       "PreferenceScope": {
         "enum": [
@@ -5718,6 +6409,15 @@
       },
       "ReplaceNotificationTypeDto": {
         "properties": {
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchDto"
+              }
+            ],
+            "description": "Batch notifications of this type per recipient (a window, or a daily/weekly digest): email and push send one message per batch, rendered with `batch.count`, `batch.items` and `batch.actors`; the inbox collapses. Not for critical types, and only with `always` routing (no fallback steps). Null removes it; open batches still close as configured when they were opened.",
+            "nullable": true
+          },
           "category_key": {
             "description": "Key of the category; it must exist (create categories first, or apply an export).",
             "example": "billing",
@@ -6516,6 +7216,12 @@
             "description": "Provider calls made.",
             "type": "integer"
           },
+          "batch_id": {
+            "description": "The batch this delivery waits in or was sent with (types with `batch`); see `GET /batches/{batch_id}`.",
+            "format": "uuid",
+            "nullable": true,
+            "type": "string"
+          },
           "channel": {
             "allOf": [
               {
@@ -6663,6 +7369,7 @@
           "target",
           "fallback_step",
           "is_fallback",
+          "batch_id",
           "state",
           "reason",
           "explanation",
@@ -6789,6 +7496,15 @@
       },
       "UpdateNotificationTypeDto": {
         "properties": {
+          "batch": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BatchDto"
+              }
+            ],
+            "description": "Batch notifications of this type per recipient (a window, or a daily/weekly digest): email and push send one message per batch, rendered with `batch.count`, `batch.items` and `batch.actors`; the inbox collapses. Not for critical types, and only with `always` routing (no fallback steps). Null removes it; open batches still close as configured when they were opened.",
+            "nullable": true
+          },
           "category_key": {
             "description": "Key of the category the type belongs to (preferences are per category).",
             "example": "billing",
@@ -6851,6 +7567,15 @@
       },
       "UpdateNotifySettingsDto": {
         "properties": {
+          "branding": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotifyBrandingDto"
+              }
+            ],
+            "description": "Replaces the hosted preference page branding (fields you leave out are cleared). `null` removes it.",
+            "nullable": true
+          },
           "client_origins": {
             "description": "Replaces the browser origins allowed to call the client API: `https://host[:port]` (or `http://localhost[:port]`), no path. `[]` goes back to localhost only.",
             "example": [
@@ -9610,6 +10335,593 @@
           "method": "vapidPublicKey",
           "paginated": false,
           "resource": "me.webpush"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/batches": {
+      "get": {
+        "description": "Batches of notification types with `batch` (a window or a digest), newest first: one per recipient and key value while collecting (`open`), then `flushed` once its one message went out. Filter by `recipient`, `type` and `state`. Pass `next_cursor` as `cursor` until `has_more` is false.",
+        "operationId": "BatchesController_list",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only this recipient (external id).",
+            "example": "user_123",
+            "in": "query",
+            "name": "recipient",
+            "required": false,
+            "schema": {
+              "example": "user_123",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only this notification type key.",
+            "example": "comment.created",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "example": "comment.created",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only batches in this state.",
+            "example": "open",
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/NotifyBatchState"
+            }
+          },
+          {
+            "description": "Opaque cursor for pagination: the `next_cursor` of the previous page.",
+            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0xMS0wMVQwMDowMDowMFoifQ",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size.",
+            "example": 25,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchListResponseDto"
+                }
+              }
+            },
+            "description": "A page of batches.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR` on a bad filter, or `BAD_REQUEST`: invalid cursor.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "RECIPIENT_TOKEN_INVALID"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List batches",
+        "tags": [
+          "notifications"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "batches"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/batches/{batch_id}": {
+      "get": {
+        "description": "The notifications collected in it, its deliveries (while open, `scheduled: batched`; after it closes, one carrier per channel with its outcome, the rest `skipped: batched_into`), and the `batch` data templates got.",
+        "operationId": "BatchesController_retrieve",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The batch id (from a delivery's `batch_id`, or the list).",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchDetailDto"
+                }
+              }
+            },
+            "description": "The batch.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "RECIPIENT_TOKEN_INVALID"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`BATCH_NOT_FOUND`: no batch with this id in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "BATCH_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get a batch",
+        "tags": [
+          "notifications"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "batches"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/batches/{batch_id}/flush": {
+      "post": {
+        "description": "Sends an open batch now instead of at its window end or digest time: one message per batched channel, rendered with everything collected so far. Preferences, quiet hours, the recipient budgets and the type throttle apply as for any send. Useful to test a digest template without waiting for the morning.",
+        "operationId": "BatchesController_flush",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The batch id (from a delivery's `batch_id`, or the list).",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional: the same key returns the first response.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlushBatchResponseDto"
+                }
+              }
+            },
+            "description": "Closed; the carriers are on their way.",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "RECIPIENT_TOKEN_INVALID"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`BATCH_NOT_FOUND`: no batch with this id in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "BATCH_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`BATCH_NOT_OPEN`: the batch already closed, or is closing right now. `IDEMPOTENCY_KEY_REUSE`: the key was used for another request. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "BATCH_NOT_OPEN",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Close a batch now",
+        "tags": [
+          "notifications"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "flush",
+          "paginated": false,
+          "resource": "batches"
         }
       }
     },
@@ -15565,7 +16877,7 @@
                 }
               }
             },
-            "description": "`RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing.",
+            "description": "`RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `BATCHED_TYPE_NOT_SCHEDULABLE`: the type batches (send it now); `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -15577,6 +16889,7 @@
               "NOTIFICATION_TYPE_ARCHIVED",
               "TEMPLATE_MISSING",
               "SEND_AT_OUT_OF_RANGE",
+              "BATCHED_TYPE_NOT_SCHEDULABLE",
               "UNSAFE_URL",
               "VALIDATION_ERROR"
             ]
@@ -18542,6 +19855,221 @@
           "method": "list",
           "paginated": true,
           "resource": "recipients.inbox"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/recipients/{external_id}/preference-link": {
+      "post": {
+        "description": "Returns a signed link to a page, hosted by Notify in your workspace's branding (`branding` in settings), where this recipient switches each category on or off per channel, sets quiet hours and a time zone, or unsubscribes from everything except critical types. It needs no sign-in, so it works from any email, also for people who never open your app. The link is valid for 365 days. Changes are recorded in the recipient's consent history with source `hosted_page`. Each call returns a fresh link and changes nothing, so it takes no `Idempotency-Key`.",
+        "operationId": "PreferenceLinkController_create",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Your user id for the recipient (URL-encoded): 1-255 of `A-Z a-z 0-9 . _ : @ | -`.",
+            "example": "user_123",
+            "in": "path",
+            "name": "external_id",
+            "required": true,
+            "schema": {
+              "example": "user_123",
+              "pattern": "^[A-Za-z0-9._:@|-]{1,255}$",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePreferenceLinkDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreferenceLinkDto"
+                }
+              }
+            },
+            "description": "The link.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`: `category_key` is malformed.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired, revoked or invalid bearer token (`UNAUTHORIZED`): send a workspace API key or a console session as `Authorization: Bearer <token>`. A recipient token is refused here with `RECIPIENT_TOKEN_INVALID`: it works only on the client API (`/v1/client/…`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "RECIPIENT_TOKEN_INVALID"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks `notify.recipient.write`, or the workspace has not enabled Notify (`SERVICE_NOT_ENABLED`). Also `FORBIDDEN` when the credential belongs to another workspace than the URL names, or the URL uses the workspace slug instead of its id (a UUID).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`RECIPIENT_NOT_FOUND`: no recipient with this external id in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "RECIPIENT_NOT_FOUND"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`CATEGORY_NOT_FOUND`: no category with this key.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY",
+              "CATEGORY_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a hosted preference page link",
+        "tags": [
+          "recipients"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "createPreferenceLink",
+          "paginated": false,
+          "resource": "recipients"
         }
       }
     },
