@@ -122,7 +122,9 @@ Full reference: [api.md](./api.md).
 - `auth.admin.app(…).webhooks`: `endpoints.create`, `endpoints.delete`, `endpoints.list`, `endpoints.retrieve`, `endpoints.rotateSecret`, `endpoints.test`, `endpoints.update`, `eventTypes.list`, `events.list`, `events.replay`, `events.retrieve`
 - `auth.apps`: `create`, `delete`, `list`, `retrieve`, `update`
 - `auth.consumer(…)`: `acceptInvite`, `acceptTenantInvite`, `exchangeProviderCode`, `logout`, `refresh`, `requestPasswordReset`, `requestVerification`, `resetPassword`, `sendPasswordResetEmail`, `sendVerificationEmail`, `signin`, `signinWithProvider`, `signup`, `switchTenant`, `verifyEmail`
-- `auth.consumer(…).me`: `activity.list`, `changePassword`, `contacts.create`, `contacts.delete`, `contacts.list`, `contacts.promote`, `deleteAccount`, `deleteAvatar`, `mfa.factors.create`, `mfa.factors.delete`, `mfa.factors.list`, `mfa.factors.verify`, `mfa.recoveryCodes.regenerate`, `mfa.stepUp.sendCode`, `mfa.stepUp.verify`, `mfa.stepUp.webauthn.options`, `permissions`, `retrieve`, `sessions.delete`, `sessions.list`, `tenantInvites.accept`, `tenants.list`, `update`, `uploadAvatar`
+- `auth.consumer(…).agentAccess`: `authorizations.approve`, `authorizations.deny`, `authorizations.retrieve`, `config.retrieve`, `config.update`, `grants.delete`, `grants.list`, `introspect`
+- `auth.consumer(…).email`: `config`, `start`, `verify`
+- `auth.consumer(…).me`: `activity.list`, `agentGrants.delete`, `agentGrants.list`, `changePassword`, `contacts.create`, `contacts.delete`, `contacts.list`, `contacts.promote`, `deleteAccount`, `deleteAvatar`, `mfa.factors.create`, `mfa.factors.delete`, `mfa.factors.list`, `mfa.factors.verify`, `mfa.recoveryCodes.regenerate`, `mfa.stepUp.sendCode`, `mfa.stepUp.verify`, `mfa.stepUp.webauthn.options`, `permissions`, `retrieve`, `sessions.delete`, `sessions.list`, `tenantInvites.accept`, `tenants.list`, `update`, `uploadAvatar`
 - `auth.consumer(…).mfa`: `enroll`, `recover`, `sendCode`, `verify`, `verifyEnrollment`, `webauthn.options`
 - `auth.consumer(…).oauth`: `introspect`, `token`
 - `auth.consumer(…).passkey`: `options`, `verify`

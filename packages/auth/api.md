@@ -590,7 +590,7 @@ Update the per-app auth config. Only fields you pass are changed.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure — a value out of range (password length, token/session lifetimes, lockout threshold, max sessions, MFA grace days, unverified-account window), an unknown enum value, a `signup_default_role` that does not exist in this app, or a `bot_protection` change that cannot stand: no provider or site key on first setup, a hostname that is not a hostname, or `enabled: true` with no secret stored or sent. |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure — a value out of range (password length, token/session lifetimes, lockout threshold, max sessions, MFA grace days, unverified-account window), an unknown enum value, a `signup_default_role` that does not exist in this app, or a `bot_protection` change that cannot stand: no provider or site key on first setup, a hostname that is not a hostname, or `enabled: true` with no secret stored or sent; or a `passwordless_email` value out of range or a `link_url` whose origin is not in `allowed_redirect_origins` (also refused when removing that origin). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.update` on this app, or the app is suspended or archived. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
@@ -1774,7 +1774,7 @@ const appNotificationSettings = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a
 
 Update the per-app notification settings. Each field is independently optional; null clears that slot.
 
-Turning `notifications_via_envoi` on (from off) creates the default template of every empty slot in the workspace's Mail templates (`auth-verification`, `auth-welcome`, `auth-password-reset`, `auth-invite`, `auth-mfa-code`), reusing a template that already has that name, and fills the slot. Templates are created with your own Mail access; a slot that could not be created stays empty. A slot you clear later is not refilled until emails are switched off and on again.
+Turning `notifications_via_envoi` on (from off) creates the default template of every empty slot in the workspace's Mail templates (`auth-verification`, `auth-welcome`, `auth-password-reset`, `auth-invite`, `auth-mfa-code`, `auth-sign-in`), reusing a template that already has that name, and fills the slot. Templates are created with your own Mail access; a slot that could not be created stays empty. A slot you clear later is not refilled until emails are switched off and on again, or you name it in `seed_defaults`.
 
 - Params: `Auth.NotificationSettingUpdateParams`
 - Credential: [`workspace_key`](#workspace_key)
@@ -3406,6 +3406,300 @@ const consumerVerify = await auth.consumer("my-app").verifyEmail({ code: "123456
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-verify)
 
+## consumer(…).agentAccess
+
+### `auth.consumer(…).agentAccess.introspect(params, options?)`
+
+`POST /{app_slug}/v1/agent-access/introspect` → `Auth.AgentTokenIntrospection`
+
+Verify an agent access token (RFC 7662 shape).
+
+For your resource server: is this agent token usable right now, for which user, client, scopes and grant context? Checks the signature, issuer, single audience, expiry, that the connection is live and the user active. Inactive is exactly `{"active": false}`. Cache positives for at most a few seconds: a Disconnect must take effect quickly. Own per-app bucket of 1200 calls a minute (429 with `Retry-After`). Requires `auth.agent_access.introspect` on the app.
+
+- Params: `Auth.AgentAccessIntrospectParams`
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `token` missing. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_WORKSPACE_MISMATCH` | `PAK_WORKSPACE_MISMATCH` (the PAK belongs to another workspace than the app), or the PAK's policy does not allow `auth.agent_access.introspect` on `pcft:heimdall:app/<appId>`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APP_NOT_FOUND` | `APP_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: this app's introspect bucket is exhausted. `Retry-After` says when it refills. |
+
+```ts
+const agentTokenIntrospection = await auth.consumer("my-app").agentAccess.introspect({ token: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-agent-access-introspect)
+
+## consumer(…).agentAccess.authorizations
+
+### `auth.consumer(…).agentAccess.authorizations.approve(handle, params?, options?)`
+
+`POST /{app_slug}/v1/agent-access/authorizations/{handle}/approve` → `Auth.AgentAuthorizationDecision`
+
+Approve an agent authorization.
+
+Call it when the user presses Allow, from your backend or your page, with the user's own token. Narrow `scopes` to what the user allowed and store your own `context` (e.g. the workspaces they chose; Auth keeps it opaque and returns it on introspection). Then send the browser to `redirect_to`. Single use: a second decision is 409.
+
+- Params: `Auth.AgentAccessAuthorizationApproveParams`
+- Credential: [`end_user_token`](#end_user_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `AGENT_AUTHORIZATION_INVALID` | `AGENT_AUTHORIZATION_INVALID`: a scope that was not requested, or `context` over 2 KB. Or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired end-user access token. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `AGENT_AUTHORIZATION_NOT_FOUND`, `AGENT_ACCESS_DISABLED` | `AGENT_AUTHORIZATION_NOT_FOUND`. Or `AGENT_ACCESS_DISABLED`: agent access is not turned on for this app. |
+| 409 | `ConflictError` | `CONFLICT`, `AGENT_AUTHORIZATION_DECIDED` | `AGENT_AUTHORIZATION_DECIDED`: already approved or denied. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const agentAuthorizationDecision = await auth.consumer("my-app").agentAccess.authorizations.approve("pcar_Q2xhdWRlLUNvZGUtZXhhbXBsZS1oYW5kbGU", { context: {} });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-agent-access-authorizations-handle-approve)
+
+### `auth.consumer(…).agentAccess.authorizations.deny(handle, options?)`
+
+`POST /{app_slug}/v1/agent-access/authorizations/{handle}/deny` → `Auth.AgentAuthorizationDecision`
+
+Deny an agent authorization.
+
+The user pressed Cancel. Send the browser to `redirect_to` (`error=access_denied`).
+
+- Credential: [`end_user_token`](#end_user_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired end-user access token. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `AGENT_AUTHORIZATION_NOT_FOUND`, `AGENT_ACCESS_DISABLED` | `AGENT_AUTHORIZATION_NOT_FOUND`. Or `AGENT_ACCESS_DISABLED`: agent access is not turned on for this app. |
+| 409 | `ConflictError` | `CONFLICT`, `AGENT_AUTHORIZATION_DECIDED` | `AGENT_AUTHORIZATION_DECIDED`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const agentAuthorizationDecision = await auth.consumer("my-app").agentAccess.authorizations.deny("pcar_Q2xhdWRlLUNvZGUtZXhhbXBsZS1oYW5kbGU");
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-agent-access-authorizations-handle-deny)
+
+### `auth.consumer(…).agentAccess.authorizations.retrieve(handle, options?)`
+
+`GET /{app_slug}/v1/agent-access/authorizations/{handle}` → `Auth.AgentAuthorization`
+
+Read a pending agent authorization (consent screen).
+
+Your consent page calls this with the `request` handle /authorize sent the browser to it with. The first signed-in end user to read a request is bound to it; anyone else gets 404. Shows who is asking (`client.name` is self-declared: say it is unverified), where the browser returns and which scopes were requested. Requests live 10 minutes.
+
+- Credential: [`end_user_token`](#end_user_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired end-user access token. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `AGENT_AUTHORIZATION_NOT_FOUND`, `AGENT_ACCESS_DISABLED` | `AGENT_AUTHORIZATION_NOT_FOUND`: unknown, expired or bound to another user. Or `AGENT_ACCESS_DISABLED`: agent access is not turned on for this app. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const agentAuthorization = await auth.consumer("my-app").agentAccess.authorizations.retrieve("pcar_Q2xhdWRlLUNvZGUtZXhhbXBsZS1oYW5kbGU");
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-agent-access-authorizations-handle)
+
+## consumer(…).agentAccess.config
+
+### `auth.consumer(…).agentAccess.config.retrieve(options?)`
+
+`GET /{app_slug}/v1/agent-access/config` → `Auth.AgentAccessConfig`
+
+Read this app's agent access settings.
+
+Requires `auth.agent_access.configure` on the app.
+
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_WORKSPACE_MISMATCH` | `PAK_WORKSPACE_MISMATCH` (the PAK belongs to another workspace than the app), or the PAK's policy does not allow `auth.agent_access.configure` on `pcft:heimdall:app/<appId>`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APP_NOT_FOUND` | `APP_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const agentAccessConfig = await auth.consumer("my-app").agentAccess.config.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-agent-access-config)
+
+### `auth.consumer(…).agentAccess.config.update(params, options?)`
+
+`PUT /{app_slug}/v1/agent-access/config` → `Auth.AgentAccessConfig`
+
+Push this app's agent access settings.
+
+Call it on boot: your code is the source of truth for the resources (your MCP server URLs), the consent page URL and the scope catalogue. The whole object is replaced. Enabling needs a consent URL, a resource and a scope. Requires `auth.agent_access.configure` on the app. Audited as `agent_access.config.updated`.
+
+- Params: `Auth.AgentAccessConfigUpdateParams`
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `AGENT_ACCESS_INVALID_CONFIG` | `AGENT_ACCESS_INVALID_CONFIG` (`details.field`), or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_WORKSPACE_MISMATCH` | `PAK_WORKSPACE_MISMATCH` (the PAK belongs to another workspace than the app), or the PAK's policy does not allow `auth.agent_access.configure` on `pcft:heimdall:app/<appId>`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APP_NOT_FOUND` | `APP_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const agentAccessConfig = await auth.consumer("my-app").agentAccess.config.update({
+  enabled: true,
+  resources: ["https://mcp.example.com/mcp"],
+  scopes: [{ description: "Read disputes, transactions and evidence", name: "disputes:read" }],
+});
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#put-app-slug-v1-agent-access-config)
+
+## consumer(…).agentAccess.grants
+
+### `auth.consumer(…).agentAccess.grants.delete(grantId, options?)`
+
+`DELETE /{app_slug}/v1/agent-access/grants/{grant_id}` → `void`
+
+Disconnect an end user's agent.
+
+Revokes the connection at once (refresh stops, introspection answers `{"active": false}`), whoever made it. Audited as `agent_access.grant.revoked` with reason `app` and the PAK as actor; record who asked for it in your own trail. Requires `auth.agent_access.grants.manage` on the app.
+
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_WORKSPACE_MISMATCH` | `PAK_WORKSPACE_MISMATCH` (the PAK belongs to another workspace than the app), or the PAK's policy does not allow `auth.agent_access.grants.manage` on `pcft:heimdall:app/<appId>`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `AGENT_GRANT_NOT_FOUND`, `APP_NOT_FOUND` | `AGENT_GRANT_NOT_FOUND`: unknown or already revoked. Or `APP_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await auth.consumer("my-app").agentAccess.grants.delete("agr_9xYk2LmQ0aBcDeFg");
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-agent-access-grants-grant-id)
+
+### `auth.consumer(…).agentAccess.grants.list(params?, options?)`
+
+`GET /{app_slug}/v1/agent-access/grants` → `PagePromise<Auth.AppAgentGrant>`
+
+List the app's agent connections (all end users).
+
+For your own admin views, e.g. a workspace owner's list of every member's connected agents. Live connections only (not revoked, not expired), newest first, cursor paged. `context` narrows by JSON containment against the context your app stored at approval: `{"workspace_ids":["tnt_…"]}` returns the connections that include that workspace. Requires `auth.agent_access.grants.manage` on the app.
+
+- Params: `Auth.AgentAccessGrantListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `context` is not a JSON object, `account_id` is not a UUID, or a foreign `cursor`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or revoked Platform API Key (`Authorization: Bearer pcft_live_…`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_WORKSPACE_MISMATCH` | `PAK_WORKSPACE_MISMATCH` (the PAK belongs to another workspace than the app), or the PAK's policy does not allow `auth.agent_access.grants.manage` on `pcft:heimdall:app/<appId>`. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `APP_NOT_FOUND` | `APP_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const grant of auth.consumer("my-app").agentAccess.grants.list()) {
+  console.log(grant);
+}
+const page = await auth.consumer("my-app").agentAccess.grants.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-agent-access-grants)
+
+## consumer(…).email
+
+### `auth.consumer(…).email.config(options?)`
+
+`GET /{app_slug}/v1/auth/email/config` → `Auth.ConsumerEmailSignInConfig`
+
+What a sign-in page needs to offer email sign-in.
+
+Public. The app's display name, whether email sign-in is on and what the email carries, and the CAPTCHA site key when bot protection is on. Says nothing about any account.
+
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `APP_SUSPENDED`, `APP_ARCHIVED` | The app exists but is suspended (`APP_SUSPENDED`) or archived (`APP_ARCHIVED`). Decided by `AppStatusGuard` before the handler runs. |
+| 404 | `NotFoundError` | `NOT_FOUND` | The `:appSlug` in the path matches no app (or no live rename alias for one). This is about the **app**, not the account — it is decided before any identifier, code or credential in the body is looked at, so it is never a signal about whether an account or a contact exists. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP rate limit (`RATE_LIMITED`): this path is in the `default` bucket — 60 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
+
+```ts
+const consumerEmailSignInConfig = await auth.consumer("my-app").email.config();
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-auth-email-config)
+
+### `auth.consumer(…).email.start(params, options?)`
+
+`POST /{app_slug}/v1/auth/email/start` → `Auth.ConsumerEmailSignInStart`
+
+Start a passwordless email sign-in (magic link or code).
+
+Emails a sign-in link and/or a 6-digit code to `email`, per the app's `passwordless_email` settings. Sign-up and sign-in are the same flow: an address with no account gets one when it verifies, if the app allows sign-up through this flow (`passwordless_email.allow_signup`, `signup_enabled`, the email-domain allowlist, and a Platform API Key when the app sets `signup_requires_pak`).
+
+**No account enumeration.** The response is identical whether the address has an account, may get one, or neither. An address that can neither sign in nor sign up gets no email and a flow that can never be completed; the caller cannot tell the difference.
+
+Keep the returned `flow_id` in the browser that called this (it binds the link to that browser) and finish with `POST /auth/email/verify`. Codes and links are single-use and expire after `passwordless_email.ttl_minutes` (default 10).
+
+Limits, all checked before the address is looked up: one email per address every 30 seconds and 5 per hour, 30 starts per client IP per hour, 1,000 per app per hour (429 `PASSWORDLESS_RATE_LIMITED` with `details.retry_after_seconds`). When the app has bot protection on, every start needs a `bot_protection_token`.
+
+- Params: `Auth.EmailStartParams`
+- Credential (optional): [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PASSWORDLESS_RETURN_TO_NOT_ALLOWED`, `BOT_PROTECTION_REQUIRED` | A malformed email; `return_to` or `link_url` whose origin is not in `allowed_redirect_origins` (`PASSWORDLESS_RETURN_TO_NOT_ALLOWED`); or `BOT_PROTECTION_REQUIRED`. Also: Request validation failed: a required body field is missing, has the wrong type, or fails its format constraint. Produced by the global `ValidationPipe` before the handler runs; the response body lists the offending fields. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PASSWORDLESS_DISABLED`, `BOT_PROTECTION_FAILED` | `PASSWORDLESS_DISABLED`: email sign-in is off for this app. Also: sign-in is disabled, a presented Platform API Key is invalid or lacks `auth.signup.create` on this app, `BOT_PROTECTION_FAILED`, or the app is suspended / archived. |
+| 404 | `NotFoundError` | `NOT_FOUND` | The `:appSlug` in the path matches no app (or no live rename alias for one). This is about the **app**, not the account — it is decided before any identifier, code or credential in the body is looked at, so it is never a signal about whether an account or a contact exists. |
+| 412 | `APIError` | `PRECONDITION_FAILED`, `ENVOI_NOT_ENABLED`, `ENVOI_SENDER_NOT_CONFIGURED`, `ENVOI_TEMPLATE_NOT_CONFIGURED`, `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` | The app cannot send the email: Mail notifications are off (`ENVOI_NOT_ENABLED`), no sender (`ENVOI_SENDER_NOT_CONFIGURED`), no sign-in template (`ENVOI_TEMPLATE_NOT_CONFIGURED`) or no workspace (`ENVOI_APP_NOT_BOUND_TO_WORKSPACE`). Decided before the address is looked up. |
+| 415 | `APIError` | `UNSUPPORTED_MEDIA_TYPE` | The request body was sent as `application/x-www-form-urlencoded` (`UNSUPPORTED_MEDIA_TYPE`). This API is JSON-only: a form body is a CORS-simple request that skips preflight, so accepting one would widen the CSRF surface. Send `application/json`. Rejected in `main.ts` before routing, on every non-GET request. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `PASSWORDLESS_RATE_LIMITED` | `PASSWORDLESS_RATE_LIMITED`: one of the per-address, per-IP or per-app send limits above. Also: Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `BOT_PROTECTION_UNAVAILABLE`, `ENVOI_NOT_WIRED` | `BOT_PROTECTION_UNAVAILABLE`, or Mail is not reachable from this deployment (`ENVOI_NOT_WIRED`). |
+
+```ts
+const consumerEmailSignInStart = await auth.consumer("my-app").email.start({ email: "ada@example.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-email-start)
+
+### `auth.consumer(…).email.verify(params?, options?)`
+
+`POST /{app_slug}/v1/auth/email/verify` → `Auth.EmailVerifyResponse`
+
+Finish a passwordless email sign-in with the code or the link.
+
+Send `flow_id` + `code`, or the link's `token` (+ `flow_id` when the app keeps links to the browser that asked, the default). Creates the account when the address had none and the flow allowed sign-up; the email is marked verified either way. Returns the same results as `/auth/signin`: a session (`amr: ["email","otp"]` for a code, `["email","link"]` for a link), an MFA challenge when the person holds a factor, or an enrolment demand when the app requires MFA. With `response_mode: "redirect"` (hosted pages) the result goes behind a `heimdall_code` and the response is `{ redirect_url }` instead.
+
+A flow dies after 5 wrong codes. Every failure is the same 401, so a wrong code, an unknown, used or expired flow and one that was never emailed look alike.
+
+- Params: `Auth.EmailVerifyParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Neither or both of `code` and `token`; `code` without `flow_id`; or `response_mode: redirect` on a flow started without `return_to`. Also: Request validation failed: a required body field is missing, has the wrong type, or fails its format constraint. Produced by the global `ValidationPipe` before the handler runs; the response body lists the offending fields. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `PASSWORDLESS_CODE_INVALID` | `PASSWORDLESS_CODE_INVALID`: invalid or expired code or link. Identical for every reason. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PASSWORDLESS_DISABLED` | `PASSWORDLESS_DISABLED`, sign-in disabled, or the account is suspended / deactivated (only after the code or link checked out). |
+| 404 | `NotFoundError` | `NOT_FOUND` | The `:appSlug` in the path matches no app (or no live rename alias for one). This is about the **app**, not the account — it is decided before any identifier, code or credential in the body is looked at, so it is never a signal about whether an account or a contact exists. |
+| 409 | `ConflictError` | `CONFLICT`, `PASSWORDLESS_LINK_OTHER_BROWSER` | `PASSWORDLESS_LINK_OTHER_BROWSER`: a live link opened in a browser other than the one that asked, while the app keeps links to that browser. Nothing is consumed. `details.code_available` says whether the email also carries a code the person can type instead. |
+| 415 | `APIError` | `UNSUPPORTED_MEDIA_TYPE` | The request body was sent as `application/x-www-form-urlencoded` (`UNSUPPORTED_MEDIA_TYPE`). This API is JSON-only: a form body is a CORS-simple request that skips preflight, so accepting one would widen the CSRF surface. Send `application/json`. Rejected in `main.ts` before routing, on every non-GET request. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Per-IP burst limit on code consumption. Per-IP rate limit (`RATE_LIMITED`): this path is in the `verify_code` bucket — 5 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
+
+```ts
+const result = await auth.consumer("my-app").email.verify({ code: "482913" });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-app-slug-v1-auth-email-verify)
+
 ## consumer(…).me
 
 ### `auth.consumer(…).me.changePassword(params, options?)`
@@ -3593,6 +3887,57 @@ for await (const activity of auth.consumer("my-app").me.activity.list()) {
 ```
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me-activity)
+
+## consumer(…).me.agentGrants
+
+### `auth.consumer(…).me.agentGrants.delete(grantId, options?)`
+
+`DELETE /{app_slug}/v1/me/agent-grants/{grant_id}` → `void`
+
+Disconnect an agent.
+
+Revokes the connection at once: its refresh token stops working and introspection of its access tokens answers `{"active": false}`. Audited as `agent_access.grant.revoked`.
+
+- Credential: [`end_user_token`](#end_user_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired end-user access token. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `AGENT_GRANT_NOT_FOUND` | `AGENT_GRANT_NOT_FOUND`: not yours, unknown or already revoked. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await auth.consumer("my-app").me.agentGrants.delete("agr_9xYk2LmQ0aBcDeFg");
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-app-slug-v1-me-agent-grants-grant-id)
+
+### `auth.consumer(…).me.agentGrants.list(params?, options?)`
+
+`GET /{app_slug}/v1/me/agent-grants` → `PagePromise<Auth.AgentGrant>`
+
+List the signed-in user's connected agents.
+
+Live connections only (not revoked, not expired), newest first, at most 200. Show them on an "AI agents" or "Authorized apps" settings page with a Disconnect button.
+
+- Params: `Auth.MeAgentGrantListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+- Credential: [`end_user_token`](#end_user_token)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired end-user access token. |
+| 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const agentGrant of auth.consumer("my-app").me.agentGrants.list()) {
+  console.log(agentGrant);
+}
+const page = await auth.consumer("my-app").me.agentGrants.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#get-app-slug-v1-me-agent-grants)
 
 ## consumer(…).me.contacts
 
@@ -5425,6 +5770,12 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `ACCOUNT_EXISTS` | An account already exists for this address. Sign in and accept the invite from your account instead. |
 | `ACCOUNT_NOT_FOUND` | Account not found. |
 | `ACCOUNT_SUSPENDED` | Account suspended. |
+| `AGENT_ACCESS_DISABLED` | Agent access (OAuth for MCP) is not turned on for this app. |
+| `AGENT_ACCESS_INVALID_CONFIG` | The agent access settings are invalid; `details` names the field. |
+| `AGENT_AUTHORIZATION_DECIDED` | This agent authorization request was already approved or denied. |
+| `AGENT_AUTHORIZATION_NOT_FOUND` | Agent authorization request not found, expired, or opened by another user. |
+| `AGENT_AUTHORIZATION_INVALID` | The approval does not match the request: a scope that was not requested, or context over 2 KB. |
+| `AGENT_GRANT_NOT_FOUND` | Agent connection not found. |
 | `APEX_NOT_SUPPORTED` | A custom domain must be a subdomain, not the apex of a zone. |
 | `APP_ARCHIVED` | The app is archived. |
 | `APP_HAS_NO_WORKSPACE` | App has no workspace. |
@@ -5461,6 +5812,11 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `PAK_WORKSPACE_MISMATCH` | The workspace API key belongs to a different workspace. |
 | `PASSWORD_BREACHED` | This password has appeared in a known data breach — pick a different one. |
 | `PASSWORD_TOO_COMMON` | Password is too common — pick something less guessable. |
+| `PASSWORDLESS_CODE_INVALID` | The sign-in code or link is invalid, used or expired. Ask for a new one. |
+| `PASSWORDLESS_DISABLED` | Email sign-in (magic link or code) is not turned on for this app. |
+| `PASSWORDLESS_LINK_OTHER_BROWSER` | This sign-in link was requested in another browser. Open it there, or type the code from the same email. |
+| `PASSWORDLESS_RATE_LIMITED` | Too many sign-in emails; `details.retry_after_seconds` says when to try again. |
+| `PASSWORDLESS_RETURN_TO_NOT_ALLOWED` | The `return_to` or `link_url` origin is not in the app's allowed redirect origins. |
 | `PROVIDER_ERROR` | The DNS provider returned an error. |
 | `PROVIDER_PERMISSION_DENIED` | The DNS provider token lacks permission to edit this zone. |
 | `PROVIDER_TOKEN_REJECTED` | The DNS provider rejected the token. |
