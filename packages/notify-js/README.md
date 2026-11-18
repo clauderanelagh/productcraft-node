@@ -115,7 +115,12 @@ React apps get all of this ready-made from [`@productcraft/notify-react`](https:
 ## Approval requests
 
 ```ts
+import { createNotifyClient } from "@productcraft/notify-js";
+
+const client = createNotifyClient({ getToken: () => fetch("/api/notify-token").then((r) => r.text()) });
+const approvalId = "0193a8b2-7c1d-7e3f-9a40-5b6c7d8e9f40";
 const request = await client.approvals.get(approvalId);
+console.log(request.status);
 await client.approvals.decide(approvalId, "approve", "Checked the migrations");
 // a second answer, or one after the request expired, rejects with code APPROVAL_NOT_PENDING
 ```
