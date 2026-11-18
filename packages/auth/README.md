@@ -103,7 +103,7 @@ Full reference: [api.md](./api.md).
 - `auth.admin.app(…).apiKeys`: `create`, `delete`, `list`, `rotate`
 - `auth.admin.app(…).auditLogs`: `export`, `list`
 - `auth.admin.app(…).auditSink`: `disconnect`, `replace`, `retrieve`, `rotateSecret`, `setupStatus`, `test`, `update`
-- `auth.admin.app(…).authConfig`: `providers.check`, `providers.delete`, `providers.list`, `providers.replace`, `providers.retrieve`, `providers.update`, `retrieve`, `update`
+- `auth.admin.app(…).authConfig`: `providers.check`, `providers.delete`, `providers.discoverOidc`, `providers.list`, `providers.replace`, `providers.retrieve`, `providers.update`, `retrieve`, `update`
 - `auth.admin.app(…).credentials`: `create`, `delete`, `list`, `retrieve`, `rotate`, `update`, `updateScopes`
 - `auth.admin.app(…).customDomains`: `apply`, `check`, `create`, `delete`, `export`, `list`, `retrieve`
 - `auth.admin.app(…).endUserInsights`: `retrieve`, `users.retrieve`
