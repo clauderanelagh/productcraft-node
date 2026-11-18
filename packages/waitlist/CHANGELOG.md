@@ -1,5 +1,11 @@
 # @productcraft/waitlist
 
+## 2.4.0
+
+### Minor Changes
+
+- 82e8e80: Entrant status page: `entries.me({ token })` on the public scope (place in line, referral link and count, rewards progress, status link), and the waitlist settings `signup_page_url` and `status_page_url`.
+
 ## 2.3.0
 
 ### Minor Changes
