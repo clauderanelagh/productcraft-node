@@ -1,5 +1,11 @@
 # @productcraft/waitlist
 
+## 2.5.0
+
+### Minor Changes
+
+- daf4682: Invite waves and access codes: `lists.inviteWaves.create/list/retrieve/cancel` (the next N by place in line, now or on a schedule, into an Auth app or with single-use access codes) and `lists.accessCodes.redeem()`.
+
 ## 2.4.0
 
 ### Minor Changes
