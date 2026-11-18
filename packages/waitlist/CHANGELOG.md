@@ -1,5 +1,11 @@
 # @productcraft/waitlist
 
+## 2.3.0
+
+### Minor Changes
+
+- d260d11: Referral fraud checks and bot checks: `lists.entries.release()` for held entries, the `held` entry status and `fraud_signals` on entries, waitlist settings `fraud_protection` and `captcha_provider` / `captcha_site_key` / `captcha_secret_key` (reCAPTCHA, Turnstile or hCaptcha), `captcha` on the public info, and `captcha_token` / `device_id` on public sign-ups.
+
 ## 2.2.0
 
 ### Minor Changes
