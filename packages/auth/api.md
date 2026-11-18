@@ -590,7 +590,7 @@ Update the per-app auth config. Only fields you pass are changed.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure — a value out of range (password length, token/session lifetimes, lockout threshold, max sessions, MFA grace days, unverified-account window), an unknown enum value, a `signup_default_role` that does not exist in this app, or a `bot_protection` change that cannot stand: no provider or site key on first setup, a hostname that is not a hostname, or `enabled: true` with no secret stored or sent; or a `passwordless_email` value out of range or a `link_url` whose origin is not in `allowed_redirect_origins` (also refused when removing that origin). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `TEST_MODE_PRODUCTION_APP` | Validation failure — a value out of range (password length, token/session lifetimes, lockout threshold, max sessions, MFA grace days, unverified-account window), an unknown enum value, a `signup_default_role` that does not exist in this app, or a `bot_protection` change that cannot stand: no provider or site key on first setup, a hostname that is not a hostname, or `enabled: true` with no secret stored or sent; or a `passwordless_email` value out of range or a `link_url` whose origin is not in `allowed_redirect_origins` (also refused when removing that origin); or `TEST_MODE_PRODUCTION_APP`: test mode switched on in a production app without `allow_in_production: true`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.update` on this app, or the app is suspended or archived. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
@@ -5875,6 +5875,7 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `TENANT_CONTEXT_REQUIRED` | No active tenant on this session. Switch to a tenant first (POST /auth/switch-tenant). |
 | `TENANT_MEMBERSHIP_REQUIRED` | You are not a member of the active tenant. |
 | `TENANT_NOT_ACTIVE` | The active tenant is not active. |
+| `TEST_MODE_PRODUCTION_APP` | Test mode is off-limits in a production app unless you also send allow_in_production: true. |
 | `TOKEN_EXPIRED` | Token expired. |
 | `TOKEN_INVALID` | Token invalid. |
 | `TOKEN_REVOKED` | Token revoked. |
