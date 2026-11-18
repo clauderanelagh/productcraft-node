@@ -14,6 +14,11 @@ const auth = new Auth();
   await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.delete("google");
 }
 
+// authConfig.providers.discoverOidc: Check an OpenID Connect issuer before adding it as a sign-in provider.
+{
+  const oidcDiscoveryResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.discoverOidc({ issuer: "https://acme.okta.com" });
+}
+
 // authConfig.providers.list: List federated sign-in providers Auth supports, with their setup status for this app.
 {
   const result = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.list();

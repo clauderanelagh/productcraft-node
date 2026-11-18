@@ -611,7 +611,7 @@ const authConfig = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").
 
 Check the saved provider credentials with the provider.
 
-Calls the provider's token endpoint with a dummy sign-in code. If the provider refuses the client (`invalid_client`, GitHub `incorrect_client_credentials` or `unknown_client`), the result is `credentials_rejected` and the provider shows as `blocked` with reason `credentials_rejected` until the credentials are fixed. If it only refuses the code (`invalid_grant`, `bad_verification_code`), the credentials are valid. Nobody is signed in. The result is saved on the provider (`last_check_*`). The same check runs automatically whenever the credentials are saved. Works for a provider that is saved but not switched on yet.
+Calls the provider's token endpoint with a dummy sign-in code. If the provider refuses the client (`invalid_client`, GitHub `incorrect_client_credentials` or `unknown_client`), the result is `credentials_rejected` and the provider shows as `blocked` with reason `credentials_rejected` until the credentials are fixed. If it only refuses the code (`invalid_grant`, `bad_verification_code`), the credentials are valid. Nobody is signed in. For an OpenID Connect provider the issuer's discovery document is fetched first; when it cannot be used the result is `inconclusive` with a `discovery_*` provider error and the provider shows as `blocked` with reason `discovery_failed`. The result is saved on the provider (`last_check_*`). The same check runs automatically whenever the credentials are saved. Works for a provider that is saved but not switched on yet.
 
 - Credential: [`workspace_key`](#workspace_key)
 
@@ -649,6 +649,32 @@ await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.provider
 
 [HTTP reference](https://productcraft.co/docs/auth/api-reference#delete-v1-apps-app-id-auth-config-providers-provider)
 
+### `auth.admin.app(…).authConfig.providers.discoverOidc(params, options?)`
+
+`POST /v1/apps/{app_id}/auth-config/providers/oidc/discover` → `Auth.OidcDiscoveryResult`
+
+Check an OpenID Connect issuer before adding it as a sign-in provider.
+
+Fetches `{issuer}/.well-known/openid-configuration` (https only, public addresses only, 5 s, no redirects) and returns what Auth would use: the authorize, token and key endpoints, scopes and claims. The document must name exactly this issuer. Nothing is saved; saving an `oidc-<key>` provider runs the same check and fails with 422 when it does not pass.
+
+- Params: `Auth.AuthConfigProviderDiscoverOidcParams`
+- Credential: [`workspace_key`](#workspace_key)
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `issuer` is missing or not a string (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.update` on this app, or the app is suspended or archived. |
+| 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `OIDC_DISCOVERY_FAILED` | Discovery failed (`OIDC_DISCOVERY_FAILED`); `details.reason` says why: - `discovery_not_https`: The issuer, or an endpoint its discovery document names, is not an https URL. - `discovery_blocked`: The issuer host resolves to a private or reserved address, which Auth never calls. - `discovery_unreachable`: The discovery document at {issuer}/.well-known/openid-configuration could not be fetched. - `discovery_invalid`: The discovery document is not valid: it must be JSON with authorization_endpoint, token_endpoint and jwks_uri. - `discovery_issuer_mismatch`: The `issuer` in the discovery document is not exactly the issuer you saved. Copy the issuer value from the document. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const oidcDiscoveryResult = await auth.admin.app("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").authConfig.providers.discoverOidc({ issuer: "https://acme.okta.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/auth/api-reference#post-v1-apps-app-id-auth-config-providers-oidc-discover)
+
 ### `auth.admin.app(…).authConfig.providers.list(options?)`
 
 `GET /v1/apps/{app_id}/auth-config/providers` → `Auth.AuthConfigProviderListResponse`
@@ -685,6 +711,7 @@ Write or replace the config for an (app, provider). Validates the body via the p
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown provider or malformed config. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `OIDC_DISCOVERY_FAILED`, `MICROSOFT_TENANT_NOT_FOUND` | The provider could not be reached to validate the config: an OpenID Connect issuer's discovery document failed (`OIDC_DISCOVERY_FAILED`, `details.reason`), or a Microsoft verified-domain tenant is unknown to Microsoft (`MICROSOFT_TENANT_NOT_FOUND`). Nothing was saved. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -728,6 +755,7 @@ Partially update the config for an (app, provider). Only top-level keys present 
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Unknown provider or merged config invalid. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Provider not configured for this app. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `OIDC_DISCOVERY_FAILED`, `MICROSOFT_TENANT_NOT_FOUND` | The provider could not be reached to validate the changed config: an OpenID Connect issuer's discovery document failed (`OIDC_DISCOVERY_FAILED`, `details.reason`), or a Microsoft verified-domain tenant is unknown to Microsoft (`MICROSOFT_TENANT_NOT_FOUND`). Nothing was saved. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -5809,6 +5837,8 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `INVALID_PROVIDER` | Unsupported DNS provider. |
 | `INVALID_ZONE` | The DNS zone is not one this domain belongs to. |
 | `MAIL_UNREACHABLE` | The Mail service did not answer; try again in a minute. |
+| `MICROSOFT_TENANT_NOT_FOUND` | Microsoft knows no directory for the configured tenant domain; use the directory (tenant) id. |
+| `OIDC_DISCOVERY_FAILED` | The OpenID Connect discovery document could not be used; `details.reason` says why. |
 | `PAK_WORKSPACE_MISMATCH` | The workspace API key belongs to a different workspace. |
 | `PASSWORD_BREACHED` | This password has appeared in a known data breach — pick a different one. |
 | `PASSWORD_TOO_COMMON` | Password is too common — pick something less guessable. |
