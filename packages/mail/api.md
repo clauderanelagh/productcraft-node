@@ -1648,7 +1648,7 @@ const text = await response.text();
 
 Disconnect an integration. Deletes the credential row.
 
-Hard delete — the encrypted blob is removed. The customer must reconnect via the provider-specific OAuth flow to restore access.
+Hard delete: the encrypted blob is removed. For a GitHub OAuth connection Mail also deletes the repo webhook it made and revokes the token; a GitHub App installation stays on the GitHub account (uninstall it there). Written to the workspace audit log as `mail.integration.disconnected`.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
@@ -1713,15 +1713,15 @@ const integrationDetail = await mail.integrations.retrieve("github");
 
 ## integrations.github
 
-### `mail.integrations.github.connect(params, options?)`
+### `mail.integrations.github.installGitHubApp(params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/integrations/github/connect` → `Mail.ConnectGitHub`
+`POST /v1/workspaces/{workspace_id}/integrations/github/app/install` → `Mail.GitHubAppInstall`
 
-Mint a GitHub OAuth state token and return the authorize URL.
+Start installing the ProductCraft Mail GitHub App for this workspace.
 
-The frontend redirects the user to `authorize_url`; GitHub bounces back to the `/callback` endpoint with a `code` + `state` pair. state is single-use, 5-minute TTL.
+Returns a URL for the browser. The customer installs the App on the repositories they choose (Contents read, Metadata read, Pull requests read, Checks write; nothing else), confirms on GitHub that it is them, and lands back on `return_to` with `integration=github&status=connected` (or `migrated` when the workspace was connected through the older OAuth App: Mail then keeps the repo settings, deletes the old repo webhook and revokes the OAuth token). The state is single-use and expires in 15 minutes. Written to the audit log as `mail.integration.connected`.
 
-- Params: `Mail.IntegrationGithubConnectParams`
+- Params: `Mail.IntegrationGithubInstallGitHubAppParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
 | Status | Error class | Codes | When |
@@ -1732,12 +1732,33 @@ The frontend redirects the user to `authorize_url`; GitHub bounces back to the `
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `GITHUB_APP_NOT_CONFIGURED` | `GITHUB_APP_NOT_CONFIGURED`: the App is not set up yet. |
 
 ```ts
-const connectGitHub = await mail.integrations.github.connect({ return_to: "https://console.productcraft.co/mail/workspaces/acme/integrations" });
+const gitHubAppInstall = await mail.integrations.github.installGitHubApp({ return_to: "https://console.productcraft.co/mail/workspaces/acme/integrations" });
 ```
 
-[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-connect)
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-app-install)
+
+### `mail.integrations.github.retrieveGitHubApp(options?)`
+
+`GET /v1/workspaces/{workspace_id}/integrations/github/app` → `Mail.GitHubAppStatus`
+
+Whether the ProductCraft Mail GitHub App is available, and what it asks for.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const gitHubAppStatus = await mail.integrations.github.retrieveGitHubApp();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-app)
 
 ## integrations.github.repos
 
@@ -1745,7 +1766,7 @@ const connectGitHub = await mail.integrations.github.connect({ return_to: "https
 
 `GET /v1/workspaces/{workspace_id}/integrations/github/repos` → `Mail.IntegrationGithubRepoListResponse`
 
-List repos visible to the connected GitHub account.
+List the repositories Mail can sync from: for a GitHub App connection, the repositories the App is installed on; for an older OAuth connection, the repositories the connected account can see.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1787,9 +1808,9 @@ const result = await mail.integrations.github.repos.branches.list("acme", "email
 
 ### `mail.integrations.github.settings.update(params, options?)`
 
-`PUT /v1/workspaces/{workspace_id}/integrations/github/settings` → `void`
+`PUT /v1/workspaces/{workspace_id}/integrations/github/settings` → `Mail.GitHubSettingsSaved`
 
-Set the repo + branch + templates path to sync from.
+Set the repo + branch + templates path to sync from, then start a sync. GitHub App connection: push sync is on through the App (the repo must be one the App is installed on). Older OAuth connection: Mail adds a push webhook to the repo when the connected account is an admin of it. Written to the audit log as `mail.integration.settings_updated`.
 
 - Params: `Mail.IntegrationGithubSettingsUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -1804,7 +1825,7 @@ Set the repo + branch + templates path to sync from.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
+const gitHubSettingsSaved = await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#put-v1-workspaces-workspace-id-integrations-github-settings)
@@ -1815,7 +1836,7 @@ await mail.integrations.github.settings.update({ branch: "main", repo_full_name:
 
 `POST /v1/workspaces/{workspace_id}/integrations/github/sync` → `Mail.StartSync`
 
-Trigger an immediate sync from GitHub. Returns a sync id to poll.
+Trigger an immediate sync from GitHub. Returns a sync id to poll. The request and the result are written to the workspace audit log.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
@@ -1833,6 +1854,26 @@ const startSync = await mail.integrations.github.sync.create();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-sync)
+
+### `mail.integrations.github.sync.latest(options?)`
+
+`GET /v1/workspaces/{workspace_id}/integrations/github/sync/latest` → `Mail.SyncStatus`
+
+The most recent sync that changed or rejected something (kept 30 days), with the per-file errors and skips. 404 when there is none.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | No sync recorded in the last 30 days. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const syncStatus = await mail.integrations.github.sync.latest();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-sync-latest)
 
 ### `mail.integrations.github.sync.retrieve(syncId, options?)`
 
@@ -2977,6 +3018,29 @@ const page = await mail.suppression.list({}, { timeout: 5_000 });
 
 ## templates
 
+### `mail.templates.attach(name, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/attach` → `Mail.Template`
+
+Hand a detached template back to the GitHub sync. The next sync replaces it with the repository version; edits made in Mail since the detach are lost.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.attach("welcome");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-attach)
+
 ### `mail.templates.create(params, options?)`
 
 `POST /v1/workspaces/{workspace_id}/templates` → `Mail.Template`
@@ -2988,7 +3052,7 @@ Create or update a template, layout, or partial. Idempotent on (workspace_id, na
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (bad name / payload). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `TEMPLATE_SYNTAX_ERROR` | Validation failure (bad name / payload), or `TEMPLATE_SYNTAX_ERROR` when the subject or a body does not compile (the message quotes Handlebars). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
@@ -3013,6 +3077,7 @@ Delete a template, layout, or partial by name.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_MANAGED_IN_GITHUB` | `TEMPLATE_MANAGED_IN_GITHUB`: delete the file in the repository instead (or detach the template first). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3020,6 +3085,29 @@ await mail.templates.delete("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-templates-name)
+
+### `mail.templates.detach(name, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/detach` → `Mail.Template`
+
+Take a GitHub-synced template over in Mail: it becomes editable here and the GitHub sync stops changing it (each sync reports it as `edited_in_console`) until it is reattached.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.detach("welcome");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-detach)
 
 ### `mail.templates.lint(params, options?)`
 
@@ -3782,6 +3870,19 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `EMAIL_NOT_FOUND` | Email not found in this workspace. |
 | `EMAIL_UNAVAILABLE` | Emailing share links is temporarily unavailable. Create the link without email_to and send it yourself. |
 | `FROM_DOMAIN_MISMATCH` | The From address is not at this domain. |
+| `GITHUB_APP_ALREADY_CONFIGURED` | The ProductCraft Mail GitHub App is already set up. |
+| `GITHUB_APP_INSTALLATION_FORBIDDEN` | The signed-in GitHub user cannot access that GitHub App installation. |
+| `GITHUB_APP_NOT_CONFIGURED` | The ProductCraft Mail GitHub App is not set up yet. |
+| `GITHUB_APP_NOT_INSTALLED` | The ProductCraft Mail GitHub App is no longer installed on the GitHub account. |
+| `GITHUB_APP_OWNER_REJECTED` | The GitHub App was created under an account that is not allowed to own it. |
+| `GITHUB_APP_SETUP_EXPIRED` | The GitHub App setup link has expired or was already used. |
+| `GITHUB_APP_SETUP_FAILED` | GitHub did not complete the App setup. |
+| `GITHUB_APP_SUSPENDED` | The GitHub App installation is suspended, or no longer has access to the repository. |
+| `GITHUB_APP_VERIFY_FAILED` | GitHub did not confirm who installed the App. |
+| `GITHUB_OAUTH_CONNECT_RETIRED` | Connecting GitHub through the OAuth App is retired; install the ProductCraft Mail GitHub App instead. |
+| `GITHUB_REPO_NOT_INSTALLED` | The repository is not one the GitHub App is installed on. |
+| `GITHUB_WEBHOOK_MALFORMED` | The GitHub delivery is not a readable JSON body. |
+| `GITHUB_WEBHOOK_SIGNATURE_INVALID` | The GitHub delivery signature did not verify. |
 | `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW` | An `idempotency_key` on a batch row conflicts with the request key. |
 | `IMPORT_IN_PROGRESS` | Another contact import is running for this workspace. |
 | `IMPORT_NOT_FOUND` | Import not found. |
@@ -3830,8 +3931,11 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `SMTP_PASSWORD_REQUIRED` | An SMTP password is required. |
 | `TEMPLATE_DATA_INVALID` | The render data does not match the template schema. |
 | `TEMPLATE_KIND_NOT_SENDABLE` | This template kind (a partial or layout) cannot be sent on its own. |
+| `TEMPLATE_MANAGED_IN_GITHUB` | This template is synced from GitHub: change the file in the repository, or detach it to edit it in Mail. |
 | `TEMPLATE_NOT_FOUND` | No template with this name in this workspace. |
+| `TEMPLATE_NOT_SYNCED` | This template is not synced from GitHub. |
 | `TEMPLATE_RENDER_FAILED` | The template could not be rendered. |
+| `TEMPLATE_SYNTAX_ERROR` | The template does not compile: fix the Handlebars syntax. |
 | `TLS_ENFORCED_NOT_AVAILABLE` | `tls: enforced` is not available yet. |
 | `TOPIC_EXISTS` | A topic with this name already exists. |
 | `TOPIC_LIMIT` | The workspace has the maximum number of topics. |

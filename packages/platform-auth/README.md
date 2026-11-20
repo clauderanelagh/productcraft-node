@@ -84,15 +84,15 @@ Full reference: [api.md](./api.md).
 
 - `platform.account`: `erase`
 - `platform.apiKeys`: `self`
-- `platform.auth`: `logout`, `logoutCurrent`, `password.requestReset`, `password.reset`, `refresh`, `signin`, `signup`
+- `platform.auth`: `logout`, `logoutCurrent`, `mfa.sendCode`, `mfa.verify`, `password.requestReset`, `password.reset`, `refresh`, `signin`, `signup`, `stepUp.retrieve`, `stepUp.sendCode`, `stepUp.verify`
 - `platform.introspect`: `apiKey`, `retrieve`, `workspaces.retrieve`
-- `platform.me`: `avatar.clear`, `avatar.upload`, `hiddenGuides.hide`, `hiddenGuides.list`, `hiddenGuides.reset`, `hiddenGuides.unhide`, `profile.update`, `retrieve`
+- `platform.me`: `avatar.clear`, `avatar.upload`, `hiddenGuides.hide`, `hiddenGuides.list`, `hiddenGuides.reset`, `hiddenGuides.unhide`, `mfa.email.confirm`, `mfa.email.start`, `mfa.factors.delete`, `mfa.factors.update`, `mfa.recoveryCodes.regenerate`, `mfa.retrieve`, `mfa.totp.confirm`, `mfa.totp.start`, `profile.update`, `retrieve`
 - `platform.oauth`: `connections.delete`, `connections.list`, `workspaces.connections.delete`, `workspaces.connections.list`, `workspaces.connections.restore`
 - `platform.sessions`: `delete`, `list`, `revokeOthers`
 - `platform.stats`: `retrieve`
 - `platform.verification`: `resend`, `verify`
 - `platform.wellKnown`: `jwks`, `oauthAuthorizationServer`
-- `platform.workspaces`: `apiKeys.create`, `apiKeys.delete`, `apiKeys.list`, `apiKeys.presets.list`, `apiKeys.preview`, `apiKeys.retrieve`, `apiKeys.rotate`, `apiKeys.update`, `apiKeys.updateBindings`, `auditFeed.list`, `auditLogs.export`, `auditLogs.list`, `avatar.clear`, `avatar.upload`, `create`, `delete`, `invites.accept`, `invites.create`, `invites.delete`, `invites.list`, `list`, `members.delete`, `members.list`, `members.updateRole`, `policies.actions.catalog`, `policies.create`, `policies.delete`, `policies.list`, `policies.retrieve`, `policies.update`, `retrieve`, `roles.create`, `roles.delete`, `roles.list`, `roles.retrieve`, `roles.update`, `services.disable`, `services.enable`, `services.list`, `services.updateSettings`, `update`
+- `platform.workspaces`: `apiKeys.create`, `apiKeys.delete`, `apiKeys.list`, `apiKeys.presets.list`, `apiKeys.preview`, `apiKeys.retrieve`, `apiKeys.rotate`, `apiKeys.update`, `apiKeys.updateBindings`, `auditFeed.list`, `auditLogs.export`, `auditLogs.list`, `avatar.clear`, `avatar.upload`, `create`, `delete`, `invites.accept`, `invites.create`, `invites.delete`, `invites.list`, `list`, `members.delete`, `members.list`, `members.updateRole`, `policies.actions.catalog`, `policies.create`, `policies.delete`, `policies.list`, `policies.retrieve`, `policies.update`, `retrieve`, `roles.create`, `roles.delete`, `roles.list`, `roles.retrieve`, `roles.update`, `security.retrieve`, `security.update`, `services.disable`, `services.enable`, `services.list`, `services.updateSettings`, `update`
 
 ## Pagination
 

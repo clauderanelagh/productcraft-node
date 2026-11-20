@@ -2495,7 +2495,7 @@
             }
           },
           {
-            "description": "Pass a key (1..256 chars, [A-Za-z0-9_\\-:]) to make retries safe — replays return the original response for 24h.",
+            "description": "Pass a key (1..256 chars, [A-Za-z0-9._:-]) to make retries safe — replays return the original response for 24h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -3598,7 +3598,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4194,7 +4194,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4450,7 +4450,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4688,7 +4688,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -5496,7 +5496,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,

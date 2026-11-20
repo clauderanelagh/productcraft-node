@@ -9,9 +9,9 @@ const mail = new Mail();
   await mail.integrations.delete("github");
 }
 
-// integrations.github.connect: Mint a GitHub OAuth state token and return the authorize URL.
+// integrations.github.installGitHubApp: Start installing the ProductCraft Mail GitHub App for this workspace.
 {
-  const connectGitHub = await mail.integrations.github.connect({ return_to: "https://console.productcraft.co/mail/workspaces/acme/integrations" });
+  const gitHubAppInstall = await mail.integrations.github.installGitHubApp({ return_to: "https://console.productcraft.co/mail/workspaces/acme/integrations" });
 }
 
 // integrations.github.repos.branches.list: List branches for the given repo.
@@ -19,19 +19,29 @@ const mail = new Mail();
   const result = await mail.integrations.github.repos.branches.list("acme", "email-templates");
 }
 
-// integrations.github.repos.list: List repos visible to the connected GitHub account.
+// integrations.github.repos.list: List the repositories Mail can sync from: for a GitHub App connection, the repositories the App is installed on; for an older OAuth connection, the repositories the connected account can see.
 {
   const result = await mail.integrations.github.repos.list();
 }
 
-// integrations.github.settings.update: Set the repo + branch + templates path to sync from.
+// integrations.github.retrieveGitHubApp: Whether the ProductCraft Mail GitHub App is available, and what it asks for.
 {
-  await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
+  const gitHubAppStatus = await mail.integrations.github.retrieveGitHubApp();
 }
 
-// integrations.github.sync.create: Trigger an immediate sync from GitHub. Returns a sync id to poll.
+// integrations.github.settings.update: Set the repo + branch + templates path to sync from, then start a sync. GitHub App connection: push sync is on through the App (the repo must be one the App is installed on). Older OAuth connection: Mail adds a push webhook to the repo when the connected account is an admin of it. Written to the audit log as `mail.integration.settings_updated`.
+{
+  const gitHubSettingsSaved = await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
+}
+
+// integrations.github.sync.create: Trigger an immediate sync from GitHub. Returns a sync id to poll. The request and the result are written to the workspace audit log.
 {
   const startSync = await mail.integrations.github.sync.create();
+}
+
+// integrations.github.sync.latest: The most recent sync that changed or rejected something (kept 30 days), with the per-file errors and skips. 404 when there is none.
+{
+  const syncStatus = await mail.integrations.github.sync.latest();
 }
 
 // integrations.github.sync.retrieve: Poll a sync run's status.

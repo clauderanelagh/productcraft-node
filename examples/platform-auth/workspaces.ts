@@ -214,6 +214,16 @@ const platform = new PlatformAuth();
   const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Manages billing and reads invoices." });
 }
 
+// workspaces.security.retrieve: Get the workspace security policy
+{
+  const workspaceSecurity = await platform.workspaces.security.retrieve("acme");
+}
+
+// workspaces.security.update: Change the workspace security policy
+{
+  const workspaceSecurity = await platform.workspaces.security.update("acme", { mfa_required: true });
+}
+
 // workspaces.services.disable: Disable a service (settings are retained)
 {
   await platform.workspaces.services.disable("acme", "mail");
