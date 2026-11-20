@@ -14,6 +14,16 @@ const platform = new PlatformAuth();
   await platform.auth.logoutCurrent();
 }
 
+// auth.mfa.sendCode: Email a sign-in code
+{
+  const codeSent = await platform.auth.mfa.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+}
+
+// auth.mfa.verify: Finish sign-in with the second step
+{
+  const token = await platform.auth.mfa.verify({ mfa_token: "string" });
+}
+
 // auth.password.requestReset: Request a password reset email. Neither the response nor its timing reveals whether the email matched an account.
 {
   await platform.auth.password.requestReset({ email: "user@example.com" });
@@ -31,12 +41,27 @@ const platform = new PlatformAuth();
 
 // auth.signin: Sign in with email/username and password
 {
-  const token = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
+  const result = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
 }
 
 // auth.signup: Create a new account and sign in
 {
   const token = await platform.auth.signup({ email: "user@example.com", password: "MySecurePassword123", username: "john_doe" });
+}
+
+// auth.stepUp.retrieve: Get the session's step-up state
+{
+  const stepUpStatus = await platform.auth.stepUp.retrieve();
+}
+
+// auth.stepUp.sendCode: Email a step-up code
+{
+  const codeSent = await platform.auth.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+}
+
+// auth.stepUp.verify: Confirm it is you (step-up)
+{
+  const stepUpResult = await platform.auth.stepUp.verify({ code: "string" });
 }
 
 export {};

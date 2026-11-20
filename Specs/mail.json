@@ -651,8 +651,7 @@
         "required": [
           "authorize_url"
         ],
-        "type": "object",
-        "x-pc-sdk-model": "ConnectGitHub"
+        "type": "object"
       },
       "ConsentDto": {
         "properties": {
@@ -7242,6 +7241,77 @@
         "type": "object",
         "x-pc-sdk-model": "GetSmtpConfig"
       },
+      "GitHubAppInstallResponseDto": {
+        "properties": {
+          "install_url": {
+            "description": "Open this URL in the browser (a top-level navigation, not a fetch). It leads to the App's install page on GitHub, where the customer picks the account and the repositories; GitHub then brings them back to `return_to`.",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "install_url"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "GitHubAppInstall"
+      },
+      "GitHubAppStatusDto": {
+        "properties": {
+          "available": {
+            "description": "True once the ProductCraft Mail GitHub App is set up; until then only the older OAuth Connect exists.",
+            "type": "boolean"
+          },
+          "events": {
+            "description": "Webhook events the App receives.",
+            "example": [
+              "push",
+              "pull_request"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "html_url": {
+            "description": "The App's public page on GitHub; null until it is set up.",
+            "format": "uri",
+            "nullable": true,
+            "type": "string"
+          },
+          "permissions": {
+            "additionalProperties": {
+              "enum": [
+                "read",
+                "write"
+              ],
+              "type": "string"
+            },
+            "description": "Repository permissions the App asks for when installed.",
+            "example": {
+              "checks": "write",
+              "contents": "read",
+              "metadata": "read",
+              "pull_requests": "read"
+            },
+            "type": "object"
+          },
+          "slug": {
+            "description": "The App's slug on GitHub; null until it is set up.",
+            "example": "productcraft-mail",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "available",
+          "slug",
+          "html_url",
+          "permissions",
+          "events"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "GitHubAppStatus"
+      },
       "GitHubBranchDto": {
         "properties": {
           "name": {
@@ -7254,6 +7324,14 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "GitHubBranch"
+      },
+      "GitHubPushSync": {
+        "enum": [
+          "on",
+          "needs_admin",
+          "failed"
+        ],
+        "type": "string"
       },
       "GitHubRepoDto": {
         "properties": {
@@ -7290,6 +7368,28 @@
         "type": "object",
         "x-pc-sdk-model": "GitHubRepo"
       },
+      "GitHubSettingsSavedDto": {
+        "properties": {
+          "push_sync": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubPushSync"
+              }
+            ],
+            "description": "`on`: Mail added a webhook to the repo, so a push syncs at once and pull requests get a template check. `needs_admin`: the connected GitHub account is not an admin of the repo, so Mail checks the branch every 5 minutes instead. `failed`: GitHub refused the webhook for another reason; polling continues."
+          },
+          "sync_id": {
+            "description": "The sync started by the save.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "push_sync",
+          "sync_id"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "GitHubSettingsSaved"
+      },
       "IntegrationDetailDto": {
         "properties": {
           "account_avatar_url": {
@@ -7322,6 +7422,12 @@
           "last_synced_at": {
             "description": "When the last successful sync ran. null until first success.",
             "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "manage_url": {
+            "description": "Where the connection is managed on the provider's site (a GitHub App installation's settings page); null when there is none.",
+            "format": "uri",
             "nullable": true,
             "type": "string"
           },
@@ -7360,6 +7466,7 @@
           "last_synced_at",
           "settings",
           "updated_at",
+          "manage_url",
           "credentials_redacted"
         ],
         "type": "object",
@@ -7392,6 +7499,12 @@
           "last_synced_at": {
             "description": "When the last successful sync ran. null until first success.",
             "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "manage_url": {
+            "description": "Where the connection is managed on the provider's site (a GitHub App installation's settings page); null when there is none.",
+            "format": "uri",
             "nullable": true,
             "type": "string"
           },
@@ -7429,7 +7542,8 @@
           "last_error",
           "last_synced_at",
           "settings",
-          "updated_at"
+          "updated_at",
+          "manage_url"
         ],
         "type": "object",
         "x-pc-sdk-model": "IntegrationListItem"
@@ -7447,6 +7561,14 @@
           "running",
           "completed",
           "failed"
+        ],
+        "type": "string"
+      },
+      "IntegrationSyncTrigger": {
+        "enum": [
+          "manual",
+          "schedule",
+          "webhook"
         ],
         "type": "string"
       },
@@ -8302,6 +8424,19 @@
               "EMAIL_NOT_FOUND",
               "EMAIL_UNAVAILABLE",
               "FROM_DOMAIN_MISMATCH",
+              "GITHUB_APP_ALREADY_CONFIGURED",
+              "GITHUB_APP_INSTALLATION_FORBIDDEN",
+              "GITHUB_APP_NOT_CONFIGURED",
+              "GITHUB_APP_NOT_INSTALLED",
+              "GITHUB_APP_OWNER_REJECTED",
+              "GITHUB_APP_SETUP_EXPIRED",
+              "GITHUB_APP_SETUP_FAILED",
+              "GITHUB_APP_SUSPENDED",
+              "GITHUB_APP_VERIFY_FAILED",
+              "GITHUB_OAUTH_CONNECT_RETIRED",
+              "GITHUB_REPO_NOT_INSTALLED",
+              "GITHUB_WEBHOOK_MALFORMED",
+              "GITHUB_WEBHOOK_SIGNATURE_INVALID",
               "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW",
               "IMPORT_IN_PROGRESS",
               "IMPORT_NOT_FOUND",
@@ -8350,8 +8485,11 @@
               "SMTP_PASSWORD_REQUIRED",
               "TEMPLATE_DATA_INVALID",
               "TEMPLATE_KIND_NOT_SENDABLE",
+              "TEMPLATE_MANAGED_IN_GITHUB",
               "TEMPLATE_NOT_FOUND",
+              "TEMPLATE_NOT_SYNCED",
               "TEMPLATE_RENDER_FAILED",
+              "TEMPLATE_SYNTAX_ERROR",
               "TLS_ENFORCED_NOT_AVAILABLE",
               "TOPIC_EXISTS",
               "TOPIC_LIMIT",
@@ -8410,6 +8548,19 @@
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "FROM_DOMAIN_MISMATCH": "The From address is not at this domain.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
+          "GITHUB_APP_ALREADY_CONFIGURED": "The ProductCraft Mail GitHub App is already set up.",
+          "GITHUB_APP_INSTALLATION_FORBIDDEN": "The signed-in GitHub user cannot access that GitHub App installation.",
+          "GITHUB_APP_NOT_CONFIGURED": "The ProductCraft Mail GitHub App is not set up yet.",
+          "GITHUB_APP_NOT_INSTALLED": "The ProductCraft Mail GitHub App is no longer installed on the GitHub account.",
+          "GITHUB_APP_OWNER_REJECTED": "The GitHub App was created under an account that is not allowed to own it.",
+          "GITHUB_APP_SETUP_EXPIRED": "The GitHub App setup link has expired or was already used.",
+          "GITHUB_APP_SETUP_FAILED": "GitHub did not complete the App setup.",
+          "GITHUB_APP_SUSPENDED": "The GitHub App installation is suspended, or no longer has access to the repository.",
+          "GITHUB_APP_VERIFY_FAILED": "GitHub did not confirm who installed the App.",
+          "GITHUB_OAUTH_CONNECT_RETIRED": "Connecting GitHub through the OAuth App is retired; install the ProductCraft Mail GitHub App instead.",
+          "GITHUB_REPO_NOT_INSTALLED": "The repository is not one the GitHub App is installed on.",
+          "GITHUB_WEBHOOK_MALFORMED": "The GitHub delivery is not a readable JSON body.",
+          "GITHUB_WEBHOOK_SIGNATURE_INVALID": "The GitHub delivery signature did not verify.",
           "GONE": "The resource existed but has been removed for good.",
           "IDEMPOTENCY_IN_PROGRESS": "A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response.",
           "IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW": "An `idempotency_key` on a batch row conflicts with the request key.",
@@ -8480,8 +8631,11 @@
           "SMTP_PASSWORD_REQUIRED": "An SMTP password is required.",
           "TEMPLATE_DATA_INVALID": "The render data does not match the template schema.",
           "TEMPLATE_KIND_NOT_SENDABLE": "This template kind (a partial or layout) cannot be sent on its own.",
+          "TEMPLATE_MANAGED_IN_GITHUB": "This template is synced from GitHub: change the file in the repository, or detach it to edit it in Mail.",
           "TEMPLATE_NOT_FOUND": "No template with this name in this workspace.",
+          "TEMPLATE_NOT_SYNCED": "This template is not synced from GitHub.",
           "TEMPLATE_RENDER_FAILED": "The template could not be rendered.",
+          "TEMPLATE_SYNTAX_ERROR": "The template does not compile: fix the Handlebars syntax.",
           "TLS_ENFORCED_NOT_AVAILABLE": "`tls: enforced` is not available yet.",
           "TOPIC_EXISTS": "A topic with this name already exists.",
           "TOPIC_LIMIT": "The workspace has the maximum number of topics.",
@@ -12515,6 +12669,12 @@
             },
             "type": "object"
           },
+          "locale": {
+            "description": "The recipient's language as a BCP 47 tag (`he`, `pt-PT`, `nb`). Mail sends the localised sibling of the template when the workspace has one: `<name>-<locale>` (lowercased, e.g. `welcome-pt-pt`), then `<name>-<language>` (`welcome-pt`), else `<name>` itself, so a missing translation never fails the send. `no` and `nb` stand in for each other. A sibling your key may not send is skipped. The stored message records the template that was used.",
+            "example": "pt-PT",
+            "maxLength": 35,
+            "type": "string"
+          },
           "reply_to": {
             "description": "Reply-To address(es): one address or an array. This is the only way to set `Reply-To`.",
             "example": "support@acme.com",
@@ -13445,6 +13605,14 @@
             "description": "Counts of what the sync changed; null while running.",
             "nullable": true,
             "type": "object"
+          },
+          "trigger": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntegrationSyncTrigger"
+              }
+            ],
+            "description": "What started the run: `manual` (console or API), `schedule` (the 5-minute poll) or `webhook` (a push to the branch)."
           }
         },
         "required": [
@@ -13452,7 +13620,8 @@
           "started_at",
           "ended_at",
           "summary",
-          "error"
+          "error",
+          "trigger"
         ],
         "type": "object",
         "x-pc-sdk-model": "SyncStatus"
@@ -29845,9 +30014,424 @@
         }
       }
     },
+    "/v1/workspaces/{workspace_id}/integrations/github/app": {
+      "get": {
+        "operationId": "GitHubAppController_status",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubAppStatusDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Whether the ProductCraft Mail GitHub App is available, and what it asks for.",
+        "tags": [
+          "integrations"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "retrieveGitHubApp",
+          "paginated": false,
+          "resource": "integrations.github"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/app/install": {
+      "post": {
+        "description": "Returns a URL for the browser. The customer installs the App on the repositories they choose (Contents read, Metadata read, Pull requests read, Checks write; nothing else), confirms on GitHub that it is them, and lands back on `return_to` with `integration=github&status=connected` (or `migrated` when the workspace was connected through the older OAuth App: Mail then keeps the repo settings, deletes the old repo webhook and revokes the OAuth token). The state is single-use and expires in 15 minutes. Written to the audit log as `mail.integration.connected`.",
+        "operationId": "GitHubAppController_install",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9._:-]`) used to deduplicate retries within a 24h window. A retry with the same key and body returns the original response with `Idempotent-Replay: true`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectGitHubRequestDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubAppInstallResponseDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`GITHUB_APP_NOT_CONFIGURED`: the App is not set up yet.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "SERVICE_UNAVAILABLE",
+              "GITHUB_APP_NOT_CONFIGURED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start installing the ProductCraft Mail GitHub App for this workspace.",
+        "tags": [
+          "integrations"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "installGitHubApp",
+          "paginated": false,
+          "resource": "integrations.github"
+        }
+      }
+    },
     "/v1/workspaces/{workspace_id}/integrations/github/connect": {
       "post": {
-        "description": "The frontend redirects the user to `authorize_url`; GitHub bounces back to the `/callback` endpoint with a `code` + `state` pair. state is single-use, 5-minute TTL.",
+        "deprecated": true,
+        "description": "The older Connect, which asks GitHub for the `repo` scope (read and write on every repository the person can reach). Once the ProductCraft Mail GitHub App is set up this answers 410 `GITHUB_OAUTH_CONNECT_RETIRED`: use `POST /workspaces/{workspaceId}/integrations/github/app/install`. Existing OAuth connections keep working until they are switched. The frontend redirects the user to `authorize_url`; GitHub bounces back to the callback with a `code` + `state` pair. state is single-use, 5-minute TTL.",
         "operationId": "GitHubOAuthController_connect",
         "parameters": [
           {
@@ -30023,6 +30607,25 @@
               "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
+          "410": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`GITHUB_OAUTH_CONNECT_RETIRED`: connect with the GitHub App instead.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "GONE",
+              "GITHUB_OAUTH_CONNECT_RETIRED"
+            ]
+          },
           "429": {
             "content": {
               "application/json": {
@@ -30056,18 +30659,11 @@
             "bearer": []
           }
         ],
-        "summary": "Mint a GitHub OAuth state token and return the authorize URL.",
+        "summary": "Deprecated: connect GitHub through the OAuth App. Use the GitHub App install instead.",
         "tags": [
           "integrations"
         ],
-        "x-pc-sdk": {
-          "bind": [
-            "workspace_id"
-          ],
-          "method": "connect",
-          "paginated": false,
-          "resource": "integrations.github"
-        }
+        "x-pc-sdk": false
       }
     },
     "/v1/workspaces/{workspace_id}/integrations/github/repos": {
@@ -30229,7 +30825,7 @@
             "bearer": []
           }
         ],
-        "summary": "List repos visible to the connected GitHub account.",
+        "summary": "List the repositories Mail can sync from: for a GitHub App connection, the repositories the App is installed on; for an older OAuth connection, the repositories the connected account can see.",
         "tags": [
           "integrations"
         ],
@@ -30472,8 +31068,15 @@
           "required": true
         },
         "responses": {
-          "204": {
-            "description": "Saved.",
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GitHubSettingsSavedDto"
+                }
+              }
+            },
+            "description": "",
             "headers": {
               "Idempotent-Replay": {
                 "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
@@ -30639,7 +31242,7 @@
             "bearer": []
           }
         ],
-        "summary": "Set the repo + branch + templates path to sync from.",
+        "summary": "Set the repo + branch + templates path to sync from, then start a sync. GitHub App connection: push sync is on through the App (the repo must be one the App is installed on). Older OAuth connection: Mail adds a push webhook to the repo when the connected account is an admin of it. Written to the audit log as `mail.integration.settings_updated`.",
         "tags": [
           "integrations"
         ],
@@ -30853,7 +31456,7 @@
             "bearer": []
           }
         ],
-        "summary": "Trigger an immediate sync from GitHub. Returns a sync id to poll.",
+        "summary": "Trigger an immediate sync from GitHub. Returns a sync id to poll. The request and the result are written to the workspace audit log.",
         "tags": [
           "integrations"
         ],
@@ -30862,6 +31465,176 @@
             "workspace_id"
           ],
           "method": "create",
+          "paginated": false,
+          "resource": "integrations.github.sync"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/integrations/github/sync/latest": {
+      "get": {
+        "operationId": "GitHubController_getLatestSync",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncStatusDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No sync recorded in the last 30 days.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "The most recent sync that changed or rejected something (kept 30 days), with the per-file errors and skips. 404 when there is none.",
+        "tags": [
+          "integrations"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "latest",
           "paginated": false,
           "resource": "integrations.github.sync"
         }
@@ -31048,7 +31821,7 @@
     },
     "/v1/workspaces/{workspace_id}/integrations/{provider}": {
       "delete": {
-        "description": "Hard delete — the encrypted blob is removed. The customer must reconnect via the provider-specific OAuth flow to restore access.",
+        "description": "Hard delete: the encrypted blob is removed. For a GitHub OAuth connection Mail also deletes the repo webhook it made and revokes the token; a GitHub App installation stays on the GitHub account (uninstall it there). Written to the workspace audit log as `mail.integration.disconnected`.",
         "operationId": "IntegrationsController_disconnect",
         "parameters": [
           {
@@ -41353,7 +42126,7 @@
                 }
               }
             },
-            "description": "Validation failure (bad name / payload).",
+            "description": "Validation failure (bad name / payload), or `TEMPLATE_SYNTAX_ERROR` when the subject or a body does not compile (the message quotes Handlebars).",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -41361,7 +42134,8 @@
             },
             "x-pc-error-codes": [
               "BAD_REQUEST",
-              "VALIDATION_ERROR"
+              "VALIDATION_ERROR",
+              "TEMPLATE_SYNTAX_ERROR"
             ]
           },
           "401": {
@@ -42183,6 +42957,25 @@
               "NOT_FOUND"
             ]
           },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`TEMPLATE_MANAGED_IN_GITHUB`: delete the file in the repository instead (or detach the template first).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "TEMPLATE_MANAGED_IN_GITHUB"
+            ]
+          },
           "429": {
             "content": {
               "application/json": {
@@ -42403,6 +43196,454 @@
             "workspace_id"
           ],
           "method": "retrieve",
+          "paginated": false,
+          "resource": "templates"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/templates/{name}/attach": {
+      "post": {
+        "operationId": "TemplateController_attach",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the template.",
+            "example": "welcome",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9._:-]`) used to deduplicate retries within a 24h window. A retry with the same key and body returns the original response with `Idempotent-Replay: true`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Template not found in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Hand a detached template back to the GitHub sync. The next sync replaces it with the repository version; edits made in Mail since the detach are lost.",
+        "tags": [
+          "templates"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "attach",
+          "paginated": false,
+          "resource": "templates"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/templates/{name}/detach": {
+      "post": {
+        "operationId": "TemplateController_detach",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Name of the template.",
+            "example": "welcome",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque client-generated string (1–256 chars, `[A-Za-z0-9._:-]`) used to deduplicate retries within a 24h window. A retry with the same key and body returns the original response with `Idempotent-Replay: true`.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "Idempotent-Replay": {
+                "description": "`true` when this response is a replay of an earlier request with the same `Idempotency-Key`.",
+                "schema": {
+                  "enum": [
+                    "true"
+                  ],
+                  "type": "string"
+                }
+              },
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing, expired or invalid bearer token.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Template not found in this workspace.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key).",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying with the same key (sent with `IDEMPOTENCY_IN_PROGRESS`).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "IDEMPOTENCY_KEY_REUSE",
+              "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Take a GitHub-synced template over in Mail: it becomes editable here and the GitHub sync stops changing it (each sync reports it as `edited_in_console`) until it is reattached.",
+        "tags": [
+          "templates"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "detach",
           "paginated": false,
           "resource": "templates"
         }

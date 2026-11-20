@@ -108,11 +108,13 @@ const token = await platform.auth.refresh({ refresh_token: "eyJhbGciOiJIUzI1NiIs
 
 ### `platform.auth.signin(params, options?)`
 
-`POST /v1/auth/signin` → `PlatformAuth.Token`
+`POST /v1/auth/signin` → `PlatformAuth.AuthSigninResponse`
 
 Sign in with email/username and password.
 
 Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.
+
+An account with two-step sign-in on answers `200` with a challenge instead of tokens (`mfa_required: true`, `mfa_token`, `factors`): finish with `POST /v1/auth/mfa/verify`. Tell the two apart by `mfa_required`. The challenge is only ever returned for a correct password.
 
 - Params: `PlatformAuth.AuthSigninParams`
 - Public: no API key, browser-safe
@@ -125,7 +127,7 @@ Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unk
 | 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Too many attempts for this identifier (`TOO_MANY_ATTEMPTS`). Two counters produce it, both keyed purely by the submitted identifier: a burst limit of 5 attempts per minute, and a 15-minute lock after 4 failed attempts. Both fire on the same attempt for a registered and an unregistered identifier. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const token = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
+const result = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-signin)
@@ -149,6 +151,56 @@ const token = await platform.auth.signup({ email: "user@example.com", password: 
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-signup)
+
+## auth.mfa
+
+### `platform.auth.mfa.sendCode(params, options?)`
+
+`POST /v1/auth/mfa/send-code` → `PlatformAuth.CodeSent`
+
+Email a sign-in code.
+
+Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds, 3 per sign-in.
+
+- Params: `PlatformAuth.AuthMfaSendCodeParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CHALLENGE_INVALID` | The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No email factor with this id on the account (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Sent less than 30 seconds ago, or 3 codes already went out for this sign-in (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const codeSent = await platform.auth.mfa.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-mfa-send-code)
+
+### `platform.auth.mfa.verify(params, options?)`
+
+`POST /v1/auth/mfa/verify` → `PlatformAuth.Token`
+
+Finish sign-in with the second step.
+
+Send exactly one of `{factor_id, code}` (authenticator app or email), `{recovery_code}` or `{factor_id, webauthn}`. A right answer returns the session tokens, exactly like a sign-in without two-step. A wrong one spends one of the challenge's 5 tries. Not idempotent: the answer is a session.
+
+- Params: `PlatformAuth.AuthMfaVerifyParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Not exactly one way of answering (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CODE_INVALID`, `MFA_CHALLENGE_INVALID` | The answer was wrong (`MFA_CODE_INVALID`; the challenge survives until its 5 tries are spent), or The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `ACCOUNT_SUSPENDED`, `ACCOUNT_DEACTIVATED` | The account was suspended (`ACCOUNT_SUSPENDED`) or deactivated (`ACCOUNT_DEACTIVATED`) meanwhile. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const token = await platform.auth.mfa.verify({ mfa_token: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-mfa-verify)
 
 ## auth.password
 
@@ -191,6 +243,75 @@ await platform.auth.password.reset({ new_password: "MyNewPassword123", token: "1
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-password-reset)
+
+## auth.stepUp
+
+### `platform.auth.stepUp.retrieve(options?)`
+
+`GET /v1/auth/step-up` → `PlatformAuth.StepUpStatus`
+
+Get the session's step-up state.
+
+Whether sensitive actions are allowed right now (a second step, or the sign-in itself, in the last 10 minutes), until when, and how to step up. `methods`: `totp` / `email` / `webauthn` / `recovery_code` for an account with factors, `password` for one without, `reauthenticate` (sign in again) for one with neither.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const stepUpStatus = await platform.auth.stepUp.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-auth-step-up)
+
+### `platform.auth.stepUp.sendCode(params, options?)`
+
+`POST /v1/auth/step-up/send-code` → `PlatformAuth.CodeSent`
+
+Email a step-up code.
+
+Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds.
+
+- Params: `PlatformAuth.AuthStepUpSendCodeParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No email factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const codeSent = await platform.auth.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-step-up-send-code)
+
+### `platform.auth.stepUp.verify(params?, options?)`
+
+`POST /v1/auth/step-up` → `PlatformAuth.StepUpResult`
+
+Confirm it is you (step-up).
+
+Send exactly one of `{factor_id, code}`, `{recovery_code}`, `{factor_id, webauthn}` or, for an account without factors, `{password}`. Sensitive actions on this session are then allowed for 10 minutes. 5 failures per 15 minutes per session. Not idempotent.
+
+- Params: `PlatformAuth.AuthStepUpVerifyParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Not exactly one way of answering (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CODE_INVALID`, `INVALID_CREDENTIALS`, `SESSION_REVOKED` | Wrong code or passkey (`MFA_CODE_INVALID`), wrong password or a password offered by an account that has factors (`INVALID_CREDENTIALS`). No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | 5 failed attempts on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const stepUpResult = await platform.auth.stepUp.verify({ code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-step-up)
 
 ## introspect
 
@@ -389,6 +510,197 @@ await platform.me.hiddenGuides.unhide("dashboard");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-me-hidden-guides-key)
+
+## me.mfa
+
+### `platform.me.mfa.retrieve(options?)`
+
+`GET /v1/me/mfa` → `PlatformAuth.MfaOverview`
+
+Get the caller's two-step sign-in methods.
+
+Whether two-step sign-in is on, the active factors, how many unused recovery codes are left, and the workspaces that require it of this account (with the deadline and whether access is already blocked).
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mfaOverview = await platform.me.mfa.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-me-mfa)
+
+## me.mfa.email
+
+### `platform.me.mfa.email.confirm(factorId, params, options?)`
+
+`POST /v1/me/mfa/email/{factor_id}/confirm` → `PlatformAuth.FactorActivated`
+
+Turn on pending email codes.
+
+Checks the emailed code. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaEmailConfirmParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MFA_CODE_INVALID` | Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `EMAIL_NOT_VERIFIED` | The account email changed since the code was sent (`EMAIL_NOT_VERIFIED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const factorActivated = await platform.me.mfa.email.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-email-factor-id-confirm)
+
+### `platform.me.mfa.email.start(params?, options?)`
+
+`POST /v1/me/mfa/email` → `PlatformAuth.EmailEnrollment`
+
+Start adding email codes.
+
+Creates a pending email factor bound to the account's verified primary email and sends it a code (valid 5 minutes). Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaEmailStartParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 409 | `ConflictError` | `CONFLICT`, `EMAIL_NOT_VERIFIED`, `MFA_FACTOR_EXISTS` | The account email is not verified (`EMAIL_NOT_VERIFIED`), or email codes are already on (`MFA_FACTOR_EXISTS`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const emailEnrollment = await platform.me.mfa.email.start({ label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-email)
+
+## me.mfa.factors
+
+### `platform.me.mfa.factors.delete(factorId, options?)`
+
+`DELETE /v1/me/mfa/factors/{factor_id}` → `void`
+
+Remove a factor.
+
+Needs step-up. Removing the last factor turns two-step sign-in off and deletes the recovery codes; refused while a workspace requires it.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No active factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_REQUIRED_BY_WORKSPACE` | It is the last factor and a workspace requires two-step sign-in (`MFA_REQUIRED_BY_WORKSPACE`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await platform.me.mfa.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-me-mfa-factors-factor-id)
+
+### `platform.me.mfa.factors.update(factorId, params, options?)`
+
+`PATCH /v1/me/mfa/factors/{factor_id}` → `PlatformAuth.MfaFactor`
+
+Rename a factor.
+
+- Params: `PlatformAuth.MeMfaFactorUpdateParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No active factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mfaFactor = await platform.me.mfa.factors.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-me-mfa-factors-factor-id)
+
+## me.mfa.recoveryCodes
+
+### `platform.me.mfa.recoveryCodes.regenerate(options?)`
+
+`POST /v1/me/mfa/recovery-codes` → `PlatformAuth.RecoveryCodes`
+
+Replace the recovery codes.
+
+Needs step-up. Returns 10 new single-use codes; every previous code stops working. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_ENROLLMENT_REQUIRED` | Two-step sign-in is off (`MFA_ENROLLMENT_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const recoveryCodes = await platform.me.mfa.recoveryCodes.regenerate();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-recovery-codes)
+
+## me.mfa.totp
+
+### `platform.me.mfa.totp.confirm(factorId, params, options?)`
+
+`POST /v1/me/mfa/totp/{factor_id}/confirm` → `PlatformAuth.FactorActivated`
+
+Turn on a pending authenticator app.
+
+Checks one current code. When this is the account's first factor the answer carries 10 recovery codes, exactly once. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaTotpConfirmParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MFA_CODE_INVALID` | Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const factorActivated = await platform.me.mfa.totp.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-totp-factor-id-confirm)
+
+### `platform.me.mfa.totp.start(params?, options?)`
+
+`POST /v1/me/mfa/totp` → `PlatformAuth.TotpEnrollment`
+
+Start adding an authenticator app.
+
+Creates a pending TOTP factor (SHA-1, 6 digits, 30 s) and returns its secret, `otpauth://` URI and QR code. Confirm with a code to turn it on. Starting again replaces a pending one. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaTotpStartParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const totpEnrollment = await platform.me.mfa.totp.start({ label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-totp)
 
 ## me.profile
 
@@ -731,7 +1043,7 @@ Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -820,7 +1132,7 @@ Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `m
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PAK_NAME_REQUIRED`, `PAK_NAME_TOO_LONG` | Body failed validation (`VALIDATION_ERROR`): neither or both of `policy_ids` and `preset`, an unknown `preset`, an empty `policy_ids`, more than 25 policies, or a blank/overlong `name` (`PAK_NAME_REQUIRED` / `PAK_NAME_TOO_LONG`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or one of `policy_ids` does not exist in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_ALREADY_MINTED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `PAK_ALREADY_MINTED`: this `Idempotency-Key` already minted a key (its `id` is in `details`); the token was shown once, so rotate that key for a new one. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -934,7 +1246,7 @@ Mint a replacement for an existing PAK, carrying its name, description and polic
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_REVOKED`, `PAK_EXPIRED` | The key is revoked (`PAK_REVOKED`), already expired (`PAK_EXPIRED`), or has no policy bindings to carry across. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -980,7 +1292,7 @@ Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the me
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | One of: bound > 25 policies; merged > 200 statements; one of the policy ids does not exist or lives in a different workspace. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller cannot grant one or more actions in the merged statement set. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller cannot grant one or more actions in the merged statement set, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT` | Empty bindings — revoke the PAK instead of leaving it unbound. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1178,7 +1490,7 @@ Create a workspace invite link. Cookie/JWT only — invites bring new humans int
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1294,7 +1606,7 @@ Update a member's role. Body: { roleId } or { role: "owner"|"admin"|"member" }.
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `STEP_UP_REQUIRED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners. Or a person's session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOT_A_MEMBER`, `ROLE_NOT_FOUND` | Workspace not found, target account is not a member (`NOT_A_MEMBER`), or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `SOLE_OWNER` | Would demote the only owner (`SOLE_OWNER`). Assign another owner first. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -1552,6 +1864,54 @@ const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-roles-role-id)
 
+## workspaces.security
+
+### `platform.workspaces.security.retrieve(workspaceSlug, options?)`
+
+`GET /v1/workspaces/{workspace_slug}/security` → `PlatformAuth.WorkspaceSecurity`
+
+Get the workspace security policy.
+
+Whether members must use two-step sign-in, since when, and the grace period. Callers holding `workspace.member.read` also get each member's status (enabled, deadline, blocked).
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `MFA_ENROLLMENT_REQUIRED` | Not a member (`NOT_A_MEMBER`), or a member past the deadline without two-step sign-in (`MFA_ENROLLMENT_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceSecurity = await platform.workspaces.security.retrieve("acme");
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-security)
+
+### `platform.workspaces.security.update(workspaceSlug, params, options?)`
+
+`PUT /v1/workspaces/{workspace_slug}/security` → `PlatformAuth.WorkspaceSecurity`
+
+Change the workspace security policy.
+
+Owner only (`workspace.security.update`), a person's session only, and needs step-up. Turning the requirement on needs the caller to have two-step sign-in. Each member then has until max(now, joined) + `grace_period_days` to turn it on; past that, the workspace refuses them until they do. Workspace API keys are not affected. Saving again while it is on keeps the original start date. `PUT` replaces the policy, so it takes no `Idempotency-Key`.
+
+- Params: `PlatformAuth.WorkspaceSecurityUpdateParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `grace_period_days` must be 0-30. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED`, `MCP_NOT_PERMITTED`, `NOT_A_MEMBER`, `STEP_UP_REQUIRED` | Caller is a workspace API key or an MCP grant (`PAK_NOT_PERMITTED` / `MCP_NOT_PERMITTED`), not a member (`NOT_A_MEMBER`), lacks `workspace.security.update`, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_ENROLLMENT_REQUIRED` | Turning the requirement on while the caller has no two-step sign-in (`MFA_ENROLLMENT_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceSecurity = await platform.workspaces.security.update("acme", { mfa_required: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#put-v1-workspaces-workspace-slug-security)
+
 ## workspaces.services
 
 ### `platform.workspaces.services.disable(workspaceSlug, service, options?)`
@@ -1681,6 +2041,7 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `ALREADY_A_MEMBER` | Already a member. |
 | `CROSS_ORIGIN_REJECTED` | The request came from an origin that is not allowed for this cookie-authenticated route. |
 | `EMAIL_NOT_VERIFIED` | Verify the account email first. |
+| `HUMAN_SESSION_REQUIRED` | This route needs a person's own session; workspace API keys and OAuth/MCP tokens cannot use it. |
 | `INVITE_EMAIL_MISMATCH` | The invite was sent to a different email address. |
 | `INVITE_EXHAUSTED` | Invite exhausted. |
 | `INVITE_EXPIRED` | Invite expired. |
@@ -1689,6 +2050,12 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `INVITE_REVOKED` | Invite revoked. |
 | `LAST_MEMBER` | The workspace's last member cannot leave; delete the workspace instead. |
 | `MEMBER_RANK_EXCEEDED` | You cannot manage a member whose role ranks above yours. |
+| `MFA_CHALLENGE_INVALID` | The two-step sign-in challenge is unknown, expired, used or out of tries; sign in again. |
+| `MFA_CODE_INVALID` | The two-step code, recovery code or passkey was not accepted. |
+| `MFA_ENROLLMENT_REQUIRED` | Set up two-step sign-in first: the workspace requires it. |
+| `MFA_FACTOR_EXISTS` | Email codes are already on for this account, or this passkey is already registered. |
+| `MFA_FACTOR_NOT_FOUND` | No two-step sign-in method with this id on your account. |
+| `MFA_REQUIRED_BY_WORKSPACE` | A workspace you belong to requires two-step sign-in, so the last method cannot be removed. |
 | `NOT_A_MEMBER` | The caller is not a member of this workspace. |
 | `OAUTH_GRANT_ADMIN_REVOKED` | An admin revoked this OAuth grant. |
 | `OWNER_ROLE_REQUIRED` | Only an owner can do this. |
@@ -1709,5 +2076,6 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `SERVICE_NOT_ACTIVATED` | The product is not activated for this workspace. |
 | `SERVICE_UNKNOWN` | No product with this name. |
 | `SOLE_OWNER` | The workspace's only owner cannot leave or be removed; transfer ownership first. |
+| `STEP_UP_REQUIRED` | Confirm it is you (a fresh two-step check) before this action; `details.methods` lists how. |
 | `TOO_MANY_ATTEMPTS` | Too many attempts; wait before trying again. |
 | `WORKSPACE_KEY_REQUIRED` | This route needs a workspace API key. |

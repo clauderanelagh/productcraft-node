@@ -4,6 +4,11 @@ import { Mail } from "@productcraft/mail";
 
 const mail = new Mail();
 
+// templates.attach: Hand a detached template back to the GitHub sync. The next sync replaces it with the repository version; edits made in Mail since the detach are lost.
+{
+  const template = await mail.templates.attach("welcome");
+}
+
 // templates.create: Create or update a template, layout, or partial. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.
 {
   const template = await mail.templates.create({ body_html: "string", name: "order-confirmation", subject: "string" });
@@ -12,6 +17,11 @@ const mail = new Mail();
 // templates.delete: Delete a template, layout, or partial by name.
 {
   await mail.templates.delete("welcome");
+}
+
+// templates.detach: Take a GitHub-synced template over in Mail: it becomes editable here and the GitHub sync stops changing it (each sync reports it as `edited_in_console`) until it is reattached.
+{
+  const template = await mail.templates.detach("welcome");
 }
 
 // templates.lint: Lint a draft for deliverability red flags. Same render pipeline as /preview; returns a 0-100 score (higher is better) and a sorted list of findings (errors first). Self-developed heuristic linter, no external classifier — runs in-process.

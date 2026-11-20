@@ -622,6 +622,51 @@
         ],
         "type": "object"
       },
+      "CodeSentDto": {
+        "properties": {
+          "code_expires_at": {
+            "description": "When the code stops working (5 minutes).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "destination_masked": {
+            "description": "Masked address the code went to.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "destination_masked",
+          "code_expires_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "CodeSent"
+      },
+      "ConfirmCodeDto": {
+        "properties": {
+          "code": {
+            "description": "The 6-digit code from the app or the email.",
+            "pattern": "^\\d{6}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "ConfirmWebauthnDto": {
+        "properties": {
+          "credential": {
+            "additionalProperties": true,
+            "description": "The `PublicKeyCredential` from `navigator.credentials.create()`, ArrayBuffers base64url-encoded: `{ id, raw_id, type, response: { clientDataJSON, attestationObject, transports? } }` (member names verbatim).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "credential"
+        ],
+        "type": "object"
+      },
       "ConnectedClientDto": {
         "properties": {
           "account_id": {
@@ -1383,6 +1428,31 @@
         ],
         "type": "object"
       },
+      "EmailEnrollmentDto": {
+        "properties": {
+          "code_expires_at": {
+            "description": "When the code stops working (5 minutes).",
+            "format": "date-time",
+            "type": "string"
+          },
+          "destination_masked": {
+            "description": "Masked address the code went to.",
+            "type": "string"
+          },
+          "factor_id": {
+            "description": "The pending factor; confirm it with the emailed code.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "destination_masked",
+          "code_expires_at",
+          "factor_id"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "EmailEnrollment"
+      },
       "EnableWorkspaceServiceDto": {
         "properties": {
           "settings": {
@@ -1486,6 +1556,25 @@
           "errors"
         ],
         "type": "object"
+      },
+      "FactorActivatedDto": {
+        "properties": {
+          "factor": {
+            "$ref": "#/components/schemas/MfaFactorDto"
+          },
+          "recovery_codes": {
+            "description": "Only when this was the account's FIRST factor: 10 single-use recovery codes, returned exactly once.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "factor"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "FactorActivated"
       },
       "FeedItemDto": {
         "properties": {
@@ -1832,6 +1921,36 @@
         "type": "object",
         "x-pc-sdk-model": "IntrospectWorkspaceListItem"
       },
+      "IntrospectWorkspaceMfaDto": {
+        "properties": {
+          "blocked": {
+            "description": "Past the deadline without a factor: `policy` is empty and platform routes answer `MFA_ENROLLMENT_REQUIRED`.",
+            "type": "boolean"
+          },
+          "deadline": {
+            "description": "When an unenrolled member loses access: max(requirement on, joined) + grace period. Null when not required.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "enrolled": {
+            "description": "Whether the caller has an active two-step factor.",
+            "type": "boolean"
+          },
+          "required": {
+            "description": "Whether the workspace requires two-step sign-in.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "required",
+          "enrolled",
+          "deadline",
+          "blocked"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "IntrospectWorkspaceMfa"
+      },
       "IntrospectWorkspaceResponseDto": {
         "properties": {
           "id": {
@@ -1842,6 +1961,14 @@
           "is_member": {
             "description": "Whether the caller is a member of the workspace (a workspace key bound to it counts as one). Non-members get no `id`, no role and an empty policy.",
             "type": "boolean"
+          },
+          "mfa": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IntrospectWorkspaceMfaDto"
+              }
+            ],
+            "description": "Members only (not workspace keys): the workspace's two-step sign-in requirement for this caller (internal_docs/platform/mfa.md)."
           },
           "policy": {
             "description": "Effective IAM-style policy for this caller in this workspace.",
@@ -2434,6 +2561,287 @@
         "type": "object",
         "x-pc-sdk-model": "MeProfile"
       },
+      "MfaChallengeFactorDto": {
+        "properties": {
+          "email_masked": {
+            "description": "Email factors: the masked destination, e.g. `c***h@g***l.com`.",
+            "type": "string"
+          },
+          "id": {
+            "description": "Factor id; send it back as `factor_id`.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "label": {
+            "description": "Name the account holder gave it (or a default).",
+            "type": "string"
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MfaFactorType"
+              }
+            ],
+            "description": "Kind of factor. Clients treat this as an open enum."
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "label"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MfaChallengeFactor"
+      },
+      "MfaChallengeResponseDto": {
+        "properties": {
+          "expires_at": {
+            "description": "When `mfa_token` expires.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "factors": {
+            "description": "The account's active factors.",
+            "items": {
+              "$ref": "#/components/schemas/MfaChallengeFactorDto"
+            },
+            "type": "array"
+          },
+          "mfa_required": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MfaRequiredFlag"
+              }
+            ],
+            "description": "Always `true`: tell this apart from a token response by this field."
+          },
+          "mfa_token": {
+            "description": "Opaque, single use, valid 10 minutes, 5 wrong answers in total. Send it to `/v1/auth/mfa/*`.",
+            "type": "string"
+          },
+          "recovery_codes_available": {
+            "description": "Whether an unused recovery code exists (offer \"use a recovery code\").",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mfa_required",
+          "mfa_token",
+          "expires_at",
+          "factors",
+          "recovery_codes_available"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MfaChallenge"
+      },
+      "MfaFactorDto": {
+        "properties": {
+          "created_at": {
+            "description": "When the factor was turned on.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "email_masked": {
+            "description": "Email factors: the masked destination, e.g. `c***h@g***l.com`.",
+            "type": "string"
+          },
+          "id": {
+            "description": "Factor id; send it back as `factor_id`.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "label": {
+            "description": "Name the account holder gave it (or a default).",
+            "type": "string"
+          },
+          "last_used_at": {
+            "description": "Last time it completed a second step.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MfaFactorStatus"
+              }
+            ],
+            "description": "Only active factors are listed."
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MfaFactorType"
+              }
+            ],
+            "description": "Kind of factor. Clients treat this as an open enum."
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "label",
+          "status",
+          "created_at",
+          "last_used_at"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MfaFactor"
+      },
+      "MfaFactorStatus": {
+        "enum": [
+          "active"
+        ],
+        "type": "string"
+      },
+      "MfaFactorType": {
+        "enum": [
+          "totp",
+          "email",
+          "webauthn"
+        ],
+        "type": "string"
+      },
+      "MfaOverviewDto": {
+        "properties": {
+          "enabled": {
+            "description": "True when the account has at least one active factor.",
+            "type": "boolean"
+          },
+          "factors": {
+            "description": "Active factors.",
+            "items": {
+              "$ref": "#/components/schemas/MfaFactorDto"
+            },
+            "type": "array"
+          },
+          "recovery_codes_remaining": {
+            "description": "Unused recovery codes.",
+            "type": "number"
+          },
+          "required_by": {
+            "description": "Workspaces that require two-step sign-in of this account.",
+            "items": {
+              "$ref": "#/components/schemas/MfaRequiredByDto"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "enabled",
+          "factors",
+          "recovery_codes_remaining",
+          "required_by"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MfaOverview"
+      },
+      "MfaRequiredByDto": {
+        "properties": {
+          "blocked": {
+            "description": "True once the deadline passed without a factor: the workspace refuses this account (`MFA_ENROLLMENT_REQUIRED`).",
+            "type": "boolean"
+          },
+          "deadline": {
+            "description": "When this member loses access without two-step sign-in: max(requirement turned on, joined) + grace period.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Workspace display name.",
+            "type": "string"
+          },
+          "workspace_id": {
+            "description": "Id of the workspace that requires it.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "workspace_slug": {
+            "description": "Workspace slug.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "workspace_slug",
+          "display_name",
+          "deadline",
+          "blocked"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "MfaRequiredBy"
+      },
+      "MfaRequiredFlag": {
+        "enum": [
+          true
+        ],
+        "type": "number"
+      },
+      "MfaSendCodeDto": {
+        "properties": {
+          "factor_id": {
+            "description": "The email factor to send to.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "mfa_token": {
+            "description": "`mfa_token` from the sign-in answer.",
+            "maxLength": 256,
+            "type": "string"
+          }
+        },
+        "required": [
+          "mfa_token",
+          "factor_id"
+        ],
+        "type": "object"
+      },
+      "MfaTokenDto": {
+        "properties": {
+          "mfa_token": {
+            "description": "`mfa_token` from the sign-in answer.",
+            "maxLength": 256,
+            "type": "string"
+          }
+        },
+        "required": [
+          "mfa_token"
+        ],
+        "type": "object"
+      },
+      "MfaVerifyDto": {
+        "properties": {
+          "code": {
+            "description": "6-digit TOTP or email code.",
+            "pattern": "^\\d{6}$",
+            "type": "string"
+          },
+          "factor_id": {
+            "description": "The factor answered (TOTP, email or passkey). Omit with `recovery_code`.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "mfa_token": {
+            "description": "`mfa_token` from the sign-in answer.",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "recovery_code": {
+            "description": "A recovery code (`abcd-efgh-jk`, case-insensitive, dashes optional). Works once.",
+            "type": "string"
+          },
+          "webauthn": {
+            "additionalProperties": true,
+            "description": "The `PublicKeyCredential` from `navigator.credentials.get()`, ArrayBuffers base64url-encoded: `{ id, raw_id, type: \"public-key\", response: { clientDataJSON, authenticatorData, signature, userHandle } }`. WebAuthn member names are passed through verbatim (camelCase by spec).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "mfa_token"
+        ],
+        "type": "object"
+      },
       "MintPakResponseDto": {
         "properties": {
           "record": {
@@ -2454,6 +2862,14 @@
       },
       "OAuthCallbackResultDto": {
         "properties": {
+          "mfa": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MfaChallengeResponseDto"
+              }
+            ],
+            "description": "Present instead of `tokens` when the account has two-step sign-in on: the same challenge `POST /v1/auth/signin` returns. Finish with `POST /v1/auth/mfa/verify`, then redirect to `return_to`."
+          },
           "return_to": {
             "description": "Original `return_to` the user was sent off with. auth-ui redirects here after writing the cookie.",
             "type": "string"
@@ -2464,11 +2880,10 @@
                 "$ref": "#/components/schemas/TokenResponseDto"
               }
             ],
-            "description": "Issued PlatformUser session tokens. auth-ui sets the auth_token cookie from `accessToken` and 302s the browser to `return_to`."
+            "description": "Issued PlatformUser session tokens. auth-ui sets the auth_token cookie from `accessToken` and 302s the browser to `return_to`. Absent when the account has two-step sign-in on (see `mfa`)."
           }
         },
         "required": [
-          "tokens",
           "return_to"
         ],
         "type": "object"
@@ -2721,6 +3136,7 @@
               "ALREADY_A_MEMBER",
               "CROSS_ORIGIN_REJECTED",
               "EMAIL_NOT_VERIFIED",
+              "HUMAN_SESSION_REQUIRED",
               "INVITE_EMAIL_MISMATCH",
               "INVITE_EXHAUSTED",
               "INVITE_EXPIRED",
@@ -2729,6 +3145,12 @@
               "INVITE_REVOKED",
               "LAST_MEMBER",
               "MEMBER_RANK_EXCEEDED",
+              "MFA_CHALLENGE_INVALID",
+              "MFA_CODE_INVALID",
+              "MFA_ENROLLMENT_REQUIRED",
+              "MFA_FACTOR_EXISTS",
+              "MFA_FACTOR_NOT_FOUND",
+              "MFA_REQUIRED_BY_WORKSPACE",
               "NOT_A_MEMBER",
               "OAUTH_GRANT_ADMIN_REVOKED",
               "OWNER_ROLE_REQUIRED",
@@ -2749,6 +3171,7 @@
               "SERVICE_NOT_ACTIVATED",
               "SERVICE_UNKNOWN",
               "SOLE_OWNER",
+              "STEP_UP_REQUIRED",
               "TOO_MANY_ATTEMPTS",
               "WORKSPACE_KEY_REQUIRED"
             ],
@@ -2773,6 +3196,7 @@
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
           "GONE": "The resource existed but has been removed for good.",
+          "HUMAN_SESSION_REQUIRED": "This route needs a person's own session; workspace API keys and OAuth/MCP tokens cannot use it.",
           "IDEMPOTENCY_IN_PROGRESS": "A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response.",
           "IDEMPOTENCY_KEY_REQUIRED": "This operation requires an `Idempotency-Key` header.",
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
@@ -2789,6 +3213,12 @@
           "MCP_WORKSPACE_MISMATCH": "The MCP token was issued for a different workspace.",
           "MEMBER_RANK_EXCEEDED": "You cannot manage a member whose role ranks above yours.",
           "METHOD_NOT_ALLOWED": "The route does not accept this HTTP method.",
+          "MFA_CHALLENGE_INVALID": "The two-step sign-in challenge is unknown, expired, used or out of tries; sign in again.",
+          "MFA_CODE_INVALID": "The two-step code, recovery code or passkey was not accepted.",
+          "MFA_ENROLLMENT_REQUIRED": "Set up two-step sign-in first: the workspace requires it.",
+          "MFA_FACTOR_EXISTS": "Email codes are already on for this account, or this passkey is already registered.",
+          "MFA_FACTOR_NOT_FOUND": "No two-step sign-in method with this id on your account.",
+          "MFA_REQUIRED_BY_WORKSPACE": "A workspace you belong to requires two-step sign-in, so the last method cannot be removed.",
           "NOT_ACCEPTABLE": "The route cannot produce the requested content type.",
           "NOT_A_MEMBER": "The caller is not a member of this workspace.",
           "NOT_FOUND": "The resource does not exist, or belongs to another workspace or app.",
@@ -2822,6 +3252,7 @@
           "SERVICE_UNKNOWN": "No product with this name.",
           "SESSION_REVOKED": "The session behind this token was signed out or revoked.",
           "SOLE_OWNER": "The workspace's only owner cannot leave or be removed; transfer ownership first.",
+          "STEP_UP_REQUIRED": "Confirm it is you (a fresh two-step check) before this action; `details.methods` lists how.",
           "TOO_MANY_ATTEMPTS": "Too many attempts; wait before trying again.",
           "UNAUTHORIZED": "No credentials, or the token or API key is invalid, expired or revoked.",
           "UNPROCESSABLE_ENTITY": "The request is well-formed but cannot be carried out.",
@@ -3069,6 +3500,22 @@
         "type": "object",
         "x-pc-sdk-model": "PublicApiKey"
       },
+      "RecoveryCodesDto": {
+        "properties": {
+          "recovery_codes": {
+            "description": "The new recovery codes (every previous code stops working). Shown once.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "RecoveryCodes"
+      },
       "RefreshDto": {
         "properties": {
           "refresh_token": {
@@ -3079,6 +3526,20 @@
         },
         "required": [
           "refresh_token"
+        ],
+        "type": "object"
+      },
+      "RenameFactorDto": {
+        "properties": {
+          "label": {
+            "description": "New name (1-64).",
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "label"
         ],
         "type": "object"
       },
@@ -3404,6 +3865,16 @@
         "type": "object",
         "x-pc-sdk-model": "SourceDiagnostic"
       },
+      "StartFactorDto": {
+        "properties": {
+          "label": {
+            "description": "Name for the factor (max 64).",
+            "maxLength": 64,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "StatsGranularity": {
         "enum": [
           "day"
@@ -3444,6 +3915,109 @@
           "30d"
         ],
         "type": "string"
+      },
+      "StepUpMethod": {
+        "enum": [
+          "totp",
+          "email",
+          "webauthn",
+          "recovery_code",
+          "password",
+          "reauthenticate"
+        ],
+        "type": "string"
+      },
+      "StepUpResultDto": {
+        "properties": {
+          "valid_until": {
+            "description": "Sensitive actions are allowed until then.",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "valid_until"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "StepUpResult"
+      },
+      "StepUpSendCodeDto": {
+        "properties": {
+          "factor_id": {
+            "description": "The email factor to send to.",
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "factor_id"
+        ],
+        "type": "object"
+      },
+      "StepUpStatusDto": {
+        "properties": {
+          "active": {
+            "description": "True while the session completed a second step (or signed in) in the last 10 minutes.",
+            "type": "boolean"
+          },
+          "factors": {
+            "description": "The account's active factors to offer.",
+            "items": {
+              "$ref": "#/components/schemas/MfaChallengeFactorDto"
+            },
+            "type": "array"
+          },
+          "methods": {
+            "description": "How this session can step up. Open enum.",
+            "items": {
+              "$ref": "#/components/schemas/StepUpMethod"
+            },
+            "type": "array"
+          },
+          "valid_until": {
+            "description": "End of the current window, or null when not stepped up.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "active",
+          "valid_until",
+          "methods",
+          "factors"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "StepUpStatus"
+      },
+      "StepUpVerifyDto": {
+        "properties": {
+          "code": {
+            "description": "6-digit TOTP or email code.",
+            "pattern": "^\\d{6}$",
+            "type": "string"
+          },
+          "factor_id": {
+            "description": "The factor answered (TOTP, email or passkey).",
+            "format": "uuid",
+            "type": "string"
+          },
+          "password": {
+            "description": "Only for an account WITHOUT factors: its password.",
+            "maxLength": 1024,
+            "type": "string"
+          },
+          "recovery_code": {
+            "description": "A recovery code. Works once.",
+            "type": "string"
+          },
+          "webauthn": {
+            "additionalProperties": true,
+            "description": "The `PublicKeyCredential` from `navigator.credentials.get()`, ArrayBuffers base64url-encoded: `{ id, raw_id, type: \"public-key\", response: { clientDataJSON, authenticatorData, signature, userHandle } }`. WebAuthn member names are passed through verbatim (camelCase by spec).",
+            "type": "object"
+          }
+        },
+        "type": "object"
       },
       "TokenRequestDto": {
         "properties": {
@@ -3520,6 +4094,35 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "Token"
+      },
+      "TotpEnrollmentDto": {
+        "properties": {
+          "factor_id": {
+            "description": "The pending factor; confirm it with a code.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "otpauth_uri": {
+            "description": "`otpauth://` URI for authenticator apps.",
+            "type": "string"
+          },
+          "qr_data_url": {
+            "description": "PNG data URL of the QR code for `otpauth_uri`.",
+            "type": "string"
+          },
+          "secret": {
+            "description": "Base32 secret for manual entry. Shown once.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "factor_id",
+          "secret",
+          "otpauth_uri",
+          "qr_data_url"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "TotpEnrollment"
       },
       "UpdateMemberRoleDto": {
         "properties": {
@@ -3719,6 +4322,25 @@
         },
         "type": "object"
       },
+      "UpdateWorkspaceSecurityDto": {
+        "properties": {
+          "grace_period_days": {
+            "default": 7,
+            "description": "Days members get to turn it on (0-30).",
+            "maximum": 30,
+            "minimum": 0,
+            "type": "number"
+          },
+          "mfa_required": {
+            "description": "Require two-step sign-in of every member.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "mfa_required"
+        ],
+        "type": "object"
+      },
       "VerifyCodeDto": {
         "properties": {
           "code": {
@@ -3729,6 +4351,38 @@
         },
         "required": [
           "code"
+        ],
+        "type": "object"
+      },
+      "WebauthnEnrollmentDto": {
+        "properties": {
+          "factor_id": {
+            "description": "The pending factor; confirm it with the created credential.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "public_key": {
+            "additionalProperties": true,
+            "description": "`PublicKeyCredentialCreationOptions` (rp `productcraft.co`) for `navigator.credentials.create({ publicKey })` after decoding base64url fields (`challenge`, `user.id`, `exclude_credentials[].id`).",
+            "type": "object"
+          }
+        },
+        "required": [
+          "factor_id",
+          "public_key"
+        ],
+        "type": "object"
+      },
+      "WebauthnRequestOptionsDto": {
+        "properties": {
+          "public_key": {
+            "additionalProperties": true,
+            "description": "`PublicKeyCredentialRequestOptions` (`challenge`, `rp_id`, `allow_credentials[]` with base64url ids, `user_verification`, `timeout`). Decode the base64url fields to ArrayBuffers and pass to `navigator.credentials.get({ publicKey })`.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "public_key"
         ],
         "type": "object"
       },
@@ -4227,6 +4881,89 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "WorkspaceRole"
+      },
+      "WorkspaceSecurityDto": {
+        "properties": {
+          "grace_period_days": {
+            "description": "Days a member has to turn it on.",
+            "maximum": 30,
+            "minimum": 0,
+            "type": "number"
+          },
+          "members": {
+            "description": "Per-member status; only for callers holding `workspace.member.read`.",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSecurityMemberDto"
+            },
+            "type": "array"
+          },
+          "mfa_required": {
+            "description": "Whether members must use two-step sign-in.",
+            "type": "boolean"
+          },
+          "mfa_required_since": {
+            "description": "When the requirement was turned on.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "mfa_required",
+          "mfa_required_since",
+          "grace_period_days"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WorkspaceSecurity"
+      },
+      "WorkspaceSecurityMemberDto": {
+        "properties": {
+          "account_id": {
+            "description": "Member account id.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "blocked": {
+            "description": "Past the deadline without two-step sign-in: the workspace refuses this member.",
+            "type": "boolean"
+          },
+          "deadline": {
+            "description": "When this member loses access without two-step sign-in; null when not required.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "display_name": {
+            "description": "Member display name.",
+            "nullable": true,
+            "type": "string"
+          },
+          "email": {
+            "description": "Member primary email.",
+            "format": "email",
+            "nullable": true,
+            "type": "string"
+          },
+          "mfa_enabled": {
+            "description": "Has at least one active factor.",
+            "type": "boolean"
+          },
+          "username": {
+            "description": "Member username.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "account_id",
+          "username",
+          "display_name",
+          "email",
+          "mfa_enabled",
+          "deadline",
+          "blocked"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WorkspaceSecurityMember"
       },
       "WorkspaceServiceStateDto": {
         "properties": {
@@ -4954,6 +5691,387 @@
         }
       }
     },
+    "/v1/auth/mfa/send-code": {
+      "post": {
+        "description": "Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds, 3 per sign-in.",
+        "operationId": "AuthMfaController_sendCode",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaSendCodeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeSentDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "MFA_CHALLENGE_INVALID"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No email factor with this id on the account (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Sent less than 30 seconds ago, or 3 codes already went out for this sign-in (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Email a sign-in code",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "sendCode",
+          "paginated": false,
+          "public": true,
+          "resource": "auth.mfa"
+        }
+      }
+    },
+    "/v1/auth/mfa/verify": {
+      "post": {
+        "description": "Send exactly one of `{factor_id, code}` (authenticator app or email), `{recovery_code}` or `{factor_id, webauthn}`. A right answer returns the session tokens, exactly like a sign-in without two-step. A wrong one spends one of the challenge's 5 tries. Not idempotent: the answer is a session.",
+        "operationId": "AuthMfaController_verify",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponseDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not exactly one way of answering (`VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The answer was wrong (`MFA_CODE_INVALID`; the challenge survives until its 5 tries are spent), or The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "MFA_CODE_INVALID",
+              "MFA_CHALLENGE_INVALID"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The account was suspended (`ACCOUNT_SUSPENDED`) or deactivated (`ACCOUNT_DEACTIVATED`) meanwhile.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "ACCOUNT_SUSPENDED",
+              "ACCOUNT_DEACTIVATED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Finish sign-in with the second step",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "verify",
+          "paginated": false,
+          "public": true,
+          "resource": "auth.mfa"
+        }
+      }
+    },
+    "/v1/auth/mfa/webauthn/options": {
+      "post": {
+        "description": "A single-use WebAuthn challenge bound to this sign-in, for `navigator.credentials.get()`. Browser-only.",
+        "operationId": "AuthMfaController_webauthnOptions",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaTokenDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebauthnRequestOptionsDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "MFA_CHALLENGE_INVALID"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The account has no passkey (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [],
+        "summary": "Get passkey options for the second step",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": false
+      }
+    },
     "/v1/auth/oauth/{provider}/callback": {
       "post": {
         "operationId": "OAuthController_callback",
@@ -5416,7 +6534,7 @@
     },
     "/v1/auth/signin": {
       "post": {
-        "description": "Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.",
+        "description": "Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.\n\nAn account with two-step sign-in on answers `200` with a challenge instead of tokens (`mfa_required: true`, `mfa_token`, `factors`): finish with `POST /v1/auth/mfa/verify`. Tell the two apart by `mfa_required`. The challenge is only ever returned for a correct password.",
         "operationId": "AuthenticationController_signin",
         "parameters": [],
         "requestBody": {
@@ -5434,11 +6552,18 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenResponseDto"
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/TokenResponseDto"
+                    },
+                    {
+                      "$ref": "#/components/schemas/MfaChallengeResponseDto"
+                    }
+                  ]
                 }
               }
             },
-            "description": "Token response",
+            "description": "Tokens, or (two-step sign-in on) a challenge to finish with `POST /v1/auth/mfa/verify`.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -5631,6 +6756,507 @@
           "public": true,
           "resource": "auth"
         }
+      }
+    },
+    "/v1/auth/step-up": {
+      "get": {
+        "description": "Whether sensitive actions are allowed right now (a second step, or the sign-in itself, in the last 10 minutes), until when, and how to step up. `methods`: `totp` / `email` / `webauthn` / `recovery_code` for an account with factors, `password` for one without, `reauthenticate` (sign in again) for one with neither.",
+        "operationId": "StepUpController_status",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpStatusDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the session's step-up state",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "auth.stepUp"
+        }
+      },
+      "post": {
+        "description": "Send exactly one of `{factor_id, code}`, `{recovery_code}`, `{factor_id, webauthn}` or, for an account without factors, `{password}`. Sensitive actions on this session are then allowed for 10 minutes. 5 failures per 15 minutes per session. Not idempotent.",
+        "operationId": "StepUpController_verify",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpVerifyDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepUpResultDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not exactly one way of answering (`VALIDATION_ERROR`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wrong code or passkey (`MFA_CODE_INVALID`), wrong password or a password offered by an account that has factors (`INVALID_CREDENTIALS`). No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "MFA_CODE_INVALID",
+              "INVALID_CREDENTIALS",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "5 failed attempts on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm it is you (step-up)",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "verify",
+          "paginated": false,
+          "resource": "auth.stepUp"
+        }
+      }
+    },
+    "/v1/auth/step-up/send-code": {
+      "post": {
+        "description": "Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds.",
+        "operationId": "StepUpController_sendCode",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepUpSendCodeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CodeSentDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No email factor with this id (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Email a step-up code",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "sendCode",
+          "paginated": false,
+          "resource": "auth.stepUp"
+        }
+      }
+    },
+    "/v1/auth/step-up/webauthn/options": {
+      "post": {
+        "description": "A single-use WebAuthn challenge bound to this session. Browser-only.",
+        "operationId": "StepUpController_webauthnOptions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebauthnRequestOptionsDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The account has no passkey (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get passkey options for step-up",
+        "tags": [
+          "authentication"
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/introspect": {
@@ -6626,6 +8252,1475 @@
           "paginated": false,
           "resource": "me.hiddenGuides"
         }
+      }
+    },
+    "/v1/me/mfa": {
+      "get": {
+        "description": "Whether two-step sign-in is on, the active factors, how many unused recovery codes are left, and the workspaces that require it of this account (with the deadline and whether access is already blocked).",
+        "operationId": "MeMfaController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaOverviewDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the caller's two-step sign-in methods",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "me.mfa"
+        }
+      }
+    },
+    "/v1/me/mfa/email": {
+      "post": {
+        "description": "Creates a pending email factor bound to the account's verified primary email and sends it a code (valid 5 minutes). Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_startEmail",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartFactorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailEnrollmentDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The account email is not verified (`EMAIL_NOT_VERIFIED`), or email codes are already on (`MFA_FACTOR_EXISTS`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "EMAIL_NOT_VERIFIED",
+              "MFA_FACTOR_EXISTS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start adding email codes",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "start",
+          "paginated": false,
+          "resource": "me.mfa.email"
+        }
+      }
+    },
+    "/v1/me/mfa/email/{factor_id}/confirm": {
+      "post": {
+        "description": "Checks the emailed code. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_confirmEmail",
+        "parameters": [
+          {
+            "description": "Factor id.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "factor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmCodeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactorActivatedDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR",
+              "MFA_CODE_INVALID"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The account email changed since the code was sent (`EMAIL_NOT_VERIFIED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "EMAIL_NOT_VERIFIED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn on pending email codes",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "confirm",
+          "paginated": false,
+          "resource": "me.mfa.email"
+        }
+      }
+    },
+    "/v1/me/mfa/factors/{factor_id}": {
+      "delete": {
+        "description": "Needs step-up. Removing the last factor turns two-step sign-in off and deletes the recovery codes; refused while a workspace requires it.",
+        "operationId": "MeMfaController_remove",
+        "parameters": [
+          {
+            "description": "Factor id.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "factor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removed.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No active factor with this id (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "It is the last factor and a workspace requires two-step sign-in (`MFA_REQUIRED_BY_WORKSPACE`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "MFA_REQUIRED_BY_WORKSPACE"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a factor",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "delete",
+          "paginated": false,
+          "resource": "me.mfa.factors"
+        }
+      },
+      "patch": {
+        "operationId": "MeMfaController_rename",
+        "parameters": [
+          {
+            "description": "Factor id.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "factor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenameFactorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaFactorDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No active factor with this id (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename a factor",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "update",
+          "paginated": false,
+          "resource": "me.mfa.factors"
+        }
+      }
+    },
+    "/v1/me/mfa/recovery-codes": {
+      "post": {
+        "description": "Needs step-up. Returns 10 new single-use codes; every previous code stops working. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_regenerate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoveryCodesDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Two-step sign-in is off (`MFA_ENROLLMENT_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "MFA_ENROLLMENT_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the recovery codes",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "regenerate",
+          "paginated": false,
+          "resource": "me.mfa.recoveryCodes"
+        }
+      }
+    },
+    "/v1/me/mfa/totp": {
+      "post": {
+        "description": "Creates a pending TOTP factor (SHA-1, 6 digits, 30 s) and returns its secret, `otpauth://` URI and QR code. Confirm with a code to turn it on. Starting again replaces a pending one. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_startTotp",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartFactorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpEnrollmentDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start adding an authenticator app",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "start",
+          "paginated": false,
+          "resource": "me.mfa.totp"
+        }
+      }
+    },
+    "/v1/me/mfa/totp/{factor_id}/confirm": {
+      "post": {
+        "description": "Checks one current code. When this is the account's first factor the answer carries 10 recovery codes, exactly once. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_confirmTotp",
+        "parameters": [
+          {
+            "description": "Factor id.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "factor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmCodeDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactorActivatedDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR",
+              "MFA_CODE_INVALID"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn on a pending authenticator app",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "confirm",
+          "paginated": false,
+          "resource": "me.mfa.totp"
+        }
+      }
+    },
+    "/v1/me/mfa/webauthn": {
+      "post": {
+        "description": "Creates a pending passkey factor and returns `PublicKeyCredentialCreationOptions` for `navigator.credentials.create()` (relying party `productcraft.co`). Browser-only, so not in the SDKs. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_startWebauthn",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartFactorDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WebauthnEnrollmentDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start adding a passkey",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": false
+      }
+    },
+    "/v1/me/mfa/webauthn/{factor_id}/confirm": {
+      "post": {
+        "description": "Verifies the credential `navigator.credentials.create()` produced for this factor's challenge. Browser-only. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.",
+        "operationId": "MeMfaController_confirmWebauthn",
+        "parameters": [
+          {
+            "description": "Factor id.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "factor_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmWebauthnDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FactorActivatedDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR",
+              "MFA_CODE_INVALID"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No session, or the session was signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "HUMAN_SESSION_REQUIRED",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND",
+              "MFA_FACTOR_NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "This passkey is already registered (`MFA_FACTOR_EXISTS`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "MFA_FACTOR_EXISTS"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED",
+              "TOO_MANY_ATTEMPTS"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Turn on a pending passkey",
+        "tags": [
+          "me"
+        ],
+        "x-pc-sdk": false
       }
     },
     "/v1/me/profile": {
@@ -9551,7 +12646,7 @@
         "operationId": "WorkspaceController_createWorkspace",
         "parameters": [
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10112,7 +13207,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "description": "Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -10120,6 +13215,7 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
+              "STEP_UP_REQUIRED",
               "PAK_NOT_PERMITTED"
             ]
           },
@@ -10607,7 +13703,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that deduplicates retries for 24 h. A retry with the same key and body mints nothing and answers `409 PAK_ALREADY_MINTED` with the first key's `id` in `details` (the token is shown once and never cached; rotate the key for a new one). The SDKs send one on every create.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that deduplicates retries for 24 h. A retry with the same key and body mints nothing and answers `409 PAK_ALREADY_MINTED` with the first key's `id` in `details` (the token is shown once and never cached; rotate the key for a new one). The SDKs send one on every create.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -10699,7 +13795,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "description": "Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -10708,6 +13804,7 @@
             "x-pc-error-codes": [
               "FORBIDDEN",
               "NOT_A_MEMBER",
+              "STEP_UP_REQUIRED",
               "PAK_NOT_PERMITTED"
             ]
           },
@@ -11701,7 +14798,7 @@
                 }
               }
             },
-            "description": "Caller cannot grant one or more actions in the merged statement set. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "description": "Caller cannot grant one or more actions in the merged statement set, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -11709,6 +14806,7 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
+              "STEP_UP_REQUIRED",
               "PAK_NOT_PERMITTED"
             ]
           },
@@ -11870,7 +14968,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "description": "Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -11878,6 +14976,7 @@
             },
             "x-pc-error-codes": [
               "FORBIDDEN",
+              "STEP_UP_REQUIRED",
               "PAK_NOT_PERMITTED"
             ]
           },
@@ -13038,7 +16137,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -13128,7 +16227,7 @@
                 }
               }
             },
-            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
+            "description": "Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13140,6 +16239,7 @@
               "NOT_A_MEMBER",
               "OWNER_ROLE_REQUIRED",
               "MEMBER_RANK_EXCEEDED",
+              "STEP_UP_REQUIRED",
               "PAK_NOT_PERMITTED"
             ]
           },
@@ -13809,7 +16909,7 @@
                 }
               }
             },
-            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners.",
+            "description": "Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners. Or a person's session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`).",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13819,7 +16919,8 @@
               "FORBIDDEN",
               "NOT_A_MEMBER",
               "OWNER_ROLE_REQUIRED",
-              "MEMBER_RANK_EXCEEDED"
+              "MEMBER_RANK_EXCEEDED",
+              "STEP_UP_REQUIRED"
             ]
           },
           "404": {
@@ -14051,7 +17152,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -14949,7 +18050,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that deduplicates retries for 24 h. A retry with the same key and body returns the first response with `Idempotent-Replay: true` instead of creating a second resource. The SDKs send one on every create.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -15664,6 +18765,318 @@
           "method": "update",
           "paginated": false,
           "resource": "workspaces.roles"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_slug}/security": {
+      "get": {
+        "description": "Whether members must use two-step sign-in, since when, and the grace period. Callers holding `workspace.member.read` also get each member's status (enabled, deadline, blocked).",
+        "operationId": "WorkspaceSecurityController_get",
+        "parameters": [
+          {
+            "description": "Slug of the workspace. Platform routes name the workspace by slug, positionally in the SDK (`platform.workspaces.retrieve(\"acme\")`); the product APIs bind `workspace_id` instead.",
+            "example": "acme",
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSecurityDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Not a member (`NOT_A_MEMBER`), or a member past the deadline without two-step sign-in (`MFA_ENROLLMENT_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "NOT_A_MEMBER",
+              "MFA_ENROLLMENT_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get the workspace security policy",
+        "tags": [
+          "workspaces"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "retrieve",
+          "paginated": false,
+          "resource": "workspaces.security"
+        }
+      },
+      "put": {
+        "description": "Owner only (`workspace.security.update`), a person's session only, and needs step-up. Turning the requirement on needs the caller to have two-step sign-in. Each member then has until max(now, joined) + `grace_period_days` to turn it on; past that, the workspace refuses them until they do. Workspace API keys are not affected. Saving again while it is on keeps the original start date. `PUT` replaces the policy, so it takes no `Idempotency-Key`.",
+        "operationId": "WorkspaceSecurityController_update",
+        "parameters": [
+          {
+            "description": "Slug of the workspace. Platform routes name the workspace by slug, positionally in the SDK (`platform.workspaces.retrieve(\"acme\")`); the product APIs bind `workspace_id` instead.",
+            "example": "acme",
+            "in": "path",
+            "name": "workspace_slug",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWorkspaceSecurityDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSecurityDto"
+                }
+              }
+            },
+            "description": "",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`VALIDATION_ERROR`: `grace_period_days` must be 0-30.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED",
+              "SESSION_REVOKED"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Caller is a workspace API key or an MCP grant (`PAK_NOT_PERMITTED` / `MCP_NOT_PERMITTED`), not a member (`NOT_A_MEMBER`), lacks `workspace.security.update`, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "PAK_NOT_PERMITTED",
+              "MCP_NOT_PERMITTED",
+              "NOT_A_MEMBER",
+              "STEP_UP_REQUIRED"
+            ]
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Workspace not found.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "NOT_FOUND"
+            ]
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Turning the requirement on while the caller has no two-step sign-in (`MFA_ENROLLMENT_REQUIRED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "MFA_ENROLLMENT_REQUIRED"
+            ]
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying (the window, 60).",
+                "schema": {
+                  "example": 60,
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change the workspace security policy",
+        "tags": [
+          "workspaces"
+        ],
+        "x-pc-sdk": {
+          "bind": [],
+          "method": "update",
+          "paginated": false,
+          "resource": "workspaces.security"
         }
       }
     },

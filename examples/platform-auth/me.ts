@@ -34,6 +34,46 @@ const platform = new PlatformAuth();
   await platform.me.hiddenGuides.unhide("dashboard");
 }
 
+// me.mfa.email.confirm: Turn on pending email codes
+{
+  const factorActivated = await platform.me.mfa.email.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+}
+
+// me.mfa.email.start: Start adding email codes
+{
+  const emailEnrollment = await platform.me.mfa.email.start({ label: "string" });
+}
+
+// me.mfa.factors.delete: Remove a factor
+{
+  await platform.me.mfa.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+}
+
+// me.mfa.factors.update: Rename a factor
+{
+  const mfaFactor = await platform.me.mfa.factors.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { label: "string" });
+}
+
+// me.mfa.recoveryCodes.regenerate: Replace the recovery codes
+{
+  const recoveryCodes = await platform.me.mfa.recoveryCodes.regenerate();
+}
+
+// me.mfa.retrieve: Get the caller's two-step sign-in methods
+{
+  const mfaOverview = await platform.me.mfa.retrieve();
+}
+
+// me.mfa.totp.confirm: Turn on a pending authenticator app
+{
+  const factorActivated = await platform.me.mfa.totp.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+}
+
+// me.mfa.totp.start: Start adding an authenticator app
+{
+  const totpEnrollment = await platform.me.mfa.totp.start({ label: "string" });
+}
+
 // me.profile.update: Update the caller's profile. Currently only `displayName` is editable. An empty body is a no-op that returns the current profile. Cookie/JWT only — this is a human-self-service surface, not a PAK-mutation surface.
 {
   const meProfile = await platform.me.profile.update({ display_name: "Ada Lovelace" });

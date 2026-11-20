@@ -157,6 +157,18 @@ export type components = {
             scope: string;
             token_endpoint_auth_method: string;
         };
+        CodeSentDto: {
+            code_expires_at: string;
+            destination_masked: string;
+        };
+        ConfirmCodeDto: {
+            code: string;
+        };
+        ConfirmWebauthnDto: {
+            credential: {
+                [key: string]: unknown;
+            };
+        };
         ConnectedClientDto: {
             account_id: string;
             client_id: string;
@@ -279,6 +291,11 @@ export type components = {
             audience: string;
             expires_in: number;
         };
+        EmailEnrollmentDto: {
+            code_expires_at: string;
+            destination_masked: string;
+            factor_id: string;
+        };
         EnableWorkspaceServiceDto: {
             settings?: {
                 [key: string]: unknown;
@@ -299,6 +316,10 @@ export type components = {
             request_id: string;
             statusCode?: number;
             status_code: number;
+        };
+        FactorActivatedDto: {
+            factor: components["schemas"]["MfaFactorDto"];
+            recovery_codes?: string[];
         };
         FeedItemDto: {
             action: string;
@@ -363,9 +384,16 @@ export type components = {
             services: string[];
             slug: string;
         };
+        IntrospectWorkspaceMfaDto: {
+            blocked: boolean;
+            deadline: string | null;
+            enrolled: boolean;
+            required: boolean;
+        };
         IntrospectWorkspaceResponseDto: {
             id?: string;
             is_member: boolean;
+            mfa?: components["schemas"]["IntrospectWorkspaceMfaDto"];
             policy: components["schemas"]["PolicyStatementDto"][];
             role: components["schemas"]["IntrospectRoleDto"] | null;
             services: string[];
@@ -472,13 +500,68 @@ export type components = {
             status: string;
             username: string;
         };
+        MfaChallengeFactorDto: {
+            email_masked?: string;
+            id: string;
+            label: string;
+            type: components["schemas"]["MfaFactorType"];
+        };
+        MfaChallengeResponseDto: {
+            expires_at: string;
+            factors: components["schemas"]["MfaChallengeFactorDto"][];
+            mfa_required: components["schemas"]["MfaRequiredFlag"];
+            mfa_token: string;
+            recovery_codes_available: boolean;
+        };
+        MfaFactorDto: {
+            created_at: string;
+            email_masked?: string;
+            id: string;
+            label: string;
+            last_used_at: string | null;
+            status: components["schemas"]["MfaFactorStatus"];
+            type: components["schemas"]["MfaFactorType"];
+        };
+        MfaFactorStatus: "active";
+        MfaFactorType: "totp" | "email" | "webauthn";
+        MfaOverviewDto: {
+            enabled: boolean;
+            factors: components["schemas"]["MfaFactorDto"][];
+            recovery_codes_remaining: number;
+            required_by: components["schemas"]["MfaRequiredByDto"][];
+        };
+        MfaRequiredByDto: {
+            blocked: boolean;
+            deadline: string | null;
+            display_name: string;
+            workspace_id: string;
+            workspace_slug: string;
+        };
+        MfaRequiredFlag: true;
+        MfaSendCodeDto: {
+            factor_id: string;
+            mfa_token: string;
+        };
+        MfaTokenDto: {
+            mfa_token: string;
+        };
+        MfaVerifyDto: {
+            code?: string;
+            factor_id?: string;
+            mfa_token: string;
+            recovery_code?: string;
+            webauthn?: {
+                [key: string]: unknown;
+            };
+        };
         MintPakResponseDto: {
             record: components["schemas"]["PublicApiKeyDto"];
             token: string;
         };
         OAuthCallbackResultDto: {
+            mfa?: components["schemas"]["MfaChallengeResponseDto"];
             return_to: string;
-            tokens: components["schemas"]["TokenResponseDto"];
+            tokens?: components["schemas"]["TokenResponseDto"];
         };
         OAuthErrorResponseDto: {
             error: "invalid_request" | "invalid_client" | "invalid_grant" | "unauthorized_client" | "unsupported_grant_type" | "unsupported_response_type" | "invalid_scope" | "access_denied" | "server_error" | "temporarily_unavailable" | "invalid_target" | "invalid_redirect_uri" | "invalid_client_metadata" | "invalid_token";
@@ -511,7 +594,7 @@ export type components = {
             label: string;
             policy_id: string | null;
         };
-        PlatformErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "ACCOUNT_DEACTIVATED" | "ACCOUNT_SUSPENDED" | "ALREADY_A_MEMBER" | "CROSS_ORIGIN_REJECTED" | "EMAIL_NOT_VERIFIED" | "INVITE_EMAIL_MISMATCH" | "INVITE_EXHAUSTED" | "INVITE_EXPIRED" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "INVITE_REVOKED" | "LAST_MEMBER" | "MEMBER_RANK_EXCEEDED" | "NOT_A_MEMBER" | "OAUTH_GRANT_ADMIN_REVOKED" | "OWNER_ROLE_REQUIRED" | "PAK_ALREADY_MINTED" | "PAK_EXPIRED" | "PAK_NAME_REQUIRED" | "PAK_NAME_TOO_LONG" | "PAK_NOT_FOUND" | "PAK_REVOKED" | "PASSWORD_RESET_INVALID" | "POLICY_INVALID" | "POLICY_NAME_TAKEN" | "POLICY_NOT_FOUND" | "ROLE_HAS_MEMBERS" | "ROLE_NAME_TAKEN" | "ROLE_NOT_FOUND" | "ROLE_SYSTEM_IMMUTABLE" | "SERVICE_NOT_ACTIVATED" | "SERVICE_UNKNOWN" | "SOLE_OWNER" | "TOO_MANY_ATTEMPTS" | "WORKSPACE_KEY_REQUIRED") | string;
+        PlatformErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "ACCOUNT_DEACTIVATED" | "ACCOUNT_SUSPENDED" | "ALREADY_A_MEMBER" | "CROSS_ORIGIN_REJECTED" | "EMAIL_NOT_VERIFIED" | "HUMAN_SESSION_REQUIRED" | "INVITE_EMAIL_MISMATCH" | "INVITE_EXHAUSTED" | "INVITE_EXPIRED" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "INVITE_REVOKED" | "LAST_MEMBER" | "MEMBER_RANK_EXCEEDED" | "MFA_CHALLENGE_INVALID" | "MFA_CODE_INVALID" | "MFA_ENROLLMENT_REQUIRED" | "MFA_FACTOR_EXISTS" | "MFA_FACTOR_NOT_FOUND" | "MFA_REQUIRED_BY_WORKSPACE" | "NOT_A_MEMBER" | "OAUTH_GRANT_ADMIN_REVOKED" | "OWNER_ROLE_REQUIRED" | "PAK_ALREADY_MINTED" | "PAK_EXPIRED" | "PAK_NAME_REQUIRED" | "PAK_NAME_TOO_LONG" | "PAK_NOT_FOUND" | "PAK_REVOKED" | "PASSWORD_RESET_INVALID" | "POLICY_INVALID" | "POLICY_NAME_TAKEN" | "POLICY_NOT_FOUND" | "ROLE_HAS_MEMBERS" | "ROLE_NAME_TAKEN" | "ROLE_NOT_FOUND" | "ROLE_SYSTEM_IMMUTABLE" | "SERVICE_NOT_ACTIVATED" | "SERVICE_UNKNOWN" | "SOLE_OWNER" | "STEP_UP_REQUIRED" | "TOO_MANY_ATTEMPTS" | "WORKSPACE_KEY_REQUIRED") | string;
         PolicyBindingCountDto: {
             pak: number;
             role: number;
@@ -548,8 +631,14 @@ export type components = {
             updated_at: string;
             workspace_id: string;
         };
+        RecoveryCodesDto: {
+            recovery_codes: string[];
+        };
         RefreshDto: {
             refresh_token: string;
+        };
+        RenameFactorDto: {
+            label: string;
         };
         RequestPasswordResetDto: {
             email: string;
@@ -610,6 +699,9 @@ export type components = {
             included: boolean;
             source: components["schemas"]["AuditFeedSource"];
         };
+        StartFactorDto: {
+            label?: string;
+        };
         StatsGranularity: "day";
         StatsMetric: "audit_events";
         StatsSeriesPointDto: {
@@ -617,6 +709,28 @@ export type components = {
             value: number;
         };
         StatsWindow: "1d" | "7d" | "30d";
+        StepUpMethod: "totp" | "email" | "webauthn" | "recovery_code" | "password" | "reauthenticate";
+        StepUpResultDto: {
+            valid_until: string;
+        };
+        StepUpSendCodeDto: {
+            factor_id: string;
+        };
+        StepUpStatusDto: {
+            active: boolean;
+            factors: components["schemas"]["MfaChallengeFactorDto"][];
+            methods: components["schemas"]["StepUpMethod"][];
+            valid_until: string | null;
+        };
+        StepUpVerifyDto: {
+            code?: string;
+            factor_id?: string;
+            password?: string;
+            recovery_code?: string;
+            webauthn?: {
+                [key: string]: unknown;
+            };
+        };
         TokenRequestDto: {
             client_id?: string;
             client_secret?: string;
@@ -633,6 +747,12 @@ export type components = {
             expires_in: number;
             refresh_token?: string;
             token_type: string;
+        };
+        TotpEnrollmentDto: {
+            factor_id: string;
+            otpauth_uri: string;
+            qr_data_url: string;
+            secret: string;
         };
         UpdateMemberRoleDto: {
             role?: "owner" | "admin" | "member";
@@ -671,8 +791,23 @@ export type components = {
             policy?: components["schemas"]["PolicyStatementDto"][];
             policy_id?: string | null;
         };
+        UpdateWorkspaceSecurityDto: {
+            grace_period_days?: number;
+            mfa_required: boolean;
+        };
         VerifyCodeDto: {
             code: string;
+        };
+        WebauthnEnrollmentDto: {
+            factor_id: string;
+            public_key: {
+                [key: string]: unknown;
+            };
+        };
+        WebauthnRequestOptionsDto: {
+            public_key: {
+                [key: string]: unknown;
+            };
         };
         WorkspaceActionCatalogResponseDto: {
             actions: string[];
@@ -766,6 +901,21 @@ export type components = {
             name: string;
             policy: components["schemas"]["PolicyStatementDto"][];
             policy_id: string | null;
+        };
+        WorkspaceSecurityDto: {
+            grace_period_days: number;
+            members?: components["schemas"]["WorkspaceSecurityMemberDto"][];
+            mfa_required: boolean;
+            mfa_required_since: string | null;
+        };
+        WorkspaceSecurityMemberDto: {
+            account_id: string;
+            blocked: boolean;
+            deadline: string | null;
+            display_name: string | null;
+            email: string | null;
+            mfa_enabled: boolean;
+            username: string;
         };
         WorkspaceServiceStateDto: {
             disabled_at: string | null;
@@ -925,6 +1075,54 @@ export type paths = {
         patch?: never;
         trace?: never;
     };
+    "/v1/auth/mfa/send-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthMfaController_sendCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/mfa/verify": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthMfaController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/mfa/webauthn/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["AuthMfaController_webauthnOptions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/auth/oauth/{provider}/callback": {
         parameters: {
             query?: never;
@@ -1031,6 +1229,54 @@ export type paths = {
         get?: never;
         put?: never;
         post: operations["AuthenticationController_signup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/step-up": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["StepUpController_status"];
+        put?: never;
+        post: operations["StepUpController_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/step-up/send-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StepUpController_sendCode"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/auth/step-up/webauthn/options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["StepUpController_webauthnOptions"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1144,6 +1390,150 @@ export type paths = {
         put: operations["HiddenGuidesController_hide"];
         post?: never;
         delete: operations["HiddenGuidesController_show"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["MeMfaController_overview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_startEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/email/{factor_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_confirmEmail"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/factors/{factor_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["MeMfaController_remove"];
+        options?: never;
+        head?: never;
+        patch: operations["MeMfaController_rename"];
+        trace?: never;
+    };
+    "/v1/me/mfa/recovery-codes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_regenerate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/totp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_startTotp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/totp/{factor_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_confirmTotp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/webauthn": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_startWebauthn"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/mfa/webauthn/{factor_id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["MeMfaController_confirmWebauthn"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1901,6 +2291,22 @@ export type paths = {
         patch: operations["WorkspaceRoleController_update"];
         trace?: never;
     };
+    "/v1/workspaces/{workspace_slug}/security": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["WorkspaceSecurityController_get"];
+        put: operations["WorkspaceSecurityController_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/workspaces/{workspace_slug}/services": {
         parameters: {
             query?: never;
@@ -1982,65 +2388,93 @@ namespace PlatformAuth {
     // (undocumented)
     type AuthLogoutParams = __AuthLogoutParams;
     // (undocumented)
-    type AuthorizationServerMetadata = __AuthorizationServerMetadata;
+    type AuthMfaSendCodeParams = __AuthMfaSendCodeParams;
     const // (undocumented)
     ApiKeyPresetKey: {
         values: readonly ["mail-send", "waitlist-write", "trawl-jobs", "flags", "flags-dev", "notify-send", "notify-readonly", "readonly", "full"];
     };
     // (undocumented)
-    type AuthPasswordRequestResetParams = __AuthPasswordRequestResetParams;
+    type AuthMfaVerifyParams = __AuthMfaVerifyParams;
     const // (undocumented)
     ApiKeyStatus: {
         values: readonly ["active", "expired", "revoked"];
     };
     // (undocumented)
-    type AuthPasswordResetParams = __AuthPasswordResetParams;
+    type AuthorizationServerMetadata = __AuthorizationServerMetadata;
     const // (undocumented)
     AuditActorType: {
         values: readonly ["platform_user", "system", "pat"];
     };
     // (undocumented)
-    type AuthRefreshParams = __AuthRefreshParams;
+    type AuthPasswordRequestResetParams = __AuthPasswordRequestResetParams;
     const // (undocumented)
     AuditFeedSource: {
         values: readonly ["workspace_audit", "heimdall_audit", "agora_moderation"];
     };
     // (undocumented)
-    type AuthSigninParams = __AuthSigninParams;
+    type AuthPasswordResetParams = __AuthPasswordResetParams;
     const // (undocumented)
     McpProduct: {
         values: readonly ["auth", "mail", "waitlist", "social", "trawl", "flags", "notify"];
     };
     // (undocumented)
-    type AuthSignupParams = __AuthSignupParams;
+    type AuthRefreshParams = __AuthRefreshParams;
+    const // (undocumented)
+    MfaFactorStatus: {
+        values: readonly ["active"];
+    };
+    // (undocumented)
+    type AuthSigninParams = __AuthSigninParams;
+    const // (undocumented)
+    MfaFactorType: {
+        values: readonly ["totp", "email", "webauthn"];
+    };
+    // (undocumented)
+    type AuthSigninResponse = __AuthSigninResponse;
     const // (undocumented)
     PolicyEffect: {
         values: readonly ["allow", "deny"];
     };
     // (undocumented)
-    type AvatarUrl = __AvatarUrl;
+    type AuthSignupParams = __AuthSignupParams;
     const // (undocumented)
     StatsGranularity: {
         values: readonly ["day"];
     };
     // (undocumented)
-    type BoundPolicySummary = __BoundPolicySummary;
+    type AuthStepUpSendCodeParams = __AuthStepUpSendCodeParams;
     const // (undocumented)
     StatsMetric: {
         values: readonly ["audit_events"];
     };
     // (undocumented)
-    type ClientOptions = __ClientOptions;
+    type AuthStepUpVerifyParams = __AuthStepUpVerifyParams;
     const // (undocumented)
     StatsWindow: {
         values: readonly ["1d", "7d", "30d"];
     };
     // (undocumented)
+    type AvatarUrl = __AvatarUrl;
+    const // (undocumented)
+    StepUpMethod: {
+        values: readonly ["totp", "email", "webauthn", "recovery_code", "password", "reauthenticate"];
+    };
+    // (undocumented)
+    type BoundPolicySummary = __BoundPolicySummary;
+    // (undocumented)
+    type ClientOptions = __ClientOptions;
+    // (undocumented)
+    type CodeSent = __CodeSent;
+    // (undocumented)
     type ConnectedClient = __ConnectedClient;
     // (undocumented)
     type ConnectedClientList = __ConnectedClientList;
     // (undocumented)
+    type EmailEnrollment = __EmailEnrollment;
+    // (undocumented)
     type ErrorCode = __ErrorCode;
+    // (undocumented)
+    type FactorActivated = __FactorActivated;
     // (undocumented)
     type Feedback = __Feedback;
     // (undocumented)
@@ -2063,6 +2497,8 @@ namespace PlatformAuth {
     type IntrospectWorkspace = __IntrospectWorkspace;
     // (undocumented)
     type IntrospectWorkspaceListItem = __IntrospectWorkspaceListItem;
+    // (undocumented)
+    type IntrospectWorkspaceMfa = __IntrospectWorkspaceMfa;
     // (undocumented)
     type Jwk = __Jwk;
     // (undocumented)
@@ -2098,9 +2534,33 @@ namespace PlatformAuth {
     // (undocumented)
     type MeAvatarUploadParams = __MeAvatarUploadParams;
     // (undocumented)
+    type MeMfaEmailConfirmParams = __MeMfaEmailConfirmParams;
+    // (undocumented)
+    type MeMfaEmailStartParams = __MeMfaEmailStartParams;
+    // (undocumented)
+    type MeMfaFactorUpdateParams = __MeMfaFactorUpdateParams;
+    // (undocumented)
+    type MeMfaTotpConfirmParams = __MeMfaTotpConfirmParams;
+    // (undocumented)
+    type MeMfaTotpStartParams = __MeMfaTotpStartParams;
+    // (undocumented)
     type MeProfile = __MeProfile;
     // (undocumented)
     type MeProfileUpdateParams = __MeProfileUpdateParams;
+    // (undocumented)
+    type MfaChallenge = __MfaChallenge;
+    // (undocumented)
+    type MfaChallengeFactor = __MfaChallengeFactor;
+    // (undocumented)
+    type MfaFactor = __MfaFactor;
+    // (undocumented)
+    type MfaFactorStatus = __MfaFactorStatus;
+    // (undocumented)
+    type MfaFactorType = __MfaFactorType;
+    // (undocumented)
+    type MfaOverview = __MfaOverview;
+    // (undocumented)
+    type MfaRequiredBy = __MfaRequiredBy;
     // (undocumented)
     type MintPak = __MintPak;
     // (undocumented)
@@ -2130,6 +2590,8 @@ namespace PlatformAuth {
     // (undocumented)
     type RateLimitInfo = __RateLimitInfo;
     // (undocumented)
+    type RecoveryCodes = __RecoveryCodes;
+    // (undocumented)
     type RequestOptions = __RequestOptions;
     // (undocumented)
     type RevokeOtherSessions = __RevokeOtherSessions;
@@ -2154,7 +2616,15 @@ namespace PlatformAuth {
     // (undocumented)
     type StatsWindow = __StatsWindow;
     // (undocumented)
+    type StepUpMethod = __StepUpMethod;
+    // (undocumented)
+    type StepUpResult = __StepUpResult;
+    // (undocumented)
+    type StepUpStatus = __StepUpStatus;
+    // (undocumented)
     type Token = __Token;
+    // (undocumented)
+    type TotpEnrollment = __TotpEnrollment;
     // (undocumented)
     type UpdateMemberRole = __UpdateMemberRole;
     // (undocumented)
@@ -2228,6 +2698,12 @@ namespace PlatformAuth {
     // (undocumented)
     type WorkspaceRoleUpdateParams = __WorkspaceRoleUpdateParams;
     // (undocumented)
+    type WorkspaceSecurity = __WorkspaceSecurity;
+    // (undocumented)
+    type WorkspaceSecurityMember = __WorkspaceSecurityMember;
+    // (undocumented)
+    type WorkspaceSecurityUpdateParams = __WorkspaceSecurityUpdateParams;
+    // (undocumented)
     type WorkspaceServiceEnableParams = __WorkspaceServiceEnableParams;
     // (undocumented)
     type WorkspaceServiceState = __WorkspaceServiceState;
@@ -2248,11 +2724,11 @@ export { PlatformAuth }
 export default PlatformAuth;
 
 // @public
-export type PlatformAuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "ACCOUNT_DEACTIVATED" | "ACCOUNT_SUSPENDED" | "ALREADY_A_MEMBER" | "CROSS_ORIGIN_REJECTED" | "EMAIL_NOT_VERIFIED" | "INVITE_EMAIL_MISMATCH" | "INVITE_EXHAUSTED" | "INVITE_EXPIRED" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "INVITE_REVOKED" | "LAST_MEMBER" | "MEMBER_RANK_EXCEEDED" | "NOT_A_MEMBER" | "OAUTH_GRANT_ADMIN_REVOKED" | "OWNER_ROLE_REQUIRED" | "PAK_ALREADY_MINTED" | "PAK_EXPIRED" | "PAK_NAME_REQUIRED" | "PAK_NAME_TOO_LONG" | "PAK_NOT_FOUND" | "PAK_REVOKED" | "PASSWORD_RESET_INVALID" | "POLICY_INVALID" | "POLICY_NAME_TAKEN" | "POLICY_NOT_FOUND" | "ROLE_HAS_MEMBERS" | "ROLE_NAME_TAKEN" | "ROLE_NOT_FOUND" | "ROLE_SYSTEM_IMMUTABLE" | "SERVICE_NOT_ACTIVATED" | "SERVICE_UNKNOWN" | "SOLE_OWNER" | "TOO_MANY_ATTEMPTS" | "WORKSPACE_KEY_REQUIRED" | (string & {});
+export type PlatformAuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "ACCOUNT_DEACTIVATED" | "ACCOUNT_SUSPENDED" | "ALREADY_A_MEMBER" | "CROSS_ORIGIN_REJECTED" | "EMAIL_NOT_VERIFIED" | "HUMAN_SESSION_REQUIRED" | "INVITE_EMAIL_MISMATCH" | "INVITE_EXHAUSTED" | "INVITE_EXPIRED" | "INVITE_INVALID" | "INVITE_NOT_FOUND" | "INVITE_REVOKED" | "LAST_MEMBER" | "MEMBER_RANK_EXCEEDED" | "MFA_CHALLENGE_INVALID" | "MFA_CODE_INVALID" | "MFA_ENROLLMENT_REQUIRED" | "MFA_FACTOR_EXISTS" | "MFA_FACTOR_NOT_FOUND" | "MFA_REQUIRED_BY_WORKSPACE" | "NOT_A_MEMBER" | "OAUTH_GRANT_ADMIN_REVOKED" | "OWNER_ROLE_REQUIRED" | "PAK_ALREADY_MINTED" | "PAK_EXPIRED" | "PAK_NAME_REQUIRED" | "PAK_NAME_TOO_LONG" | "PAK_NOT_FOUND" | "PAK_REVOKED" | "PASSWORD_RESET_INVALID" | "POLICY_INVALID" | "POLICY_NAME_TAKEN" | "POLICY_NOT_FOUND" | "ROLE_HAS_MEMBERS" | "ROLE_NAME_TAKEN" | "ROLE_NOT_FOUND" | "ROLE_SYSTEM_IMMUTABLE" | "SERVICE_NOT_ACTIVATED" | "SERVICE_UNKNOWN" | "SOLE_OWNER" | "STEP_UP_REQUIRED" | "TOO_MANY_ATTEMPTS" | "WORKSPACE_KEY_REQUIRED" | (string & {});
 
 // @public (undocumented)
 export const PlatformAuthErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "ACCOUNT_DEACTIVATED", "ACCOUNT_SUSPENDED", "ALREADY_A_MEMBER", "CROSS_ORIGIN_REJECTED", "EMAIL_NOT_VERIFIED", "INVITE_EMAIL_MISMATCH", "INVITE_EXHAUSTED", "INVITE_EXPIRED", "INVITE_INVALID", "INVITE_NOT_FOUND", "INVITE_REVOKED", "LAST_MEMBER", "MEMBER_RANK_EXCEEDED", "NOT_A_MEMBER", "OAUTH_GRANT_ADMIN_REVOKED", "OWNER_ROLE_REQUIRED", "PAK_ALREADY_MINTED", "PAK_EXPIRED", "PAK_NAME_REQUIRED", "PAK_NAME_TOO_LONG", "PAK_NOT_FOUND", "PAK_REVOKED", "PASSWORD_RESET_INVALID", "POLICY_INVALID", "POLICY_NAME_TAKEN", "POLICY_NOT_FOUND", "ROLE_HAS_MEMBERS", "ROLE_NAME_TAKEN", "ROLE_NOT_FOUND", "ROLE_SYSTEM_IMMUTABLE", "SERVICE_NOT_ACTIVATED", "SERVICE_UNKNOWN", "SOLE_OWNER", "TOO_MANY_ATTEMPTS", "WORKSPACE_KEY_REQUIRED"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "ACCOUNT_DEACTIVATED", "ACCOUNT_SUSPENDED", "ALREADY_A_MEMBER", "CROSS_ORIGIN_REJECTED", "EMAIL_NOT_VERIFIED", "HUMAN_SESSION_REQUIRED", "INVITE_EMAIL_MISMATCH", "INVITE_EXHAUSTED", "INVITE_EXPIRED", "INVITE_INVALID", "INVITE_NOT_FOUND", "INVITE_REVOKED", "LAST_MEMBER", "MEMBER_RANK_EXCEEDED", "MFA_CHALLENGE_INVALID", "MFA_CODE_INVALID", "MFA_ENROLLMENT_REQUIRED", "MFA_FACTOR_EXISTS", "MFA_FACTOR_NOT_FOUND", "MFA_REQUIRED_BY_WORKSPACE", "NOT_A_MEMBER", "OAUTH_GRANT_ADMIN_REVOKED", "OWNER_ROLE_REQUIRED", "PAK_ALREADY_MINTED", "PAK_EXPIRED", "PAK_NAME_REQUIRED", "PAK_NAME_TOO_LONG", "PAK_NOT_FOUND", "PAK_REVOKED", "PASSWORD_RESET_INVALID", "POLICY_INVALID", "POLICY_NAME_TAKEN", "POLICY_NOT_FOUND", "ROLE_HAS_MEMBERS", "ROLE_NAME_TAKEN", "ROLE_NOT_FOUND", "ROLE_SYSTEM_IMMUTABLE", "SERVICE_NOT_ACTIVATED", "SERVICE_UNKNOWN", "SOLE_OWNER", "STEP_UP_REQUIRED", "TOO_MANY_ATTEMPTS", "WORKSPACE_KEY_REQUIRED"];
 };
 
 export { PollOptions }
