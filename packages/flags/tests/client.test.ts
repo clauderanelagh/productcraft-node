@@ -250,6 +250,28 @@ describe("fail-safe sources", () => {
   });
 });
 
+describe("Flags turned off for the workspace", () => {
+  it("a 403 SERVICE_NOT_ENABLED keeps the held config (STALE) and says why", async () => {
+    server.reply(ok(config(1, { f: BOOL(true) })), { status: 403, body: { code: "SERVICE_NOT_ENABLED" } });
+    const flags = client();
+    const errors: string[] = [];
+    flags.on("error", (e) => errors.push(e.message));
+    await flags.forceRefresh();
+    await flags.forceRefresh();
+    expect(flags.state).toBe("stale");
+    expect(await flags.getValueDetails("f", false)).toMatchObject({ value: true, reason: "STALE" });
+    expect(errors.some((m) => m.includes("Flags is turned off for this workspace"))).toBe(true);
+  });
+
+  it("with no config held, evaluations return the defaults", async () => {
+    server.reply({ status: 403, body: { code: "SERVICE_NOT_ENABLED" } });
+    const flags = client();
+    await flags.forceRefresh();
+    expect(flags.state).toBe("unavailable");
+    expect(await flags.getValue("f", false)).toBe(false);
+  });
+});
+
 describe("values", () => {
   const settings = {
     on: BOOL(true),
