@@ -94,6 +94,18 @@ export let setOverride: (client: FlagsClient, key: string, value: unknown) => vo
 const unref = <T>(t: T): T => ((t as { unref?: () => void }).unref?.(), t);
 const cancel = (res: Response): void => void res.body?.cancel().catch(() => undefined);
 
+/** The `code` of a small JSON error body, or null; never throws. */
+async function errorCode(res: Response): Promise<string | null> {
+  try {
+    const text = await res.text();
+    if (text.length > 4096) return null;
+    const code = (JSON.parse(text) as { code?: unknown }).code;
+    return typeof code === "string" ? code : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Feature flags and settings, evaluated locally.
  *
@@ -374,6 +386,14 @@ export class FlagsClient {
   async #handle(res: Response): Promise<void> {
     const status = res.status;
     if (status === 304) return this.#succeeded();
+    if (status === 403 && (await errorCode(res)) === "SERVICE_NOT_ENABLED") {
+      // Flags turned off for the workspace (Workspace > Services): say why, keep what is held.
+      this.#retryAfter = parseRetryAfterMs(res.headers, Date.now()) ?? 0;
+      return this.#failed(
+        "http_status",
+        "Flags is turned off for this workspace (403 SERVICE_NOT_ENABLED): serving the last config held, or your default values; turn Flags back on in the console (Workspace > Services)",
+      );
+    }
     if (status !== 200) {
       cancel(res);
       this.#retryAfter = parseRetryAfterMs(res.headers, Date.now()) ?? 0;
