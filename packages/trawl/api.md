@@ -66,7 +66,7 @@ Queues an extraction: an agent browses from `suggested_urls` (or searches when t
 | 402 | `PaymentRequiredError` | `PAYMENT_REQUIRED`, `TRAWL_CREDITS_EXHAUSTED` | `TRAWL_CREDITS_EXHAUSTED`: the workspace has no Trawl credits left (`GET /credits` shows the balance). Add credits, then retry. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `trawl.create`, or workspace has not enabled the `trawl` service. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_JOBS` | Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_JOBS`, `USAGE_LIMIT_REACHED` | Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. `USAGE_LIMIT_REACHED` — the workspace used its plan's monthly Trawl steps (`details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }`; `Retry-After` is the seconds until the allowance resets). Jobs already running always finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const job = await trawl.jobs.create({
@@ -465,7 +465,7 @@ const webhookEventDetail = await trawl.webhooks.events.retrieve("evt_3f0c3c1e-8a
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -475,10 +475,16 @@ const webhookEventDetail = await trawl.webhooks.events.retrieve("evt_3f0c3c1e-8a
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
 | `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
 | `TOO_MANY_ACTIVE_JOBS` | The workspace has the maximum number of active jobs; wait or cancel some. |
+| `USAGE_LIMIT_REACHED` | The workspace used its plan's monthly Trawl steps; new jobs start again when the allowance resets or when the plan is upgraded. |
 | `TRAWL_CREDITS_EXHAUSTED` | The workspace has no Trawl credits left. |

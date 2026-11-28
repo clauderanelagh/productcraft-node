@@ -69,7 +69,7 @@ const social = new Social();
   const upsertActor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").actors.create({ external_id: "user_abc123" });
 }
 
-// actors.delete: Delete an actor. Hard delete — cascades to every post, comment, edge, flag, and notification it owns.
+// actors.delete: Delete an actor (the erasure call). Hard delete: cascades to every post, comment, edge and notification it owns. A comment of theirs that other people replied to stays as a `[deleted]` tombstone with no author, so the replies keep their place; reports about or by the actor are kept, minimised.
 {
   await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").actors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }

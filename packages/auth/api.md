@@ -52,6 +52,7 @@ Delete an app permanently.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.delete`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found or caller is not a member. |
+| 409 | `ConflictError` | `CONFLICT`, `RESOURCE_IN_USE` | `RESOURCE_IN_USE`: other records still reference the app, so nothing was deleted. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -595,6 +596,7 @@ Update the per-app auth config. Only fields you pass are changed.
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.update` on this app, or the app is suspended or archived. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
 | 409 | `ConflictError` | `CONFLICT`, `APP_HAS_NO_WORKSPACE` | `APP_HAS_NO_WORKSPACE`: `signup_requires_pak: true` on an app that belongs to no workspace, so no Platform API Key could ever be accepted for its sign-ups. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `EMAIL_SENDER_NOT_VERIFIED` | `EMAIL_SENDER_NOT_VERIFIED`: `passwordless_email.enabled` switched on while the app's sender cannot send (no workspace default sender, or its domain is not verified in Mail). Not raised when Mail cannot be asked. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1813,7 +1815,7 @@ Turning `notifications_via_envoi` on (from off) creates the default template of 
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.update` on this app, or the app is suspended or archived. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found. |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `SENDER_ADDRESS_REQUIRED` | `SENDER_ADDRESS_REQUIRED`: `sender_mode: custom` with no `default_sender_address` (in the body or already saved). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `SENDER_ADDRESS_REQUIRED`, `EMAIL_SENDER_NOT_VERIFIED` | `SENDER_ADDRESS_REQUIRED`: `sender_mode: custom` with no `default_sender_address` (in the body or already saved). `EMAIL_SENDER_NOT_VERIFIED`: `notifications_via_envoi` switched on while the sender cannot send (no workspace default sender, or its domain is not verified in Mail); `details` names the sender. Not raised when Mail cannot be asked. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -2011,7 +2013,7 @@ Delete a custom role.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `auth.delete` on this app, or the app is suspended or archived, or the role is a system role. |
 | 404 | `NotFoundError` | `NOT_FOUND` | App not found, or no such role in this app. |
-| 409 | `ConflictError` | `CONFLICT` | Role is still assigned to members (`code: ROLE_IN_USE`). |
+| 409 | `ConflictError` | `CONFLICT` | Role is still held (`code: ROLE_IN_USE`). The message names what holds it and `details` counts it: `{ app_members, tenant_members, pending_tenant_invites }`. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3266,6 +3268,8 @@ PAK-required — distinct permission from the bare mint so customers can enable 
 
   * 412 ENVOI_NOT_ENABLED — `notifications_via_envoi` is false
   * 412 ENVOI_SENDER_NOT_CONFIGURED
+  * 412 ENVOI_SENDER_NOT_READY — the workspace sender has none chosen or an unverified domain
+  * 412 ENVOI_TEST_SENDER_MEMBERS_ONLY — the workspace sends from the shared test sender, which only emails its members
   * 412 ENVOI_TEMPLATE_NOT_CONFIGURED
   * 412 ENVOI_APP_NOT_BOUND_TO_WORKSPACE
   * 503 ENVOI_DISPATCH_FAILED — RabbitMQ publish failure
@@ -3688,7 +3692,7 @@ Limits, all checked before the address is looked up: one email per address every
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PASSWORDLESS_DISABLED`, `BOT_PROTECTION_FAILED` | `PASSWORDLESS_DISABLED`: email sign-in is off for this app. Also: sign-in is disabled, a presented Platform API Key is invalid or lacks `auth.signup.create` on this app, `BOT_PROTECTION_FAILED`, or the app is suspended / archived. |
 | 404 | `NotFoundError` | `NOT_FOUND` | The `:appSlug` in the path matches no app (or no live rename alias for one). This is about the **app**, not the account — it is decided before any identifier, code or credential in the body is looked at, so it is never a signal about whether an account or a contact exists. |
-| 412 | `APIError` | `PRECONDITION_FAILED`, `ENVOI_NOT_ENABLED`, `ENVOI_SENDER_NOT_CONFIGURED`, `ENVOI_TEMPLATE_NOT_CONFIGURED`, `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` | The app cannot send the email: Mail notifications are off (`ENVOI_NOT_ENABLED`), no sender (`ENVOI_SENDER_NOT_CONFIGURED`), no sign-in template (`ENVOI_TEMPLATE_NOT_CONFIGURED`) or no workspace (`ENVOI_APP_NOT_BOUND_TO_WORKSPACE`). Decided before the address is looked up. |
+| 412 | `APIError` | `PRECONDITION_FAILED`, `ENVOI_NOT_ENABLED`, `ENVOI_SENDER_NOT_CONFIGURED`, `ENVOI_SENDER_NOT_READY`, `ENVOI_TEST_SENDER_MEMBERS_ONLY`, `ENVOI_TEMPLATE_NOT_CONFIGURED`, `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` | The app cannot send the email: Mail notifications are off (`ENVOI_NOT_ENABLED`), no sender (`ENVOI_SENDER_NOT_CONFIGURED`), the workspace sender cannot send yet: none chosen or its domain is not verified (`ENVOI_SENDER_NOT_READY`, `details.reason`), the workspace sends from the shared ProductCraft test sender and the address is not a workspace member (`ENVOI_TEST_SENDER_MEMBERS_ONLY`), no sign-in template (`ENVOI_TEMPLATE_NOT_CONFIGURED`) or no workspace (`ENVOI_APP_NOT_BOUND_TO_WORKSPACE`). Decided before the address is looked up. |
 | 415 | `APIError` | `UNSUPPORTED_MEDIA_TYPE` | The request body was sent as `application/x-www-form-urlencoded` (`UNSUPPORTED_MEDIA_TYPE`). This API is JSON-only: a form body is a CORS-simple request that skips preflight, so accepting one would widen the CSRF surface. Send `application/json`. Rejected in `main.ts` before routing, on every non-GET request. |
 | 429 | `RateLimitError` | `RATE_LIMITED`, `PASSWORDLESS_RATE_LIMITED` | `PASSWORDLESS_RATE_LIMITED`: one of the per-address, per-IP or per-app send limits above. Also: Per-IP rate limit (`RATE_LIMITED`): this path is in the `auth` bucket — 10 requests per minute per IP over a sliding 60-second window, shared across pods through Redis. Applied by `RateLimitMiddleware` before the handler runs, so it is reachable whatever the body says, and the response carries `Retry-After` in seconds. |
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `BOT_PROTECTION_UNAVAILABLE`, `ENVOI_NOT_WIRED` | `BOT_PROTECTION_UNAVAILABLE`, or Mail is not reachable from this deployment (`ENVOI_NOT_WIRED`). |
@@ -5780,7 +5784,7 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -5790,6 +5794,11 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
@@ -5822,18 +5831,19 @@ A workspace API key (`pcft_live_…`, what the SDKs read from `PRODUCTCRAFT_API_
 | `CUSTOM_DOMAIN_NOT_FOUND` | Custom domain not found. |
 | `CUSTOM_DOMAIN_OAUTH_ONLY` | The custom domain only serves OAuth routes; test sign-in on the app domain instead. |
 | `DNS_CONFLICTS` | Some records cannot be written without breaking existing ones; nothing was changed. |
+| `EMAIL_SENDER_NOT_VERIFIED` | An email setting was switched on while the sender cannot send (no workspace sender, or its domain is not verified in Mail). |
 | `ENVOI_APP_NOT_BOUND_TO_WORKSPACE` | The app is not linked to a workspace, so it cannot send through Mail. |
 | `ENVOI_NOT_ENABLED` | Mail is not enabled for the app's workspace. |
 | `ENVOI_NOT_WIRED` | Mail client not wired in this deployment. |
 | `ENVOI_SENDER_NOT_CONFIGURED` | No sender address is set for this notification. |
+| `ENVOI_SENDER_NOT_READY` | The workspace default sender cannot send yet (none chosen, or its domain is not verified). |
+| `ENVOI_TEST_SENDER_MEMBERS_ONLY` | The workspace sends from the shared ProductCraft test sender (no verified domain yet), which only emails members of the workspace; this address is not one. |
 | `ENVOI_TEMPLATE_NOT_CONFIGURED` | No Mail template is set for this notification. |
 | `FEATURE_NOT_ENABLED` | Custom domains are not available for this workspace yet. |
 | `HOSTNAME_RESERVED` | That host name is reserved and cannot be used. |
 | `HOSTNAME_TAKEN` | That host name is already used by another app. |
 | `INSUFFICIENT_PERMISSIONS` | The token does not grant the permission this route needs. |
-| `INVALID_FORMAT` | A path or query value is not in the expected format. |
 | `INVALID_HOSTNAME` | The host name is not valid; use a name such as `auth.example.com`. |
-| `INVALID_IDENTIFIER` | An id in the path or query is not a valid UUID. |
 | `INVALID_PROVIDER` | Unsupported DNS provider. |
 | `INVALID_ZONE` | The DNS zone is not one this domain belongs to. |
 | `MAIL_UNREACHABLE` | The Mail service did not answer; try again in a minute. |

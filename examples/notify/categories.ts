@@ -6,7 +6,7 @@ const notify = new Notify();
 
 // categories.create: Create a category
 {
-  const category = await notify.categories.create({ key: "security" });
+  const category = await notify.categories.create({ key: "security", name: "Security" });
 }
 
 // categories.delete: Delete a category

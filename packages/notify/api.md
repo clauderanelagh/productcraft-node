@@ -51,7 +51,7 @@ Asks one or more people a yes/no question on the type's channels and records the
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOTIFICATION_TYPE_NOT_FOUND` | `NOTIFICATION_TYPE_NOT_FOUND`: no type with this key. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `NOT_AN_APPROVAL_TYPE`, `NOTIFICATION_TYPE_ARCHIVED`, `RECIPIENT_NOT_FOUND` | `NOT_AN_APPROVAL_TYPE`: the type has no `approval`; `NOTIFICATION_TYPE_ARCHIVED`; `RECIPIENT_NOT_FOUND`: an approver is not a recipient (`details.missing`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over the workspace send limit; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | `RATE_LIMITED`: over the workspace send limit; see `Retry-After`. `USAGE_LIMIT_REACHED`: the workspace used its plan's monthly Notify messages (push, web push and in-app); `details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }` and `Retry-After` until the allowance resets. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const approval = await notify.approvals.create({
@@ -245,7 +245,7 @@ At most 50 categories per workspace during the preview. Channels left out of `de
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const category = await notify.categories.create({ key: "security" });
+const category = await notify.categories.create({ key: "security", name: "Security" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-categories)
@@ -687,7 +687,12 @@ At most 200 types per workspace during the preview. Add templates with `PUT …/
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notificationType = await notify.notificationTypes.create({ key: "invoice.paid" });
+const notificationType = await notify.notificationTypes.create({
+  category_key: "billing",
+  key: "invoice.paid",
+  name: "Invoice paid",
+  routing: { always: ["inbox"], fallback: [{ channel: "inbox" }] },
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#post-v1-workspaces-workspace-id-notification-types)
@@ -765,7 +770,12 @@ Types as code: sets the type and its complete template set in one transaction (t
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const notificationType = await notify.notificationTypes.replaceByKey("invoice.paid", { templates: [{ body: {}, channel: "inbox", locale: "string" }] });
+const notificationType = await notify.notificationTypes.replaceByKey("invoice.paid", {
+  category_key: "string",
+  name: "string",
+  routing: { always: ["inbox"], fallback: [{ channel: "inbox" }] },
+  templates: [{ body: {}, channel: "inbox", locale: "string" }],
+});
 ```
 
 [HTTP reference](https://productcraft.co/docs/notify/api-reference#put-v1-workspaces-workspace-id-notification-types-by-key-key)
@@ -1086,7 +1096,7 @@ Notifies up to 1,000 recipients with one notification type, across the type's ch
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the key was used with a different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE`, `DATA_TOO_LARGE` | `DATA_TOO_LARGE`: `data` is over 16 KB. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_NOT_FOUND`, `NOTIFICATION_TYPE_ARCHIVED`, `TEMPLATE_MISSING`, `SEND_AT_OUT_OF_RANGE`, `BATCHED_TYPE_NOT_SCHEDULABLE`, `APPROVAL_TYPE_SEND_REFUSED`, `UNSAFE_URL`, `VALIDATION_ERROR` | `RECIPIENT_NOT_FOUND`: no recipient can be notified (`details.skipped` lists why); `NOTIFICATION_TYPE_ARCHIVED`; `TEMPLATE_MISSING`: no template for any requested channel; `SEND_AT_OUT_OF_RANGE`; `BATCHED_TYPE_NOT_SCHEDULABLE`: the type batches (send it now); `APPROVAL_TYPE_SEND_REFUSED`: an approval type, sent with `POST /approvals`; `UNSAFE_URL`; `VALIDATION_ERROR`: a channel outside the type's routing. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | `RATE_LIMITED`: over 3,000 recipients a minute in this workspace; see `Retry-After`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | `RATE_LIMITED`: over 3,000 recipients a minute in this workspace; see `Retry-After`. `USAGE_LIMIT_REACHED`: the workspace used its plan's monthly Notify messages (push, web push and in-app); `details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }` and `Retry-After` until the allowance resets. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await notify.notifications.send({
@@ -2281,7 +2291,7 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -2291,6 +2301,11 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
@@ -2340,4 +2355,5 @@ A recipient token minted by your backend with `POST /v1/workspaces/{workspace_id
 | `CONFIRMATION_REQUIRED` | The change is destructive and needs an explicit confirmation field (e.g. `confirm: "rotate"`). |
 | `INBOX_ITEM_NOT_FOUND` | The recipient has no inbox item with this id (or the sender retracted it). |
 | `RECIPIENT_ERASED` | The recipient was erased in the last 24 hours (its linked Auth user was deleted) and cannot be recreated yet. |
+| `USAGE_LIMIT_REACHED` | The workspace used its plan's monthly Notify messages; sends resume when the allowance resets or when the plan is upgraded. |
 | `DEVICE_MOVE_LIMIT` | The device was moved between recipients too often; wait before moving it again. |

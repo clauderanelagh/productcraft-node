@@ -274,7 +274,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -504,7 +504,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -625,6 +625,12 @@
             "nullable": true,
             "type": "string"
           },
+          "completion_tokens": {
+            "description": "Model output tokens used; null until it finishes.",
+            "example": 940,
+            "nullable": true,
+            "type": "number"
+          },
           "created_at": {
             "description": "When the job was created.",
             "format": "date-time",
@@ -662,6 +668,12 @@
             "description": "Model tier the worker uses (e.g. `standard`, `pro`).",
             "type": "string"
           },
+          "prompt_tokens": {
+            "description": "Model input tokens used; null until it finishes.",
+            "example": 18250,
+            "nullable": true,
+            "type": "number"
+          },
           "result": {
             "additionalProperties": true,
             "description": "The extracted data, shaped by `json_schema`. Null until the job succeeds.",
@@ -682,6 +694,12 @@
             ],
             "description": "`queued` until a worker picks it up, then `running`; it ends `succeeded` (the result is in `result`), `failed` (see `error`) or `cancelled`."
           },
+          "steps_used": {
+            "description": "Browser steps the job used (what it is billed in); null until it finishes.",
+            "example": 7,
+            "nullable": true,
+            "type": "number"
+          },
           "suggested_urls": {
             "description": "Seed URLs the worker starts from; null when none were given.",
             "items": {
@@ -693,6 +711,12 @@
           "timeout_s": {
             "description": "Wall-clock timeout for the job, in seconds.",
             "type": "integer"
+          },
+          "total_tokens": {
+            "description": "Prompt plus completion tokens; null until it finishes.",
+            "example": 19190,
+            "nullable": true,
+            "type": "number"
           },
           "webhook_id": {
             "description": "The webhook endpoint named at creation to notify when the job ends; null when none.",
@@ -723,7 +747,11 @@
           "enqueued_at",
           "started_at",
           "completed_at",
-          "created_at"
+          "created_at",
+          "steps_used",
+          "prompt_tokens",
+          "completion_tokens",
+          "total_tokens"
         ],
         "type": "object",
         "x-pc-sdk-model": "Job"
@@ -785,7 +813,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -981,12 +1009,18 @@
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
               "IDEMPOTENCY_IN_PROGRESS",
+              "INVALID_CURSOR",
+              "INVALID_FORMAT",
+              "INVALID_IDENTIFIER",
+              "REFERENCE_NOT_FOUND",
+              "RESOURCE_IN_USE",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
               "WEBHOOK_EVENT_NOT_FOUND",
               "WEBHOOK_EVENT_TYPE_UNKNOWN",
               "TOO_MANY_ACTIVE_JOBS",
+              "USAGE_LIMIT_REACHED",
               "TRAWL_CREDITS_EXHAUSTED"
             ],
             "type": "string"
@@ -1010,6 +1044,9 @@
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
           "INTERNAL_SERVER_ERROR": "An unexpected server error. Retrying is safe for idempotent requests; quote `request_id` to support.",
           "INVALID_CREDENTIALS": "The credentials were not accepted.",
+          "INVALID_CURSOR": "The cursor is invalid; restart from the first page.",
+          "INVALID_FORMAT": "A path or query value is not in the expected format.",
+          "INVALID_IDENTIFIER": "An id in the path or query is not in the format the resource uses (for example, not a valid UUID).",
           "MCP_NOT_PERMITTED": "An MCP (agent) token cannot call this route.",
           "MCP_WORKSPACE_MISMATCH": "The MCP token was issued for a different workspace.",
           "METHOD_NOT_ALLOWED": "The route does not accept this HTTP method.",
@@ -1022,8 +1059,10 @@
           "PRECONDITION_FAILED": "A precondition header did not match.",
           "PRECONDITION_REQUIRED": "The route requires a precondition header.",
           "RATE_LIMITED": "Too many requests; retry after the `Retry-After` header.",
+          "REFERENCE_NOT_FOUND": "A resource the request refers to does not exist.",
           "REQUEST_TIMEOUT": "The request took too long to arrive.",
-          "SERVICE_NOT_ENABLED": "The workspace has not enabled this product.",
+          "RESOURCE_IN_USE": "Other records still reference this resource, so it cannot be deleted or changed yet.",
+          "SERVICE_NOT_ENABLED": "The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on.",
           "SERVICE_UNAVAILABLE": "The service or one of its dependencies is temporarily unavailable; retry.",
           "SESSION_REVOKED": "The session behind this token was signed out or revoked.",
           "TOO_MANY_ACTIVE_JOBS": "The workspace has the maximum number of active jobs; wait or cancel some.",
@@ -1031,6 +1070,7 @@
           "UNAUTHORIZED": "No credentials, or the token or API key is invalid, expired or revoked.",
           "UNPROCESSABLE_ENTITY": "The request is well-formed but cannot be carried out.",
           "UNSUPPORTED_MEDIA_TYPE": "The request body is not in a content type the route accepts.",
+          "USAGE_LIMIT_REACHED": "The workspace used its plan's monthly Trawl steps; new jobs start again when the allowance resets or when the plan is upgraded.",
           "VALIDATION_ERROR": "One or more request fields are invalid; `errors` lists each field (`param`, `message`, `code`).",
           "WEBHOOK_ENDPOINT_LIMIT": "The workspace has the maximum number of webhook endpoints.",
           "WEBHOOK_ENDPOINT_NOT_FOUND": "No webhook endpoint with this id in this workspace.",
@@ -2495,7 +2535,7 @@
             }
           },
           {
-            "description": "Pass a key (1..256 chars, [A-Za-z0-9_\\-:]) to make retries safe — replays return the original response for 24h.",
+            "description": "Pass a key (1..256 chars, [A-Za-z0-9._:-]) to make retries safe — replays return the original response for 24h.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -2647,7 +2687,7 @@
                 }
               }
             },
-            "description": "Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "description": "Rate limited. `RATE_LIMITED` — submission window exceeded (default 10/min per workspace); the `Retry-After` header gives the seconds until the window resets. `TOO_MANY_ACTIVE_JOBS` — too many queued/running jobs (default 25); retry once some finish. `USAGE_LIMIT_REACHED` — the workspace used its plan's monthly Trawl steps (`details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }`; `Retry-After` is the seconds until the allowance resets). Jobs already running always finish. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
             "headers": {
               "Retry-After": {
                 "$ref": "#/components/headers/Retry-After"
@@ -2664,7 +2704,8 @@
             },
             "x-pc-error-codes": [
               "RATE_LIMITED",
-              "TOO_MANY_ACTIVE_JOBS"
+              "TOO_MANY_ACTIVE_JOBS",
+              "USAGE_LIMIT_REACHED"
             ]
           }
         },
@@ -3598,7 +3639,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4194,7 +4235,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4450,7 +4491,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -4688,7 +4729,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,
@@ -5496,7 +5537,7 @@
             }
           },
           {
-            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9_-:]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
+            "description": "Opaque client-generated string (1-256 chars, `[A-Za-z0-9._:-]`) that makes a retry of this request safe for 24 hours. The same key with a different body returns 409 `IDEMPOTENCY_KEY_REUSE`.",
             "in": "header",
             "name": "Idempotency-Key",
             "required": false,

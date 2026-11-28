@@ -871,12 +871,12 @@
             "type": "string"
           },
           "waitlist_id": {
-            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`).",
             "format": "uuid",
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the waitlist belongs to.",
             "format": "uuid",
             "type": "string"
           }
@@ -957,12 +957,12 @@
             "type": "string"
           },
           "waitlist_id": {
-            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`).",
             "format": "uuid",
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the waitlist belongs to.",
             "format": "uuid",
             "type": "string"
           }
@@ -1172,12 +1172,12 @@
             "type": "string"
           },
           "waitlist_id": {
-            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`).",
             "format": "uuid",
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the waitlist belongs to.",
             "format": "uuid",
             "type": "string"
           }
@@ -1245,12 +1245,12 @@
             "type": "string"
           },
           "waitlist_id": {
-            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`). Absent on \"Send test\" deliveries.",
+            "description": "The waitlist, so you can route without opening `data` (also in `data.waitlist_id`).",
             "format": "uuid",
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the waitlist belongs to. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the waitlist belongs to.",
             "format": "uuid",
             "type": "string"
           }
@@ -3548,6 +3548,11 @@
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
               "IDEMPOTENCY_IN_PROGRESS",
+              "INVALID_CURSOR",
+              "INVALID_FORMAT",
+              "INVALID_IDENTIFIER",
+              "REFERENCE_NOT_FOUND",
+              "RESOURCE_IN_USE",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
@@ -3555,7 +3560,12 @@
               "WEBHOOK_EVENT_TYPE_UNKNOWN",
               "ACCESS_CODE_INVALID",
               "ACCESS_CODE_USED",
+              "CONFIRMATION_EMAIL_UNAVAILABLE",
+              "CONFIRMATION_EMAIL_MEMBERS_ONLY",
+              "EMAILS_OFF",
+              "EMAIL_SENDER_NOT_VERIFIED",
               "ENTRY_LINK_INVALID",
+              "LIMIT_EXCEEDED",
               "MAIL_UNREACHABLE",
               "ORIGIN_NOT_ALLOWED",
               "WAITLIST_NOT_FOUND",
@@ -3577,7 +3587,11 @@
           "ACTIONS_NOT_GRANTABLE": "The policy grants actions the caller does not hold.",
           "BAD_GATEWAY": "An upstream service returned an invalid response.",
           "BAD_REQUEST": "The request is malformed (not valid JSON, a bad header, an unusable parameter).",
+          "CONFIRMATION_EMAIL_MEMBERS_ONLY": "The workspace has no verified sender yet and sends from the shared ProductCraft test sender, which only emails members of the workspace; nothing was stored.",
+          "CONFIRMATION_EMAIL_UNAVAILABLE": "Email confirmation is on but the confirmation email cannot be sent right now (`details.reason`); nothing was stored.",
           "CONFLICT": "The request conflicts with the current state of the resource.",
+          "EMAILS_OFF": "Email confirmation cannot be turned on while Waitlist emails are off.",
+          "EMAIL_SENDER_NOT_VERIFIED": "The workspace has no sender, or its domain is not verified in Mail (`details.reason`).",
           "ENTRY_LINK_INVALID": "The confirmation or status link is not valid, or its sign-up expired or was deleted.",
           "FORBIDDEN": "The caller is authenticated but not allowed to do this.",
           "GATEWAY_TIMEOUT": "An upstream service did not answer in time; retry.",
@@ -3587,6 +3601,10 @@
           "IDEMPOTENCY_KEY_REUSE": "The `Idempotency-Key` was already used with a different body or route.",
           "INTERNAL_SERVER_ERROR": "An unexpected server error. Retrying is safe for idempotent requests; quote `request_id` to support.",
           "INVALID_CREDENTIALS": "The credentials were not accepted.",
+          "INVALID_CURSOR": "The cursor is invalid; restart from the first page.",
+          "INVALID_FORMAT": "A path or query value is not in the expected format.",
+          "INVALID_IDENTIFIER": "An id in the path or query is not in the format the resource uses (for example, not a valid UUID).",
+          "LIMIT_EXCEEDED": "The workspace reached its plan's limit of waitlist sign-ups; upgrade the plan to accept more.",
           "MAIL_UNREACHABLE": "The Mail service did not answer; try again in a minute.",
           "MCP_NOT_PERMITTED": "An MCP (agent) token cannot call this route.",
           "MCP_WORKSPACE_MISMATCH": "The MCP token was issued for a different workspace.",
@@ -3601,8 +3619,10 @@
           "PRECONDITION_FAILED": "A precondition header did not match.",
           "PRECONDITION_REQUIRED": "The route requires a precondition header.",
           "RATE_LIMITED": "Too many requests; retry after the `Retry-After` header.",
+          "REFERENCE_NOT_FOUND": "A resource the request refers to does not exist.",
           "REQUEST_TIMEOUT": "The request took too long to arrive.",
-          "SERVICE_NOT_ENABLED": "The workspace has not enabled this product.",
+          "RESOURCE_IN_USE": "Other records still reference this resource, so it cannot be deleted or changed yet.",
+          "SERVICE_NOT_ENABLED": "The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on.",
           "SERVICE_UNAVAILABLE": "The service or one of its dependencies is temporarily unavailable; retry.",
           "SESSION_REVOKED": "The session behind this token was signed out or revoked.",
           "UNAUTHORIZED": "No credentials, or the token or API key is invalid, expired or revoked.",
@@ -5097,6 +5117,25 @@
               }
             }
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5276,14 +5315,15 @@
                 }
               }
             },
-            "description": "The request came from a web origin (`Origin` header) that is not on the waitlist's `allowed_origins` list. Requests without an `Origin` header (server-side calls) are not checked. A CORS preflight from such an origin gets the same 403.",
+            "description": "The request came from a web origin (`Origin` header) that is not on the waitlist's `allowed_origins` list. Requests without an `Origin` header (server-side calls) are not checked. A CORS preflight from such an origin gets the same 403. Code `SERVICE_NOT_ENABLED` instead: Waitlist is turned off for this workspace.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "FORBIDDEN"
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
             ]
           },
           "404": {
@@ -5339,14 +5379,16 @@
                 }
               }
             },
-            "description": "Waitlist is not active or is full",
+            "description": "Waitlist is not active or is full. Code `LIMIT_EXCEEDED` instead: the workspace has as many sign-ups as its plan allows (Free: 1,000 across all its waitlists; `details`: `resource`, `max`, `current`). The owner can upgrade under Workspace > Billing; sign-ups already on the list are kept. Code `CONFIRMATION_EMAIL_MEMBERS_ONLY`: email confirmation is on and the workspace has no verified sender yet, so its email goes out from the shared ProductCraft test sender, which only emails members of the workspace; this address is not one. Nothing is stored; show the message to the visitor.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
               }
             },
             "x-pc-error-codes": [
-              "UNPROCESSABLE_ENTITY"
+              "UNPROCESSABLE_ENTITY",
+              "LIMIT_EXCEEDED",
+              "CONFIRMATION_EMAIL_MEMBERS_ONLY"
             ]
           },
           "429": {
@@ -5374,6 +5416,25 @@
             },
             "x-pc-error-codes": [
               "RATE_LIMITED"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `CONFIRMATION_EMAIL_UNAVAILABLE`: email confirmation is on but the confirmation email cannot be sent right now (Waitlist emails off, no confirmation template, or no verified sender; `details.reason`). Nothing is stored. Show the message to the visitor.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "SERVICE_UNAVAILABLE",
+              "CONFIRMATION_EMAIL_UNAVAILABLE"
             ]
           }
         },
@@ -5481,6 +5542,25 @@
             "x-pc-error-codes": [
               "BAD_REQUEST",
               "VALIDATION_ERROR"
+            ]
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
             ]
           },
           "404": {
@@ -5618,6 +5698,25 @@
                 "$ref": "#/components/headers/RequestId"
               }
             }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
           },
           "404": {
             "content": {
@@ -5772,6 +5871,25 @@
               "VALIDATION_ERROR"
             ]
           },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
           "404": {
             "content": {
               "application/json": {
@@ -5789,6 +5907,25 @@
             "x-pc-error-codes": [
               "NOT_FOUND",
               "WAITLIST_NOT_FOUND"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `CONFIRMATION_EMAIL_MEMBERS_ONLY`: the workspace sends from the shared ProductCraft test sender, which only emails its members; this address is not one.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY",
+              "CONFIRMATION_EMAIL_MEMBERS_ONLY"
             ]
           },
           "429": {
@@ -5816,6 +5953,25 @@
             },
             "x-pc-error-codes": [
               "RATE_LIMITED"
+            ]
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `CONFIRMATION_EMAIL_UNAVAILABLE`: the waitlist cannot send confirmation emails right now (Waitlist emails off, no confirmation template, or no verified sender); `details.reason` says which. Decided before the address is looked up.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "SERVICE_UNAVAILABLE",
+              "CONFIRMATION_EMAIL_UNAVAILABLE"
             ]
           }
         },
@@ -5912,6 +6068,25 @@
                 "$ref": "#/components/headers/RequestId"
               }
             }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
           },
           "404": {
             "content": {
@@ -6040,6 +6215,25 @@
                 "$ref": "#/components/headers/RequestId"
               }
             }
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
           },
           "404": {
             "content": {
@@ -7198,6 +7392,26 @@
               "IDEMPOTENCY_IN_PROGRESS"
             ]
           },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`settings.email_confirmation` switched on while the confirmation email could not be sent: `EMAILS_OFF` (Waitlist emails are off) or `EMAIL_SENDER_NOT_VERIFIED` (no workspace sender, or its domain is not verified in Mail; `details.reason`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY",
+              "EMAILS_OFF",
+              "EMAIL_SENDER_NOT_VERIFIED"
+            ]
+          },
           "429": {
             "content": {
               "application/json": {
@@ -7657,6 +7871,26 @@
               "CONFLICT",
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_IN_PROGRESS"
+            ]
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            },
+            "description": "`settings.email_confirmation` switched on while the confirmation email could not be sent: `EMAILS_OFF` (Waitlist emails are off) or `EMAIL_SENDER_NOT_VERIFIED` (no workspace sender, or its domain is not verified in Mail; `details.reason`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNPROCESSABLE_ENTITY",
+              "EMAILS_OFF",
+              "EMAIL_SENDER_NOT_VERIFIED"
             ]
           },
           "429": {

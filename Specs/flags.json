@@ -356,7 +356,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -451,7 +451,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -546,7 +546,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -641,7 +641,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -838,7 +838,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -1578,7 +1578,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -2942,6 +2942,11 @@
               "IDEMPOTENCY_KEY_REUSE",
               "IDEMPOTENCY_KEY_REQUIRED",
               "IDEMPOTENCY_IN_PROGRESS",
+              "INVALID_CURSOR",
+              "INVALID_FORMAT",
+              "INVALID_IDENTIFIER",
+              "REFERENCE_NOT_FOUND",
+              "RESOURCE_IN_USE",
               "WEBHOOK_ENDPOINT_LIMIT",
               "WEBHOOK_ENDPOINT_NOT_FOUND",
               "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED",
@@ -2955,6 +2960,7 @@
               "CHANGE_NOT_FOUND",
               "REVISION_NOT_FOUND",
               "SDK_KEY_NOT_FOUND",
+              "SDK_KEY_REVOKED",
               "KEY_ALREADY_EXISTS",
               "LAST_ENVIRONMENT",
               "VERSION_CONFLICT",
@@ -3042,6 +3048,9 @@
           "IMPORT_UNSUPPORTED": "The ConfigCat product uses features Flags cannot import; see details.items.",
           "INTERNAL_SERVER_ERROR": "An unexpected server error. Retrying is safe for idempotent requests; quote `request_id` to support.",
           "INVALID_CREDENTIALS": "The credentials were not accepted.",
+          "INVALID_CURSOR": "The cursor is invalid; restart from the first page.",
+          "INVALID_FORMAT": "A path or query value is not in the expected format.",
+          "INVALID_IDENTIFIER": "An id in the path or query is not in the format the resource uses (for example, not a valid UUID).",
           "INVALID_TARGETING": "The targeting rules are not valid.",
           "INVALID_VALUE": "The value does not match the setting's type or exceeds its size limit.",
           "KEY_ALREADY_EXISTS": "Another resource in the same scope already uses this key.",
@@ -3073,7 +3082,9 @@
           "RAMP_NOT_FOUND": "The ramp does not exist in this workspace.",
           "RAMP_NOT_LIVE": "The ramp already completed, failed or was cancelled.",
           "RATE_LIMITED": "Too many requests; retry after the `Retry-After` header.",
+          "REFERENCE_NOT_FOUND": "A resource the request refers to does not exist.",
           "REQUEST_TIMEOUT": "The request took too long to arrive.",
+          "RESOURCE_IN_USE": "Other records still reference this resource, so it cannot be deleted or changed yet.",
           "REVERT_NOT_SUPPORTED": "This kind of change cannot be restored.",
           "REVIEWER_MUST_BE_HUMAN": "Only a person signed in to the console can review a change request.",
           "REVISION_NOT_FOUND": "The config revision does not exist for this environment.",
@@ -3081,10 +3092,11 @@
           "SCHEDULED_CHANGE_NOT_FOUND": "The scheduled change does not exist in this workspace.",
           "SCHEDULED_CHANGE_NOT_PENDING": "The scheduled change already ran or was cancelled.",
           "SDK_KEY_NOT_FOUND": "The SDK key is unknown, revoked or expired.",
+          "SDK_KEY_REVOKED": "The SDK key was revoked while it was being revealed; revoked keys keep no key material. Reveal the keys again.",
           "SEGMENT_IN_USE": "A targeting rule uses this segment.",
           "SEGMENT_NOT_FOUND": "The segment does not exist in this workspace.",
           "SELF_APPROVAL_NOT_ALLOWED": "The author of a change request (or the person an agent acted for) cannot review it.",
-          "SERVICE_NOT_ENABLED": "The workspace has not enabled this product.",
+          "SERVICE_NOT_ENABLED": "The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on.",
           "SERVICE_UNAVAILABLE": "The service or one of its dependencies is temporarily unavailable; retry.",
           "SESSION_REVOKED": "The session behind this token was signed out or revoked.",
           "SETTING_IN_USE": "Another setting uses this one as a prerequisite.",
@@ -5366,7 +5378,7 @@
             "type": "string"
           },
           "workspace_id": {
-            "description": "The workspace the event belongs to, so you can route without opening `data`. Absent on \"Send test\" deliveries.",
+            "description": "The workspace the event belongs to, so you can route without opening `data`.",
             "format": "uuid",
             "type": "string"
           }
@@ -7728,6 +7740,121 @@
         ],
         "type": "object",
         "x-pc-sdk-model": "WebhookPagination"
+      },
+      "WorkspaceSdkKeyDto": {
+        "properties": {
+          "config_id": {
+            "description": "Id of the config the key downloads.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "config_name": {
+            "description": "Name of the config.",
+            "example": "main",
+            "type": "string"
+          },
+          "created_at": {
+            "description": "When the key was minted.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "environment_id": {
+            "description": "Id of the environment the key belongs to.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "environment_name": {
+            "description": "Name of the environment.",
+            "example": "Production",
+            "type": "string"
+          },
+          "environment_protected": {
+            "description": "Whether the environment is protected.",
+            "example": true,
+            "type": "boolean"
+          },
+          "expires_at": {
+            "description": "Secondary keys only: when the key stops resolving (end of the grace period). `null` for the primary key.",
+            "format": "date-time",
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "description": "Id of the key.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "key_prefix": {
+            "description": "The first 12 characters of the key.",
+            "example": "pcf_sdk_4fQx",
+            "type": "string"
+          },
+          "last4": {
+            "description": "The last 4 characters of the key.",
+            "example": "k9Zt",
+            "type": "string"
+          },
+          "project_id": {
+            "description": "Id of the project the config belongs to.",
+            "format": "uuid",
+            "type": "string"
+          },
+          "project_name": {
+            "description": "Name of the project.",
+            "example": "Web app",
+            "type": "string"
+          },
+          "slot": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SdkKeySlot"
+              }
+            ],
+            "description": "`primary` is the current key; `secondary` is the previous one during a rotation's grace period."
+          }
+        },
+        "required": [
+          "slot",
+          "key_prefix",
+          "last4",
+          "created_at",
+          "expires_at",
+          "id",
+          "project_id",
+          "project_name",
+          "config_id",
+          "config_name",
+          "environment_id",
+          "environment_name",
+          "environment_protected"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WorkspaceSdkKey"
+      },
+      "WorkspaceSdkKeyListResponseDto": {
+        "properties": {
+          "data": {
+            "description": "Live keys, newest first.",
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceSdkKeyDto"
+            },
+            "type": "array"
+          },
+          "pagination": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FlagsPaginationDto"
+              }
+            ],
+            "description": "The cursor for the next page."
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "type": "object",
+        "x-pc-sdk-model": "WorkspaceSdkKeyList"
       }
     },
     "securitySchemes": {
@@ -7888,6 +8015,18 @@
                 "$ref": "#/components/headers/RequestId"
               }
             }
+          },
+          "403": {
+            "description": "`SERVICE_NOT_ENABLED`: Flags is turned off for the key's workspace. Keep your last config or use your defaults (the SDKs do); the config is served again within about a minute of Flags being turned back on. `Cache-Control: public, max-age=0, s-maxage=15`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
           },
           "404": {
             "description": "`SDK_KEY_NOT_FOUND`: the key is malformed, unknown, revoked, an expired secondary key, or its workspace is suspended or deleted.",
@@ -11646,6 +11785,18 @@
               "ENVIRONMENT_NOT_FOUND"
             ]
           },
+          "409": {
+            "description": "`SDK_KEY_REVOKED`: a key was revoked while it was being revealed; a revoked key keeps no key material. Reveal again.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "CONFLICT",
+              "SDK_KEY_REVOKED"
+            ]
+          },
           "429": {
             "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
             "headers": {
@@ -13430,7 +13581,7 @@
             ]
           },
           "422": {
-            "description": "`LIMIT_EXCEEDED`: the workspace already has the maximum number of projects (`details`: `limit`, `max`, `current`).",
+            "description": "`LIMIT_EXCEEDED`: the workspace already has the maximum number of projects (`details`: `limit`, `max`, `current`). `details.limit` is `projects` for the preview limit, or `flags_projects` for the workspace plan's limit (Free 2, Pro 10, Scale 50; upgrade under Workspace > Billing). Existing projects are never affected.",
             "headers": {
               "X-Request-Id": {
                 "$ref": "#/components/headers/RequestId"
@@ -13498,7 +13649,7 @@
     },
     "/v1/workspaces/{workspace_id}/projects/{project_id}": {
       "delete": {
-        "description": "Deletes the project with all of its environments, configs, flags, segments, SDK keys and history. Pass `confirm` with the exact project name. SDKs using its keys stop receiving updates. Needs `flags.project.manage`; recorded in the workspace audit log.",
+        "description": "Deletes the project with all of its environments, configs, flags, segments and SDK keys. Its change history is minimised and kept for one year: who changed which flag and when, without values, rules or notes; then it is deleted. Export the history first if you need the values. Pass `confirm` with the exact project name. SDKs using its keys stop receiving updates. Needs `flags.project.manage`; recorded in the workspace audit log.",
         "operationId": "ProjectsController_delete",
         "parameters": [
           {
@@ -18036,6 +18187,171 @@
           "method": "cancel",
           "paginated": false,
           "resource": "scheduledChanges"
+        }
+      }
+    },
+    "/v1/workspaces/{workspace_id}/sdk-keys": {
+      "get": {
+        "description": "Every live SDK key in this workspace, newest first, masked (prefix and last four characters), each with its project, config and environment. A secondary key is listed until its grace period ends. A config and environment that nobody has read keys for yet has no key here: listing that pair mints its primary key.",
+        "operationId": "WorkspaceSdkKeysController_list",
+        "parameters": [
+          {
+            "description": "Id of the workspace.",
+            "example": "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f",
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Opaque cursor for pagination: the `next_cursor` of the previous page.",
+            "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0xMS0wMVQwMDowMDowMFoifQ",
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "example": "eyJjcmVhdGVkX2F0IjoiMjAyNi0xMS0wMVQwMDowMDowMFoifQ",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Page size.",
+            "example": 50,
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceSdkKeyListResponseDto"
+                }
+              }
+            },
+            "description": "A page of keys.",
+            "headers": {
+              "X-RateLimit-Limit-long": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-long"
+              },
+              "X-RateLimit-Limit-short": {
+                "$ref": "#/components/headers/X-RateLimit-Limit-short"
+              },
+              "X-RateLimit-Remaining-long": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-long"
+              },
+              "X-RateLimit-Remaining-short": {
+                "$ref": "#/components/headers/X-RateLimit-Remaining-short"
+              },
+              "X-RateLimit-Reset-long": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-long"
+              },
+              "X-RateLimit-Reset-short": {
+                "$ref": "#/components/headers/X-RateLimit-Reset-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            }
+          },
+          "400": {
+            "description": "`VALIDATION_ERROR`: a bad cursor or a `limit` outside 1-100.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "BAD_REQUEST",
+              "VALIDATION_ERROR"
+            ]
+          },
+          "401": {
+            "description": "Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`.",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "UNAUTHORIZED"
+            ]
+          },
+          "403": {
+            "description": "The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`).",
+            "headers": {
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "FORBIDDEN",
+              "SERVICE_NOT_ENABLED"
+            ]
+          },
+          "429": {
+            "description": "More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "Retry-After-long": {
+                "$ref": "#/components/headers/Retry-After-long"
+              },
+              "Retry-After-short": {
+                "$ref": "#/components/headers/Retry-After-short"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "RATE_LIMITED"
+            ]
+          },
+          "503": {
+            "description": "The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving.",
+            "headers": {
+              "Retry-After": {
+                "$ref": "#/components/headers/Retry-After"
+              },
+              "X-Request-Id": {
+                "$ref": "#/components/headers/RequestId"
+              }
+            },
+            "x-pc-error-codes": [
+              "SERVICE_UNAVAILABLE",
+              "MANAGEMENT_UNAVAILABLE"
+            ]
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List the SDK keys of a workspace",
+        "tags": [
+          "sdk-keys"
+        ],
+        "x-pc-sdk": {
+          "bind": [
+            "workspace_id"
+          ],
+          "method": "list",
+          "paginated": true,
+          "resource": "sdkKeys"
         }
       }
     },

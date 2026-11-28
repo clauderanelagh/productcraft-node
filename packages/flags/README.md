@@ -279,6 +279,7 @@ Full reference: [api.md](./api.md).
 - `flags.projects`: `changes.export`, `changes.list`, `configs.create`, `configs.list`, `create`, `delete`, `environments.create`, `environments.delete`, `environments.list`, `environments.retrieve`, `environments.update`, `list`, `retrieve`, `segments.create`, `segments.list`, `staleFlags.list`, `staleFlags.sendDigest`, `update`
 - `flags.ramps`: `cancel`, `list`, `pause`, `resume`, `retrieve`
 - `flags.scheduledChanges`: `cancel`, `list`, `retrieve`
+- `flags.sdkKeys`: `list`
 - `flags.segments`: `delete`, `retrieve`, `revealConfidential`, `update`
 - `flags.settings`: `delete`, `retrieve`, `update`, `values.changeRequests.create`, `values.ramps.create`, `values.replace`, `values.retrieve`, `values.revealConfidential`, `values.scheduledChanges.create`, `values.update`
 - `flags.stats`: `retrieve`

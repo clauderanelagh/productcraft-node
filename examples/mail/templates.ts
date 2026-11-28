@@ -4,7 +4,12 @@ import { Mail } from "@productcraft/mail";
 
 const mail = new Mail();
 
-// templates.create: Create or update a template, layout, or partial. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.
+// templates.attach: Hand a detached template back to the GitHub sync. The next sync replaces it with the repository version; edits made in Mail since the detach are lost.
+{
+  const template = await mail.templates.attach("welcome");
+}
+
+// templates.create: Create or update a template, layout, or partial, and publish it. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.
 {
   const template = await mail.templates.create({ body_html: "string", name: "order-confirmation", subject: "string" });
 }
@@ -12,6 +17,21 @@ const mail = new Mail();
 // templates.delete: Delete a template, layout, or partial by name.
 {
   await mail.templates.delete("welcome");
+}
+
+// templates.detach: Take a GitHub-synced template over in Mail: it becomes editable here and the GitHub sync stops changing it (each sync reports it as `edited_in_console`) until it is reattached.
+{
+  const template = await mail.templates.detach("welcome");
+}
+
+// templates.draft.delete: Discard the unpublished draft. The published version is not changed.
+{
+  await mail.templates.draft.delete("welcome");
+}
+
+// templates.draft.update: Save the unpublished draft of a template (creates or replaces it). Sends keep using the published version until the draft is published.
+{
+  const template = await mail.templates.draft.update("welcome", { body_html: "string" });
 }
 
 // templates.lint: Lint a draft for deliverability red flags. Same render pipeline as /preview; returns a 0-100 score (higher is better) and a sorted list of findings (errors first). Self-developed heuristic linter, no external classifier — runs in-process.
@@ -32,12 +52,17 @@ const mail = new Mail();
   const renderedMessage = await mail.templates.preview({ body_html: "string" });
 }
 
-// templates.render: Render a saved template against a data payload. Returns subject + html + text without sending.
+// templates.publish: Publish the draft as the next version. Every send uses it from now on; the version history keeps the previous ones, and the draft is cleared.
+{
+  const template = await mail.templates.publish("welcome", { note: "Shorter subject line" });
+}
+
+// templates.render: Render a saved template against a data payload. Returns subject + html + text without sending. Renders the published version unless `template_version` names another one or `"draft"`.
 {
   const renderedMessage = await mail.templates.render("welcome", { data: { name: "Alice", order_id: "ord_123" } });
 }
 
-// templates.retrieve: Get a template, layout, or partial by name.
+// templates.retrieve: Get a template, layout, or partial by name: its published content (what sends use), `version`, and the unpublished `draft`, if any.
 {
   const template = await mail.templates.retrieve("welcome");
 }
@@ -73,6 +98,24 @@ const mail = new Mail();
 // templates.variables.list: Variables auto-detected from the saved template body + subject (Handlebars expressions, dotted paths preserved, dedup'd in first-occurrence order).
 {
   const templateVariables = await mail.templates.variables.list("welcome");
+}
+
+// templates.versions.list: List the published versions of a template, newest first and cursor-paginated: content, note, author and, for a GitHub-synced version, the commit SHA.
+{
+  for await (const version of mail.templates.versions.list("welcome")) {
+    console.log(version);
+  }
+  const page = await mail.templates.versions.list("welcome", {}, { timeout: 5_000 });
+}
+
+// templates.versions.restore: Restore a published version as the draft (replacing any draft). Nothing is published until the draft is published.
+{
+  const template = await mail.templates.versions.restore("welcome", "1");
+}
+
+// templates.versions.retrieve: Get one published version of a template.
+{
+  const templateVersion = await mail.templates.versions.retrieve("welcome", "1");
 }
 
 export {};

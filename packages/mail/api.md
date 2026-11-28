@@ -1412,6 +1412,213 @@ const smtpVerifyResult = await mail.domains.smtpConfig.verifySaved("3f0c3c1e-8a2
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-domains-domain-id-smtp-config-verify-saved)
 
+## drafts
+
+### `mail.drafts.approve(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/drafts/{id}/approve` → `Mail.MailDraft`
+
+Approve and send a draft.
+
+A person approves a draft waiting for approval, optionally after changing it (`edits`), and it is sent from the mailbox at once through the normal send path (limits, suppression, the message log): `status: sent`, `sent_email_id`, the message appears in the conversation and a `draft.decided` webhook goes out. Pass the `version` you reviewed. Not for agents or API keys, and not for the draft's author or the person an agent wrote it for. Needs `mail.draft.approve` and `mail.send` on the mailbox. If the send is refused the draft stays waiting.
+
+- Params: `Mail.DraftApproveParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | `VALIDATION_ERROR` (a malformed field; with `submit: true` also no body, or a new email without `subject`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED`, `MCP_NOT_PERMITTED`, `PRINCIPAL_NOT_PERMITTED`, `MAIL_DRAFT_SELF_APPROVAL` | `PAK_NOT_PERMITTED` (an API key) or `MCP_NOT_PERMITTED` (an MCP grant): deciding drafts needs a person's session. `PRINCIPAL_NOT_PERMITTED`: an OAuth client acting for a person. `MAIL_DRAFT_SELF_APPROVAL`: you wrote it, or an agent wrote it for you. Or the policy does not allow `mail.draft.approve` (and, to approve, `mail.send`) on the mailbox. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_NOT_PENDING`, `MAIL_DRAFT_NOT_EDITABLE`, `MAIL_DRAFT_VERSION_CONFLICT`, `MAIL_DOMAIN_CANNOT_SEND`, `APPROVAL_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_NOT_PENDING` / `MAIL_DRAFT_NOT_EDITABLE`: the draft is not in a state that can be sent (`details.status`). `MAIL_DRAFT_VERSION_CONFLICT`: it changed since you read it (`details.version`). `MAIL_DOMAIN_CANNOT_SEND`: the mailbox's domain only receives. `APPROVAL_REQUIRED`: the mailbox sends only approved drafts. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified` | `from_domain_not_verified`: the mailbox's domain is not verified for sending yet. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (`RATE_LIMITED`) or the monthly email allowance (`USAGE_LIMIT_REACHED`). Nothing is sent and the draft stays waiting for approval. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.approve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { version: 2 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-drafts-id-approve)
+
+### `mail.drafts.discard(id, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/drafts/{id}` → `void`
+
+Discard a draft.
+
+Discards a `draft` or `pending_approval` draft and its files (`status: discarded`); it leaves the queue. Repeating it changes nothing. Needs `mail.draft.create` on the mailbox.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_NOT_EDITABLE` | `MAIL_DRAFT_NOT_EDITABLE`: it was already sent or rejected (`details.status`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await mail.drafts.discard("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-drafts-id)
+
+### `mail.drafts.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/drafts` → `PagePromise<Mail.MailDraft>`
+
+List drafts.
+
+Drafts in every mailbox you may list (`mail.list`), or in `mailbox_id`; most recently changed first. Default: the open ones (`draft`, `pending_approval`). `status=pending_approval` is the approval queue ("Waiting for approval"); `author=agents` narrows it to drafts written by agents.
+
+- Params: `Mail.DraftListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a malformed filter or cursor, or `author=me` with an API key. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAILBOX_NOT_FOUND` | `MAILBOX_NOT_FOUND`: `mailbox_id` is not a mailbox of this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const draft of mail.drafts.list()) {
+  console.log(draft);
+}
+const page = await mail.drafts.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-drafts)
+
+### `mail.drafts.reject(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/drafts/{id}/reject` → `Mail.MailDraft`
+
+Reject a draft.
+
+A person turns down a draft waiting for approval with a `note` for the author: `status: rejected`, nothing is sent, a `draft.decided` webhook goes out. Not for agents or API keys. Needs `mail.draft.approve` on the mailbox.
+
+- Params: `Mail.DraftRejectParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED`, `MCP_NOT_PERMITTED`, `PRINCIPAL_NOT_PERMITTED`, `MAIL_DRAFT_SELF_APPROVAL` | `PAK_NOT_PERMITTED` (an API key) or `MCP_NOT_PERMITTED` (an MCP grant): deciding drafts needs a person's session. `PRINCIPAL_NOT_PERMITTED`: an OAuth client acting for a person. `MAIL_DRAFT_SELF_APPROVAL`: you wrote it, or an agent wrote it for you. Or the policy does not allow `mail.draft.approve` (and, to approve, `mail.send`) on the mailbox. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_NOT_PENDING`, `MAIL_DRAFT_VERSION_CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_NOT_PENDING` (`details.status`), `MAIL_DRAFT_VERSION_CONFLICT`, or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.reject("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { note: "Do not promise a refund date." });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-drafts-id-reject)
+
+### `mail.drafts.requestApproval(id, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/drafts/{id}/submit` → `Mail.MailDraft`
+
+Submit a draft for approval.
+
+Moves a `draft` to `pending_approval`: it shows in the approval queue and a `draft.pending_approval` webhook goes out so a reviewer can be told. Submitting a draft already waiting changes nothing. Needs `mail.draft.create` on the mailbox.
+
+- Params: `Mail.DraftRequestApprovalParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_REPLY_NO_RECIPIENT`, `RECIPIENT_LIMIT` | `VALIDATION_ERROR`: no body, or a new email without `subject`. `MAIL_REPLY_NO_RECIPIENT`, `RECIPIENT_LIMIT`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_VERSION_CONFLICT`, `MAIL_DRAFT_NOT_EDITABLE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_VERSION_CONFLICT`, `MAIL_DRAFT_NOT_EDITABLE`, or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.requestApproval("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { version: 1 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-drafts-id-submit)
+
+### `mail.drafts.retrieve(id, options?)`
+
+`GET /v1/workspaces/{workspace_id}/drafts/{id}` → `Mail.MailDraft`
+
+Retrieve a draft.
+
+One draft with its content, author, status and review. Needs `mail.read` on the mailbox.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-drafts-id)
+
+### `mail.drafts.send(id, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/drafts/{id}/send` → `Mail.MailDraft`
+
+Send your own draft.
+
+The author (a person, or an API key) sends their own draft without a reviewer, when the mailbox allows it: with `reply_approval: agents` (the default) people and API keys may, agents never; with `everyone` nobody, and the draft needs another person's approval. Needs `mail.send` on the mailbox.
+
+- Params: `Mail.DraftSendParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | `VALIDATION_ERROR` (a malformed field; with `submit: true` also no body, or a new email without `subject`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PRINCIPAL_NOT_PERMITTED`, `MAIL_DRAFT_NOT_AUTHOR` | `PRINCIPAL_NOT_PERMITTED`: an agent cannot send. `MAIL_DRAFT_NOT_AUTHOR`: someone else wrote it; approve it instead. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_NOT_PENDING`, `MAIL_DRAFT_NOT_EDITABLE`, `MAIL_DRAFT_VERSION_CONFLICT`, `MAIL_DOMAIN_CANNOT_SEND`, `APPROVAL_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_NOT_PENDING` / `MAIL_DRAFT_NOT_EDITABLE`: the draft is not in a state that can be sent (`details.status`). `MAIL_DRAFT_VERSION_CONFLICT`: it changed since you read it (`details.version`). `MAIL_DOMAIN_CANNOT_SEND`: the mailbox's domain only receives. `APPROVAL_REQUIRED`: the mailbox sends only approved drafts. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified` | `from_domain_not_verified`: the mailbox's domain is not verified for sending yet. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (`RATE_LIMITED`) or the monthly email allowance (`USAGE_LIMIT_REACHED`). Nothing is sent and the draft stays waiting for approval. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.send("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { version: 1 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-drafts-id-send)
+
+### `mail.drafts.update(id, params, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/drafts/{id}` → `Mail.MailDraft`
+
+Edit a draft.
+
+Changes a `draft` or `pending_approval` draft; pass the `version` you read. A submitted draft edited by its author goes back to `draft` (submit it again); edited by anyone else it stays waiting for approval. `attachments` replaces the stored files. Needs `mail.draft.create` on the mailbox.
+
+- Params: `Mail.DraftUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | `VALIDATION_ERROR` (a malformed field; with `submit: true` also no body, or a new email without `subject`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_DRAFT_NOT_FOUND` | `MAIL_DRAFT_NOT_FOUND` / not found: no such draft in this workspace (a discarded draft is gone). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_VERSION_CONFLICT`, `MAIL_DRAFT_NOT_EDITABLE`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_VERSION_CONFLICT`: it changed since you read it (`details.version`). `MAIL_DRAFT_NOT_EDITABLE`: it was sent, rejected or discarded (`details.status`). Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.drafts.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { version: 1 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-drafts-id)
+
 ## emails
 
 ### `mail.emails.batch(params, options?)`
@@ -1433,7 +1640,7 @@ Each row is a `POST /emails` body plus an optional `idempotency_key`, processed 
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `INVALID_FROM_ADDRESS` | For any row: `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace (`reason: not_registered` or `not_verified`); refused before anything is recorded or queued. Or `domain_not_verified_by_provider`: the from-domain's DNS records have been broken for over 72 h, so the email provider no longer sends for it. Or `INVALID_FROM_ADDRESS`. The whole batch is refused; no row is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | The workspace send limits never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED` (or `USAGE_LIMIT_REACHED` once the monthly email allowance is used up), and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.emails.batch({
@@ -1576,7 +1783,7 @@ Send your own `html` and/or `text`, or a saved `template`, to up to 50 recipient
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `INVALID_FROM_ADDRESS`, `TEMPLATE_RENDER_FAILED`, `TEMPLATE_DATA_INVALID`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace (`reason: not_registered` or `not_verified`); refused before anything is recorded or queued. Or `domain_not_verified_by_provider`: the from-domain's DNS records have been broken for over 72 h, so the email provider no longer sends for it. Or `INVALID_FROM_ADDRESS`. Or `TEMPLATE_RENDER_FAILED` / `TEMPLATE_DATA_INVALID` for a template send. Or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`); nothing is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (by plan, see `GET /limits`; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (by plan, see `GET /limits`; each recipient counts): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Or `USAGE_LIMIT_REACHED`: the workspace used its plan's monthly email allowance (`details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }`; `Retry-After` is the seconds until it resets). Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.emails.send({
@@ -1640,6 +1847,266 @@ const text = await response.text();
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-emails-id-attachments-position)
 
+## forwardDestinations
+
+### `mail.forwardDestinations.create(params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/forward-destinations` → `Mail.ForwardDestination`
+
+Add a forward destination.
+
+A workspace member's verified email, and any `@simulator.amazonses.com` address, is confirmed at once. Any other address gets an email from ProductCraft with a confirmation link (valid 7 days) and an "I didn't ask for this" link; it stays `pending` until confirmed, and a route cannot forward to it until then. At most 20 confirmation emails per workspace per day.
+
+- Params: `Mail.ForwardDestinationCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Not an email address. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_FORWARD_DESTINATION_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_FORWARD_DESTINATION_EXISTS`: the address is already a destination (`details.id`). Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 confirmation emails today (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The confirmation email could not be queued (`SERVICE_UNAVAILABLE`); retry, or use resend. |
+
+```ts
+const forwardDestination = await mail.forwardDestinations.create({ address: "ops@example.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-forward-destinations)
+
+### `mail.forwardDestinations.delete(id, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/forward-destinations/{id}` → `void`
+
+Delete a forward destination.
+
+Refused while a route still forwards to it.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a uuid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_FORWARD_DESTINATION_NOT_FOUND` | No such destination (`MAIL_FORWARD_DESTINATION_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_FORWARD_DESTINATION_IN_USE` | `MAIL_FORWARD_DESTINATION_IN_USE`: a route forwards to it (`details.route_ids`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await mail.forwardDestinations.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-forward-destinations-id)
+
+### `mail.forwardDestinations.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/forward-destinations` → `PagePromise<Mail.ForwardDestination>`
+
+List forward destinations.
+
+Newest first, cursor-paged, with their confirmation status.
+
+- Params: `Mail.ForwardDestinationListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `limit` or `cursor`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const forwardDestination of mail.forwardDestinations.list()) {
+  console.log(forwardDestination);
+}
+const page = await mail.forwardDestinations.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-forward-destinations)
+
+### `mail.forwardDestinations.resend(id, options?)`
+
+`POST /v1/workspaces/{workspace_id}/forward-destinations/{id}/resend` → `Mail.ForwardDestination`
+
+Resend the confirmation email.
+
+A new link (the old one stops working), valid 7 days. Once a minute at most.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a uuid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_FORWARD_DESTINATION_NOT_FOUND` | No such destination (`MAIL_FORWARD_DESTINATION_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_FORWARD_DESTINATION_CONFIRMED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_FORWARD_DESTINATION_CONFIRMED`: already confirmed. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Sent less than a minute ago, or 20 confirmation emails today (`RATE_LIMITED`). Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | The email could not be queued (`SERVICE_UNAVAILABLE`). |
+
+```ts
+const forwardDestination = await mail.forwardDestinations.resend("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-forward-destinations-id-resend)
+
+## inboundRoutes
+
+### `mail.inboundRoutes.create(params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/inbound-routes` → `Mail.InboundRoute`
+
+Create an inbound route.
+
+A route on one address of a receive domain (`local_part`), or the domain catch-all (`local_part: "*"`, every address without a route or mailbox). Precedence: the address route, then the address's mailbox or alias (stored as before), then the catch-all. Rules run in order; the first that matches runs (`stop: false` goes on to the next match). Forwards are re-sent from the route address with Reply-To set to the sender, never with the sender's From (that would fail DMARC), to confirmed destinations only, at most 60 per hour and 500 per day per route. Forward and webhook actions skip spam unless the rule says `spam: any`.
+
+- Params: `Mail.InboundRouteCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ROUTE_STORE_MAILBOX_REQUIRED`, `MAIL_ROUTE_LOOP` | Validation failure: a malformed body, more than 20 rules or 5 actions per rule or 10 destinations per forward, `drop` with another action, a field that does not belong to the action type (`VALIDATION_ERROR`); `MAIL_ROUTE_STORE_MAILBOX_REQUIRED` (no `store_mailbox_id` and the address has no mailbox of its own); or `MAIL_ROUTE_LOOP` (a forward would come back to this route through the workspace's own routes, `details.path`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | The domain, `store_mailbox_id` or a webhook `endpoint_id` is not in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_ROUTE_EXISTS`, `MAIL_DOMAIN_CANNOT_RECEIVE`, `MAIL_DOMAIN_CANNOT_SEND`, `MAIL_FORWARD_DESTINATION_UNCONFIRMED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_ROUTE_EXISTS` (the address or catch-all already has a route), `MAIL_DOMAIN_CANNOT_RECEIVE` (the domain does not receive mail), `MAIL_DOMAIN_CANNOT_SEND` (a forward needs a domain that also sends: forwards go out from the route address), `MAIL_FORWARD_DESTINATION_UNCONFIRMED` (`details.destination_ids`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inboundRoute = await mail.inboundRoutes.create({
+  domain_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b",
+  local_part: "support",
+  rules: [{ actions: [{ type: "forward" }] }],
+});
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-inbound-routes)
+
+### `mail.inboundRoutes.delete(id, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/inbound-routes/{id}` → `void`
+
+Delete an inbound route.
+
+Mail to the address goes back to its mailbox or alias, else to the catch-all, else it is refused. Routing outcomes already recorded on received email are kept.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a uuid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_ROUTE_NOT_FOUND` | No such route (`MAIL_ROUTE_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await mail.inboundRoutes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-inbound-routes-id)
+
+### `mail.inboundRoutes.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/inbound-routes` → `PagePromise<Mail.InboundRoute>`
+
+List inbound routes.
+
+Newest first, cursor-paged, each with its rules in order. Filter by `domain_id`.
+
+- Params: `Mail.InboundRouteListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `domain_id`, `limit` or `cursor`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const inboundRoute of mail.inboundRoutes.list()) {
+  console.log(inboundRoute);
+}
+const page = await mail.inboundRoutes.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-inbound-routes)
+
+### `mail.inboundRoutes.retrieve(id, options?)`
+
+`GET /v1/workspaces/{workspace_id}/inbound-routes/{id}` → `Mail.InboundRoute`
+
+Get an inbound route.
+
+The route with its rules in order.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a uuid. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_ROUTE_NOT_FOUND` | No such route in this workspace (`MAIL_ROUTE_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inboundRoute = await mail.inboundRoutes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-inbound-routes-id)
+
+### `mail.inboundRoutes.test(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/inbound-routes/{id}/test` → `Mail.TestInboundRouteResult`
+
+Test an inbound route.
+
+A dry run: which rules would match a message with this sender, subject and spam flag, and what they would do (forward destinations with whether each is confirmed). Sends and stores nothing.
+
+- Params: `Mail.InboundRouteTestParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed body. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_ROUTE_NOT_FOUND` | No such route (`MAIL_ROUTE_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const testInboundRouteResult = await mail.inboundRoutes.test("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { from: "alice@example.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-inbound-routes-id-test)
+
+### `mail.inboundRoutes.update(id, params?, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/inbound-routes/{id}` → `Mail.InboundRoute`
+
+Update an inbound route.
+
+Switch it on or off, change its store mailbox, or replace its rules: `rules` is the whole new list (rule ids change). The address and domain cannot change; delete and create instead.
+
+- Params: `Mail.InboundRouteUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ROUTE_STORE_MAILBOX_REQUIRED`, `MAIL_ROUTE_LOOP` | Validation failure: a malformed body, more than 20 rules or 5 actions per rule or 10 destinations per forward, `drop` with another action, a field that does not belong to the action type (`VALIDATION_ERROR`); `MAIL_ROUTE_STORE_MAILBOX_REQUIRED` (no `store_mailbox_id` and the address has no mailbox of its own); or `MAIL_ROUTE_LOOP` (a forward would come back to this route through the workspace's own routes, `details.path`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_ROUTE_NOT_FOUND` | No such route (`MAIL_ROUTE_NOT_FOUND`), or the `store_mailbox_id` or a webhook `endpoint_id` is not in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_ROUTE_EXISTS`, `MAIL_DOMAIN_CANNOT_RECEIVE`, `MAIL_DOMAIN_CANNOT_SEND`, `MAIL_FORWARD_DESTINATION_UNCONFIRMED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_ROUTE_EXISTS` (the address or catch-all already has a route), `MAIL_DOMAIN_CANNOT_RECEIVE` (the domain does not receive mail), `MAIL_DOMAIN_CANNOT_SEND` (a forward needs a domain that also sends: forwards go out from the route address), `MAIL_FORWARD_DESTINATION_UNCONFIRMED` (`details.destination_ids`), or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const inboundRoute = await mail.inboundRoutes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { enabled: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-inbound-routes-id)
+
 ## integrations
 
 ### `mail.integrations.delete(provider, options?)`
@@ -1648,7 +2115,7 @@ const text = await response.text();
 
 Disconnect an integration. Deletes the credential row.
 
-Hard delete — the encrypted blob is removed. The customer must reconnect via the provider-specific OAuth flow to restore access.
+Hard delete: the encrypted blob is removed. For a GitHub OAuth connection Mail also deletes the repo webhook it made and revokes the token; a GitHub App installation stays on the GitHub account (uninstall it there). Written to the workspace audit log as `mail.integration.disconnected`.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
@@ -1713,15 +2180,15 @@ const integrationDetail = await mail.integrations.retrieve("github");
 
 ## integrations.github
 
-### `mail.integrations.github.connect(params, options?)`
+### `mail.integrations.github.installGitHubApp(params, options?)`
 
-`POST /v1/workspaces/{workspace_id}/integrations/github/connect` → `Mail.ConnectGitHub`
+`POST /v1/workspaces/{workspace_id}/integrations/github/app/install` → `Mail.GitHubAppInstall`
 
-Mint a GitHub OAuth state token and return the authorize URL.
+Start installing the ProductCraft Mail GitHub App for this workspace.
 
-The frontend redirects the user to `authorize_url`; GitHub bounces back to the `/callback` endpoint with a `code` + `state` pair. state is single-use, 5-minute TTL.
+Returns a URL for the browser. The customer installs the App on the repositories they choose (Contents read, Metadata read, Pull requests read, Checks write; nothing else), confirms on GitHub that it is them, and lands back on `return_to` with `integration=github&status=connected` (or `migrated` when the workspace was connected through the older OAuth App: Mail then keeps the repo settings, deletes the old repo webhook and revokes the OAuth token). The state is single-use and expires in 15 minutes. Written to the audit log as `mail.integration.connected`.
 
-- Params: `Mail.IntegrationGithubConnectParams`
+- Params: `Mail.IntegrationGithubInstallGitHubAppParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
 | Status | Error class | Codes | When |
@@ -1732,12 +2199,33 @@ The frontend redirects the user to `authorize_url`; GitHub bounces back to the `
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `GITHUB_APP_NOT_CONFIGURED` | `GITHUB_APP_NOT_CONFIGURED`: the App is not set up yet. |
 
 ```ts
-const connectGitHub = await mail.integrations.github.connect({ return_to: "https://console.productcraft.co/mail/workspaces/acme/integrations" });
+const gitHubAppInstall = await mail.integrations.github.installGitHubApp({ return_to: "https://console.productcraft.co/mail/integrations?workspace=acme" });
 ```
 
-[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-connect)
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-app-install)
+
+### `mail.integrations.github.retrieveGitHubApp(options?)`
+
+`GET /v1/workspaces/{workspace_id}/integrations/github/app` → `Mail.GitHubAppStatus`
+
+Whether the ProductCraft Mail GitHub App is available, and what it asks for.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const gitHubAppStatus = await mail.integrations.github.retrieveGitHubApp();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-app)
 
 ## integrations.github.repos
 
@@ -1745,7 +2233,7 @@ const connectGitHub = await mail.integrations.github.connect({ return_to: "https
 
 `GET /v1/workspaces/{workspace_id}/integrations/github/repos` → `Mail.IntegrationGithubRepoListResponse`
 
-List repos visible to the connected GitHub account.
+List the repositories Mail can sync from: for a GitHub App connection, the repositories the App is installed on; for an older OAuth connection, the repositories the connected account can see.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1787,9 +2275,9 @@ const result = await mail.integrations.github.repos.branches.list("acme", "email
 
 ### `mail.integrations.github.settings.update(params, options?)`
 
-`PUT /v1/workspaces/{workspace_id}/integrations/github/settings` → `void`
+`PUT /v1/workspaces/{workspace_id}/integrations/github/settings` → `Mail.GitHubSettingsSaved`
 
-Set the repo + branch + templates path to sync from.
+Set the repo + branch + templates path to sync from, then start a sync. GitHub App connection: push sync is on through the App (the repo must be one the App is installed on). Older OAuth connection: Mail adds a push webhook to the repo when the connected account is an admin of it. Written to the audit log as `mail.integration.settings_updated`.
 
 - Params: `Mail.IntegrationGithubSettingsUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -1804,7 +2292,7 @@ Set the repo + branch + templates path to sync from.
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
+const gitHubSettingsSaved = await mail.integrations.github.settings.update({ branch: "main", repo_full_name: "octocat/templates", templates_path: "/" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#put-v1-workspaces-workspace-id-integrations-github-settings)
@@ -1815,7 +2303,7 @@ await mail.integrations.github.settings.update({ branch: "main", repo_full_name:
 
 `POST /v1/workspaces/{workspace_id}/integrations/github/sync` → `Mail.StartSync`
 
-Trigger an immediate sync from GitHub. Returns a sync id to poll.
+Trigger an immediate sync from GitHub. Returns a sync id to poll. The request and the result are written to the workspace audit log.
 
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
@@ -1833,6 +2321,26 @@ const startSync = await mail.integrations.github.sync.create();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-integrations-github-sync)
+
+### `mail.integrations.github.sync.latest(options?)`
+
+`GET /v1/workspaces/{workspace_id}/integrations/github/sync/latest` → `Mail.SyncStatus`
+
+The most recent sync that changed or rejected something (kept 30 days), with the per-file errors and skips. 404 when there is none.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | No sync recorded in the last 30 days. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const syncStatus = await mail.integrations.github.sync.latest();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-sync-latest)
 
 ### `mail.integrations.github.sync.retrieve(syncId, options?)`
 
@@ -1853,6 +2361,111 @@ const syncStatus = await mail.integrations.github.sync.retrieve("3f0c1a2b-4c5d-4
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-integrations-github-sync-sync-id)
+
+## labels
+
+### `mail.labels.create(params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/labels` → `Mail.MailLabel`
+
+Create a label.
+
+Needs `mail.label.manage`. Written to the workspace audit log (`mail.label.created`).
+
+- Params: `Mail.LabelCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `name` empty or over 64 characters, or `color` not `#rrggbb`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_LABEL_EXISTS`, `MAIL_LABEL_LIMIT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_LABEL_EXISTS`: the name is taken (case-insensitive). `MAIL_LABEL_LIMIT`: the workspace has 200 labels. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailLabel = await mail.labels.create({ name: "Needs reply" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-labels)
+
+### `mail.labels.delete(id, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/labels/{id}` → `void`
+
+Delete a label.
+
+Removes it from every thread. Needs `mail.label.manage`. Written to the workspace audit log (`mail.label.deleted`).
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_LABEL_NOT_FOUND` | `MAIL_LABEL_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await mail.labels.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-labels-id)
+
+### `mail.labels.list(options?)`
+
+`GET /v1/workspaces/{workspace_id}/labels` → `PagePromise<Mail.MailLabelWithCount>`
+
+List labels.
+
+Every label of the workspace, by name, with how many threads carry each.
+
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const label of mail.labels.list()) {
+  console.log(label);
+}
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-labels)
+
+### `mail.labels.update(id, params?, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/labels/{id}` → `Mail.MailLabel`
+
+Rename or recolour a label.
+
+Needs `mail.label.manage`.
+
+- Params: `Mail.LabelUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: nothing to change, or a malformed field. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAIL_LABEL_NOT_FOUND` | `MAIL_LABEL_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_LABEL_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_LABEL_EXISTS`: another label has that name. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailLabel = await mail.labels.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { color: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-labels-id)
 
 ## limits
 
@@ -1975,7 +2588,7 @@ const mailbox = await mail.mailboxes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4
 
 `PATCH /v1/workspaces/{workspace_id}/mailboxes/{id}` → `Mail.Mailbox`
 
-Update mailbox display name, retention, or status. Status transitions are restricted (active ↔ suspended; archived is terminal).
+Update mailbox display name, retention, reply approval (`reply_approval`), or status. Status transitions are restricted (active ↔ suspended; archived is terminal).
 
 - Params: `Mail.MailboxUpdateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
@@ -1995,6 +2608,44 @@ const mailbox = await mail.mailboxes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-mailboxes-id)
+
+## mailboxes.drafts
+
+### `mail.mailboxes.drafts.create(id, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/mailboxes/{id}/drafts` → `Mail.MailDraft`
+
+Draft an email from a mailbox.
+
+Writes an email from the mailbox without sending it: `kind: new` (default) starts a conversation when sent; `reply`, `reply_all` or `forward` with `thread_id` and `message_id` answer a conversation of this mailbox, the same as `POST /threads/{thread_id}/drafts`. `submit: true` puts it in the approval queue. Needs `mail.draft.create` on the mailbox.
+
+- Params: `Mail.MailboxDraftCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | `VALIDATION_ERROR` (a malformed field; with `submit: true` also no body, or a new email without `subject`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND`, `THREAD_MESSAGE_NOT_FOUND` | Mailbox not found in this workspace; `THREAD_NOT_FOUND`: `thread_id` is not a conversation of this mailbox; `THREAD_MESSAGE_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_EXISTS`: you already have an open draft answering this message (`details.draft_id`): edit or discard it. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.mailboxes.drafts.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
+  attachments: [
+    {
+      content: "JVBERi0xLjcKJcfsj6IKMSAwIG9iago8PC9UeXBlL0NhdGFsb2c+PgplbmRvYmoK",
+      content_id: "logo",
+      content_type: "application/pdf",
+      filename: "invoice-1234.pdf",
+      path: "https://files.acme.com/invoices/1234.pdf",
+    },
+  ],
+});
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-mailboxes-id-drafts)
 
 ## mailboxes.messages
 
@@ -2127,6 +2778,35 @@ const text = await response.text();
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-mailboxes-id-messages-mid-attachments-position)
+
+## mailboxes.threads
+
+### `mail.mailboxes.threads.create(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/mailboxes/{id}/threads` → `Mail.ThreadSendResult`
+
+Start a conversation from a mailbox.
+
+Sends a new email from the mailbox (`From: <display name> <mailbox address>`) and opens a thread for it: answers to it join that thread. Same send rules as `POST /emails`. Needs `mail.send` on the mailbox.
+
+- Params: `Mail.MailboxThreadCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | Validation failure; `VALIDATION_ERROR` (neither `html` nor `text`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. Nothing is sent. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Mailbox not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DOMAIN_CANNOT_SEND`, `APPROVAL_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DOMAIN_CANNOT_SEND`: the mailbox's domain only receives (`intent: receive`); set it up for sending too. `APPROVAL_REQUIRED`: the caller is an agent (an MCP grant, or an OAuth client acting for a user), or the mailbox has `reply_approval: everyone`; draft it (`POST /threads/{id}/drafts`) and a person approves it. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified`: the mailbox's domain is not verified for sending yet. `MAIL_ATTACHMENT_FETCH_FAILED` for an attachment `path`. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (`RATE_LIMITED`, every recipient counts) or the monthly email allowance (`USAGE_LIMIT_REACHED`). Nothing is sent. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSendResult = await mail.mailboxes.threads.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { subject: "Your order 42", to: ["success@simulator.amazonses.com"] });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-mailboxes-id-threads)
 
 ## messages
 
@@ -2527,6 +3207,7 @@ Contacts are not touched; a static segment's member list goes with it.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SEGMENT_NOT_FOUND` | No such segment (`SEGMENT_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `SEGMENT_IN_USE` | A broadcast that has not been sent yet targets this segment (`SEGMENT_IN_USE`; `details.broadcasts[].id\|name\|status`). Change the broadcast's audience or delete it first. Sent and canceled broadcasts do not block. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -2977,18 +3658,43 @@ const page = await mail.suppression.list({}, { timeout: 5_000 });
 
 ## templates
 
+### `mail.templates.attach(name, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/attach` → `Mail.Template`
+
+Hand a detached template back to the GitHub sync. The next sync replaces it with the repository version; edits made in Mail since the detach are lost.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.attach("welcome");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-attach)
+
 ### `mail.templates.create(params, options?)`
 
 `POST /v1/workspaces/{workspace_id}/templates` → `Mail.Template`
 
-Create or update a template, layout, or partial. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.
+Create or update a template, layout, or partial, and publish it. Idempotent on (workspace_id, name); `kind` cannot change after the first upsert.
+
+A write that changes the subject, a body or the variables schema publishes the next version at once (sends use it from now on) and records it in the version history with `version_note`; a write that changes only tags publishes nothing. An unpublished draft is left as it is. To edit without publishing, save a draft (`PUT /templates/{name}/draft`) and publish it (`POST /templates/{name}/publish`).
 
 - Params: `Mail.TemplateCreateParams`
 - Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (bad name / payload). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `TEMPLATE_SYNTAX_ERROR` | Validation failure (bad name / payload), or `TEMPLATE_SYNTAX_ERROR` when the subject or a body does not compile (the message quotes Handlebars). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
@@ -3013,6 +3719,7 @@ Delete a template, layout, or partial by name.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_MANAGED_IN_GITHUB` | `TEMPLATE_MANAGED_IN_GITHUB`: delete the file in the repository instead (or detach the template first). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3020,6 +3727,29 @@ await mail.templates.delete("welcome");
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-templates-name)
+
+### `mail.templates.detach(name, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/detach` → `Mail.Template`
+
+Take a GitHub-synced template over in Mail: it becomes editable here and the GitHub sync stops changing it (each sync reports it as `edited_in_console`) until it is reattached.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.detach("welcome");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-detach)
 
 ### `mail.templates.lint(params, options?)`
 
@@ -3093,11 +3823,35 @@ const renderedMessage = await mail.templates.preview({ body_html: "string" });
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-preview)
 
+### `mail.templates.publish(name, params?, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/publish` → `Mail.Template`
+
+Publish the draft as the next version. Every send uses it from now on; the version history keeps the previous ones, and the draft is cleared.
+
+- Params: `Mail.TemplatePublishParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_NO_DRAFT`, `TEMPLATE_MANAGED_IN_GITHUB`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `TEMPLATE_NO_DRAFT`: there is no draft to publish; `TEMPLATE_MANAGED_IN_GITHUB`: a synced template publishes from its repository; or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.publish("welcome", { note: "Shorter subject line" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-publish)
+
 ### `mail.templates.render(name, params, options?)`
 
 `POST /v1/workspaces/{workspace_id}/templates/{name}/render` → `Mail.RenderedMessage`
 
-Render a saved template against a data payload. Returns subject + html + text without sending.
+Render a saved template against a data payload. Returns subject + html + text without sending. Renders the published version unless `template_version` names another one or `"draft"`.
 
 - Params: `Mail.TemplateRenderParams`
 
@@ -3107,7 +3861,7 @@ Render a saved template against a data payload. Returns subject + html + text wi
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
-| 409 | `ConflictError` | `CONFLICT` | Cannot render a layout/partial — only sendable templates. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_NO_DRAFT` | Cannot render a layout/partial — only sendable templates; or `TEMPLATE_NO_DRAFT` for `template_version: "draft"` without a draft. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | Render or schema validation failed. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -3121,7 +3875,7 @@ const renderedMessage = await mail.templates.render("welcome", { data: { name: "
 
 `GET /v1/workspaces/{workspace_id}/templates/{name}` → `Mail.Template`
 
-Get a template, layout, or partial by name.
+Get a template, layout, or partial by name: its published content (what sends use), `version`, and the unpublished `draft`, if any.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -3151,11 +3905,11 @@ Send a template-rendered message. Pass an `Idempotency-Key` header (1..256 chars
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure (malformed body or recipient), or an attachment refused: `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
-| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_VERSION_NOT_FOUND` | Template not found in this workspace, or `TEMPLATE_VERSION_NOT_FOUND`: the pinned `template_version` does not exist. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | IDEMPOTENCY_KEY_REUSE — same key, different body. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB (attachments are limited to 10 MB after decoding). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `RECIPIENT_SUPPRESSED`, `TOPIC_NOT_FOUND`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `no_default_sender`, `MAIL_ATTACHMENT_FETCH_FAILED` | Recipient suppressed (`RECIPIENT_SUPPRESSED`; with a `topic_id`, or a template rendering `{{{unsubscribe_url}}}`, also when the recipient unsubscribed or never opted in: `details.reason` is `unsubscribe` or `no_consent`), `TOPIC_NOT_FOUND`, render failure, or invalid from address; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it; or `no_default_sender` (body `code`): the body has no `from` and the workspace has no default sender set (nothing is queued; an `email.skipped` webhook event is logged); or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched (`details.reason`), nothing is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Over a workspace send limit (by plan, see `GET /limits`): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (by plan, see `GET /limits`): `RATE_LIMITED` with `details: { window, limit, retry_after }`. Or `USAGE_LIMIT_REACHED`: the workspace used its plan's monthly email allowance (`details: { meter, used, included, resets_at, retry_after_seconds, upgrade_url }`; `Retry-After` is the seconds until it resets). Nothing is recorded or queued. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.templates.send("welcome", { data: { name: "Alice", order_id: "ord_123" }, to: "user@example.com" });
@@ -3182,7 +3936,7 @@ Two ways to make retries safe. An `Idempotency-Key` header covers the whole requ
 | 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider` | For any row: `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued (the whole batch is refused); or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it. The whole batch is refused; no row is sent. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | The workspace send limits (by plan, see `GET /limits`) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED`, and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | The workspace send limits (by plan, see `GET /limits`) never 429 a batch: a row over one is rejected in the 200 body with `RATE_LIMITED` (or `USAGE_LIMIT_REACHED` once the monthly email allowance is used up), and the other rows are unaffected. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await mail.templates.sendBatch("welcome", {
@@ -3212,8 +3966,8 @@ Send a test rendering of the template to an arbitrary recipient. Bypasses the su
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` | Validation failure, or an attachment refused: `MAIL_ATTACHMENT_INVALID`, `MAIL_ATTACHMENT_TOO_LARGE`, `MAIL_ATTACHMENT_TYPE_BLOCKED`, `MAIL_ATTACHMENT_CID_UNREFERENCED` (`details.index`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | From-address domain is not registered to this workspace. |
-| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
-| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Cannot test-send a layout/partial, or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_VERSION_NOT_FOUND` | Template not found in this workspace, or `TEMPLATE_VERSION_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_NO_DRAFT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Cannot test-send a layout/partial, `TEMPLATE_NO_DRAFT` (`template_version: "draft"` without a draft), or `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different body or route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | `PAYLOAD_TOO_LARGE`: the request body is over 15 MB. |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `domain_not_verified_by_provider`, `MAIL_ATTACHMENT_FETCH_FAILED` | Invalid from address or render failure; or `from_domain_not_verified` (body `code`, `details: { fqdn, reason }`): the domain of the From address is not itself an active sending domain of this workspace — `reason: not_registered` (unknown, registered to another workspace, or only a subdomain such as `mail.example.com` is verified; a verified subdomain does not cover its parent) or `reason: not_verified` (registered, DNS not verified yet). Refused before anything is recorded or queued; or `domain_not_verified_by_provider` (body `code`): the from-domain's DNS records have been broken for over 72 h (`health: failing`), so the email provider no longer sends for it. Or `MAIL_ATTACHMENT_FETCH_FAILED`: an attachment `path` could not be fetched. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 30 test sends this hour in this workspace: `RATE_LIMITED` with `details: { window, limit, retry_after }`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
@@ -3223,6 +3977,55 @@ const result = await mail.templates.testSend("welcome", { from: "Acme <hello@acm
 ```
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-test-send)
+
+## templates.draft
+
+### `mail.templates.draft.delete(name, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/templates/{name}/draft` → `void`
+
+Discard the unpublished draft. The published version is not changed.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_NO_DRAFT` | Template not found, or `TEMPLATE_NO_DRAFT`: it has no draft. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await mail.templates.draft.delete("welcome");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-templates-name-draft)
+
+### `mail.templates.draft.update(name, params, options?)`
+
+`PUT /v1/workspaces/{workspace_id}/templates/{name}/draft` → `Mail.Template`
+
+Save the unpublished draft of a template (creates or replaces it). Sends keep using the published version until the draft is published.
+
+- Params: `Mail.TemplateDraftUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `TEMPLATE_SYNTAX_ERROR` | Validation failure, or `TEMPLATE_SYNTAX_ERROR` when the subject or a body does not compile. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_MANAGED_IN_GITHUB`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `TEMPLATE_MANAGED_IN_GITHUB`: a synced template has no drafts here (its repository is the draft); or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.draft.update("welcome", { body_html: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#put-v1-workspaces-workspace-id-templates-name-draft)
 
 ## templates.tags
 
@@ -3268,6 +4071,372 @@ const templateVariables = await mail.templates.variables.list("welcome");
 
 [HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-name-variables)
 
+## templates.versions
+
+### `mail.templates.versions.list(name, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/templates/{name}/versions` → `PagePromise<Mail.TemplateVersion>`
+
+List the published versions of a template, newest first and cursor-paginated: content, note, author and, for a GitHub-synced version, the commit SHA.
+
+- Params: `Mail.TemplateVersionListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid cursor. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Template not found in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const version of mail.templates.versions.list("welcome")) {
+  console.log(version);
+}
+const page = await mail.templates.versions.list("welcome", {}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-name-versions)
+
+### `mail.templates.versions.restore(name, version, options?)`
+
+`POST /v1/workspaces/{workspace_id}/templates/{name}/versions/{version}/restore` → `Mail.Template`
+
+Restore a published version as the draft (replacing any draft). Nothing is published until the draft is published.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The version is not a number. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_VERSION_NOT_FOUND` | Template not found, or `TEMPLATE_VERSION_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `TEMPLATE_MANAGED_IN_GITHUB`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `TEMPLATE_MANAGED_IN_GITHUB`: revert the commit in the repository instead; or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const template = await mail.templates.versions.restore("welcome", "1");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-templates-name-versions-version-restore)
+
+### `mail.templates.versions.retrieve(name, version, options?)`
+
+`GET /v1/workspaces/{workspace_id}/templates/{name}/versions/{version}` → `Mail.TemplateVersion`
+
+Get one published version of a template.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The version is not a number. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `TEMPLATE_VERSION_NOT_FOUND` | Template not found, or `TEMPLATE_VERSION_NOT_FOUND`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const templateVersion = await mail.templates.versions.retrieve("welcome", "1");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-templates-name-versions-version)
+
+## testSender
+
+### `mail.testSender.retrieve(options?)`
+
+`GET /v1/workspaces/{workspace_id}/test-sender` → `Mail.TestSenderStatus`
+
+Get the test sender status.
+
+Whether this workspace's email goes out from the shared ProductCraft test sender (`test@sandbox.productcraft.co`): used while the workspace has no default sender on a verified domain. It delivers only to the verified addresses of the workspace's members, at most `daily_cap` emails a day, and switches itself off for the workspace after any bounce or spam complaint. Changes nothing.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const testSenderStatus = await mail.testSender.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-test-sender)
+
+### `mail.testSender.sendTest(options?)`
+
+`POST /v1/workspaces/{workspace_id}/test-sender/test` → `Mail.TestSenderTestAccepted`
+
+Send me a test from the test sender.
+
+Sends a short fixed email from the test sender to your own verified address, so you can see what your members will receive. Needs a signed-in member (an API key has no inbox: 422 `test_sender_recipient_not_allowed`). Counts against the daily cap and the ordinary send limits.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this `workspaceId`, or it is not a UUID (`NOT_FOUND`). A workspace the caller is not a member of answers 403. Routes that read a resource also answer 404 when the resource is missing. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | `test_sender_recipient_not_allowed`: the caller is not a member with a verified address. `test_sender_unavailable` (`details.reason`): the test sender is switched off for this workspace or everywhere. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | `test_sender_daily_cap` (`details: { scope, limit, retry_after }`), or the ordinary `RATE_LIMITED`. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE` | `SERVICE_UNAVAILABLE`: the workspace members could not be read; retry. |
+
+```ts
+const testSenderTestAccepted = await mail.testSender.sendTest();
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-test-sender-test)
+
+## threads
+
+### `mail.threads.bulkUpdate(params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/threads/bulk` → `Mail.BulkUpdateThreads`
+
+Change many conversations.
+
+Applies one change to up to 100 threads at once: `status`, `read`, `assignee_account_id`, `add_labels`, `remove_labels`. All or nothing: needs `mail.thread.triage` on every mailbox the threads are in.
+
+- Params: `Mail.ThreadBulkUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ASSIGNEE_NOT_MEMBER` | `VALIDATION_ERROR`: nothing to change, or a malformed field. `MAIL_ASSIGNEE_NOT_MEMBER`: `assignee_account_id` is not a member of this workspace, or the credential cannot read members to check (`workspace.member.read`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND`, `MAIL_LABEL_NOT_FOUND` | `THREAD_NOT_FOUND`: an id is not a thread of this workspace. `MAIL_LABEL_NOT_FOUND`: a label id is not a label of this workspace (`details.label_ids`). |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const bulkUpdateThreads = await mail.threads.bulkUpdate({ ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"] });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-threads-bulk)
+
+### `mail.threads.forward(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/threads/{id}/forward` → `Mail.ThreadSendResult`
+
+Forward a message of a conversation.
+
+Sends a message of the thread on to `to` (and `cc` / `bcc`) from the thread's mailbox, with `Fwd: ` before the subject, your optional note (`text` / `html`) above a `Forwarded message` block (sender, date, subject, recipients, original text) and the original's files attached (executables left out; over 20 files or 10 MB with yours, none, and the body says so). The forward appears in the thread. Needs `mail.send` on the mailbox.
+
+- Params: `Mail.ThreadForwardParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | Validation failure; `VALIDATION_ERROR` (neither `html` nor `text`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. Nothing is sent. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_MESSAGE_NOT_FOUND` | No such thread in this workspace, or `THREAD_MESSAGE_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DOMAIN_CANNOT_SEND`, `APPROVAL_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DOMAIN_CANNOT_SEND`: the mailbox's domain only receives (`intent: receive`); set it up for sending too. `APPROVAL_REQUIRED`: the caller is an agent (an MCP grant, or an OAuth client acting for a user), or the mailbox has `reply_approval: everyone`; draft it (`POST /threads/{id}/drafts`) and a person approves it. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified`: the mailbox's domain is not verified for sending yet. `MAIL_ATTACHMENT_FETCH_FAILED` for an attachment `path`. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (`RATE_LIMITED`, every recipient counts) or the monthly email allowance (`USAGE_LIMIT_REACHED`). Nothing is sent. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSendResult = await mail.threads.forward("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
+  message_id: "3f0a3c3e-6c1d-4b8e-9b7a-0d4b1c2e3f40",
+  to: ["success@simulator.amazonses.com"],
+});
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-threads-id-forward)
+
+### `mail.threads.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/threads` → `PagePromise<Mail.ThreadSummary>`
+
+List conversations.
+
+Conversations across every mailbox you may list (`mail.list` on `pcft:envoi:mailbox/<id>`), or the ones in `mailbox_id`; newest message first. Filter by `status` (default `open`, the inbox), `unread`, `assignee`, `label` and the search `q`. Words in `q` match message bodies only when you hold `mail.message.body.read`; otherwise only subjects and addresses, and `snippet` is null.
+
+- Params: `Mail.ThreadListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_SEARCH_INVALID` | `MAIL_SEARCH_INVALID`: a search operator with a bad value (`details.token`), a negated operator, more than 32 terms or a `q` over 256 characters. `VALIDATION_ERROR`: a malformed filter or cursor, or `assignee=me` with an API key. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MAILBOX_NOT_FOUND` | `MAILBOX_NOT_FOUND`: a `mailbox_id` is not a mailbox of this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+for await (const thread of mail.threads.list()) {
+  console.log(thread);
+}
+const page = await mail.threads.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-threads)
+
+### `mail.threads.reply(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/threads/{id}/reply` → `Mail.ThreadSendResult`
+
+Reply to a message in a conversation.
+
+Sends from the thread's mailbox (`From: <display name> <mailbox address>`) to the answered message's `Reply-To`, else its sender; `reply_all` adds its `To` and `Cc`, minus this workspace's mailbox addresses. Sets `In-Reply-To` and `References` so the reply lands in the recipient's conversation, prefixes the subject with `Re: `, and quotes the original text under yours (`quote: false` to leave it out). The reply appears in the thread. Goes through the send path like `POST /emails`: limits, suppression, test addresses, attachments and the message log (`source: inbox_reply`). Needs `mail.send` on the mailbox.
+
+- Params: `Mail.ThreadReplyParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | Validation failure; `VALIDATION_ERROR` (neither `html` nor `text`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. Nothing is sent. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_MESSAGE_NOT_FOUND` | No such thread in this workspace, or `THREAD_MESSAGE_NOT_FOUND`: `message_id` is not a message of this thread. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DOMAIN_CANNOT_SEND`, `APPROVAL_REQUIRED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DOMAIN_CANNOT_SEND`: the mailbox's domain only receives (`intent: receive`); set it up for sending too. `APPROVAL_REQUIRED`: the caller is an agent (an MCP grant, or an OAuth client acting for a user), or the mailbox has `reply_approval: everyone`; draft it (`POST /threads/{id}/drafts`) and a person approves it. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `from_domain_not_verified`, `MAIL_ATTACHMENT_FETCH_FAILED` | `from_domain_not_verified`: the mailbox's domain is not verified for sending yet. `MAIL_ATTACHMENT_FETCH_FAILED` for an attachment `path`. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `USAGE_LIMIT_REACHED` | Over a workspace send limit (`RATE_LIMITED`, every recipient counts) or the monthly email allowance (`USAGE_LIMIT_REACHED`). Nothing is sent. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSendResult = await mail.threads.reply("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { message_id: "3f0a3c3e-6c1d-4b8e-9b7a-0d4b1c2e3f40" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-threads-id-reply)
+
+### `mail.threads.retrieve(id, params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/threads/{id}` → `Mail.Thread`
+
+Retrieve a conversation.
+
+One conversation of a mailbox with every message in it, oldest first: received messages (`direction: inbound`, body at `GET /received/{id}/raw`) and mail sent from the mailbox (`direction: outbound`, `GET /emails/{id}`). `include=text` adds each message’s plain-text body (HTML converted server-side, at most 64 KB each), for readers that must never get raw HTML, such as agents. Messages join a thread by their `In-Reply-To` / `References` headers, else by subject and sender within 14 days. `snippet` needs `mail.message.body.read`.
+
+- Params: `Mail.ThreadRetrieveParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `include` is not `text`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND` | `THREAD_NOT_FOUND`: no such thread in this workspace. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const thread = await mail.threads.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#get-v1-workspaces-workspace-id-threads-id)
+
+### `mail.threads.update(id, params?, options?)`
+
+`PATCH /v1/workspaces/{workspace_id}/threads/{id}` → `Mail.ThreadSummary`
+
+Triage a conversation.
+
+Archive, move to spam or trash, restore (`status: open`), mark read or unread, assign or unassign. Trashed threads are erased 30 days after `trashed_at`. Needs `mail.thread.triage` on the thread's mailbox. Assignment changes are written to the workspace audit log (`mail.thread.assigned`); read toggles are not.
+
+- Params: `Mail.ThreadUpdateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MAIL_ASSIGNEE_NOT_MEMBER` | `VALIDATION_ERROR`: nothing to change, or a malformed field. `MAIL_ASSIGNEE_NOT_MEMBER`: `assignee_account_id` is not a member of this workspace, or the credential cannot read members to check (`workspace.member.read`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND` | `THREAD_NOT_FOUND`: no such thread in this workspace. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSummary = await mail.threads.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { assignee_account_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#patch-v1-workspaces-workspace-id-threads-id)
+
+## threads.drafts
+
+### `mail.threads.drafts.create(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/threads/{id}/drafts` → `Mail.MailDraft`
+
+Draft a reply or forward.
+
+Writes a reply, reply-all or forward of a message in this conversation without sending it. Recipients and subject are computed now, as `POST /threads/{id}/reply` would (pass `to` to replace them). `submit: true` puts it straight in the approval queue (`pending_approval`, `draft.pending_approval` webhook). This is how agents answer mail: an MCP grant or an OAuth client cannot send, a person approves (`POST /drafts/{id}/approve`). One open draft per message and author. Needs `mail.draft.create` on the mailbox.
+
+- Params: `Mail.ThreadDraftCreateParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `RECIPIENT_LIMIT`, `MAIL_REPLY_NO_RECIPIENT` | `VALIDATION_ERROR` (a malformed field; with `submit: true` also no body, or a new email without `subject`); `RECIPIENT_LIMIT` (more than 50 recipients); `MAIL_REPLY_NO_RECIPIENT` (the answered message came only from this workspace's own addresses); `MAIL_ATTACHMENT_*` for `attachments`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_MESSAGE_NOT_FOUND` | No such thread in this workspace, or `THREAD_MESSAGE_NOT_FOUND`: `message_id` is not a message of this thread. |
+| 409 | `ConflictError` | `CONFLICT`, `MAIL_DRAFT_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `MAIL_DRAFT_EXISTS`: you already have an open draft answering this message (`details.draft_id`): edit or discard it. Or `IDEMPOTENCY_KEY_REUSE`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mailDraft = await mail.threads.drafts.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { kind: "reply", message_id: "3f0a3c3e-6c1d-4b8e-9b7a-0d4b1c2e3f40" });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-threads-id-drafts)
+
+## threads.labels
+
+### `mail.threads.labels.add(id, params, options?)`
+
+`POST /v1/workspaces/{workspace_id}/threads/{id}/labels` → `Mail.ThreadSummary`
+
+Label a conversation.
+
+Adds labels to the thread (ones it has already are kept). Needs `mail.thread.triage` on its mailbox.
+
+- Params: `Mail.ThreadLabelAddParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `label_ids` missing, empty or not uuids. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND`, `MAIL_LABEL_NOT_FOUND` | `THREAD_NOT_FOUND`, or `MAIL_LABEL_NOT_FOUND` (`details.label_ids`). |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSummary = await mail.threads.labels.add("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { label_ids: ["9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b"] });
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#post-v1-workspaces-workspace-id-threads-id-labels)
+
+### `mail.threads.labels.delete(id, labelId, options?)`
+
+`DELETE /v1/workspaces/{workspace_id}/threads/{id}/labels/{label_id}` → `Mail.ThreadSummary`
+
+Remove a label from a conversation.
+
+Takes one label off the thread (a no-op when it does not have it). Needs `mail.thread.triage` on its mailbox.
+
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | A resource id in the path is not a UUID, or the request failed validation (`BAD_REQUEST` / `VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `THREAD_NOT_FOUND`, `MAIL_LABEL_NOT_FOUND` | `THREAD_NOT_FOUND`, or `MAIL_LABEL_NOT_FOUND`. |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `IDEMPOTENCY_KEY_REUSE`: the `Idempotency-Key` was already used with a different request body or on a different route. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const threadSummary = await mail.threads.labels.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/mail/api-reference#delete-v1-workspaces-workspace-id-threads-id-labels-label-id)
+
 ## topics
 
 ### `mail.topics.create(params, options?)`
@@ -3310,6 +4479,7 @@ Also deletes every contact's choice for it. Sends naming it are refused afterwar
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller lacks the action this route requires on the resource, or Mail is not enabled for the workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `TOPIC_NOT_FOUND` | No such topic (`TOPIC_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `TOPIC_IN_USE` | A broadcast that has not been sent yet targets this topic (`TOPIC_IN_USE`; `details.broadcasts[].id\|name\|status`). Change the broadcast's audience or delete it first. Sent and canceled broadcasts do not block. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -3394,7 +4564,7 @@ const topic = await mail.topics.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
 
 ### `mail.webhooks.unwrap({ payload, headers, secret? })`
 
-Verifies the signature and returns `Mail.UnwrapWebhookEvent`. Events: `contact.created`, `contact.deleted`, `contact.updated`, `domain.created`, `domain.deleted`, `domain.updated`, `domain.verified`, `email.bounced`, `email.canceled`, `email.clicked`, `email.complained`, `email.delivered`, `email.delivery_delayed`, `email.failed`, `email.opened`, `email.received`, `email.scheduled`, `email.sent`, `email.skipped`, `email.suppressed`, `sending_defaults.updated`, `suppression.added`, `suppression.removed`, plus `UnknownWebhookEvent` for types added later.
+Verifies the signature and returns `Mail.UnwrapWebhookEvent`. Events: `contact.created`, `contact.deleted`, `contact.updated`, `domain.created`, `domain.deleted`, `domain.updated`, `domain.verified`, `draft.decided`, `draft.pending_approval`, `email.bounced`, `email.canceled`, `email.clicked`, `email.complained`, `email.delivered`, `email.delivery_delayed`, `email.failed`, `email.opened`, `email.received`, `email.scheduled`, `email.sent`, `email.skipped`, `email.suppressed`, `sending_defaults.updated`, `suppression.added`, `suppression.removed`, plus `UnknownWebhookEvent` for types added later.
 
 ### `mail.webhooks.sign({ payload, secret?, id?, timestamp? })`
 
@@ -3736,7 +4906,7 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -3746,11 +4916,17 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
 | `WEBHOOK_EVENT_NOT_FOUND` | No webhook event with this id in this workspace. |
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
+| `APPROVAL_REQUIRED` | An agent (an MCP grant, or an OAuth client acting for a user) cannot send from a mailbox, and a mailbox with `reply_approval: everyone` sends only approved drafts: create a draft, submit it, and a person approves it. |
 | `ATTACHMENT_NOT_FOUND` | No attachment at this position, or it is no longer stored (attachments are kept 30 days). |
 | `AUDIENCE_REQUIRED` | Pass segment_id, topic_id, or both. |
 | `BROADCAST_AUDIENCE_EMPTY` | Nobody in this audience can receive the broadcast. |
@@ -3782,6 +4958,19 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `EMAIL_NOT_FOUND` | Email not found in this workspace. |
 | `EMAIL_UNAVAILABLE` | Emailing share links is temporarily unavailable. Create the link without email_to and send it yourself. |
 | `FROM_DOMAIN_MISMATCH` | The From address is not at this domain. |
+| `GITHUB_APP_ALREADY_CONFIGURED` | The ProductCraft Mail GitHub App is already set up. |
+| `GITHUB_APP_INSTALLATION_FORBIDDEN` | The signed-in GitHub user cannot access that GitHub App installation. |
+| `GITHUB_APP_NOT_CONFIGURED` | The ProductCraft Mail GitHub App is not set up yet. |
+| `GITHUB_APP_NOT_INSTALLED` | The ProductCraft Mail GitHub App is no longer installed on the GitHub account. |
+| `GITHUB_APP_OWNER_REJECTED` | The GitHub App was created under an account that is not allowed to own it. |
+| `GITHUB_APP_SETUP_EXPIRED` | The GitHub App setup link has expired or was already used. |
+| `GITHUB_APP_SETUP_FAILED` | GitHub did not complete the App setup. |
+| `GITHUB_APP_SUSPENDED` | The GitHub App installation is suspended, or no longer has access to the repository. |
+| `GITHUB_APP_VERIFY_FAILED` | GitHub did not confirm who installed the App. |
+| `GITHUB_OAUTH_CONNECT_RETIRED` | Connecting GitHub through the OAuth App is retired; install the ProductCraft Mail GitHub App instead. |
+| `GITHUB_REPO_NOT_INSTALLED` | The repository is not one the GitHub App is installed on. |
+| `GITHUB_WEBHOOK_MALFORMED` | The GitHub delivery is not a readable JSON body. |
+| `GITHUB_WEBHOOK_SIGNATURE_INVALID` | The GitHub delivery signature did not verify. |
 | `IDEMPOTENCY_KEY_CONFLICTS_WITH_ROW` | An `idempotency_key` on a batch row conflicts with the request key. |
 | `IMPORT_IN_PROGRESS` | Another contact import is running for this workspace. |
 | `IMPORT_NOT_FOUND` | Import not found. |
@@ -3792,33 +4981,60 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `INVALID_DATE` | A date is not valid ISO 8601. |
 | `INVALID_DATE_RANGE` | The date range is invalid (start after end). |
 | `INVALID_DATE_WINDOW` | The date window is invalid. |
-| `INVALID_FORMAT` | A path or query value is not in the expected format. |
 | `INVALID_FROM_ADDRESS` | The From address could not be parsed. |
 | `INVALID_SEGMENT_RULE` | The segment rule is invalid (`details.problems`). |
 | `INVALID_TIMEZONE` | The time zone is not a valid IANA name. |
 | `INVALID_ZONE` | The DNS zone is not one this domain belongs to. |
+| `MAILBOX_NOT_FOUND` | Mailbox not found in this workspace. |
 | `MAIL_ATTACHMENT_CID_UNREFERENCED` | An attachment `content_id` is not referenced as `cid:<id>` in the html (`details.index`). |
 | `MAIL_ATTACHMENT_FETCH_FAILED` | An attachment `path` could not be fetched (`details.index`, `details.reason`). |
 | `MAIL_ATTACHMENT_INVALID` | An attachment is malformed: bad base64, both or neither of `content` and `path`, or a bad file name or `content_id` (`details.index`). |
 | `MAIL_ATTACHMENT_TOO_LARGE` | More than 20 attachments, or more than 10 MB in total after decoding (`details.limit_bytes`, `details.total_bytes`). |
 | `MAIL_ATTACHMENT_TYPE_BLOCKED` | An attachment is an executable file type (by name, declared type or content) and cannot be sent (`details.index`). |
 | `MAIL_ATTACHMENTS_NOT_IN_BATCH` | Batch sends do not take attachments; send those emails one by one. |
+| `MAIL_ASSIGNEE_NOT_MEMBER` | `assignee_account_id` is not a member of this workspace, or this credential cannot read the members (it needs `workspace.member.read`). |
+| `MAIL_DOMAIN_CANNOT_RECEIVE` | The domain does not receive mail; turn receiving on before adding inbound routes. |
+| `MAIL_DOMAIN_CANNOT_SEND` | The domain only receives mail (`intent: receive`): a mailbox reply, or an inbound route's forward (sent from the route address), needs it to send too. |
+| `MAIL_DRAFT_EXISTS` | You already have an open draft answering this message (`details.draft_id`): edit it or discard it first. |
+| `MAIL_DRAFT_NOT_AUTHOR` | Only a draft's author sends it without review; someone else approves it (`POST /drafts/{id}/approve`). |
+| `MAIL_DRAFT_NOT_EDITABLE` | The draft was sent, rejected or discarded (`details.status`): only `draft` and `pending_approval` drafts change. |
+| `MAIL_DRAFT_NOT_FOUND` | No such draft in this workspace. |
+| `MAIL_DRAFT_NOT_PENDING` | The draft is not waiting for approval (`details.status`): submit it first, or it was already decided. |
+| `MAIL_DRAFT_SELF_APPROVAL` | You wrote this draft, or an agent wrote it for you: another person approves it. |
+| `MAIL_DRAFT_VERSION_CONFLICT` | The draft changed since you read it (`details.version` is the current one): read it again and retry. |
 | `MAIL_EMAIL_NOT_SCHEDULED` | The email is not scheduled any more: it was sent, is going out now, or was canceled. |
+| `MAIL_FORWARD_CONFIRMATION_NOT_FOUND` | The forward confirmation link is unknown, used, expired or was removed. |
+| `MAIL_FORWARD_DESTINATION_CONFIRMED` | The forward destination is already confirmed. |
+| `MAIL_FORWARD_DESTINATION_EXISTS` | The address is already a forward destination of this workspace (`details.id`). |
+| `MAIL_FORWARD_DESTINATION_IN_USE` | A route still forwards to this destination (`details.route_ids`). |
+| `MAIL_FORWARD_DESTINATION_NOT_FOUND` | Forward destination not found in this workspace. |
+| `MAIL_FORWARD_DESTINATION_UNCONFIRMED` | A forward destination is not confirmed yet (`details.destination_ids`). |
 | `MAIL_FROM_HOST_IN_USE` | The MAIL FROM host already has records that are not ours (`details.found`). |
 | `MAIL_FROM_NOT_SENDING` | A custom MAIL FROM needs the domain to send. |
 | `MAIL_HEADER_NOT_ALLOWED` | A custom header is not allowed, or its value is invalid (`details.headers`). |
+| `MAIL_LABEL_EXISTS` | A label with this name already exists in the workspace (names are case-insensitive). |
+| `MAIL_LABEL_LIMIT` | The workspace has 200 labels, the most it can have; delete one first. |
+| `MAIL_LABEL_NOT_FOUND` | Label not found in this workspace (`details.label_ids` for the unknown ones). |
+| `MAIL_REPLY_NO_RECIPIENT` | Nobody to reply to: the answered message came only from this workspace's own addresses. |
+| `MAIL_ROUTE_EXISTS` | The address (or the domain catch-all) already has an inbound route. |
+| `MAIL_ROUTE_LOOP` | A forward would come back to its own route through the workspace's routes (`details.path`). |
+| `MAIL_ROUTE_NOT_FOUND` | Inbound route not found in this workspace. |
+| `MAIL_ROUTE_STORE_MAILBOX_REQUIRED` | The route needs `store_mailbox_id`: the address has no mailbox of its own. |
 | `MAIL_SCHEDULE_OUT_OF_RANGE` | `scheduled_at` must be between 1 minute and 7 days from now (`details.earliest`, `details.latest`). |
 | `MAIL_SCHEDULE_UNPARSEABLE` | `scheduled_at` is not ISO 8601 with an offset or one of the documented phrases. |
+| `MAIL_SEARCH_INVALID` | The search `q` has an operator with a bad value, is over 256 characters or has more than 32 terms (`details.token`). |
 | `PROVIDER_ERROR` | The DNS provider returned an error. |
 | `PROVIDER_PERMISSION_DENIED` | The DNS provider token lacks permission to edit this zone. |
 | `PROVIDER_TOKEN_REJECTED` | The DNS provider rejected the token. |
 | `PROVIDER_UNAVAILABLE` | The DNS provider is unavailable; try again later. |
 | `PROVIDER_ZONE_NOT_FOUND` | The DNS provider has no zone for this domain. |
+| `PRINCIPAL_NOT_PERMITTED` | This credential cannot do this: approving, rejecting and sending drafts is for people, not agents (an MCP grant or an OAuth client acting for a person). |
 | `RECIPIENT_LIMIT` | More than 50 recipients across `to`, `cc` and `bcc`. |
 | `RECIPIENT_SUPPRESSED` | The recipient is suppressed for this workspace or topic (`details.reason`). |
 | `REGION_NOT_AVAILABLE` | `region` is not the region this deployment sends from (`details.available`). |
 | `RESERVED_PROPERTY_KEY` | The property key is reserved. |
 | `SEGMENT_EXISTS` | A segment with this name already exists. |
+| `SEGMENT_IN_USE` | A broadcast that has not been sent yet (draft, scheduled or sending) targets this segment (`details.broadcasts`); change or delete it first. |
 | `SEGMENT_LIMIT` | The workspace has the maximum number of segments. |
 | `SEGMENT_NOT_FOUND` | Segment not found. |
 | `SEGMENT_RULE_BASED` | Members of a rule segment follow its rule: change the contact or the rule instead. |
@@ -3830,15 +5046,24 @@ const webhookEventDetail = await mail.webhooks.events.retrieve("3f0c1a2b-4c5d-4e
 | `SMTP_PASSWORD_REQUIRED` | An SMTP password is required. |
 | `TEMPLATE_DATA_INVALID` | The render data does not match the template schema. |
 | `TEMPLATE_KIND_NOT_SENDABLE` | This template kind (a partial or layout) cannot be sent on its own. |
+| `TEMPLATE_MANAGED_IN_GITHUB` | This template is synced from GitHub: change the file in the repository, or detach it to edit it in Mail. |
+| `TEMPLATE_NO_DRAFT` | This template has no unpublished draft. |
 | `TEMPLATE_NOT_FOUND` | No template with this name in this workspace. |
+| `TEMPLATE_NOT_SYNCED` | This template is not synced from GitHub. |
 | `TEMPLATE_RENDER_FAILED` | The template could not be rendered. |
+| `TEMPLATE_VERSION_NOT_FOUND` | This template has no published version with this number. |
+| `TEMPLATE_SYNTAX_ERROR` | The template does not compile: fix the Handlebars syntax. |
 | `TLS_ENFORCED_NOT_AVAILABLE` | `tls: enforced` is not available yet. |
+| `THREAD_MESSAGE_NOT_FOUND` | The message is not in this thread. |
+| `THREAD_NOT_FOUND` | Thread not found in this workspace. |
 | `TOPIC_EXISTS` | A topic with this name already exists. |
+| `TOPIC_IN_USE` | A broadcast that has not been sent yet (draft, scheduled or sending) targets this topic (`details.broadcasts`); change or delete it first. |
 | `TOPIC_LIMIT` | The workspace has the maximum number of topics. |
 | `TOPIC_NOT_FOUND` | Topic not found. |
 | `TRACKING_NOT_AVAILABLE` | A custom tracking subdomain is not available: tracking uses track.productcraft.co. |
 | `UNKNOWN_CONTACT_PROPERTY` | The contact property is not defined; create it first. |
 | `UNSUBSCRIBE_LINK_REQUIRED` | A broadcast body must contain `{{{unsubscribe_url}}}`. |
+| `USAGE_LIMIT_REACHED` | The workspace used its plan's monthly email allowance; sends resume when it resets or when the plan is upgraded. |
 | `domain_not_verified_by_provider` | The From domain's DNS records have been broken for over 72 h, so it no longer sends. |
 | `from_domain_not_verified` | The From domain is not an active sending domain of this workspace (`details: { fqdn, reason }`). |
 | `no_default_sender` | No `from` and the workspace has no default sender. |

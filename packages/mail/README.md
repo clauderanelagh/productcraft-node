@@ -59,10 +59,14 @@ Full reference: [api.md](./api.md).
 - `mail.contacts`: `create`, `delete`, `imports.create`, `imports.list`, `imports.retrieve`, `list`, `properties.create`, `properties.delete`, `properties.list`, `properties.retrieve`, `properties.update`, `retrieve`, `segments.add`, `segments.delete`, `segments.list`, `topics.list`, `topics.update`, `update`
 - `mail.deliverability`: `retrieve`
 - `mail.domains`: `create`, `delete`, `dnsRecords.apply`, `dnsRecords.check`, `dnsRecords.export`, `dnsRecords.list`, `domainConnect.start`, `events.list`, `list`, `lookup`, `retrieve`, `shareLinks.create`, `shareLinks.delete`, `shareLinks.list`, `smtpConfig.reset`, `smtpConfig.retrieve`, `smtpConfig.update`, `smtpConfig.verifySaved`, `testSend`, `update`, `verify`
+- `mail.drafts`: `approve`, `discard`, `list`, `reject`, `requestApproval`, `retrieve`, `send`, `update`
 - `mail.emails`: `attachments.retrieve`, `batch`, `cancel`, `list`, `metrics`, `retrieve`, `send`, `update`
-- `mail.integrations`: `delete`, `github.connect`, `github.repos.branches.list`, `github.repos.list`, `github.settings.update`, `github.sync.create`, `github.sync.retrieve`, `list`, `retrieve`
+- `mail.forwardDestinations`: `create`, `delete`, `list`, `resend`
+- `mail.inboundRoutes`: `create`, `delete`, `list`, `retrieve`, `test`, `update`
+- `mail.integrations`: `delete`, `github.installGitHubApp`, `github.repos.branches.list`, `github.repos.list`, `github.retrieveGitHubApp`, `github.settings.update`, `github.sync.create`, `github.sync.latest`, `github.sync.retrieve`, `list`, `retrieve`
+- `mail.labels`: `create`, `delete`, `list`, `update`
 - `mail.limits`: `retrieve`
-- `mail.mailboxes`: `create`, `delete`, `list`, `messages.attachments.retrieve`, `messages.delete`, `messages.list`, `messages.raw`, `messages.read`, `messages.retrieve`, `retrieve`, `update`
+- `mail.mailboxes`: `create`, `delete`, `drafts.create`, `list`, `messages.attachments.retrieve`, `messages.delete`, `messages.list`, `messages.raw`, `messages.read`, `messages.retrieve`, `retrieve`, `threads.create`, `update`
 - `mail.messages`: `body`, `erase`, `export`, `list`, `retrieve`, `settings.retrieve`, `settings.update`
 - `mail.received`: `attachments.retrieve`, `delete`, `export`, `list`, `raw`, `read`, `retrieve`, `timeline`
 - `mail.segments`: `contacts.list`, `create`, `delete`, `list`, `metrics`, `preview`, `retrieve`, `update`
@@ -70,7 +74,9 @@ Full reference: [api.md](./api.md).
 - `mail.smtpConfig`: `list`, `reset`, `retrieve`, `update`, `verify`, `verifySaved`
 - `mail.stats`: `retrieve`
 - `mail.suppression`: `create`, `delete`, `list`
-- `mail.templates`: `create`, `delete`, `lint`, `list`, `preview`, `render`, `retrieve`, `send`, `sendBatch`, `tags.list`, `testSend`, `variables.list`
+- `mail.templates`: `attach`, `create`, `delete`, `detach`, `draft.delete`, `draft.update`, `lint`, `list`, `preview`, `publish`, `render`, `retrieve`, `send`, `sendBatch`, `tags.list`, `testSend`, `variables.list`, `versions.list`, `versions.restore`, `versions.retrieve`
+- `mail.testSender`: `retrieve`, `sendTest`
+- `mail.threads`: `bulkUpdate`, `drafts.create`, `forward`, `labels.add`, `labels.delete`, `list`, `reply`, `retrieve`, `update`
 - `mail.topics`: `create`, `delete`, `list`, `retrieve`, `update`
 - `mail.webhooks`: `attempts.list`, `endpoints.create`, `endpoints.delete`, `endpoints.list`, `endpoints.retrieve`, `endpoints.rotateSecret`, `endpoints.test`, `endpoints.update`, `eventTypes.list`, `events.list`, `events.replay`, `events.retrieve`
 

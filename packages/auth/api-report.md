@@ -356,7 +356,7 @@ namespace Auth {
     type AppMembership = __AppMembership;
     const // (undocumented)
     SignInTestEmailNoticeCode: {
-        values: readonly ["emails_off", "email_sender_missing", "email_template_missing", "email_workspace_missing", "email_unavailable", "email_send_failed"];
+        values: readonly ["emails_off", "email_sender_missing", "email_sender_not_ready", "email_test_sender_members_only", "email_template_missing", "email_workspace_missing", "email_unavailable", "email_send_failed"];
     };
     // (undocumented)
     type AppMemberSummary = __AppMemberSummary;
@@ -534,6 +534,8 @@ namespace Auth {
     type AuthorizeBatch = __AuthorizeBatch;
     // (undocumented)
     type AuthorizeBatchResult = __AuthorizeBatchResult;
+    // (undocumented)
+    type AuthStatsApp = __AuthStatsApp;
     // (undocumented)
     type AuthStatsInWindow = __AuthStatsInWindow;
     // (undocumented)
@@ -1331,11 +1333,11 @@ export interface AuthClaims extends JWTPayload {
 export { AuthenticationError }
 
 // @public
-export type AuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "MICROSOFT_TENANT_NOT_FOUND" | "OIDC_DISCOVERY_FAILED" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TEST_MODE_PRODUCTION_APP" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required" | (string & {});
+export type AuthErrorCode = "BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "INVALID_CURSOR" | "INVALID_FORMAT" | "INVALID_IDENTIFIER" | "REFERENCE_NOT_FOUND" | "RESOURCE_IN_USE" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "EMAIL_SENDER_NOT_VERIFIED" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_SENDER_NOT_READY" | "ENVOI_TEST_SENDER_MEMBERS_ONLY" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_HOSTNAME" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "MICROSOFT_TENANT_NOT_FOUND" | "OIDC_DISCOVERY_FAILED" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TEST_MODE_PRODUCTION_APP" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required" | (string & {});
 
 // @public (undocumented)
 export const AuthErrorCode: {
-    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_EXISTS", "ACCOUNT_NOT_FOUND", "ACCOUNT_SUSPENDED", "AGENT_ACCESS_DISABLED", "AGENT_ACCESS_INVALID_CONFIG", "AGENT_AUTHORIZATION_DECIDED", "AGENT_AUTHORIZATION_NOT_FOUND", "AGENT_AUTHORIZATION_INVALID", "AGENT_GRANT_NOT_FOUND", "APEX_NOT_SUPPORTED", "APP_ARCHIVED", "APP_HAS_NO_WORKSPACE", "APP_NOT_FOUND", "APP_SUSPENDED", "AUTH_SETTINGS_IN_METADATA", "AVATAR_INVALID_TYPE", "AVATAR_MAGIC_MISMATCH", "AVATAR_NOT_FOUND", "AVATAR_TOO_LARGE", "BOT_PROTECTION_FAILED", "BOT_PROTECTION_REQUIRED", "BOT_PROTECTION_UNAVAILABLE", "CUSTOM_DOMAIN_EXISTS", "CUSTOM_DOMAIN_NOT_ACTIVE", "CUSTOM_DOMAIN_NOT_FOUND", "CUSTOM_DOMAIN_OAUTH_ONLY", "DNS_CONFLICTS", "ENVOI_APP_NOT_BOUND_TO_WORKSPACE", "ENVOI_NOT_ENABLED", "ENVOI_NOT_WIRED", "ENVOI_SENDER_NOT_CONFIGURED", "ENVOI_TEMPLATE_NOT_CONFIGURED", "FEATURE_NOT_ENABLED", "HOSTNAME_RESERVED", "HOSTNAME_TAKEN", "INSUFFICIENT_PERMISSIONS", "INVALID_FORMAT", "INVALID_HOSTNAME", "INVALID_IDENTIFIER", "INVALID_PROVIDER", "INVALID_ZONE", "MAIL_UNREACHABLE", "MICROSOFT_TENANT_NOT_FOUND", "OIDC_DISCOVERY_FAILED", "PAK_WORKSPACE_MISMATCH", "PASSWORD_BREACHED", "PASSWORD_TOO_COMMON", "PASSWORDLESS_CODE_INVALID", "PASSWORDLESS_DISABLED", "PASSWORDLESS_LINK_OTHER_BROWSER", "PASSWORDLESS_RATE_LIMITED", "PASSWORDLESS_RETURN_TO_NOT_ALLOWED", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "ROLE_IN_USE", "SENDER_ADDRESS_REQUIRED", "SESSION_EXPIRED", "SIGN_IN_TEST_INVALID", "SLUG_TAKEN", "SLUG_UUID_SHAPED", "TENANT_API_KEYS_APP_PROXY_ONLY", "TENANT_API_KEYS_FORBIDDEN", "TENANT_API_KEYS_NOT_ENABLED", "TENANT_API_KEYS_NO_SCOPES", "TENANT_API_KEYS_SCOPE_INVALID", "TENANT_API_KEYS_SUSPENDED", "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE", "TENANT_API_KEYS_UNKNOWN_ROLE", "TENANT_API_KEY_EXPIRY_INVALID", "TENANT_API_KEY_LIMIT", "TENANT_API_KEY_NOT_ACTIVE", "TENANT_API_KEY_NOT_FOUND", "TENANT_API_KEY_SCOPE_ABOVE_CEILING", "TENANT_API_KEY_SCOPE_NOT_GRANTABLE", "TENANT_CONTEXT_REQUIRED", "TENANT_MEMBERSHIP_REQUIRED", "TENANT_NOT_ACTIVE", "TEST_MODE_PRODUCTION_APP", "TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_REVOKED", "USERNAME_TAKEN", "account_exists_with_different_provider", "idempotency_secret_not_replayable", "link_required", "step_up_required"];
+    values: readonly ["BAD_REQUEST", "VALIDATION_ERROR", "UNAUTHORIZED", "PAYMENT_REQUIRED", "FORBIDDEN", "NOT_FOUND", "METHOD_NOT_ALLOWED", "NOT_ACCEPTABLE", "REQUEST_TIMEOUT", "CONFLICT", "GONE", "PRECONDITION_FAILED", "PAYLOAD_TOO_LARGE", "UNSUPPORTED_MEDIA_TYPE", "UNPROCESSABLE_ENTITY", "PRECONDITION_REQUIRED", "RATE_LIMITED", "INTERNAL_SERVER_ERROR", "NOT_IMPLEMENTED", "BAD_GATEWAY", "SERVICE_UNAVAILABLE", "GATEWAY_TIMEOUT", "SERVICE_NOT_ENABLED", "INVALID_CREDENTIALS", "SESSION_REVOKED", "MCP_NOT_PERMITTED", "MCP_WORKSPACE_MISMATCH", "PAK_NOT_PERMITTED", "ACTIONS_NOT_GRANTABLE", "IDEMPOTENCY_KEY_REUSE", "IDEMPOTENCY_KEY_REQUIRED", "IDEMPOTENCY_IN_PROGRESS", "INVALID_CURSOR", "INVALID_FORMAT", "INVALID_IDENTIFIER", "REFERENCE_NOT_FOUND", "RESOURCE_IN_USE", "WEBHOOK_ENDPOINT_LIMIT", "WEBHOOK_ENDPOINT_NOT_FOUND", "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED", "WEBHOOK_EVENT_NOT_FOUND", "WEBHOOK_EVENT_TYPE_UNKNOWN", "ACCOUNT_EXISTS", "ACCOUNT_NOT_FOUND", "ACCOUNT_SUSPENDED", "AGENT_ACCESS_DISABLED", "AGENT_ACCESS_INVALID_CONFIG", "AGENT_AUTHORIZATION_DECIDED", "AGENT_AUTHORIZATION_NOT_FOUND", "AGENT_AUTHORIZATION_INVALID", "AGENT_GRANT_NOT_FOUND", "APEX_NOT_SUPPORTED", "APP_ARCHIVED", "APP_HAS_NO_WORKSPACE", "APP_NOT_FOUND", "APP_SUSPENDED", "AUTH_SETTINGS_IN_METADATA", "AVATAR_INVALID_TYPE", "AVATAR_MAGIC_MISMATCH", "AVATAR_NOT_FOUND", "AVATAR_TOO_LARGE", "BOT_PROTECTION_FAILED", "BOT_PROTECTION_REQUIRED", "BOT_PROTECTION_UNAVAILABLE", "CUSTOM_DOMAIN_EXISTS", "CUSTOM_DOMAIN_NOT_ACTIVE", "CUSTOM_DOMAIN_NOT_FOUND", "CUSTOM_DOMAIN_OAUTH_ONLY", "DNS_CONFLICTS", "EMAIL_SENDER_NOT_VERIFIED", "ENVOI_APP_NOT_BOUND_TO_WORKSPACE", "ENVOI_NOT_ENABLED", "ENVOI_NOT_WIRED", "ENVOI_SENDER_NOT_CONFIGURED", "ENVOI_SENDER_NOT_READY", "ENVOI_TEST_SENDER_MEMBERS_ONLY", "ENVOI_TEMPLATE_NOT_CONFIGURED", "FEATURE_NOT_ENABLED", "HOSTNAME_RESERVED", "HOSTNAME_TAKEN", "INSUFFICIENT_PERMISSIONS", "INVALID_HOSTNAME", "INVALID_PROVIDER", "INVALID_ZONE", "MAIL_UNREACHABLE", "MICROSOFT_TENANT_NOT_FOUND", "OIDC_DISCOVERY_FAILED", "PAK_WORKSPACE_MISMATCH", "PASSWORD_BREACHED", "PASSWORD_TOO_COMMON", "PASSWORDLESS_CODE_INVALID", "PASSWORDLESS_DISABLED", "PASSWORDLESS_LINK_OTHER_BROWSER", "PASSWORDLESS_RATE_LIMITED", "PASSWORDLESS_RETURN_TO_NOT_ALLOWED", "PROVIDER_ERROR", "PROVIDER_PERMISSION_DENIED", "PROVIDER_TOKEN_REJECTED", "PROVIDER_UNAVAILABLE", "PROVIDER_ZONE_NOT_FOUND", "ROLE_IN_USE", "SENDER_ADDRESS_REQUIRED", "SESSION_EXPIRED", "SIGN_IN_TEST_INVALID", "SLUG_TAKEN", "SLUG_UUID_SHAPED", "TENANT_API_KEYS_APP_PROXY_ONLY", "TENANT_API_KEYS_FORBIDDEN", "TENANT_API_KEYS_NOT_ENABLED", "TENANT_API_KEYS_NO_SCOPES", "TENANT_API_KEYS_SCOPE_INVALID", "TENANT_API_KEYS_SUSPENDED", "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE", "TENANT_API_KEYS_UNKNOWN_ROLE", "TENANT_API_KEY_EXPIRY_INVALID", "TENANT_API_KEY_LIMIT", "TENANT_API_KEY_NOT_ACTIVE", "TENANT_API_KEY_NOT_FOUND", "TENANT_API_KEY_SCOPE_ABOVE_CEILING", "TENANT_API_KEY_SCOPE_NOT_GRANTABLE", "TENANT_CONTEXT_REQUIRED", "TENANT_MEMBERSHIP_REQUIRED", "TENANT_NOT_ACTIVE", "TEST_MODE_PRODUCTION_APP", "TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_REVOKED", "USERNAME_TAKEN", "account_exists_with_different_provider", "idempotency_secret_not_replayable", "link_required", "step_up_required"];
 };
 
 // @public @deprecated (undocumented)
@@ -1503,6 +1505,7 @@ export type components = {
         ApiKeyStatus: "active" | "expired" | "revoked";
         ApiKeySummaryDto: {
             created_at: string;
+            created_by: string | null;
             expires_at: string | null;
             id: string;
             key_prefix: string;
@@ -1610,6 +1613,7 @@ export type components = {
             workspace_id: string;
         };
         AppSlugChangedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["AppSlugChangedEventDataDto"];
             id: string;
@@ -1823,7 +1827,12 @@ export type components = {
             test_mode: components["schemas"]["TestModeResponseDto"] | null;
             unverified_account_ttl_days: number | null;
         };
-        AuthErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_FORMAT" | "INVALID_HOSTNAME" | "INVALID_IDENTIFIER" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "MICROSOFT_TENANT_NOT_FOUND" | "OIDC_DISCOVERY_FAILED" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TEST_MODE_PRODUCTION_APP" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required") | string;
+        AuthErrorCode: ("BAD_REQUEST" | "VALIDATION_ERROR" | "UNAUTHORIZED" | "PAYMENT_REQUIRED" | "FORBIDDEN" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "NOT_ACCEPTABLE" | "REQUEST_TIMEOUT" | "CONFLICT" | "GONE" | "PRECONDITION_FAILED" | "PAYLOAD_TOO_LARGE" | "UNSUPPORTED_MEDIA_TYPE" | "UNPROCESSABLE_ENTITY" | "PRECONDITION_REQUIRED" | "RATE_LIMITED" | "INTERNAL_SERVER_ERROR" | "NOT_IMPLEMENTED" | "BAD_GATEWAY" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "SERVICE_NOT_ENABLED" | "INVALID_CREDENTIALS" | "SESSION_REVOKED" | "MCP_NOT_PERMITTED" | "MCP_WORKSPACE_MISMATCH" | "PAK_NOT_PERMITTED" | "ACTIONS_NOT_GRANTABLE" | "IDEMPOTENCY_KEY_REUSE" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_IN_PROGRESS" | "INVALID_CURSOR" | "INVALID_FORMAT" | "INVALID_IDENTIFIER" | "REFERENCE_NOT_FOUND" | "RESOURCE_IN_USE" | "WEBHOOK_ENDPOINT_LIMIT" | "WEBHOOK_ENDPOINT_NOT_FOUND" | "WEBHOOK_ENDPOINT_NOT_SUBSCRIBED" | "WEBHOOK_EVENT_NOT_FOUND" | "WEBHOOK_EVENT_TYPE_UNKNOWN" | "ACCOUNT_EXISTS" | "ACCOUNT_NOT_FOUND" | "ACCOUNT_SUSPENDED" | "AGENT_ACCESS_DISABLED" | "AGENT_ACCESS_INVALID_CONFIG" | "AGENT_AUTHORIZATION_DECIDED" | "AGENT_AUTHORIZATION_NOT_FOUND" | "AGENT_AUTHORIZATION_INVALID" | "AGENT_GRANT_NOT_FOUND" | "APEX_NOT_SUPPORTED" | "APP_ARCHIVED" | "APP_HAS_NO_WORKSPACE" | "APP_NOT_FOUND" | "APP_SUSPENDED" | "AUTH_SETTINGS_IN_METADATA" | "AVATAR_INVALID_TYPE" | "AVATAR_MAGIC_MISMATCH" | "AVATAR_NOT_FOUND" | "AVATAR_TOO_LARGE" | "BOT_PROTECTION_FAILED" | "BOT_PROTECTION_REQUIRED" | "BOT_PROTECTION_UNAVAILABLE" | "CUSTOM_DOMAIN_EXISTS" | "CUSTOM_DOMAIN_NOT_ACTIVE" | "CUSTOM_DOMAIN_NOT_FOUND" | "CUSTOM_DOMAIN_OAUTH_ONLY" | "DNS_CONFLICTS" | "EMAIL_SENDER_NOT_VERIFIED" | "ENVOI_APP_NOT_BOUND_TO_WORKSPACE" | "ENVOI_NOT_ENABLED" | "ENVOI_NOT_WIRED" | "ENVOI_SENDER_NOT_CONFIGURED" | "ENVOI_SENDER_NOT_READY" | "ENVOI_TEST_SENDER_MEMBERS_ONLY" | "ENVOI_TEMPLATE_NOT_CONFIGURED" | "FEATURE_NOT_ENABLED" | "HOSTNAME_RESERVED" | "HOSTNAME_TAKEN" | "INSUFFICIENT_PERMISSIONS" | "INVALID_HOSTNAME" | "INVALID_PROVIDER" | "INVALID_ZONE" | "MAIL_UNREACHABLE" | "MICROSOFT_TENANT_NOT_FOUND" | "OIDC_DISCOVERY_FAILED" | "PAK_WORKSPACE_MISMATCH" | "PASSWORD_BREACHED" | "PASSWORD_TOO_COMMON" | "PASSWORDLESS_CODE_INVALID" | "PASSWORDLESS_DISABLED" | "PASSWORDLESS_LINK_OTHER_BROWSER" | "PASSWORDLESS_RATE_LIMITED" | "PASSWORDLESS_RETURN_TO_NOT_ALLOWED" | "PROVIDER_ERROR" | "PROVIDER_PERMISSION_DENIED" | "PROVIDER_TOKEN_REJECTED" | "PROVIDER_UNAVAILABLE" | "PROVIDER_ZONE_NOT_FOUND" | "ROLE_IN_USE" | "SENDER_ADDRESS_REQUIRED" | "SESSION_EXPIRED" | "SIGN_IN_TEST_INVALID" | "SLUG_TAKEN" | "SLUG_UUID_SHAPED" | "TENANT_API_KEYS_APP_PROXY_ONLY" | "TENANT_API_KEYS_FORBIDDEN" | "TENANT_API_KEYS_NOT_ENABLED" | "TENANT_API_KEYS_NO_SCOPES" | "TENANT_API_KEYS_SCOPE_INVALID" | "TENANT_API_KEYS_SUSPENDED" | "TENANT_API_KEYS_SUSPENDED_NOT_WRITABLE" | "TENANT_API_KEYS_UNKNOWN_ROLE" | "TENANT_API_KEY_EXPIRY_INVALID" | "TENANT_API_KEY_LIMIT" | "TENANT_API_KEY_NOT_ACTIVE" | "TENANT_API_KEY_NOT_FOUND" | "TENANT_API_KEY_SCOPE_ABOVE_CEILING" | "TENANT_API_KEY_SCOPE_NOT_GRANTABLE" | "TENANT_CONTEXT_REQUIRED" | "TENANT_MEMBERSHIP_REQUIRED" | "TENANT_NOT_ACTIVE" | "TEST_MODE_PRODUCTION_APP" | "TOKEN_EXPIRED" | "TOKEN_INVALID" | "TOKEN_REVOKED" | "USERNAME_TAKEN" | "account_exists_with_different_provider" | "idempotency_secret_not_replayable" | "link_required" | "step_up_required") | string;
+        AuthStatsAppDto: {
+            active_users_30d: number;
+            app_id: string;
+            end_users: number;
+        };
         AuthStatsInWindowDto: {
             active_users_1d: number;
             active_users_30d: number;
@@ -1841,6 +1850,7 @@ export type components = {
             end_users: number;
         };
         AuthWorkspaceStatsDto: {
+            by_app: components["schemas"]["AuthStatsAppDto"][];
             generated_at: string;
             in_window: components["schemas"]["AuthStatsInWindowDto"];
             last_activity_at: string | null;
@@ -2030,6 +2040,7 @@ export type components = {
             site_key: string;
         };
         ConsumerEmailSignInConfigDto: {
+            app_id: string;
             app_name: string;
             bot_protection: components["schemas"]["ConsumerEmailSignInBotProtectionDto"] | null;
             delivery: components["schemas"]["PasswordlessDelivery"] | null;
@@ -3132,7 +3143,7 @@ export type components = {
             notice: components["schemas"]["SignInTestEmailNoticeDto"] | null;
             sent: boolean;
         };
-        SignInTestEmailNoticeCode: "emails_off" | "email_sender_missing" | "email_template_missing" | "email_workspace_missing" | "email_unavailable" | "email_send_failed";
+        SignInTestEmailNoticeCode: "emails_off" | "email_sender_missing" | "email_sender_not_ready" | "email_test_sender_members_only" | "email_template_missing" | "email_workspace_missing" | "email_unavailable" | "email_send_failed";
         SignInTestEmailNoticeDto: {
             code: components["schemas"]["SignInTestEmailNoticeCode"];
             fix: string;
@@ -3263,6 +3274,7 @@ export type components = {
             suspended: boolean;
         };
         TenantCreatedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantEventDataDto"];
             id: string;
@@ -3270,6 +3282,7 @@ export type components = {
             type: "tenant.created";
         };
         TenantDeletedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantEventDataDto"];
             id: string;
@@ -3283,6 +3296,7 @@ export type components = {
             tenant_slug: string;
         };
         TenantInviteAcceptedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantInviteAcceptedEventDataDto"];
             id: string;
@@ -3298,6 +3312,7 @@ export type components = {
             tenant_slug: string;
         };
         TenantInviteCreatedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantInviteCreatedEventDataDto"];
             id: string;
@@ -3331,6 +3346,7 @@ export type components = {
             use_count: number;
         };
         TenantInviteRevokedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantInviteRevokedEventDataDto"];
             id: string;
@@ -3349,6 +3365,7 @@ export type components = {
             pagination: components["schemas"]["PaginationDto"];
         };
         TenantMemberAddedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantMemberAddedEventDataDto"];
             id: string;
@@ -3363,6 +3380,7 @@ export type components = {
             tenant_slug: string;
         };
         TenantMemberRemovedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantMemberRemovedEventDataDto"];
             id: string;
@@ -3375,6 +3393,7 @@ export type components = {
             tenant_slug: string;
         };
         TenantMemberRoleChangedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantMemberRoleChangedEventDataDto"];
             id: string;
@@ -3424,6 +3443,7 @@ export type components = {
         };
         TenantStatus: "active" | "suspended" | "archived";
         TenantUpdatedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["TenantEventDataDto"];
             id: string;
@@ -3590,6 +3610,7 @@ export type components = {
             enabled?: boolean;
         };
         UserContactVerifiedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserContactVerifiedEventDataDto"];
             id: string;
@@ -3605,6 +3626,7 @@ export type components = {
         };
         UserCreatedVia: "admin" | "invite" | "tenant_invite";
         UserDeactivatedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserEventDataDto"];
             id: string;
@@ -3612,6 +3634,7 @@ export type components = {
             type: "user.deactivated";
         };
         UserDeletedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserDeletedEventDataDto"];
             id: string;
@@ -3626,6 +3649,7 @@ export type components = {
         UserDeletedReason: "unverified_expired";
         UserDeletedVia: "platform" | "platform_bulk" | "consumer_admin" | "self";
         UserEmailVerifiedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserEmailVerifiedEventDataDto"];
             id: string;
@@ -3642,6 +3666,7 @@ export type components = {
             user_id: string;
         };
         UserMfaEnrollmentRequiredEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaEnrollmentRequiredEventDataDto"];
             id: string;
@@ -3649,6 +3674,7 @@ export type components = {
             type: "user.mfa.enrollment_required";
         };
         UserMfaFactorDisabledEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaFactorEventDataDto"];
             id: string;
@@ -3656,6 +3682,7 @@ export type components = {
             type: "user.mfa.factor_disabled";
         };
         UserMfaFactorEnrolledEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaFactorEventDataDto"];
             id: string;
@@ -3663,6 +3690,7 @@ export type components = {
             type: "user.mfa.factor_enrolled";
         };
         UserMfaRecoveryCodeUsedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaRecoveryCodeUsedEventDataDto"];
             id: string;
@@ -3670,6 +3698,7 @@ export type components = {
             type: "user.mfa.recovery_code_used";
         };
         UserMfaReenrollmentRequiredEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaEnrollmentRequiredEventDataDto"];
             id: string;
@@ -3677,6 +3706,7 @@ export type components = {
             type: "user.mfa.reenrollment_required";
         };
         UserMfaStepUpLockedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaStepUpLockedEventDataDto"];
             id: string;
@@ -3684,6 +3714,7 @@ export type components = {
             type: "user.mfa.step_up_locked";
         };
         UserMfaStepUpSucceededEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["MfaStepUpSucceededEventDataDto"];
             id: string;
@@ -3691,6 +3722,7 @@ export type components = {
             type: "user.mfa.step_up_succeeded";
         };
         UserPasswordResetCompletedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserEventDataDto"];
             id: string;
@@ -3698,6 +3730,7 @@ export type components = {
             type: "user.password_reset.completed";
         };
         UserPasswordResetRequestedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserPasswordResetRequestedEventDataDto"];
             id: string;
@@ -3710,6 +3743,7 @@ export type components = {
             user_id: string;
         };
         UserReinstatedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserEventDataDto"];
             id: string;
@@ -3717,6 +3751,7 @@ export type components = {
             type: "user.reinstated";
         };
         UserRoleChangedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserRoleChangedEventDataDto"];
             id: string;
@@ -3728,6 +3763,7 @@ export type components = {
             user_id: string;
         };
         UserSigninEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserSigninEventDataDto"];
             id: string;
@@ -3743,6 +3779,7 @@ export type components = {
             username?: string | null;
         };
         UserSignupEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserSignupEventDataDto"];
             id: string;
@@ -3759,6 +3796,7 @@ export type components = {
             username: string | null;
         };
         UserSuspendedEvent: {
+            app_id: string;
             created_at: string;
             data: components["schemas"]["UserEventDataDto"];
             id: string;

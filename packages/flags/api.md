@@ -534,6 +534,7 @@ The full primary key, and the secondary key while a grace period runs. Needs `fl
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `CONFIG_NOT_FOUND`, `ENVIRONMENT_NOT_FOUND` | `CONFIG_NOT_FOUND` or `ENVIRONMENT_NOT_FOUND`: no such config in this workspace, or the environment is not one of its project. |
+| 409 | `ConflictError` | `CONFLICT`, `SDK_KEY_REVOKED` | `SDK_KEY_REVOKED`: a key was revoked while it was being revealed; a revoked key keeps no key material. Reveal again. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
@@ -737,7 +738,7 @@ Creates the project with the environments of `environment_preset` (default `dev_
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
 | 409 | `ConflictError` | `CONFLICT`, `KEY_ALREADY_EXISTS`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `KEY_ALREADY_EXISTS`: another project has this name, or a key repeats in `environments` / `configs`. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the workspace already has the maximum number of projects (`details`: `limit`, `max`, `current`). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the workspace already has the maximum number of projects (`details`: `limit`, `max`, `current`). `details.limit` is `projects` for the preview limit, or `flags_projects` for the workspace plan's limit (Free 2, Pro 10, Scale 50; upgrade under Workspace > Billing). Existing projects are never affected. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 | 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
 
@@ -753,7 +754,7 @@ const project = await flags.projects.create({ name: "Storefront" });
 
 Delete a project.
 
-Deletes the project with all of its environments, configs, flags, segments, SDK keys and history. Pass `confirm` with the exact project name. SDKs using its keys stop receiving updates. Needs `flags.project.manage`; recorded in the workspace audit log.
+Deletes the project with all of its environments, configs, flags, segments and SDK keys. Its change history is minimised and kept for one year: who changed which flag and when, without values, rules or notes; then it is deleted. Export the history first if you need the values. Pass `confirm` with the exact project name. SDKs using its keys stop receiving updates. Needs `flags.project.manage`; recorded in the workspace audit log.
 
 - Params: `Flags.ProjectDeleteParams`
 
@@ -1408,6 +1409,36 @@ const scheduledChange = await flags.scheduledChanges.retrieve("3f0c3c1e-8a2b-4c5
 ```
 
 [HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-scheduled-changes-scheduled-change-id)
+
+## sdkKeys
+
+### `flags.sdkKeys.list(params?, options?)`
+
+`GET /v1/workspaces/{workspace_id}/sdk-keys` → `PagePromise<Flags.WorkspaceSdkKey>`
+
+List the SDK keys of a workspace.
+
+Every live SDK key in this workspace, newest first, masked (prefix and last four characters), each with its project, config and environment. A secondary key is listed until its grace period ends. A config and environment that nobody has read keys for yet has no key here: listing that pair mints its primary key.
+
+- Params: `Flags.SdkKeyListParams`
+- Paginated: `for await` iterates every item; `await` gives one page
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: a bad cursor or a `limit` outside 1-100. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, expired or invalid bearer token (`UNAUTHORIZED`). Send a workspace API key or a platform session token as `Authorization: Bearer <token>`. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The caller lacks the action this route needs (`message` names it), or the workspace has not enabled Flags (`SERVICE_NOT_ENABLED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `MANAGEMENT_UNAVAILABLE` | The management API is temporarily unavailable (`MANAGEMENT_UNAVAILABLE`), for example while its database is unreachable. Wait `Retry-After` seconds and retry; SDK config delivery keeps serving. |
+
+```ts
+for await (const sdkKey of flags.sdkKeys.list()) {
+  console.log(sdkKey);
+}
+const page = await flags.sdkKeys.list({}, { timeout: 5_000 });
+```
+
+[HTTP reference](https://productcraft.co/docs/flags/api-reference#get-v1-workspaces-workspace-id-sdk-keys)
 
 ## segments
 
@@ -2122,7 +2153,7 @@ const webhookEventDetail = await flags.webhooks.events.retrieve("3f0c1a2b-4c5d-4
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -2132,6 +2163,11 @@ const webhookEventDetail = await flags.webhooks.events.retrieve("3f0c1a2b-4c5d-4
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
@@ -2145,6 +2181,7 @@ const webhookEventDetail = await flags.webhooks.events.retrieve("3f0c1a2b-4c5d-4
 | `CHANGE_NOT_FOUND` | The change does not exist in this workspace. |
 | `REVISION_NOT_FOUND` | The config revision does not exist for this environment. |
 | `SDK_KEY_NOT_FOUND` | The SDK key is unknown, revoked or expired. |
+| `SDK_KEY_REVOKED` | The SDK key was revoked while it was being revealed; revoked keys keep no key material. Reveal the keys again. |
 | `KEY_ALREADY_EXISTS` | Another resource in the same scope already uses this key. |
 | `LAST_ENVIRONMENT` | A project needs at least one environment; this is the last one. |
 | `VERSION_CONFLICT` | The resource changed since you read it; reload and apply your change again. |
