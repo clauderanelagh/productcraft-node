@@ -1162,7 +1162,7 @@ const upsertActor = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f
 
 `DELETE /v1/communities/{community_id}/actors/{actor_id}` → `void`
 
-Delete an actor. Hard delete — cascades to every post, comment, edge, flag, and notification it owns.
+Delete an actor (the erasure call). Hard delete: cascades to every post, comment, edge and notification it owns. A comment of theirs that other people replied to stays as a `[deleted]` tombstone with no author, so the replies keep their place; reports about or by the actor are kept, minimised.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -2207,7 +2207,7 @@ Upload media. Images (multipart): processed synchronously, returns ready. Videos
 | 404 | `NotFoundError` | `NOT_FOUND` | Community or owner actor not found. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
 | 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | The image could not be decoded/processed. |
-| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_UPLOADS` | `TOO_MANY_ACTIVE_UPLOADS` — the community already has the max videos uploading/processing. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ACTIVE_UPLOADS`, `USAGE_LIMIT_REACHED` | `TOO_MANY_ACTIVE_UPLOADS` — the community already has the max videos uploading/processing. `USAGE_LIMIT_REACHED` — the workspace has used its plan's media storage for this month (`details`: `meter`, `used`, `included`, `resets_at`, `retry_after_seconds`, `upgrade_url`); upgrade under Workspace > Billing. Reading, deleting and finishing an upload already started are never refused. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const uploadAsset = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f").as("7a8b9c0d-1e2f-4a3b-8c4d-5e6f7a8b9c0d").assets.create();
@@ -4965,7 +4965,7 @@ const webhookEventDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -4975,6 +4975,11 @@ const webhookEventDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
@@ -4999,10 +5004,8 @@ const webhookEventDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2
 | `COMMENTS_FOLLOWERS_ONLY` | Only followers can comment on this post. |
 | `COMMENTS_MENTIONED_ONLY` | Only actors mentioned in this post can comment. |
 | `EDIT_WINDOW_EXPIRED` | The post can no longer be edited. |
-| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
 | `INVALID_DATE_FILTER` | A date filter is not valid ISO 8601. |
 | `INVALID_EXPAND` | Unsupported expand value. |
-| `INVALID_IDENTIFIER` | An id in the path or query is not a valid UUID. |
 | `INVALID_ID_LIST` | An id list is malformed. |
 | `INVALID_NOTIFICATION_KIND` | Unknown notification kind. |
 | `INVALID_ORDER` | The `order` value is not supported. |
@@ -5017,3 +5020,4 @@ const webhookEventDetail = await social.community("3f0c3c1e-8a2b-4c55-9d3f-0a1b2
 | `TOO_MANY_ACTIVE_UPLOADS` | The community has the maximum number of videos uploading or processing. |
 | `TOO_MANY_ATTACHMENTS` | The post has too many attachments. |
 | `TOO_MANY_IDS` | Too many ids in one request. |
+| `USAGE_LIMIT_REACHED` | The workspace used its plan's allowance for this month (Social media storage); upgrade the plan or wait for the reset. |

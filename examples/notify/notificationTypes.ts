@@ -11,7 +11,12 @@ const notify = new Notify();
 
 // notificationTypes.create: Create a notification type
 {
-  const notificationType = await notify.notificationTypes.create({ key: "invoice.paid" });
+  const notificationType = await notify.notificationTypes.create({
+    category_key: "billing",
+    key: "invoice.paid",
+    name: "Invoice paid",
+    routing: { always: ["inbox"], fallback: [{ channel: "inbox" }] },
+  });
 }
 
 // notificationTypes.list: List notification types
@@ -29,7 +34,12 @@ const notify = new Notify();
 
 // notificationTypes.replaceByKey: Create or replace a notification type by key
 {
-  const notificationType = await notify.notificationTypes.replaceByKey("invoice.paid", { templates: [{ body: {}, channel: "inbox", locale: "string" }] });
+  const notificationType = await notify.notificationTypes.replaceByKey("invoice.paid", {
+    category_key: "string",
+    name: "string",
+    routing: { always: ["inbox"], fallback: [{ channel: "inbox" }] },
+    templates: [{ body: {}, channel: "inbox", locale: "string" }],
+  });
 }
 
 // notificationTypes.retrieve: Get a notification type

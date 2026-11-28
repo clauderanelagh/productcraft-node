@@ -14,6 +14,21 @@ const mail = new Mail();
   await mail.mailboxes.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
+// mailboxes.drafts.create: Draft an email from a mailbox
+{
+  const mailDraft = await mail.mailboxes.drafts.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", {
+    attachments: [
+      {
+        content: "JVBERi0xLjcKJcfsj6IKMSAwIG9iago8PC9UeXBlL0NhdGFsb2c+PgplbmRvYmoK",
+        content_id: "logo",
+        content_type: "application/pdf",
+        filename: "invoice-1234.pdf",
+        path: "https://files.acme.com/invoices/1234.pdf",
+      },
+    ],
+  });
+}
+
 // mailboxes.list: List mailboxes in this workspace. 20 per page by default (max 200) — paginate with the cursor returned in `pagination.next_cursor` while `pagination.has_more` is true.
 {
   for await (const mailbox of mail.mailboxes.list()) {
@@ -62,7 +77,12 @@ const mail = new Mail();
   const mailbox = await mail.mailboxes.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
 }
 
-// mailboxes.update: Update mailbox display name, retention, or status. Status transitions are restricted (active ↔ suspended; archived is terminal).
+// mailboxes.threads.create: Start a conversation from a mailbox
+{
+  const threadSendResult = await mail.mailboxes.threads.create("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { subject: "Your order 42", to: ["success@simulator.amazonses.com"] });
+}
+
+// mailboxes.update: Update mailbox display name, retention, reply approval (`reply_approval`), or status. Status transitions are restricted (active ↔ suspended; archived is terminal).
 {
   const mailbox = await mail.mailboxes.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { display_name: "string" });
 }

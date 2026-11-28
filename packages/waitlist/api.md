@@ -23,6 +23,7 @@ Pass `status: "active"` to accept public sign-ups straight away. Without it the 
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure, including an `allowed_origins` entry that is not a plain origin. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `waitlist.create`, or workspace has not enabled the `waitlist` service. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Slug already taken in this workspace. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `EMAILS_OFF`, `EMAIL_SENDER_NOT_VERIFIED` | `settings.email_confirmation` switched on while the confirmation email could not be sent: `EMAILS_OFF` (Waitlist emails are off) or `EMAIL_SENDER_NOT_VERIFIED` (no workspace sender, or its domain is not verified in Mail; `details.reason`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -112,6 +113,7 @@ Only the fields you send change. `settings` is merged shallowly into the saved s
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure, including an `allowed_origins` entry that is not a plain origin. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Waitlist not found. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `EMAILS_OFF`, `EMAIL_SENDER_NOT_VERIFIED` | `settings.email_confirmation` switched on while the confirmation email could not be sent: `EMAILS_OFF` (Waitlist emails are off) or `EMAIL_SENDER_NOT_VERIFIED` (no workspace sender, or its domain is not verified in Mail; `details.reason`). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
@@ -1107,6 +1109,7 @@ Post the `token` from the link in the confirmation email. The sign-up moves from
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (no token). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENTRY_LINK_INVALID`, `WAITLIST_NOT_FOUND` | Code `ENTRY_LINK_INVALID`: the token is not valid, or the sign-up expired or was deleted. `WAITLIST_NOT_FOUND`: no such waitlist. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1131,11 +1134,12 @@ The sign-up your form posts. No API key, callable from a browser; a waitlist wit
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation or spam check failed |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The request came from a web origin (`Origin` header) that is not on the waitlist's `allowed_origins` list. Requests without an `Origin` header (server-side calls) are not checked. A CORS preflight from such an origin gets the same 403. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | The request came from a web origin (`Origin` header) that is not on the waitlist's `allowed_origins` list. Requests without an `Origin` header (server-side calls) are not checked. A CORS preflight from such an origin gets the same 403. Code `SERVICE_NOT_ENABLED` instead: Waitlist is turned off for this workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WAITLIST_NOT_FOUND` | Code `WAITLIST_NOT_FOUND`: no such waitlist, or its workspace was deleted. The answer is the same in both cases. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Email already on this waitlist Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY` | Waitlist is not active or is full |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED`, `CONFIRMATION_EMAIL_MEMBERS_ONLY` | Waitlist is not active or is full. Code `LIMIT_EXCEEDED` instead: the workspace has as many sign-ups as its plan allows (Free: 1,000 across all its waitlists; `details`: `resource`, `max`, `current`). The owner can upgrade under Workspace > Billing; sign-ups already on the list are kept. Code `CONFIRMATION_EMAIL_MEMBERS_ONLY`: email confirmation is on and the workspace has no verified sender yet, so its email goes out from the shared ProductCraft test sender, which only emails members of the workspace; this address is not one. Nothing is stored; show the message to the visitor. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many requests from this IP Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `CONFIRMATION_EMAIL_UNAVAILABLE` | Code `CONFIRMATION_EMAIL_UNAVAILABLE`: email confirmation is on but the confirmation email cannot be sent right now (Waitlist emails off, no confirmation template, or no verified sender; `details.reason`). Nothing is stored. Show the message to the visitor. |
 
 ```ts
 const publicEntryCreated = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.create({ email: "ada@example.com", name: "Ada Lovelace" });
@@ -1156,6 +1160,7 @@ What an entrant sees on their status page: status, place in line, referral code 
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ENTRY_LINK_INVALID` | Code `ENTRY_LINK_INVALID`: the token is not valid, or the entry was deleted (or expired unconfirmed). |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1179,8 +1184,11 @@ For a visitor who lost the email. Always answers 202 with `accepted: true`, whet
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failure (not an email address). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WAITLIST_NOT_FOUND` | Code `WAITLIST_NOT_FOUND`: no such waitlist, or it is not active. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `CONFIRMATION_EMAIL_MEMBERS_ONLY` | Code `CONFIRMATION_EMAIL_MEMBERS_ONLY`: the workspace sends from the shared ProductCraft test sender, which only emails its members; this address is not one. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | Too many requests from this IP. Per-IP limit: more than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 503 | `InternalServerError` | `SERVICE_UNAVAILABLE`, `CONFIRMATION_EMAIL_UNAVAILABLE` | Code `CONFIRMATION_EMAIL_UNAVAILABLE`: the waitlist cannot send confirmation emails right now (Waitlist emails off, no confirmation template, or no verified sender); `details.reason` says which. Decided before the address is looked up. |
 
 ```ts
 const resendConfirmationAccepted = await waitlist.public({ workspace: "acme", waitlist: "beta" }).entries.resendConfirmation({ email: "ada@example.com" });
@@ -1203,6 +1211,7 @@ What your sign-up form renders: the copy (from the variant served for this reque
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WAITLIST_NOT_FOUND` | Code `WAITLIST_NOT_FOUND`: no such waitlist, not active, or its workspace was deleted. The answer is the same in every case. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1227,6 +1236,7 @@ The same rows as the deprecated `GET …/leaderboard`, in a `{ data }` envelope.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SERVICE_NOT_ENABLED` | Code `SERVICE_NOT_ENABLED`: Waitlist is turned off for this workspace (data is kept; it answers again once the owner turns it back on). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `WAITLIST_NOT_FOUND` | Code `WAITLIST_NOT_FOUND`: no such waitlist, not active, or its workspace was deleted. The answer is the same in every case. |
 | 429 | `RateLimitError` | `RATE_LIMITED` | More than 20 requests per second or 600 per minute from this client IP (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
@@ -1264,7 +1274,7 @@ const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -1274,6 +1284,11 @@ const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `WEBHOOK_ENDPOINT_LIMIT` | The workspace has the maximum number of webhook endpoints. |
 | `WEBHOOK_ENDPOINT_NOT_FOUND` | No webhook endpoint with this id in this workspace. |
 | `WEBHOOK_ENDPOINT_NOT_SUBSCRIBED` | The endpoint is not subscribed to this event type. |
@@ -1281,7 +1296,12 @@ const publicLeaderboard = await waitlist.public({ workspace: "acme", waitlist: "
 | `WEBHOOK_EVENT_TYPE_UNKNOWN` | The event type is not one this product sends. |
 | `ACCESS_CODE_INVALID` | No such access code on this waitlist. |
 | `ACCESS_CODE_USED` | The access code has already been redeemed. |
+| `CONFIRMATION_EMAIL_UNAVAILABLE` | Email confirmation is on but the confirmation email cannot be sent right now (`details.reason`); nothing was stored. |
+| `CONFIRMATION_EMAIL_MEMBERS_ONLY` | The workspace has no verified sender yet and sends from the shared ProductCraft test sender, which only emails members of the workspace; nothing was stored. |
+| `EMAILS_OFF` | Email confirmation cannot be turned on while Waitlist emails are off. |
+| `EMAIL_SENDER_NOT_VERIFIED` | The workspace has no sender, or its domain is not verified in Mail (`details.reason`). |
 | `ENTRY_LINK_INVALID` | The confirmation or status link is not valid, or its sign-up expired or was deleted. |
+| `LIMIT_EXCEEDED` | The workspace reached its plan's limit of waitlist sign-ups; upgrade the plan to accept more. |
 | `MAIL_UNREACHABLE` | The Mail service did not answer; try again in a minute. |
 | `ORIGIN_NOT_ALLOWED` | Origin not allowed. |
 | `WAITLIST_NOT_FOUND` | No waitlist with this id or slug in this workspace. |

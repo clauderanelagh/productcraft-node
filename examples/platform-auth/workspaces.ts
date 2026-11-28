@@ -81,6 +81,16 @@ const platform = new PlatformAuth();
   await platform.workspaces.avatar.clear("acme");
 }
 
+// workspaces.avatar.previewFromUrl: Preview the workspace image a website or image address would set
+{
+  const workspaceAvatarFromUrlPreview = await platform.workspaces.avatar.previewFromUrl("acme", { url: "https://acme.com" });
+}
+
+// workspaces.avatar.setFromUrl: Set the workspace image from a website or image address
+{
+  const workspaceAvatarFromUrl = await platform.workspaces.avatar.setFromUrl("acme", { url: "https://acme.com" });
+}
+
 // workspaces.avatar.upload: Upload (or replace) the workspace identity avatar. Gated by `workspace.settings.update` (owner + admin). PNG/JPEG/WEBP only, ≤2 MB, magic-byte sniffed. SVG is rejected (stored-XSS).
 {
   const workspaceAvatarUrl = await platform.workspaces.avatar.upload("acme", { file: new File(["…"], "image.png", { type: "image/png" }) });
@@ -119,6 +129,11 @@ const platform = new PlatformAuth();
   const page = await platform.workspaces.invites.list("acme", {}, { timeout: 5_000 });
 }
 
+// workspaces.invites.retrieve: Preview an invite before accepting it: workspace, role, who sent it, expiry and whether it still works. Cookie/JWT only.
+{
+  const workspaceInvitePreview = await platform.workspaces.invites.retrieve("code");
+}
+
 // workspaces.list: List workspaces the current user belongs to
 {
   for await (const workspace of platform.workspaces.list()) {
@@ -152,10 +167,7 @@ const platform = new PlatformAuth();
 
 // workspaces.policies.create: Create a managed policy. Cookie/JWT only — policy authoring is a human-admin surface.
 {
-  const managedPolicy = await platform.workspaces.policies.create("acme", {
-    name: "mail-readonly",
-    policy: [{ actions: ["mail.read", "mail.list"], effect: "allow", resources: ["*"] }],
-  });
+  const managedPolicy = await platform.workspaces.policies.create("acme", { name: "mail-readonly" });
 }
 
 // workspaces.policies.delete: Delete a managed policy. Cascades: API keys lose the binding (deny-all if no other bindings remain); roles fall back to their inline policy column. Owners and admins; a policy bound to a role, or a preset policy, only an owner can delete. Cookie/JWT only.
@@ -214,7 +226,17 @@ const platform = new PlatformAuth();
   const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Manages billing and reads invoices." });
 }
 
-// workspaces.services.disable: Disable a service (settings are retained)
+// workspaces.security.retrieve: Get the workspace security policy
+{
+  const workspaceSecurity = await platform.workspaces.security.retrieve("acme");
+}
+
+// workspaces.security.update: Change the workspace security policy
+{
+  const workspaceSecurity = await platform.workspaces.security.update("acme", { mfa_required: true });
+}
+
+// workspaces.services.disable: Disable a service (data and settings are retained)
 {
   await platform.workspaces.services.disable("acme", "mail");
 }

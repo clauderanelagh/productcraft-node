@@ -15,10 +15,10 @@ Delete the calling account. Auto-promotes the oldest admin (or oldest non-self m
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 403 | `PermissionDeniedError` | `FORBIDDEN` | The session lacks the required action for self-account deletion (defence-in-depth — the route is guarded but the cookie may be present without action access). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): only a person's own session can delete their account. Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). An account without a second step confirms with its password; one with neither signs in again. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No account row exists for the session principal. Should never fire for a valid session — surfaced for SDKs. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.account.erase();
@@ -39,7 +39,7 @@ Describe the workspace key making this request: its name, workspace, expiry and 
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No bearer, or the key is unknown, revoked or expired. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `WORKSPACE_KEY_REQUIRED` | Signed in with a session or another token instead of a workspace key (`WORKSPACE_KEY_REQUIRED`). Send the `pcft_live_…` key as the bearer. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | The key was deleted while the request was in flight (`PAK_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const apiKeySelf = await platform.apiKeys.self();
@@ -61,7 +61,7 @@ Logout by revoking refresh token.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed or invalid token |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.auth.logout({ refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." });
@@ -78,7 +78,7 @@ Revoke the server-side session tied to the caller’s current access token.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid access token |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.auth.logoutCurrent();
@@ -98,7 +98,7 @@ Refresh access token using refresh token.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed or invalid token |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const token = await platform.auth.refresh({ refresh_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." });
@@ -108,11 +108,13 @@ const token = await platform.auth.refresh({ refresh_token: "eyJhbGciOiJIUzI1NiIs
 
 ### `platform.auth.signin(params, options?)`
 
-`POST /v1/auth/signin` → `PlatformAuth.Token`
+`POST /v1/auth/signin` → `PlatformAuth.AuthSigninResponse`
 
 Sign in with email/username and password.
 
 Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unknown identifier, wrong password, an account with no password credential, an account locked out through a different identifier, an account an operator has blocked, and a wrong password against a suspended or deactivated account. The responses are deliberately identical in body and timing, so sign-in never reveals whether an account exists.
+
+An account with two-step sign-in on answers `200` with a challenge instead of tokens (`mfa_required: true`, `mfa_token`, `factors`): finish with `POST /v1/auth/mfa/verify`. Tell the two apart by `mfa_required`. The challenge is only ever returned for a correct password.
 
 - Params: `PlatformAuth.AuthSigninParams`
 - Public: no API key, browser-safe
@@ -122,10 +124,10 @@ Every failed attempt answers `401 INVALID_CREDENTIALS`, whatever went wrong: unk
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `INVALID_CREDENTIALS` | Invalid credentials (`INVALID_CREDENTIALS`). Returned for every failed attempt, including a correct password offered while the account is locked out or blocked, and a wrong password against a suspended or deactivated account. The body never says which. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `ACCOUNT_SUSPENDED`, `ACCOUNT_DEACTIVATED` | The account is suspended (`ACCOUNT_SUSPENDED`) or deactivated (`ACCOUNT_DEACTIVATED`). Only reachable once the caller has proven the password — a wrong password against such an account is a 401. |
-| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Too many attempts for this identifier (`TOO_MANY_ATTEMPTS`). Two counters produce it, both keyed purely by the submitted identifier: a burst limit of 5 attempts per minute, and a 15-minute lock after 4 failed attempts. Both fire on the same attempt for a registered and an unregistered identifier. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Too many attempts for this identifier (`TOO_MANY_ATTEMPTS`). Two counters produce it, both keyed purely by the submitted identifier: a burst limit of 5 attempts per minute, and a 15-minute lock after 4 failed attempts. Both fire on the same attempt for a registered and an unregistered identifier. Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const token = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
+const result = await platform.auth.signin({ identifier: "user@example.com", password: "MySecurePassword123" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-signin)
@@ -142,13 +144,84 @@ Create a new account and sign in.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `SIGNUP_NOT_ALLOWED` | `SIGNUP_NOT_ALLOWED`: signup is invite-only and this email has no pending workspace invite (and is not on the early-access list). `GET /v1/auth/signup-policy` tells a client this before the form is filled in. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const token = await platform.auth.signup({ email: "user@example.com", password: "MySecurePassword123", username: "john_doe" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-signup)
+
+### `platform.auth.signupPolicy(options?)`
+
+`GET /v1/auth/signup-policy` → `PlatformAuth.SignupPolicy`
+
+How new accounts can be created right now.
+
+Public. While `mode` is `invite_only`, `POST /v1/auth/signup` accepts only an email with a pending workspace invite (or one on the early-access list) and answers anyone else `403 SIGNUP_NOT_ALLOWED`.
+
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const signupPolicy = await platform.auth.signupPolicy();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-auth-signup-policy)
+
+## auth.mfa
+
+### `platform.auth.mfa.sendCode(params, options?)`
+
+`POST /v1/auth/mfa/send-code` → `PlatformAuth.CodeSent`
+
+Email a sign-in code.
+
+Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds, 3 per sign-in.
+
+- Params: `PlatformAuth.AuthMfaSendCodeParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CHALLENGE_INVALID` | The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No email factor with this id on the account (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Sent less than 30 seconds ago, or 3 codes already went out for this sign-in (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const codeSent = await platform.auth.mfa.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b", mfa_token: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-mfa-send-code)
+
+### `platform.auth.mfa.verify(params, options?)`
+
+`POST /v1/auth/mfa/verify` → `PlatformAuth.Token`
+
+Finish sign-in with the second step.
+
+Send exactly one of `{factor_id, code}` (authenticator app or email), `{recovery_code}` or `{factor_id, webauthn}`. A right answer returns the session tokens, exactly like a sign-in without two-step. A wrong one spends one of the challenge's 5 tries. Not idempotent: the answer is a session.
+
+- Params: `PlatformAuth.AuthMfaVerifyParams`
+- Public: no API key, browser-safe
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Not exactly one way of answering (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CODE_INVALID`, `MFA_CHALLENGE_INVALID` | The answer was wrong (`MFA_CODE_INVALID`; the challenge survives until its 5 tries are spent), or The `mfa_token` is unknown, expired, already used or out of tries (`MFA_CHALLENGE_INVALID`): sign in again. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `ACCOUNT_SUSPENDED`, `ACCOUNT_DEACTIVATED` | The account was suspended (`ACCOUNT_SUSPENDED`) or deactivated (`ACCOUNT_DEACTIVATED`) meanwhile. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const token = await platform.auth.mfa.verify({ mfa_token: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-mfa-verify)
 
 ## auth.password
 
@@ -164,7 +237,7 @@ Request a password reset email. Neither the response nor its timing reveals whet
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation (`email` missing or not an email address). Depends only on the request shape, never on whether an account exists. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min for this account from this IP, or 60 from this IP (`RATE_LIMITED`). `Retry-After` header set. |
 
 ```ts
 await platform.auth.password.requestReset({ email: "user@example.com" });
@@ -184,13 +257,82 @@ Reset password using the email-delivered reset token.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PASSWORD_RESET_INVALID` | Body failed validation, the new password fails the password policy, or the reset token is invalid or expired (`PASSWORD_RESET_INVALID`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min for this account from this IP, or 60 from this IP (`RATE_LIMITED`). `Retry-After` header set. |
 
 ```ts
 await platform.auth.password.reset({ new_password: "MyNewPassword123", token: "123456" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-password-reset)
+
+## auth.stepUp
+
+### `platform.auth.stepUp.retrieve(options?)`
+
+`GET /v1/auth/step-up` → `PlatformAuth.StepUpStatus`
+
+Get the session's step-up state.
+
+Whether sensitive actions are allowed right now (a second step, or the sign-in itself, in the last 10 minutes), until when, and how to step up. `methods`: `totp` / `email` / `webauthn` / `recovery_code` for an account with factors, `password` for one without, `reauthenticate` (sign in again) for one with neither.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const stepUpStatus = await platform.auth.stepUp.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-auth-step-up)
+
+### `platform.auth.stepUp.sendCode(params, options?)`
+
+`POST /v1/auth/step-up/send-code` → `PlatformAuth.CodeSent`
+
+Email a step-up code.
+
+Sends a 6-digit code (valid 5 minutes) to the email factor. One send per 30 seconds.
+
+- Params: `PlatformAuth.AuthStepUpSendCodeParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No email factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const codeSent = await platform.auth.stepUp.sendCode({ factor_id: "9b2f6c1e-0d6a-4a63-9a43-2f1c3e4d5a6b" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-step-up-send-code)
+
+### `platform.auth.stepUp.verify(params?, options?)`
+
+`POST /v1/auth/step-up` → `PlatformAuth.StepUpResult`
+
+Confirm it is you (step-up).
+
+Send exactly one of `{factor_id, code}`, `{recovery_code}`, `{factor_id, webauthn}` or, for an account without factors, `{password}`. Sensitive actions on this session are then allowed for 10 minutes. 5 failures per 15 minutes per session. Not idempotent.
+
+- Params: `PlatformAuth.AuthStepUpVerifyParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Not exactly one way of answering (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `MFA_CODE_INVALID`, `INVALID_CREDENTIALS`, `SESSION_REVOKED` | Wrong code or passkey (`MFA_CODE_INVALID`), wrong password or a password offered by an account that has factors (`INVALID_CREDENTIALS`). No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`): step-up does not apply to them. |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | 5 failed attempts on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const stepUpResult = await platform.auth.stepUp.verify({ code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-auth-step-up)
 
 ## introspect
 
@@ -203,7 +345,7 @@ Resolve a Platform API Key (PAK) to its workspace + IAM-style policy. Call it wi
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or malformed `Authorization: Bearer` header, or the PAK is unknown, revoked or expired. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const introspectApiKey = await platform.introspect.apiKey();
@@ -219,7 +361,7 @@ Introspect current user with workspace list.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 60 requests/min from this IP (default bucket). Anonymous callers, and callers whose session has been signed out, otherwise get 200 with `is_authenticated: false`, never 401. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 60 requests/min from this IP (default bucket). Anonymous callers, and callers whose session has been signed out, otherwise get 200 with `is_authenticated: false`, never 401. Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const introspect = await platform.introspect.retrieve();
@@ -239,7 +381,7 @@ Introspect caller's membership + effective policy + enabled services in a worksp
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). Known workspaces the caller is not a member of answer 200 with `is_member: false`. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const introspectWorkspace = await platform.introspect.workspaces.retrieve("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -259,7 +401,7 @@ Read the caller's account profile.
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No account row for the session principal. Should never fire for a valid session — surfaced for SDKs. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const meProfile = await platform.me.retrieve();
@@ -278,7 +420,7 @@ Clear the caller's avatar and delete the stored object.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.me.avatar.clear();
@@ -298,7 +440,7 @@ Upload (or replace) the caller's avatar. PNG/JPEG/WEBP only — SVG is rejected 
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid file: wrong mimetype, oversized, or content does not match the declared type. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const avatarUrl = await platform.me.avatar.upload({ file: new File(["…"], "image.png", { type: "image/png" }) });
@@ -321,7 +463,7 @@ Idempotent: hiding a guide that is already hidden returns it unchanged, with its
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The key is not a valid guide key. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const hiddenGuide = await platform.me.hiddenGuides.hide("dashboard");
@@ -341,7 +483,7 @@ Every guide the caller has hidden in the console, newest first. Hiding is presen
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const hiddenGuides = await platform.me.hiddenGuides.list();
@@ -361,7 +503,7 @@ Removes every hidden guide for the caller, `all` included. Idempotent.
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.me.hiddenGuides.reset();
@@ -382,13 +524,229 @@ Idempotent: showing a guide that is not hidden is a no-op.
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | The key is not a valid guide key. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. a workspace API key). Hidden guides are a person's console preference. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.me.hiddenGuides.unhide("dashboard");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-me-hidden-guides-key)
+
+## me.mfa
+
+### `platform.me.mfa.retrieve(options?)`
+
+`GET /v1/me/mfa` → `PlatformAuth.MfaOverview`
+
+Get the caller's two-step sign-in methods.
+
+Whether two-step sign-in is on, the active factors, how many unused recovery codes are left, and the workspaces that require it of this account (with the deadline and whether access is already blocked).
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mfaOverview = await platform.me.mfa.retrieve();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-me-mfa)
+
+## me.mfa.email
+
+### `platform.me.mfa.email.confirm(factorId, params, options?)`
+
+`POST /v1/me/mfa/email/{factor_id}/confirm` → `PlatformAuth.FactorActivated`
+
+Turn on pending email codes.
+
+Checks the emailed code. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaEmailConfirmParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MFA_CODE_INVALID` | Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `EMAIL_NOT_VERIFIED` | The account email changed since the code was sent (`EMAIL_NOT_VERIFIED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const factorActivated = await platform.me.mfa.email.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-email-factor-id-confirm)
+
+### `platform.me.mfa.email.start(params?, options?)`
+
+`POST /v1/me/mfa/email` → `PlatformAuth.EmailEnrollment`
+
+Start adding email codes.
+
+Creates a pending email factor bound to the account's verified primary email and sends it a code (valid 5 minutes). Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaEmailStartParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 409 | `ConflictError` | `CONFLICT`, `EMAIL_NOT_VERIFIED`, `MFA_FACTOR_EXISTS` | The account email is not verified (`EMAIL_NOT_VERIFIED`), or email codes are already on (`MFA_FACTOR_EXISTS`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | A code went out less than 30 seconds ago (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const emailEnrollment = await platform.me.mfa.email.start({ label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-email)
+
+## me.mfa.factors
+
+### `platform.me.mfa.factors.delete(factorId, options?)`
+
+`DELETE /v1/me/mfa/factors/{factor_id}` → `void`
+
+Remove a factor.
+
+Needs step-up. Removing the last factor turns two-step sign-in off and deletes the recovery codes; refused while a workspace requires it.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No active factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_REQUIRED_BY_WORKSPACE` | It is the last factor and a workspace requires two-step sign-in (`MFA_REQUIRED_BY_WORKSPACE`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+await platform.me.mfa.factors.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-me-mfa-factors-factor-id)
+
+### `platform.me.mfa.factors.update(factorId, params, options?)`
+
+`PATCH /v1/me/mfa/factors/{factor_id}` → `PlatformAuth.MfaFactor`
+
+Rename a factor.
+
+- Params: `PlatformAuth.MeMfaFactorUpdateParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No active factor with this id (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const mfaFactor = await platform.me.mfa.factors.update("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-me-mfa-factors-factor-id)
+
+## me.mfa.recoveryCodes
+
+### `platform.me.mfa.recoveryCodes.regenerate(options?)`
+
+`POST /v1/me/mfa/recovery-codes` → `PlatformAuth.RecoveryCodes`
+
+Replace the recovery codes.
+
+Needs step-up. Returns 10 new single-use codes; every previous code stops working. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_ENROLLMENT_REQUIRED` | Two-step sign-in is off (`MFA_ENROLLMENT_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const recoveryCodes = await platform.me.mfa.recoveryCodes.regenerate();
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-recovery-codes)
+
+## me.mfa.totp
+
+### `platform.me.mfa.totp.confirm(factorId, params, options?)`
+
+`POST /v1/me/mfa/totp/{factor_id}/confirm` → `PlatformAuth.FactorActivated`
+
+Turn on a pending authenticator app.
+
+Checks one current code. When this is the account's first factor the answer carries 10 recovery codes, exactly once. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaTotpConfirmParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `MFA_CODE_INVALID` | Wrong code or credential (`MFA_CODE_INVALID`), or `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 404 | `NotFoundError` | `NOT_FOUND`, `MFA_FACTOR_NOT_FOUND` | No pending factor with this id: start again (`MFA_FACTOR_NOT_FOUND`). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Five wrong answers on this session in 15 minutes (`TOO_MANY_ATTEMPTS`). Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const factorActivated = await platform.me.mfa.totp.confirm("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { code: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-totp-factor-id-confirm)
+
+### `platform.me.mfa.totp.start(params?, options?)`
+
+`POST /v1/me/mfa/totp` → `PlatformAuth.TotpEnrollment`
+
+Start adding an authenticator app.
+
+Creates a pending TOTP factor (SHA-1, 6 digits, 30 s) and returns its secret, `otpauth://` URI and QR code. Confirm with a code to turn it on. Starting again replaces a pending one. Not idempotent and takes no `Idempotency-Key`: the answer carries a secret (an authenticator seed, a ceremony challenge or recovery codes) that a replay cache must not hold.
+
+- Params: `PlatformAuth.MeMfaTotpStartParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`). Or the account already has a factor and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const totpEnrollment = await platform.me.mfa.totp.start({ label: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-mfa-totp)
+
+## me.password
+
+### `platform.me.password.change(params, options?)`
+
+`POST /v1/me/password` → `void`
+
+Change the password while signed in.
+
+Checks the current password (it counts towards the same lockout as sign-in), applies the password policy to the new one, and changes it. Every other session of the account is signed out; this one stays signed in. A "password changed" email goes to the account address. An account with two-step sign-in must also have confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). Takes no `Idempotency-Key`: the body carries passwords, which a replay cache must not hold; a retry after a lost response answers 401 because the current password has already changed.
+
+- Params: `PlatformAuth.MePasswordChangeParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `WEAK_PASSWORD`, `PASSWORD_REUSED`, `PASSWORD_NOT_SET` | The new password fails the policy (`WEAK_PASSWORD`), equals the current one (`PASSWORD_REUSED`), the account has no password because it signs in with a provider only (`PASSWORD_NOT_SET`), or the body is invalid (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `INVALID_CREDENTIALS`, `SESSION_REVOKED` | The current password is wrong (`INVALID_CREDENTIALS`, the same body as a failed sign-in), or there is no session or it was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`), or the account has two-step sign-in and this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). |
+| 429 | `RateLimitError` | `RATE_LIMITED`, `TOO_MANY_ATTEMPTS` | Too many wrong passwords for this account; sign-in is locked by the same counter (`TOO_MANY_ATTEMPTS`, `details.retry_after_seconds`). Or the per-IP rate limit (`RATE_LIMITED`). |
+
+```ts
+await platform.me.password.change({ current_password: "string", new_password: "string" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-me-password)
 
 ## me.profile
 
@@ -405,7 +763,7 @@ Update the caller's profile. Currently only `displayName` is editable. An empty 
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Validation failed (e.g. displayName outside 1-128 chars). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | No session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | The caller authenticated with a non-human principal (e.g. PAK). Profile is per-human; only the human owner can mutate their own row. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const meProfile = await platform.me.profile.update({ display_name: "Ada Lovelace" });
@@ -428,7 +786,7 @@ Revokes the whole grant family — the grant, its authorization codes, its refre
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection for this human. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.oauth.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -452,7 +810,7 @@ The user-facing half of revocation: which third-party clients hold a grant, in w
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const connection of platform.oauth.connections.list()) {
@@ -478,7 +836,7 @@ Revokes the whole grant family for a grant made by any member of this workspace 
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection in this workspace. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.oauth.workspaces.connections.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -502,7 +860,7 @@ The workspace-side half of revocation, for owners and admins: every grant made a
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.read`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const connection of platform.oauth.workspaces.connections.list("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f")) {
@@ -527,7 +885,7 @@ A workspace revocation is durable: the member re-running the connect flow does n
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Not a member, or lacks `workspace.connection.revoke`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such connection in this workspace. |
 | 409 | `ConflictError` | `CONFLICT` | The connection was not revoked by an administrator — there is nothing to lift. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.oauth.workspaces.connections.restore("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -543,12 +901,15 @@ await platform.oauth.workspaces.connections.restore("3f0c3c1e-8a2b-4c55-9d3f-0a1
 
 Revoke one of the caller's own sessions. Takes effect immediately — the refresh token stops working straight away, not at the end of its window.
 
+Signing out a session other than the one this request is made with needs a recent "Confirm it's you" (`STEP_UP_REQUIRED`); revoking the current session (signing yourself out) does not.
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `id` is not a UUID. |
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Unauthorized |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`), or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). Not asked when `id` is the current session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | No such session, or it belongs to somebody else — deliberately the same response, so this cannot be used to probe which session ids exist. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const revokeSession = await platform.sessions.delete("3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -565,7 +926,7 @@ List active sessions.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Unauthorized |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const result = await platform.sessions.list();
@@ -581,9 +942,10 @@ Sign out every other session of the caller, keeping the one this request was mad
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 401 | `AuthenticationError` | `UNAUTHORIZED` | Unauthorized |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | No session, or the session was signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `HUMAN_SESSION_REQUIRED`, `STEP_UP_REQUIRED` | The caller is a workspace API key or an OAuth/MCP token (`HUMAN_SESSION_REQUIRED`), or this session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). |
 | 409 | `ConflictError` | `CONFLICT` | The access token maps to no session (minted before sessions tracked token ids), so the current session cannot be kept. Sign in again. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const revokeOtherSessions = await platform.sessions.revokeOthers();
@@ -611,7 +973,7 @@ Admin changes are workspace audit events that record a mutation. Reads (any acti
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of the workspace (`NOT_A_MEMBER`) or lacks `workspace.audit.read` on it. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found: no workspace has this id (or slug). Same answer as the service's other workspace routes. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceStats = await platform.stats.retrieve();
@@ -630,7 +992,7 @@ Resend verification email.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Unauthorized |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const feedback = await platform.verification.resend();
@@ -650,7 +1012,7 @@ Verify an email code.
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Invalid or expired verification code |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const feedback = await platform.verification.verify({ code: "a1b2c3d4…" });
@@ -670,7 +1032,7 @@ Public JWKS for verifying platform-issued JWTs (issuer `https://api.auth.product
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const jwks = await platform.wellKnown.jwks();
@@ -690,7 +1052,7 @@ Discovery document for third-party clients (Claude Desktop, Cursor, the ProductC
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const authorizationServerMetadata = await platform.wellKnown.oauthAuthorizationServer();
@@ -714,7 +1076,8 @@ Create a new workspace. Cookie/JWT only — PAKs are workspace-scoped credential
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace creation requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the account already owns two workspaces on the Free plan (pricing: two free workspaces per account). Upgrade one under Workspace > Billing, or delete one. `details`: `{resource: "free_workspaces", max, current}`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspace = await platform.workspaces.create({ display_name: "Acme Corp", slug: "acme-corp" });
@@ -731,8 +1094,8 @@ Delete a workspace (requires workspace.delete). Cookie/JWT only — irreversible
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). Workspace deletion requires a human-issued session. Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how; see `POST /v1/auth/step-up`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.delete("acme");
@@ -753,7 +1116,7 @@ List workspaces the current user belongs to.
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const workspace of platform.workspaces.list()) {
@@ -775,7 +1138,7 @@ Get workspace details.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`). |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspace = await platform.workspaces.retrieve("acme");
@@ -797,7 +1160,7 @@ Update workspace display name, slug, or settings. Slug renames broadcast a `work
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
 | 409 | `ConflictError` | `CONFLICT` | Slug already taken by another workspace. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspace = await platform.workspaces.update("acme", { display_name: "Acme Corp" });
@@ -820,10 +1183,10 @@ Mint a new PAK. Choose what it can do with `preset` (a ready-made set such as `m
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR`, `PAK_NAME_REQUIRED`, `PAK_NAME_TOO_LONG` | Body failed validation (`VALIDATION_ERROR`): neither or both of `policy_ids` and `preset`, an unknown `preset`, an empty `policy_ids`, more than 25 policies, or a blank/overlong `name` (`PAK_NAME_REQUIRED` / `PAK_NAME_TOO_LONG`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`) — mint requires a human-issued session; or is not a member (`NOT_A_MEMBER`), lacks `workspace.apikey.create`, or cannot grant one or more actions in the chosen preset or policies; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`, `details.methods` lists how). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or one of `policy_ids` does not exist in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_ALREADY_MINTED`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | `PAK_ALREADY_MINTED`: this `Idempotency-Key` already minted a key (its `id` is in `details`); the token was shown once, so rotate that key for a new one. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const mintPak = await platform.workspaces.apiKeys.create("acme", { name: "Production mail", preset: "mail-send" });
@@ -845,7 +1208,7 @@ Revoke a PAK. Default behaviour: introspect returns null on the next upstream ca
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). Also a session that has been signed out (`SESSION_REVOKED`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). Revoking an already-revoked PAK is a 204 no-op. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.apiKeys.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -868,9 +1231,9 @@ Newest first, as the standard cursor-paginated `{data, pagination}` envelope (20
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
-| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`, or `include_revoked` is not `true` or `false` (`VALIDATION_ERROR`). |
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`, `include_revoked` is not `true` or `false`, `created_by` is not a UUID, or `product` is not a product (`VALIDATION_ERROR`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const apiKey of platform.workspaces.apiKeys.list("acme")) {
@@ -895,7 +1258,7 @@ Describe the key a mint with this `preset` or these `policy_ids` would create, w
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing, malformed or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK, is not a member (`NOT_A_MEMBER`), or lacks `workspace.apikey.create`. A key you could not mint is NOT a 403 here: it comes back with `grantable: false`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or one of `policy_ids` does not exist in this workspace (`POLICY_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const pakGrantPreview = await platform.workspaces.apiKeys.preview("acme", { preset: "readonly" });
@@ -915,7 +1278,7 @@ Get a single PAK by id.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const publicApiKey = await platform.workspaces.apiKeys.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -934,10 +1297,10 @@ Mint a replacement for an existing PAK, carrying its name, description and polic
 | Status | Error class | Codes | When |
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), or cannot grant one or more actions in the bindings being carried across; or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_REVOKED`, `PAK_EXPIRED` | The key is revoked (`PAK_REVOKED`), already expired (`PAK_EXPIRED`), or has no policy bindings to carry across. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const rotatePak = await platform.workspaces.apiKeys.rotate("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { grace_hours: 24 });
@@ -960,7 +1323,7 @@ Update a PAK’s name or description (does not touch bindings).
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.update`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `PAK_NOT_FOUND` | Workspace not found, or PAK not found in this workspace (`PAK_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `PAK_REVOKED` | PAK is revoked (`PAK_REVOKED`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const publicApiKey = await platform.workspaces.apiKeys.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Sends receipts from the checkout service." });
@@ -980,10 +1343,10 @@ Replace the managed-policy bindings on a PAK. Re-runs caller-narrowing on the me
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | One of: bound > 25 policies; merged > 200 statements; one of the policy ids does not exist or lives in a different workspace. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller cannot grant one or more actions in the merged statement set. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller cannot grant one or more actions in the merged statement set, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND` | PAK not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT` | Empty bindings — revoke the PAK instead of leaving it unbound. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const publicApiKey = await platform.workspaces.apiKeys.updateBindings("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { policy_ids: ["11111111-1111-1111-1111-111111111111"] });
@@ -1006,7 +1369,7 @@ List the ready-made permission sets a workspace key can be minted with (`preset`
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.apikey.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const preset of platform.workspaces.apiKeys.presets.list("acme")) {
@@ -1035,7 +1398,7 @@ Audit timeline for workspace-scoped events — workspace, member, role, invite, 
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | The caller is signed in but lacks `workspace.audit.read` for this workspace. |
 | 404 | `NotFoundError` | `NOT_FOUND` | The `:workspaceSlug` path param does not resolve to a workspace the caller can see. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const auditFeed of platform.workspaces.auditFeed.list("acme")) {
@@ -1065,7 +1428,7 @@ The response is streamed: rows are walked in keyset batches and written as they 
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller lacks `workspace.audit.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
 | 413 | `APIError` | `PAYLOAD_TOO_LARGE` | More than 1,000,000 rows match. Narrow the window with `since` / `until` and retry. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const response = await platform.workspaces.auditLogs.export("acme");
@@ -1087,7 +1450,7 @@ List workspace audit log entries, newest first. Filter by `?action=`, `?actor_id
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`, `since`, or `until`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const auditLog of platform.workspaces.auditLogs.list("acme")) {
@@ -1111,13 +1474,65 @@ Clear the workspace avatar and delete the stored object. Gated by `workspace.set
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.settings.update`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.avatar.clear("acme");
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#delete-v1-workspaces-workspace-slug-avatar)
+
+### `platform.workspaces.avatar.previewFromUrl(workspaceSlug, params, options?)`
+
+`POST /v1/workspaces/{workspace_slug}/avatar/from-url/preview` → `PlatformAuth.WorkspaceAvatarFromUrlPreview`
+
+Preview the workspace image a website or image address would set.
+
+Fetches the address and returns the image it would set, without saving anything. An image address is used as is; for a web page, its best icon is used (apple-touch-icon, the largest `<link rel="icon">` or SVG icon, web app manifest icons, then `/favicon.ico`; square and at least 64 px preferred). Fetching is https only, to public addresses only (re-checked on every redirect, at most 4), 5 s per request, at most 2 MB; the format is read from the bytes (PNG, JPEG, WebP, GIF first frame, ICO, SVG rasterised; an SVG with script or external references is refused). Gated by `workspace.settings.update`.
+
+- Params: `PlatformAuth.WorkspaceAvatarPreviewFromUrlParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `url` is missing or longer than 2048 characters (`VALIDATION_ERROR`). |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.settings.update`. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `AVATAR_URL_UNUSABLE` | The address can't be used (`AVATAR_URL_UNUSABLE`). `message` is a sentence to show as is ("That page returned 404.", "No icon found on example.com."); `details.reason` is one of `invalid_url`, `blocked_address` (not a public https address, including after a redirect), `unreachable`, `timeout`, `too_many_redirects`, `http_error` (`details.status`), `too_large` (over 2 MB), `unsupported_content`, `unsafe_svg`, `no_icon_found`; `details.host` names the site. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceAvatarFromUrlPreview = await platform.workspaces.avatar.previewFromUrl("acme", { url: "https://acme.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-avatar-from-url-preview)
+
+### `platform.workspaces.avatar.setFromUrl(workspaceSlug, params, options?)`
+
+`POST /v1/workspaces/{workspace_slug}/avatar/from-url` → `PlatformAuth.WorkspaceAvatarFromUrl`
+
+Set the workspace image from a website or image address.
+
+Resolves the address exactly like `POST …/avatar/from-url/preview`, then stores the result like an upload: re-encoded to webp (at most 512 px) in ProductCraft storage, never hotlinked. The normalised address is kept as the workspace's `avatar_source_url`, so calling this again with it refreshes the image. Uploading a file or clearing the image clears it. Gated by `workspace.settings.update`.
+
+- Params: `PlatformAuth.WorkspaceAvatarSetFromUrlParams`
+- Idempotent: an `Idempotency-Key` is sent automatically and reused on retries
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `url` is missing or longer than 2048 characters (`VALIDATION_ERROR`), or a malformed `Idempotency-Key`. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.settings.update`. |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
+| 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `AVATAR_URL_UNUSABLE` | The address can't be used (`AVATAR_URL_UNUSABLE`). `message` is a sentence to show as is ("That page returned 404.", "No icon found on example.com."); `details.reason` is one of `invalid_url`, `blocked_address` (not a public https address, including after a redirect), `unreachable`, `timeout`, `too_many_redirects`, `http_error` (`details.status`), `too_large` (over 2 MB), `unsupported_content`, `unsafe_svg`, `no_icon_found`; `details.host` names the site. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceAvatarFromUrl = await platform.workspaces.avatar.setFromUrl("acme", { url: "https://acme.com" });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-avatar-from-url)
 
 ### `platform.workspaces.avatar.upload(workspaceSlug, params, options?)`
 
@@ -1131,7 +1546,7 @@ Upload (or replace) the workspace identity avatar. Gated by `workspace.settings.
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN` | Caller is not a member of this workspace, or lacks workspace.settings.update. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceAvatarUrl = await platform.workspaces.avatar.upload("acme", { file: new File(["…"], "image.png", { type: "image/png" }) });
@@ -1156,8 +1571,9 @@ Accept a workspace invite by code. Cookie/JWT only — invite acceptance binds a
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `INVITE_EMAIL_MISMATCH`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), or the invite is restricted to a different email (`INVITE_EMAIL_MISMATCH`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `INVITE_INVALID` | Invite code not found (`INVITE_INVALID`). |
 | 409 | `ConflictError` | `CONFLICT`, `ALREADY_A_MEMBER` | Caller is already a member of this workspace (`ALREADY_A_MEMBER`). |
-| 410 | `APIError` | `GONE`, `INVITE_REVOKED`, `INVITE_EXPIRED`, `INVITE_EXHAUSTED` | Invite revoked (`INVITE_REVOKED`), expired (`INVITE_EXPIRED`) or out of uses (`INVITE_EXHAUSTED`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min from this IP (strict `auth` bucket). `Retry-After` header set. Per-IP limit: rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 410 | `APIError` | `GONE`, `INVITE_REVOKED`, `INVITE_EXPIRED`, `INVITE_EXHAUSTED`, `INVITE_ROLE_DELETED` | Invite revoked (`INVITE_REVOKED`), expired (`INVITE_EXPIRED`), out of uses (`INVITE_EXHAUSTED`), or the custom role it granted was deleted (`INVITE_ROLE_DELETED`). |
+| 422 | `UnprocessableEntityError` | `UNPROCESSABLE_ENTITY`, `LIMIT_EXCEEDED` | `LIMIT_EXCEEDED`: the workspace already has as many members as its plan allows. `details`: `{resource: "members", max, current}`. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: more than 10 requests/min for this account from this IP, or 60 from this IP (`RATE_LIMITED`). `Retry-After` header set. |
 
 ```ts
 const workspace = await platform.workspaces.invites.accept({ code: "inv_…" });
@@ -1178,10 +1594,10 @@ Create a workspace invite link. Cookie/JWT only — invites bring new humans int
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `EMAIL_NOT_VERIFIED`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `STEP_UP_REQUIRED`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), email not verified (`EMAIL_NOT_VERIFIED`), not a member (`NOT_A_MEMBER`), lacks `workspace.member.invite`, a non-owner tried to invite an owner (`OWNER_ROLE_REQUIRED`), or the role holds permissions the caller does not (`MEMBER_RANK_EXCEEDED`). Or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceInvite = await platform.workspaces.invites.create("acme", { email: "alice@example.com" });
@@ -1200,7 +1616,7 @@ Revoke a workspace invite. Cookie/JWT only.
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`), not a member of the invite’s workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `INVITE_NOT_FOUND` | Workspace not found, or invite not found (`INVITE_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.invites.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1223,7 +1639,7 @@ List workspace invites, newest first. Cursor-paginated.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.member.invite`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const invite of platform.workspaces.invites.list("acme")) {
@@ -1234,21 +1650,45 @@ const page = await platform.workspaces.invites.list("acme", {}, { timeout: 5_000
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-invites)
 
+### `platform.workspaces.invites.retrieve(code, options?)`
+
+`GET /v1/workspaces/invites/{code}` → `PlatformAuth.WorkspaceInvitePreview`
+
+Preview an invite before accepting it: workspace, role, who sent it, expiry and whether it still works. Cookie/JWT only.
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED` | Caller is a PAK (`pcft_live_*`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
+| 404 | `NotFoundError` | `NOT_FOUND`, `INVITE_INVALID` | Invite code not found (`INVITE_INVALID`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceInvitePreview = await platform.workspaces.invites.retrieve("code");
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-invites-code)
+
 ## workspaces.members
 
-### `platform.workspaces.members.delete(workspaceSlug, accountId, options?)`
+### `platform.workspaces.members.delete(workspaceSlug, accountId, params?, options?)`
 
 `DELETE /v1/workspaces/{workspace_slug}/members/{account_id}` → `void`
 
 Remove a member from a workspace (or self-leave).
 
+Workspace API keys the member minted keep working by default: keys belong to the workspace, not to the person who minted them. `GET .../api-keys?created_by=<account_id>` lists them, and their `creator_is_member` turns `false` once the member is gone. Send `revoke_api_keys=true` to revoke every live key they minted in this workspace in the same transaction as the removal: either both happen or neither does. Each revoked key is audited as `platform.apikey.revoked` with `reason: member_removed` and evicted from introspection caches at once; the `workspace.member.removed` audit row lists the revoked key ids.
+
+- Params: `PlatformAuth.WorkspaceMemberDeleteParams`
+
 | Status | Error class | Codes | When |
 |---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `revoke_api_keys` is not `true` or `false` (`VALIDATION_ERROR`). |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `MEMBER_RANK_EXCEEDED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.remove` (not required for self-leave), or the target outranks the caller (`MEMBER_RANK_EXCEEDED`: only an owner can remove an owner, and the target role's permissions must all be held by the caller). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `MEMBER_RANK_EXCEEDED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.remove` (not required for self-leave), or the target outranks the caller (`MEMBER_RANK_EXCEEDED`: only an owner can remove an owner, and the target role's permissions must all be held by the caller), or `revoke_api_keys=true` without `workspace.apikey.delete`. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOT_A_MEMBER` | Workspace not found, or target account is not a member (`NOT_A_MEMBER`). |
 | 409 | `ConflictError` | `CONFLICT`, `LAST_MEMBER`, `SOLE_OWNER` | Target is the last member (`LAST_MEMBER`) or the sole owner (`SOLE_OWNER`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.members.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1271,7 +1711,7 @@ List workspace members, oldest join first. Narrow with `?q=` (name / username / 
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing or invalid session. |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.member.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const member of platform.workspaces.members.list("acme")) {
@@ -1294,10 +1734,10 @@ Update a member's role. Body: { roleId } or { role: "owner"|"admin"|"member" }.
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Body failed validation. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session. Also a session that has been signed out (`SESSION_REVOKED`). |
-| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners. |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `OWNER_ROLE_REQUIRED`, `MEMBER_RANK_EXCEEDED`, `STEP_UP_REQUIRED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.member.update-role`, a non-owner tried to assign the owner role or change an owner (`OWNER_ROLE_REQUIRED`), or a non-owner tried to change a role to or from one holding permissions the caller lacks (`MEMBER_RANK_EXCEEDED`). Admins may make admins, never owners. Or a person's session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). |
 | 404 | `NotFoundError` | `NOT_FOUND`, `NOT_A_MEMBER`, `ROLE_NOT_FOUND` | Workspace not found, target account is not a member (`NOT_A_MEMBER`), or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `SOLE_OWNER` | Would demote the only owner (`SOLE_OWNER`). Assign another owner first. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const updateMemberRole = await platform.workspaces.members.updateRole("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { role: "owner" });
@@ -1322,13 +1762,10 @@ Create a managed policy. Cookie/JWT only — policy authoring is a human-admin s
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member (`NOT_A_MEMBER`), lacks `workspace.policy.create` (owner and admin hold it by default), or the policy grants an action the caller does not hold. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 409 | `ConflictError` | `CONFLICT`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Name already in use, or the workspace already has 100 policies. Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
-const managedPolicy = await platform.workspaces.policies.create("acme", {
-  name: "mail-readonly",
-  policy: [{ actions: ["mail.read", "mail.list"], effect: "allow", resources: ["*"] }],
-});
+const managedPolicy = await platform.workspaces.policies.create("acme", { name: "mail-readonly" });
 ```
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#post-v1-workspaces-workspace-slug-policies)
@@ -1344,7 +1781,7 @@ Delete a managed policy. Cascades: API keys lose the binding (deny-all if no oth
 | 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED`, `PAK_NOT_PERMITTED` | Caller lacks `workspace.policy.delete`, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Policy not found in this workspace (`POLICY_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const managedPolicyDeleted = await platform.workspaces.policies.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1354,7 +1791,7 @@ const managedPolicyDeleted = await platform.workspaces.policies.delete("acme", "
 
 ### `platform.workspaces.policies.list(workspaceSlug, params?, options?)`
 
-`GET /v1/workspaces/{workspace_slug}/policies` → `PagePromise<PlatformAuth.ManagedPolicy>`
+`GET /v1/workspaces/{workspace_slug}/policies` → `PagePromise<PlatformAuth.ManagedPolicyListItem>`
 
 List managed policies in a workspace, alphabetically. 20/page (max 100), cursor-paginated.
 
@@ -1365,7 +1802,7 @@ List managed policies in a workspace, alphabetically. 20/page (max 100), cursor-
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const policy of platform.workspaces.policies.list("acme")) {
@@ -1386,7 +1823,7 @@ Get a managed policy by id.
 |---|---|---|---|
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Policy not found in this workspace. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const managedPolicyDetail = await platform.workspaces.policies.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1409,7 +1846,7 @@ Update a managed policy. Owners and admins; a policy bound to a role, or a prese
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `OWNER_ROLE_REQUIRED`, `PAK_NOT_PERMITTED` | Caller lacks `workspace.policy.update`, cannot grant one or more requested actions, or is not an owner and the policy is bound to a role or is a preset policy (`OWNER_ROLE_REQUIRED`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Policy not found in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `POLICY_NAME_TAKEN` | Name already in use (`POLICY_NAME_TAKEN`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const managedPolicyDetail = await platform.workspaces.policies.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Read-only access to all Mail resources" });
@@ -1430,7 +1867,7 @@ List every known workspace action (catalog of statement actions).
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.policy.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceActionCatalog = await platform.workspaces.policies.actions.catalog("acme");
@@ -1456,7 +1893,7 @@ Create a new custom role. Cookie/JWT only — role authoring is a human-admin su
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.create`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace not found, or `policy_id` not found in this workspace (`POLICY_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_NAME_TAKEN`, `IDEMPOTENCY_KEY_REUSE`, `IDEMPOTENCY_IN_PROGRESS` | Role name already in use or reserved for a system role (`ROLE_NAME_TAKEN`). Idempotency: `IDEMPOTENCY_KEY_REUSE` when this `Idempotency-Key` was already used with a different body or route; `IDEMPOTENCY_IN_PROGRESS` while another request with the same key is still running (retry after `Retry-After` seconds, with the same key). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceRole = await platform.workspaces.roles.create("acme", { name: "BillingAdmin" });
@@ -1477,7 +1914,7 @@ Delete a custom role (fails if it has members). Cookie/JWT only — role authori
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.delete`. A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_SYSTEM_IMMUTABLE`, `ROLE_HAS_MEMBERS` | Role is a system role (`ROLE_SYSTEM_IMMUTABLE`) or still has members (`ROLE_HAS_MEMBERS`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.roles.delete("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1498,7 +1935,7 @@ List roles in a workspace. System roles first, then alphabetical. 20/page (max 1
 |---|---|---|---|
 | 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | Malformed `cursor`. |
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, invalid or expired bearer token. |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 for await (const role of platform.workspaces.roles.list("acme")) {
@@ -1521,7 +1958,7 @@ Get a role + its permissions.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.role.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND` | Workspace not found, or role not found in this workspace (`ROLE_NOT_FOUND`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceRole = await platform.workspaces.roles.retrieve("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f");
@@ -1544,7 +1981,7 @@ Update a role or replace its permission set. Cookie/JWT only — role authoring 
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `ACTIONS_NOT_GRANTABLE`, `PAK_NOT_PERMITTED` | Caller is not a member of this workspace (`NOT_A_MEMBER`), lacks `workspace.role.update`, or the policy grants actions the caller does not hold (`ACTIONS_NOT_GRANTABLE`). A workspace API key (`pcft_live_…`) is refused with `PAK_NOT_PERMITTED`: this route needs a person's session. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `ROLE_NOT_FOUND`, `POLICY_NOT_FOUND` | Workspace, role (`ROLE_NOT_FOUND`) or bound policy (`POLICY_NOT_FOUND`) not found in this workspace. |
 | 409 | `ConflictError` | `CONFLICT`, `ROLE_SYSTEM_IMMUTABLE`, `ROLE_NAME_TAKEN` | System roles cannot be renamed, edited or bound (`ROLE_SYSTEM_IMMUTABLE`), or the new name is taken (`ROLE_NAME_TAKEN`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8a2b-4c55-9d3f-0a1b2c3d4e5f", { description: "Manages billing and reads invoices." });
@@ -1552,13 +1989,63 @@ const workspaceRole = await platform.workspaces.roles.update("acme", "3f0c3c1e-8
 
 [HTTP reference](https://productcraft.co/docs/platform/api-reference#patch-v1-workspaces-workspace-slug-roles-role-id)
 
+## workspaces.security
+
+### `platform.workspaces.security.retrieve(workspaceSlug, options?)`
+
+`GET /v1/workspaces/{workspace_slug}/security` → `PlatformAuth.WorkspaceSecurity`
+
+Get the workspace security policy.
+
+Whether members must use two-step sign-in, since when, and the grace period. Callers holding `workspace.member.read` also get each member's status (enabled, deadline, blocked).
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER`, `MFA_ENROLLMENT_REQUIRED` | Not a member (`NOT_A_MEMBER`), or a member past the deadline without two-step sign-in (`MFA_ENROLLMENT_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceSecurity = await platform.workspaces.security.retrieve("acme");
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#get-v1-workspaces-workspace-slug-security)
+
+### `platform.workspaces.security.update(workspaceSlug, params, options?)`
+
+`PUT /v1/workspaces/{workspace_slug}/security` → `PlatformAuth.WorkspaceSecurity`
+
+Change the workspace security policy.
+
+Owner only (`workspace.security.update`), a person's session only, and needs step-up. Turning the requirement on needs the caller to have two-step sign-in. Each member then has until max(now, joined) + `grace_period_days` to turn it on; past that, the workspace refuses them until they do. Workspace API keys are not affected. Saving again while it is on keeps the original start date. `PUT` replaces the policy, so it takes no `Idempotency-Key`.
+
+- Params: `PlatformAuth.WorkspaceSecurityUpdateParams`
+
+| Status | Error class | Codes | When |
+|---|---|---|---|
+| 400 | `BadRequestError` | `BAD_REQUEST`, `VALIDATION_ERROR` | `VALIDATION_ERROR`: `grace_period_days` must be 0-30. |
+| 401 | `AuthenticationError` | `UNAUTHORIZED`, `SESSION_REVOKED` | Missing or invalid session, or a session that has been signed out (`SESSION_REVOKED`). |
+| 403 | `PermissionDeniedError` | `FORBIDDEN`, `PAK_NOT_PERMITTED`, `MCP_NOT_PERMITTED`, `NOT_A_MEMBER`, `STEP_UP_REQUIRED` | Caller is a workspace API key or an MCP grant (`PAK_NOT_PERMITTED` / `MCP_NOT_PERMITTED`), not a member (`NOT_A_MEMBER`), lacks `workspace.security.update`, or the session has not confirmed it is you in the last 10 minutes (`STEP_UP_REQUIRED`). |
+| 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found. |
+| 409 | `ConflictError` | `CONFLICT`, `MFA_ENROLLMENT_REQUIRED` | Turning the requirement on while the caller has no two-step sign-in (`MFA_ENROLLMENT_REQUIRED`). |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+
+```ts
+const workspaceSecurity = await platform.workspaces.security.update("acme", { mfa_required: true });
+```
+
+[HTTP reference](https://productcraft.co/docs/platform/api-reference#put-v1-workspaces-workspace-slug-security)
+
 ## workspaces.services
 
 ### `platform.workspaces.services.disable(workspaceSlug, service, options?)`
 
 `DELETE /v1/workspaces/{workspace_slug}/services/{service}` → `void`
 
-Disable a service (settings are retained).
+Disable a service (data and settings are retained).
+
+Turns the product off everywhere, for the whole workspace. Within about a minute every request to it answers `403 SERVICE_NOT_ENABLED`: its API on every credential (console sessions, workspace API keys, MCP connections); its public endpoints (Auth sign-in, sign-up, OIDC discovery, JWKS, token and verify routes for your apps; Waitlist sign-up, confirmation, status and leaderboard routes; Mail shared DNS setup links); SDK delivery (the Flags `config.json` download, so SDKs keep their last config or use their defaults); and sending (Mail sends are refused, scheduled emails that come due fail with `SERVICE_NOT_ENABLED` and are never sent later, a sending broadcast pauses, and email other products send through this workspace's Mail (Auth, Waitlist, Notify) is refused too; Notify refuses recipient tokens and new notifications; scheduled Waitlist invite waves wait). Nothing is deleted: data, settings and keys are kept, and turning the product back on (`POST /v1/workspaces/{workspace_slug}/services/{service}`) restores everything within about a minute. Unsubscribe links and click tracking in email already delivered keep working. Remove data for good with the product's own delete routes or by deleting the workspace.
 
 | Status | Error class | Codes | When |
 |---|---|---|---|
@@ -1567,7 +2054,7 @@ Disable a service (settings are retained).
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.disable`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
 | 409 | `ConflictError` | `CONFLICT`, `SERVICE_NOT_ENABLED` | Service is not currently enabled (`SERVICE_NOT_ENABLED`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 await platform.workspaces.services.disable("acme", "mail");
@@ -1581,6 +2068,8 @@ await platform.workspaces.services.disable("acme", "mail");
 
 Enable (or re-enable) a service for this workspace.
 
+Turns the product on, or back on. After a disable, everything that was kept (data, settings, keys) works again within about a minute.
+
 - Params: `PlatformAuth.WorkspaceServiceEnableParams`
 
 | Status | Error class | Codes | When |
@@ -1589,7 +2078,7 @@ Enable (or re-enable) a service for this workspace.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.enable`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceServiceState = await platform.workspaces.services.enable("acme", "mail", { settings: {} });
@@ -1608,7 +2097,7 @@ List services activated on this workspace. Complete — one row per product, not
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.read`. |
 | 404 | `NotFoundError` | `NOT_FOUND` | Workspace not found (unknown slug or id). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const listWorkspaceServices = await platform.workspaces.services.list("acme");
@@ -1630,7 +2119,7 @@ Replace the settings jsonb for an active service.
 | 401 | `AuthenticationError` | `UNAUTHORIZED` | Missing, malformed or invalid session, or a PAK bearer (this route accepts cookie/JWT sessions only). |
 | 403 | `PermissionDeniedError` | `FORBIDDEN`, `NOT_A_MEMBER` | Caller is not a member of this workspace (`NOT_A_MEMBER`), or lacks `workspace.service.enable`. |
 | 404 | `NotFoundError` | `NOT_FOUND`, `SERVICE_NOT_ACTIVATED` | Workspace not found, or the service was never activated on it (`SERVICE_NOT_ACTIVATED`). |
-| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests from this client IP in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
+| 429 | `RateLimitError` | `RATE_LIMITED` | Rate limited: too many requests in the last 60 seconds (`RATE_LIMITED`); wait `Retry-After` seconds. |
 
 ```ts
 const workspaceServiceState = await platform.workspaces.services.updateSettings("acme", "mail", { default_sender: "noreply@acme.com" });
@@ -1666,7 +2155,7 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `BAD_GATEWAY` | An upstream service returned an invalid response. |
 | `SERVICE_UNAVAILABLE` | The service or one of its dependencies is temporarily unavailable; retry. |
 | `GATEWAY_TIMEOUT` | An upstream service did not answer in time; retry. |
-| `SERVICE_NOT_ENABLED` | The workspace has not enabled this product. |
+| `SERVICE_NOT_ENABLED` | The product is turned off for this workspace (Workspace > Services). Its data is kept; it answers again within about a minute of being turned back on. |
 | `INVALID_CREDENTIALS` | The credentials were not accepted. |
 | `SESSION_REVOKED` | The session behind this token was signed out or revoked. |
 | `MCP_NOT_PERMITTED` | An MCP (agent) token cannot call this route. |
@@ -1676,19 +2165,34 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `IDEMPOTENCY_KEY_REUSE` | The `Idempotency-Key` was already used with a different body or route. |
 | `IDEMPOTENCY_KEY_REQUIRED` | This operation requires an `Idempotency-Key` header. |
 | `IDEMPOTENCY_IN_PROGRESS` | A request with the same `Idempotency-Key` is still running. Retry after `Retry-After` seconds with the same key to get its response. |
+| `INVALID_CURSOR` | The cursor is invalid; restart from the first page. |
+| `INVALID_FORMAT` | A path or query value is not in the expected format. |
+| `INVALID_IDENTIFIER` | An id in the path or query is not in the format the resource uses (for example, not a valid UUID). |
+| `REFERENCE_NOT_FOUND` | A resource the request refers to does not exist. |
+| `RESOURCE_IN_USE` | Other records still reference this resource, so it cannot be deleted or changed yet. |
 | `ACCOUNT_DEACTIVATED` | Account deactivated. |
 | `ACCOUNT_SUSPENDED` | Account suspended. |
 | `ALREADY_A_MEMBER` | Already a member. |
+| `AVATAR_URL_UNUSABLE` | The website or image address could not be used as the workspace image; `message` says why and `details.reason` names it. |
 | `CROSS_ORIGIN_REJECTED` | The request came from an origin that is not allowed for this cookie-authenticated route. |
 | `EMAIL_NOT_VERIFIED` | Verify the account email first. |
+| `HUMAN_SESSION_REQUIRED` | This route needs a person's own session; workspace API keys and OAuth/MCP tokens cannot use it. |
 | `INVITE_EMAIL_MISMATCH` | The invite was sent to a different email address. |
 | `INVITE_EXHAUSTED` | Invite exhausted. |
 | `INVITE_EXPIRED` | Invite expired. |
 | `INVITE_INVALID` | Invite invalid. |
 | `INVITE_NOT_FOUND` | Invite not found. |
 | `INVITE_REVOKED` | Invite revoked. |
+| `INVITE_ROLE_DELETED` | The role this invite granted has been deleted; ask for a new invite. |
+| `LIMIT_EXCEEDED` | The workspace's plan allows no more of this resource (members, Free workspaces); upgrade the plan under Workspace > Billing. |
 | `LAST_MEMBER` | The workspace's last member cannot leave; delete the workspace instead. |
 | `MEMBER_RANK_EXCEEDED` | You cannot manage a member whose role ranks above yours. |
+| `MFA_CHALLENGE_INVALID` | The two-step sign-in challenge is unknown, expired, used or out of tries; sign in again. |
+| `MFA_CODE_INVALID` | The two-step code, recovery code or passkey was not accepted. |
+| `MFA_ENROLLMENT_REQUIRED` | Set up two-step sign-in first: the workspace requires it. |
+| `MFA_FACTOR_EXISTS` | Email codes are already on for this account, or this passkey is already registered. |
+| `MFA_FACTOR_NOT_FOUND` | No two-step sign-in method with this id on your account. |
+| `MFA_REQUIRED_BY_WORKSPACE` | A workspace you belong to requires two-step sign-in, so the last method cannot be removed. |
 | `NOT_A_MEMBER` | The caller is not a member of this workspace. |
 | `OAUTH_GRANT_ADMIN_REVOKED` | An admin revoked this OAuth grant. |
 | `OWNER_ROLE_REQUIRED` | Only an owner can do this. |
@@ -1698,7 +2202,9 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `PAK_NAME_TOO_LONG` | The API key name is too long. |
 | `PAK_NOT_FOUND` | Pak not found. |
 | `PAK_REVOKED` | Pak revoked. |
+| `PASSWORD_NOT_SET` | The account has no password (it signs in with a provider only), so there is none to change. |
 | `PASSWORD_RESET_INVALID` | The password reset code is invalid or expired. |
+| `PASSWORD_REUSED` | The new password is the same as the current one. |
 | `POLICY_INVALID` | The policy document is invalid. |
 | `POLICY_NAME_TAKEN` | Policy name taken. |
 | `POLICY_NOT_FOUND` | Policy not found. |
@@ -1708,6 +2214,9 @@ const workspaceServiceState = await platform.workspaces.services.updateSettings(
 | `ROLE_SYSTEM_IMMUTABLE` | System roles (owner, admin, member) cannot be changed or deleted. |
 | `SERVICE_NOT_ACTIVATED` | The product is not activated for this workspace. |
 | `SERVICE_UNKNOWN` | No product with this name. |
+| `SIGNUP_NOT_ALLOWED` | Signup is invite-only: this email has no pending workspace invite. |
 | `SOLE_OWNER` | The workspace's only owner cannot leave or be removed; transfer ownership first. |
+| `STEP_UP_REQUIRED` | Confirm it is you (a fresh two-step check) before this action; `details.methods` lists how. |
 | `TOO_MANY_ATTEMPTS` | Too many attempts; wait before trying again. |
+| `WEAK_PASSWORD` | The password does not meet the policy: at least 10 characters, a digit or symbol, and not a common password. |
 | `WORKSPACE_KEY_REQUIRED` | This route needs a workspace API key. |
